@@ -296,8 +296,8 @@ See [`REFERENCES.md`](REFERENCES.md) for the full list.
 If you use this pipeline in a paper or thesis, please cite:
 
 1. **This software:** Youssef Antoury, *LiNaK: an alkali-atom AMO pipeline* (2026).  
-   Repository: [github.com/joeantouri98-sketch/LiNaK](https://github.com/joeantouri98-sketch/LiNaK) (cite the commit hash you used; BibTeX: `Antoury_LiNaK` in [`REFERENCES.bib`](REFERENCES.bib)).  
-   Contact: [Joeantouri98@gmail.com](mailto:Joeantouri98@gmail.com).  
+   DOI: [10.5281/zenodo.21821149](https://doi.org/10.5281/zenodo.21821149) · Repository: [github.com/joeantouri98-sketch/LiNaK](https://github.com/joeantouri98-sketch/LiNaK)  
+   BibTeX: `Antoury_LiNaK` in [`REFERENCES.bib`](REFERENCES.bib). Contact: [Joeantouri98@gmail.com](mailto:Joeantouri98@gmail.com).  
 2. The literature sources for any numbers you quote - see the **Must cite** table in [`REFERENCES.md`](REFERENCES.md) and Overview §19. In particular:  
    - **NIST ASD** for levels / lines  
    - **Steck** (steck.us/alkalidata) for Na/Rb/Cs hyperfine and D-line checks  

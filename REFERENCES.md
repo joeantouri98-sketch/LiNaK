@@ -8,7 +8,7 @@ Bibliographic sources used by **LiNaK** (alkali AMO pipeline). BibTeX entries li
 
 | If you use… | Cite at least… |
 |-------------|----------------|
-| This pipeline / code / regenerated tables | **Antoury_LiNaK** / **LiNaK** ([github.com/joeantouri98-sketch/LiNaK](https://github.com/joeantouri98-sketch/LiNaK); cite commit) |
+| This pipeline / code / regenerated tables | **Antoury_LiNaK** / **LiNaK** ([DOI](https://doi.org/10.5281/zenodo.21821149) · [GitHub](https://github.com/joeantouri98-sketch/LiNaK)) |
 | NIST levels / lines / Acc / CompTable lifetimes from ASD | **NIST ASD** |
 | Na / Rb / Cs hyperfine constants or Steck validation of D-line / \(I_{\rm sat}\) | **Steck** (steck.us/alkalidata; name the sheet + revision) |
 | Li hyperfine (especially \(^6\)Li block) | **Allegrini22** and **Gehm** (*Properties of \(^6\)Li*) |

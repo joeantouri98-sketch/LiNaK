@@ -23,6 +23,6 @@ abstract: >-
   for ions and 3d metals (Fe, Cr).
 url: "https://github.com/joeantouri98-sketch/LiNaK"
 repository-code: "https://github.com/joeantouri98-sketch/LiNaK"
-# identifiers:
-#   - type: doi
-#     value: "10.5281/zenodo.XXXXXXX"   # add after Zenodo deposit
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21821149"
