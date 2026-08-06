@@ -1,0 +1,7 @@
+! RKS CAM-B3LYP aug-cc-pVTZ TightSCF
+%scf
+  MaxIter 500
+end
+* xyz 1 1
+Na 0.0 0.0 0.0
+*

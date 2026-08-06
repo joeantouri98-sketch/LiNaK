@@ -1,0 +1,414 @@
+<html style="width:100%;height:100%;margin:0;padding:0;">
+<head><meta charset="utf-8" /><style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a0a14}
+.plotly-graph-div{width:100vw!important;height:100vh!important}
+#vline{position:fixed;top:8%;left:50%;width:1px;height:84%;
+  background:rgba(80,80,140,0.18);pointer-events:none;z-index:40}
+#op{position:fixed;top:12px;right:12px;width:248px;max-height:calc(100vh - 24px);
+  overflow-y:auto;background:rgba(10,10,22,0.94);border:1px solid #2a2a4a;
+  border-radius:10px;padding:12px 14px;font-family:'Helvetica Neue',Arial,sans-serif;
+  font-size:12px;color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.65);
+  z-index:9999;backdrop-filter:blur(6px)}
+#op h3{margin:0 0 9px;font-size:13px;color:#e0e8ff;border-bottom:1px solid #2a2a5a;
+  padding-bottom:5px;display:flex;align-items:center;gap:7px}
+#op .tog{margin-left:auto;cursor:pointer;font-size:11px;color:#445;user-select:none}
+#op.collapsed>*:not(h3){display:none}
+#op .sec{margin-bottom:10px}
+#op .st{font-weight:bold;color:#7a9eff;font-size:10px;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:4px}
+#op input[type=range]{width:100%;accent-color:#4a7ec7}
+#op select{width:100%;background:#111830;border:1px solid #2a3060;color:#ccc;
+  border-radius:4px;padding:3px 5px;font-size:11px}
+#op button{padding:4px 9px;font-size:11px;border:1px solid #2a3060;border-radius:5px;
+  background:#111830;color:#aac;cursor:pointer;margin:2px}
+#op button:hover{background:#1a2850;color:#e0e8ff}
+#op button.pr{background:#1a3a80;color:#cce;border-color:#2a4aaa}
+#op button.pr:hover{background:#2a4ab0}
+#sinfo{background:#0d0d20;border:1px solid #2a2a4a;border-radius:6px;padding:8px 10px;
+  font-size:11px;color:#9ab;line-height:1.7;margin-bottom:10px;min-height:52px}
+#sinfo b{color:#e0e8ff}
+.mlb{font-size:10px;padding:3px 7px;border-radius:10px;border:1px solid #2a3060;
+  background:#111830;color:#99b;cursor:pointer;margin:2px}
+.mlb.on{background:#1a3a80;color:#cce;border-color:#3a5ac0}
+.mlb:hover{background:#1a2850}
+#spin-wrap{display:none;text-align:center;padding:20px 0}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid #2a3060;
+  border-top-color:#4a7ec7;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style></head>
+<body style="width:100%;height:100%;margin:0;padding:0;background:#0a0a14;">
+    <div style="height:100%; width:100%;">                        <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.6.0.min.js" integrity="sha256-QaOVwtVY0T02VaHrr6pnoHLCwayMJp4O5n4YyaE3rJk=" crossorigin="anonymous"></script>                <div id="dbaf5c48-1f1b-437b-bf20-12353e23b111" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("dbaf5c48-1f1b-437b-bf20-12353e23b111")) {                    Plotly.newPlot(                        "dbaf5c48-1f1b-437b-bf20-12353e23b111",                        [{"hoverinfo":"skip","line":{"color":"rgba(220,50,50,0.25)","width":1},"mode":"lines","name":"IE limit","scene":"scene","showlegend":true,"x":[-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,-0.5,null,0.2142857142857143,0.2142857142857143,null,0.9285714285714286,0.9285714285714286,null,1.6428571428571428,1.6428571428571428,null,2.357142857142857,2.357142857142857,null,3.0714285714285716,3.0714285714285716,null,3.7857142857142856,3.7857142857142856,null,4.5,4.5,null],"y":[3.0,3.0,null,4.0,4.0,null,5.0,5.0,null,6.0,6.0,null,7.0,7.0,null,8.0,8.0,null,9.0,9.0,null,10.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null,3.0,10.0,null],"z":[0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null],"type":"scatter3d"},{"customdata":[["3s \u00b9P\u00b0\u2081",3,"s","1",-13.964,1.97683,0],["3s \u00b3P\u00b0\u2081",3,"s","1",-14.34505,1.97683,0],["3s \u00b3P\u00b0\u2082",3,"s","2",-14.43993,1.97683,0],["3s \u00b3P\u00b0\u2080",3,"s","0",-14.27165,1.97683,0],["3p \u00b9P\u2081",3,"p","1",-10.10531,2.31761,1],["3p \u00b3D\u2081",3,"p","1",-10.31856,2.31761,1],["3p \u00b3P\u2081",3,"p","1",-10.02823,2.31761,1],["3p \u00b3S\u2081",3,"p","1",-10.93167,2.31761,1],["3p \u00b9D\u2082",3,"p","2",-10.19153,2.31761,1],["3p \u00b3D\u2082",3,"p","2",-10.38425,2.31761,1],["3p \u00b3P\u2082",3,"p","2",-10.07822,2.31761,1],["3p \u00b3D\u2083",3,"p","3",-10.4322,2.31761,1],["3p \u00b9S\u2080",3,"p","0",-8.9925,2.31761,1],["3p \u00b3P\u2080",3,"p","0",-10.04302,2.31761,1],["3d \u00b2[1\u002f2]\u00b0\u2081",3,"d","1",-6.29263,2.97591,2],["3d \u00b2[3\u002f2]\u00b0\u2081",3,"d","1",-6.15522,2.97591,2],["3d \u00b2[3\u002f2]\u00b0\u2082",3,"d","2",-6.27374,2.97591,2],["3d \u00b2[5\u002f2]\u00b0\u2082",3,"d","2",-6.16507,2.97591,2],["3d \u00b2[5\u002f2]\u00b0\u2083",3,"d","3",-6.15982,2.97591,2],["3d \u00b2[7\u002f2]\u00b0\u2083",3,"d","3",-6.22444,2.97591,2],["3d \u00b2[7\u002f2]\u00b0\u2084",3,"d","4",-6.23233,2.97591,2],["3d \u00b2[1\u002f2]\u00b0\u2080",3,"d","0",-6.30346,2.97591,2],["4s \u00b2[1\u002f2]\u00b0\u2081",4,"s","1",-5.98626,2.97683,0],["4s \u00b2[3\u002f2]\u00b0\u2081",4,"s","1",-6.13924,2.97683,0],["4s \u00b2[3\u002f2]\u00b0\u2082",4,"s","2",-6.18603,2.97683,0],["4s \u00b2[1\u002f2]\u00b0\u2080",4,"s","0",-6.03556,2.97683,0],["4p \u00b2[1\u002f2]\u2081",4,"p","1",-5.102,3.31761,1],["4p \u00b2[3\u002f2]\u2081",4,"p","1",-4.79219,3.31761,1],["4p \u00b2[3\u002f2]\u2082",4,"p","2",-4.89529,3.31761,1],["4p \u00b2[5\u002f2]\u2082",4,"p","2",-4.951,3.31761,1],["4p \u00b2[5\u002f2]\u2083",4,"p","3",-4.97606,3.31761,1],["4d \u00b2[1\u002f2]\u00b0\u2081",4,"d","1",-3.51586,3.97591,2],["4d \u00b2[3\u002f2]\u00b0\u2081",4,"d","1",-3.44547,3.97591,2],["4d \u00b2[3\u002f2]\u00b0\u2082",4,"d","2",-3.50112,3.97591,2],["4d \u00b2[5\u002f2]\u00b0\u2082",4,"d","2",-3.46251,3.97591,2],["4d \u00b2[5\u002f2]\u00b0\u2083",4,"d","3",-3.45995,3.97591,2],["4d \u00b2[7\u002f2]\u00b0\u2083",4,"d","3",-3.49013,3.97591,2],["4d \u00b2[7\u002f2]\u00b0\u2084",4,"d","4",-3.49482,3.97591,2],["4d \u00b2[1\u002f2]\u00b0\u2080",4,"d","0",-3.52368,3.97591,2],["4f \u00b2[3\u002f2]\u2081",4,"f","1",-3.41614,4.07018,3],["4f \u00b2[3\u002f2]\u2082",4,"f","2",-3.41599,4.07018,3],["4f \u00b2[5\u002f2]\u2082",4,"f","2",-3.40504,4.07018,3],["4f \u00b2[5\u002f2]\u2083",4,"f","3",-3.40515,4.07018,3],["4f \u00b2[7\u002f2]\u2083",4,"f","3",-3.39937,4.07018,3],["4f \u00b2[7\u002f2]\u2084",4,"f","4",-3.39935,4.07018,3],["4f \u00b2[9\u002f2]\u2084",4,"f","4",-3.41069,4.07018,3],["4f \u00b2[9\u002f2]\u2085",4,"f","5",-3.41069,4.07018,3],["5s \u00b2[1\u002f2]\u00b0\u2081",5,"s","1",-3.27224,3.97683,0],["5s \u00b2[3\u002f2]\u00b0\u2081",5,"s","1",-3.43076,3.97683,0],["5s \u00b2[3\u002f2]\u00b0\u2082",5,"s","2",-3.4534,3.97683,0],["5s \u00b2[1\u002f2]\u00b0\u2080",5,"s","0",-3.28935,3.97683,0],["5d \u00b2[1\u002f2]\u00b0\u2081",5,"d","1",-2.23702,4.97591,2],["5d \u00b2[3\u002f2]\u00b0\u2081",5,"d","1",-2.20175,4.97591,2],["5d \u00b2[3\u002f2]\u00b0\u2082",5,"d","2",-2.22533,4.97591,2],["5d \u00b2[1\u002f2]\u00b0\u2080",5,"d","0",-2.23891,4.97591,2],["5f \u00b2[3\u002f2]\u2081",5,"f","1",-2.18488,5.07018,3],["5f \u00b2[3\u002f2]\u2082",5,"f","2",-2.18475,5.07018,3],["5f \u00b2[5\u002f2]\u2082",5,"f","2",-2.179,5.07018,3],["5f \u00b2[5\u002f2]\u2083",5,"f","3",-2.17908,5.07018,3],["5f \u00b2[7\u002f2]\u2083",5,"f","3",-2.17622,5.07018,3],["5f \u00b2[7\u002f2]\u2084",5,"f","4",-2.1762,5.07018,3],["5f \u00b2[9\u002f2]\u2084",5,"f","4",-2.18207,5.07018,3],["5f \u00b2[9\u002f2]\u2085",5,"f","5",-2.18207,5.07018,3],["6s \u00b2[1\u002f2]\u00b0\u2081",6,"s","1",-2.02673,4.97683,0],["6s \u00b2[3\u002f2]\u00b0\u2081",6,"s","1",-2.19011,4.97683,0],["6s \u00b2[3\u002f2]\u00b0\u2082",6,"s","2",-2.20444,4.97683,0],["6s \u00b2[1\u002f2]\u00b0\u2080",6,"s","0",-2.0309,4.97683,0],["6d \u00b2[1\u002f2]\u00b0\u2081",6,"d","1",-1.59891,5.97591,2],["6d \u00b2[3\u002f2]\u00b0\u2081",6,"d","1",-1.40779,5.97591,2],["6f \u00b2[3\u002f2]\u2081",6,"f","1",-1.51651,6.07018,3],["6f \u00b2[3\u002f2]\u2082",6,"f","2",-1.51642,6.07018,3],["6f \u00b2[5\u002f2]\u2082",6,"f","2",-1.51304,6.07018,3],["6f \u00b2[5\u002f2]\u2083",6,"f","3",-1.51307,6.07018,3],["6f \u00b2[7\u002f2]\u2083",6,"f","3,4",-1.51144,6.07018,3],["6f \u00b2[9\u002f2]\u2084",6,"f","4",-1.51486,6.07018,3],["6f \u00b2[9\u002f2]\u2085",6,"f","5",-1.51487,6.07018,3],["6g \u00b2[5\u002f2]\u00b0\u2082",6,"g","2,3",-1.51337,6.03012,4],["6g \u00b2[7\u002f2]\u00b0\u2083",6,"g","3,4",-1.51156,6.03012,4],["6g \u00b2[9\u002f2]\u00b0\u2084",6,"g","4,5",-1.51097,6.03012,4],["6g \u00b2[11\u002f2]\u00b0\u2085",6,"g","5,6",-1.51273,6.03012,4],["7s \u00b2[1\u002f2]\u00b0\u2081",7,"s","1",-1.36527,5.97683,0],["7s \u00b2[3\u002f2]\u00b0\u2081",7,"s","1",-1.52745,5.97683,0],["7d \u00b2[3\u002f2]\u00b0\u2081",7,"d","1",-1.17536,6.97591,2],["7f \u00b2[3\u002f2]\u2081",7,"f","1",-1.1137,7.07018,3],["7f \u00b2[3\u002f2]\u2082",7,"f","2",-1.11367,7.07018,3],["7f \u00b2[5\u002f2]\u2082",7,"f","2,3",-1.1115,7.07018,3],["7f \u00b2[7\u002f2]\u2083",7,"f","3,4",-1.11052,7.07018,3],["7f \u00b2[9\u002f2]\u2084",7,"f","4,5",-1.11267,7.07018,3],["7g \u00b2[5\u002f2]\u00b0\u2082",7,"g","2,3",-1.11174,7.03012,4],["7g \u00b2[7\u002f2]\u00b0\u2083",7,"g","3,4",-1.11064,7.03012,4],["7g \u00b2[9\u002f2]\u00b0\u2084",7,"g","4,5",-1.11016,7.03012,4],["7g \u00b2[11\u002f2]\u00b0\u2085",7,"g","5,6",-1.11133,7.03012,4],["8s \u00b2[3\u002f2]\u00b0\u2081",8,"s","1",-1.17536,6.97683,0],["8d \u00b2[3\u002f2]\u00b0\u2081",8,"d","1",-0.86036,7.97591,2],["8f \u00b2[3\u002f2]\u2081",8,"f","1,2",-0.85243,8.07018,3],["8f \u00b2[5\u002f2]\u2082",8,"f","2,3",-0.68194,8.07018,3],["8f \u00b2[7\u002f2]\u2083",8,"f","3,4",-0.8503,8.07018,3],["8f \u00b2[9\u002f2]\u2084",8,"f","4,5",-0.85176,8.07018,3],["9s \u00b2[3\u002f2]\u00b0\u2081",9,"s","1",-0.86036,7.97683,0],["9d \u00b2[3\u002f2]\u00b0\u2081",9,"d","1",-0.68536,8.97591,2],["10s \u00b2[3\u002f2]\u00b0\u2081",10,"s","1",-0.68536,8.97683,0],["10d \u00b2[3\u002f2]\u00b0\u2081",10,"d","1",-0.55336,9.97591,2]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e  [click\u2192orbital]\u003cbr\u003en=%{customdata[1]} l=%{customdata[2]} J=%{customdata[3]}\u003cbr\u003eE=%{customdata[4]:.5f} eV  n*=%{customdata[5]:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2196F3","line":{"color":"rgba(255,255,255,0.3)","width":1},"opacity":0.9,"size":[6.182107524400092,7.269302761221477,8,8,6.778046822269926,6.7668497887480825,6.772061081182821,7.483919296628801,7.187216484816997,7.0821268108359146,7.071897695812073,7.1519783022803285,6.79447453790269,7.0474642693865635,6.682792420873713,6.203330479894615,6.885930008237499,6.485588686394143,6.935897351717654,6.893110646813935,6.78673698803026,6.760338534760624,6.588257508840527,6.40683940424385,6.895337139037303,6.87715559478782,7.579876334235862,7.270505732615061,7.4059816322081415,7.460044725470965,7.896411964125793,10.123752437483086,10.060413651509858,9.860943778583795,9.82648463285153,10.024643685519056,10.051559368555337,10.61057247029526,10.756362486061722,14.939432494988322,14.57480261575963,14.569662609589473,14.5053890230533,14.50268554856575,14.74161271859985,14.746930177049752,15.352186271803118,6.953617494926414,7.056197659429357,6.951819428339408,7.328398187208435,9.646240969379907,9.618162383974166,9.440530520899651,10.08170037301712,14.45387326216606,14.08656871436271,14.08449939231956,14.020561000387273,14.01953356933215,14.257871892862353,14.259983431824853,14.868474705257086,7.345284361178816,7.447927166332544,7.347230802581156,7.6263379937707665,9.369541610111044,9.1708626475519,14.34793336482448,13.983041183208638,13.981925338168445,13.920281398311856,13.464230147526447,14.160543885271496,14.770232631756096,16.0,15.708870872412167,15.692653655992634,15.952091365624204,7.636949761795972,7.76445255718282,9.359166914157997,14.330687480580455,13.97303059428076,13.516806921063,13.459969007151486,13.703081707653539,15.914912168703744,15.6419630901702,15.625410512713326,15.893022594702792,8.085312309325701,9.475249062408903,13.906508533780528,13.500889310451416,13.501849259206482,13.746491248903432,8.279865719623668,9.71745434681968,8.504776571449453,9.93771758673431]},"mode":"markers+text","name":"NIST","scene":"scene","showlegend":true,"text":["3s \u00b9P\u00b0\u2081","3s \u00b3P\u00b0\u2081","3s \u00b3P\u00b0\u2082","3s \u00b3P\u00b0\u2080","3p \u00b9P\u2081","3p \u00b3D\u2081","3p \u00b3P\u2081","3p \u00b3S\u2081","3p \u00b9D\u2082","3p \u00b3D\u2082","3p \u00b3P\u2082","3p \u00b3D\u2083","3p \u00b9S\u2080","3p \u00b3P\u2080","3d \u00b2[1\u002f2]\u00b0\u2081","3d \u00b2[3\u002f2]\u00b0\u2081","3d \u00b2[3\u002f2]\u00b0\u2082","3d \u00b2[5\u002f2]\u00b0\u2082","3d \u00b2[5\u002f2]\u00b0\u2083","3d \u00b2[7\u002f2]\u00b0\u2083","3d \u00b2[7\u002f2]\u00b0\u2084","3d \u00b2[1\u002f2]\u00b0\u2080","4s \u00b2[1\u002f2]\u00b0\u2081","4s \u00b2[3\u002f2]\u00b0\u2081","4s \u00b2[3\u002f2]\u00b0\u2082","4s \u00b2[1\u002f2]\u00b0\u2080","4p \u00b2[1\u002f2]\u2081","4p \u00b2[3\u002f2]\u2081","4p \u00b2[3\u002f2]\u2082","4p \u00b2[5\u002f2]\u2082","4p \u00b2[5\u002f2]\u2083","4d \u00b2[1\u002f2]\u00b0\u2081","4d \u00b2[3\u002f2]\u00b0\u2081","4d \u00b2[3\u002f2]\u00b0\u2082","4d \u00b2[5\u002f2]\u00b0\u2082","4d \u00b2[5\u002f2]\u00b0\u2083","4d \u00b2[7\u002f2]\u00b0\u2083","4d \u00b2[7\u002f2]\u00b0\u2084","4d \u00b2[1\u002f2]\u00b0\u2080","4f \u00b2[3\u002f2]\u2081","4f \u00b2[3\u002f2]\u2082","4f \u00b2[5\u002f2]\u2082","4f \u00b2[5\u002f2]\u2083","4f \u00b2[7\u002f2]\u2083","4f \u00b2[7\u002f2]\u2084","4f \u00b2[9\u002f2]\u2084","4f \u00b2[9\u002f2]\u2085","5s \u00b2[1\u002f2]\u00b0\u2081","5s \u00b2[3\u002f2]\u00b0\u2081","5s \u00b2[3\u002f2]\u00b0\u2082","5s \u00b2[1\u002f2]\u00b0\u2080","5d \u00b2[1\u002f2]\u00b0\u2081","5d \u00b2[3\u002f2]\u00b0\u2081","5d \u00b2[3\u002f2]\u00b0\u2082","5d \u00b2[1\u002f2]\u00b0\u2080","5f \u00b2[3\u002f2]\u2081","5f \u00b2[3\u002f2]\u2082","5f \u00b2[5\u002f2]\u2082","5f \u00b2[5\u002f2]\u2083","5f \u00b2[7\u002f2]\u2083","5f \u00b2[7\u002f2]\u2084","5f \u00b2[9\u002f2]\u2084","5f \u00b2[9\u002f2]\u2085","6s \u00b2[1\u002f2]\u00b0\u2081","6s \u00b2[3\u002f2]\u00b0\u2081","6s \u00b2[3\u002f2]\u00b0\u2082","6s \u00b2[1\u002f2]\u00b0\u2080","6d \u00b2[1\u002f2]\u00b0\u2081","6d \u00b2[3\u002f2]\u00b0\u2081","6f \u00b2[3\u002f2]\u2081","6f \u00b2[3\u002f2]\u2082","6f \u00b2[5\u002f2]\u2082","6f \u00b2[5\u002f2]\u2083","6f \u00b2[7\u002f2]\u2083","6f \u00b2[9\u002f2]\u2084","6f \u00b2[9\u002f2]\u2085","6g \u00b2[5\u002f2]\u00b0\u2082","6g \u00b2[7\u002f2]\u00b0\u2083","6g \u00b2[9\u002f2]\u00b0\u2084","6g \u00b2[11\u002f2]\u00b0\u2085","","","","","","","","","","","","","","","","","","","","","",""],"textfont":{"color":"#FFE082","family":"Arial, sans-serif","size":11},"textposition":"top center","x":[0.04,0.02,0.13999999999999999,-0.09999999999999999,0.94,0.94,1.04,1.0,1.12,1.06,1.1600000000000001,1.18,0.92,0.92,2.06,2.04,2.16,2.08,2.2,2.24,2.36,1.94,0.06,0.04,0.16,-0.06,0.96,0.94,1.06,1.12,1.24,2.06,2.04,2.16,2.08,2.2,2.24,2.36,1.94,2.94,3.06,3.12,3.24,3.24,3.36,3.4,3.52,0.06,0.04,0.16,-0.06,2.06,2.04,2.16,1.94,2.94,3.06,3.12,3.24,3.24,3.36,3.4,3.52,0.06,0.04,0.16,-0.06,2.06,2.04,2.94,3.06,3.12,3.24,3.24,3.4,3.52,4.08,4.24,4.340000000000001,4.44,0.06,0.04,2.04,2.94,3.06,3.12,3.24,3.4,4.08,4.24,4.340000000000001,4.44,0.04,2.04,2.94,3.12,3.24,3.4,0.04,2.04,0.04,2.04],"y":[3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,10.0,10.0],"z":[-13.964,-14.345045,-14.439931,-14.271647,-10.105313,-10.318557,-10.028227,-10.931672,-10.191533,-10.384247,-10.078216,-10.432203,-8.992501,-10.043017,-6.292628,-6.155215,-6.273745,-6.165068,-6.159822,-6.224442,-6.232335,-6.303464,-5.986264,-6.139237,-6.186031,-6.035564,-5.102,-4.79219,-4.89529,-4.951,-4.97606,-3.51586,-3.44547,-3.50112,-3.46251,-3.45995,-3.49013,-3.49482,-3.52368,-3.416135,-3.415985,-3.405043,-3.405152,-3.399373,-3.399347,-3.410688,-3.410692,-3.27224,-3.43076,-3.4534,-3.28935,-2.23702,-2.20175,-2.22533,-2.23891,-2.18488,-2.18475,-2.179,-2.17908,-2.17622,-2.1762,-2.18207,-2.18207,-2.02673,-2.19011,-2.20444,-2.0309,-1.59891,-1.40779,-1.516513,-1.51642,-1.513039,-1.513068,-1.51144,-1.514864,-1.514874,-1.513375,-1.51156,-1.51097,-1.51273,-1.36527,-1.52745,-1.17536,-1.1137,-1.11367,-1.1115,-1.11052,-1.11267,-1.11174,-1.11064,-1.11016,-1.11133,-1.17536,-0.86036,-0.85243,-0.68194,-0.8503,-0.85176,-0.86036,-0.68536,-0.68536,-0.55336],"type":"scatter3d"},{"customdata":[["5p",5,"p","\u2014",-2.9194,4.31761,1],["6p",6,"p","\u2014",-1.92463,5.31761,1],["7p",7,"p","\u2014",-1.36356,6.31761,1],["8p",8,"p","\u2014",-1.01635,7.31761,1],["8g",8,"g","\u2014",-0.84399,8.03012,4],["9p",9,"p","\u2014",-0.78665,8.31761,1],["9f",9,"f","\u2014",-0.66153,9.07018,3],["9g",9,"g","\u2014",-0.66741,9.03012,4],["10p",10,"p","\u2014",-0.62686,9.31761,1],["10f",10,"f","\u2014",-0.53667,10.07018,3],["10g",10,"g","\u2014",-0.54096,10.03012,4]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e  [click\u2192orbital]\u003cbr\u003en=%{customdata[1]} l=%{customdata[2]} J=%{customdata[3]}\u003cbr\u003eE=%{customdata[4]:.5f} eV  n*=%{customdata[5]:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#FF9800","line":{"color":"rgba(255,255,255,0.3)","width":1},"opacity":0.9,"size":[8.572014613207376,9.128672511712741,9.543659594717386,9.556977360487226,15.472468480929027,9.925618131500503,13.41031970095285,15.565758876949722,10.079876448169621,13.486715166191605,15.691991170188158]},"mode":"markers+text","name":"QDT model","scene":"scene","showlegend":true,"text":["5p","6p","","","","","","","","",""],"textfont":{"color":"#FFE082","family":"Arial, sans-serif","size":11},"textposition":"top center","x":[1.0,1.0,1.0,1.0,4.0,1.0,3.0,4.0,1.0,3.0,4.0],"y":[5.0,6.0,7.0,8.0,8.0,9.0,9.0,9.0,10.0,10.0,10.0],"z":[-2.919397,-1.92463,-1.363561,-1.016347,-0.843989,-0.786653,-0.661529,-0.667412,-0.626861,-0.536668,-0.540964],"type":"scatter3d"},{"caps":{"x":{"show":false},"y":{"show":false},"z":{"show":false}},"colorscale":[[0.0,"rgb(0,0,0)"],[0.3333333333333333,"rgb(230,0,0)"],[0.6666666666666666,"rgb(255,210,0)"],[1.0,"rgb(255,255,255)"]],"isomax":0.95,"isomin":0.04,"name":"Orbital","opacity":0.55,"reversescale":false,"scene":"scene2","showlegend":false,"showscale":true,"surface":{"count":4},"value":[0.5],"visible":false,"x":[0.0],"y":[0.0],"z":[0.0],"type":"isosurface"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":17,"color":"#f0f0f0"},"text":"\u003cb\u003eNa+ \u2014 Orbital Viewer\u003c\u002fb\u003e\u003cbr\u003e\u003csup\u003eClick a node (left) \u2192 |\u03c8|\u00b2 isosurface (right)\u003c\u002fsup\u003e","x":0.5,"xanchor":"center"},"font":{"family":"'Helvetica Neue',Arial,sans-serif","color":"#ddd"},"margin":{"l":0,"r":0,"t":65,"b":0},"scene":{"domain":{"x":[0.0,0.49],"y":[0.0,1.0]},"xaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"l"},"tickvals":[0,1,2,3,4],"ticktext":["0(s)","1(p)","2(d)","3(f)","4(g)"],"range":[-0.6,4.6],"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"yaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"n"},"range":[2.5,10.5],"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"zaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"Energy (eV)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"camera":{"eye":{"x":1.8,"y":-1.6,"z":0.9}},"aspectratio":{"x":1.0,"y":1.6,"z":1.2},"bgcolor":"#0d0d1a","aspectmode":"manual","annotations":[{"font":{"color":"rgba(220,80,80,0.7)","size":10},"showarrow":false,"text":"IE","x":2.0,"xanchor":"center","y":10.0,"z":0.0}]},"scene2":{"domain":{"x":[0.51,1.0],"y":[0.0,1.0]},"xaxis":{"title":{"text":"x (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"yaxis":{"title":{"text":"y (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"zaxis":{"title":{"text":"z (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"bgcolor":"#0a0a18","camera":{"eye":{"x":1.5,"y":1.5,"z":1.0}},"aspectmode":"cube"},"legend":{"font":{"color":"#ccc","size":11},"bgcolor":"rgba(15,15,30,0.85)","bordercolor":"#333","borderwidth":1,"x":0.0,"xanchor":"left","y":0.01,"yanchor":"bottom","itemclick":"toggle"},"paper_bgcolor":"#0a0a14","autosize":true},                        {"responsive": true}                    )                };            </script>        </div>
+<div id="vline"></div>
+<div id="op">
+  <h3>🌐 Orbital Viewer <span class="tog" onclick="togOP()">▲</span></h3>
+  <div style="font-size:10px;color:#446;line-height:1.6;margin-bottom:8px;padding:5px 7px;
+    background:rgba(30,30,60,0.5);border-radius:5px;border:1px solid #2a2a4a;">
+    Hydrogen-like |ψ|² with n* = n−δₗ (QDT).<br>
+    <b style="color:#4a9">Valid</b> for Rydberg states (n*≳3.5).<br>
+    <b style="color:#e07040">Approximate</b> for core-penetrating states.
+  </div>
+  <div id="spin-wrap"><div class="spin"></div><br>
+    <span style="font-size:10px;color:#445">Computing…</span></div>
+  <div id="sinfo"><span style="color:#334;">Click a node in the Grotrian<br>
+    to display its |ψ|² orbital.</span></div>
+  <div class="sec" id="ml-sec" style="display:none">
+    <div class="st">m<sub>l</sub> sub-state</div>
+    <div id="ml-btns"></div>
+    <div id="ml-note" style="font-size:10px;color:#446;margin-top:4px;display:none">
+      ⓘ "All mₗ" = Σ|Y_l^m|² = spherically symmetric (radial nodes only).
+      Select individual m for angular lobe structure.
+    </div>
+  </div>
+  <div class="sec">
+    <div class="st">Isovalue (outer) &nbsp;<span id="ivo">0.04</span></div>
+    <input type="range" id="iso-sl" min="0.01" max="0.55" value="0.04" step="0.01"
+           oninput="document.getElementById('ivo').textContent=
+             parseFloat(this.value).toFixed(2);redraw()">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#334">
+      <span>diffuse</span><span>compact</span></div>
+  </div>
+  <div class="sec">
+    <div class="st">Isovalue (inner) &nbsp;<span id="ivhi">0.95</span></div>
+    <input type="range" id="isohi-sl" min="0.50" max="1.00" value="0.95" step="0.01"
+           oninput="document.getElementById('ivhi').textContent=
+             parseFloat(this.value).toFixed(2);redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Surfaces &nbsp;<span id="nsurf">4</span></div>
+    <input type="range" id="surf-sl" min="1" max="6" value="4" step="1"
+           oninput="document.getElementById('nsurf').textContent=this.value;redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Opacity</div>
+    <input type="range" id="op-sl" min="0.05" max="1.0" value="0.55" step="0.05"
+           oninput="redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Colour map</div>
+    <select id="cmap" onchange="redraw()">
+      <option value="auto">H-wavefunction (inferno)</option>
+      <option value="Viridis">Viridis</option>
+      <option value="Plasma">Plasma</option>
+      <option value="Hot">Hot</option>
+      <option value="Electric">Electric</option>
+      <option value="RdBu">RdBu</option>
+    </select>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+    <button class="pr" onclick="redraw()">↺ Redraw</button>
+    <button onclick="clearOrb()">✕ Clear</button>
+  </div>
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:6px;margin-top:4px">
+    <div style="font-size:10px;color:#334;line-height:1.9">
+      <b>Left</b> drag = rotate Grotrian<br>
+      <b>Right</b> drag = rotate orbital<br>
+      Grid: 55³ (computed in browser)
+    </div>
+  </div>
+</div><script>
+(function(){
+  const QD      = {"s": 1.023174, "p": 0.682386, "d": 0.024091, "f": -0.070184, "g": -0.03012};
+  const L_ORDER = ["s", "p", "d", "f", "g"];
+  const GRID    = 55;
+  const ISO_IDX = 3;
+  const A0      = 0.529177;
+
+  const HWAVE = [
+    [0.00,'rgb(22,11,57)'],[0.12,'rgb(69,10,105)'],[0.25,'rgb(117,27,109)'],
+    [0.38,'rgb(164,44,96)'],[0.50,'rgb(204,65,72)'],[0.62,'rgb(235,101,39)'],
+    [0.75,'rgb(251,153,6)'],[0.88,'rgb(246,211,63)'],[1.00,'rgb(255,255,255)'],
+  ];
+
+  let cur=null, activeWorker=null, _lastSurfs=null;
+  window.togOP=function(){
+    const e=document.getElementById('op');
+    e.classList.toggle('collapsed');
+    e.querySelector('.tog').textContent=e.classList.contains('collapsed')?'▼':'▲';
+  };
+  function gd(){return document.querySelector('.plotly-graph-div');}
+
+  // ── All physics lives in this string — injected into a Blob Web Worker ────
+  // Running in a Worker means the main thread (UI + spinner) stays responsive
+  // even while computing an 85³ grid for a high-n g orbital.
+  const WORKER_SRC = `
+    // Associated Laguerre L_p^alpha(x) — overflow-safe recurrence
+    // Intermediate values for large p+alpha can exceed 1e200 (NaN in Float64).
+    // We track a running rescale factor and renormalise when |L|>1e100.
+    function lag(p,alpha,x){
+      const n=x.length;
+      let L0=new Float64Array(n).fill(1);
+      if(p<=0) return L0;
+      let L1=new Float64Array(n);
+      for(let i=0;i<n;i++) L1[i]=1+alpha-x[i];
+      if(p===1) return L1;
+      let Lk=new Float64Array(n), logScale=0;
+      for(let k=2;k<=p;k++){
+        let mx=0;
+        for(let i=0;i<n;i++){
+          Lk[i]=((2*k-1+alpha-x[i])*L1[i]-(k-1+alpha)*L0[i])/k;
+          const a=Math.abs(Lk[i]); if(a>mx) mx=a;
+        }
+        if(mx>1e100){
+          const inv=1/mx;
+          for(let i=0;i<n;i++){Lk[i]*=inv;L1[i]*=inv;L0[i]*=inv;}
+          logScale+=Math.log(mx);
+        }
+        [L0,L1]=[L1,Lk]; Lk=new Float64Array(n);
+      }
+      // Re-apply log-scale (shape preserved; absolute magnitude restored)
+      if(logScale!==0){
+        const s=Math.exp(logScale);
+        for(let i=0;i<n;i++) L1[i]*=s;
+      }
+      return L1;
+    }
+
+    // Associated Legendre P_l^|m|(x) — scalar
+    function legSc(l,am,x){
+      let Pmm=1,f=1;
+      for(let i=1;i<=am;i++) f*=(2*i-1);
+      Pmm=f*Math.pow(Math.max(1-x*x,0),am/2)*(am%2?-1:1);
+      if(l===am) return Pmm;
+      let Pm1=(2*am+1)*x*Pmm,Pk=0;
+      if(l===am+1) return Pm1;
+      for(let k=am+2;k<=l;k++){Pk=((2*k-1)*x*Pm1-(k+am-1)*Pmm)/(k-am);Pmm=Pm1;Pm1=Pk;}
+      return Pm1;
+    }
+
+    // Real spherical harmonic — scalar
+    function Ylm(l,m,cosT,phi){
+      const am=Math.abs(m),P=legSc(l,am,cosT);
+      let r=1; for(let i=l-am+1;i<=l+am;i++) r*=i;
+      const N=Math.sqrt((2*l+1)/(4*Math.PI)/r);
+      if(m===0) return N*P;
+      return m>0?Math.SQRT2*N*P*Math.cos(m*phi):Math.SQRT2*N*P*Math.sin(am*phi);
+    }
+
+    // Build density grid and post result back to main thread
+    self.onmessage=function(e){
+      const {n,l,m_arg,neff,GRID,A0}=e.data;
+
+      // r_max: cover outermost lobe; cap to avoid wasting compute on empty tail
+      const r_max=Math.min(neff*neff*2.2+10, neff*neff*3.0);
+      const rAng =r_max*A0;
+
+      // Cartesian grid — adaptive N, capped at 75 to keep compute < ~5s
+      const N=Math.min(GRID+l*4,75);
+      const co=new Float64Array(N);
+      for(let i=0;i<N;i++) co[i]=-r_max+2*r_max*i/(N-1);
+
+      // Log-spaced 1D radial table — resolves inner lobes of high-n states.
+      // For n*=19: linear spacing at Nr=2048 gives dr≈0.4 a₀ uniformly.
+      //            log spacing gives ~500 pts below r=40 a₀ where inner lobes live.
+      const Nr=2048;
+      const r0=Math.max(0.05,neff*0.008), r1=r_max;
+      const logR0=Math.log(r0), dlogR=(Math.log(r1)-logR0)/(Nr-1);
+      const rArr=new Float64Array(Nr);
+      for(let i=0;i<Nr;i++) rArr[i]=Math.exp(logR0+i*dlogR);
+
+      const nF=Math.max(Math.floor(neff),l+1), pp=Math.max(nF-l-1,0);
+      const rho=new Float64Array(Nr);
+      for(let i=0;i<Nr;i++) rho[i]=2*rArr[i]/neff;
+      const Lv=lag(pp,2*l+1,rho);
+
+      // Build unnormalised R1d; normalise by own max to avoid over/underflow
+      const R1d=new Float64Array(Nr);
+      let Rmx=0;
+      for(let i=0;i<Nr;i++){
+        const v=Math.pow(rho[i],l)*Math.exp(-rho[i]/2)*Lv[i];
+        R1d[i]=v; if(Math.abs(v)>Rmx) Rmx=Math.abs(v);
+      }
+      if(Rmx>0) for(let i=0;i<Nr;i++) R1d[i]/=Rmx;
+
+      // Log-interpolation
+      const rToR=r=>{
+        if(r<=r0) return R1d[0];
+        if(r>=r1) return 0;
+        const fi=(Math.log(r)-logR0)/dlogR;
+        const i0=Math.min(Math.floor(fi),Nr-2),t=fi-i0;
+        return R1d[i0]*(1-t)+R1d[i0+1]*t;
+      };
+
+      const doAll=(m_arg==='all'), doSph=(m_arg===null);
+      const mL=doAll?Array.from({length:2*l+1},(_,i)=>i-l):null;
+
+      const tot=N*N*N;
+      const xA=new Float32Array(tot),yA=new Float32Array(tot),
+            zA=new Float32Array(tot),vA=new Float32Array(tot);
+      let idx=0,mx=0;
+      for(let ix=0;ix<N;ix++){
+        const cx=co[ix],cx2=cx*cx;
+        for(let iy=0;iy<N;iy++){
+          const cy=co[iy],cxy=cx2+cy*cy;
+          for(let iz=0;iz<N;iz++,idx++){
+            const cz=co[iz],r2=cxy+cz*cz,r=Math.sqrt(r2)||1e-15;
+            xA[idx]=cx*A0; yA[idx]=cy*A0; zA[idx]=cz*A0;
+            if(r<0.02||r>=r_max) continue;
+            const Rv=rToR(r),R2=Rv*Rv;
+            let d=0;
+            if(doSph){ d=R2*r2; }
+            else if(doAll){
+              const cosT=cz/r,phi=Math.atan2(cy,cx);
+              for(let mi=0;mi<mL.length;mi++){const y=Ylm(l,mL[mi],cosT,phi);d+=R2*y*y;}
+            } else {
+              const cosT=cz/r,phi=Math.atan2(cy,cx);
+              const y=Ylm(l,m_arg,cosT,phi);d=R2*y*y;
+            }
+            vA[idx]=d; if(d>mx) mx=d;
+          }
+        }
+      }
+      if(mx>0) for(let i=0;i<tot;i++) vA[i]/=mx;
+
+      // Transfer typed arrays (zero-copy) back to main thread
+      self.postMessage(
+        {x:xA,y:yA,z:zA,v:vA,rAng,grid:N},
+        [xA.buffer,yA.buffer,zA.buffer,vA.buffer]
+      );
+    };
+  `;
+
+  // ── Draw — fires Worker, shows spinner immediately ─────────────────────────
+  function draw(mk){
+    if(!cur) return;
+    cur.mk=mk;
+    const g=gd(); if(!g) return;
+
+    // Cancel any in-flight worker
+    if(activeWorker){ activeWorker.terminate(); activeWorker=null; }
+
+    document.getElementById('spin-wrap').style.display='block';
+    document.getElementById('ml-sec').style.display='none';
+
+    const m_arg = mk==='sum'?'all' : mk==='sph'?null : parseInt(mk);
+
+    const blob   = new Blob([WORKER_SRC],{type:'application/javascript'});
+    const worker = new Worker(URL.createObjectURL(blob));
+    activeWorker = worker;
+
+    worker.onmessage=function(e){
+      activeWorker=null;
+      const {x,y,z,v,rAng,grid}=e.data;
+
+      const iso  =parseFloat(document.getElementById('iso-sl').value);
+      const isohi=parseFloat(document.getElementById('isohi-sl').value);
+      const surfs=parseInt(document.getElementById('surf-sl').value);
+      const opv  =parseFloat(document.getElementById('op-sl').value);
+      const cmv  =document.getElementById('cmap').value;
+      const cmap =cmv==='auto'?HWAVE:cmv;
+
+      // surface_count cannot be changed via restyle — need delete+recreate.
+      // We track _lastSurfs so we only do the expensive recreation when the
+      // slider actually changed; otherwise plain restyle keeps ISO_IDX stable.
+      const doLayout=()=>{
+        const mLbl2=mk==='sum'?'Σ mₗ (spherical)':mk==='sph'?'R²·r²':`mₗ=${mk}`;
+        Plotly.relayout(g,{
+          'scene2.xaxis.range':[-rAng,rAng],
+          'scene2.yaxis.range':[-rAng,rAng],
+          'scene2.zaxis.range':[-rAng,rAng],
+          'scene2.annotations':[{x:0,y:0,z:rAng*.88,
+            text:`${cur.lbl}  ${mLbl2}  (grid ${grid}³)`,
+            showarrow:false,font:{color:'rgba(200,210,255,0.7)',size:11},
+            xanchor:'center'}]});
+        document.getElementById('ml-note').style.display=mk==='sum'?'block':'none';
+        document.getElementById('spin-wrap').style.display='none';
+        document.getElementById('ml-sec').style.display='block';
+        worker.terminate();
+      };
+
+      if(surfs!==_lastSurfs){
+        _lastSurfs=surfs;
+        Plotly.deleteTraces(g,ISO_IDX);
+        Plotly.addTraces(g,{
+          type:'isosurface',
+          x:Array.from(x),y:Array.from(y),z:Array.from(z),value:Array.from(v),
+          isomin:iso,isomax:isohi,
+          surface:{count:surfs},
+          colorscale:cmap,reversescale:false,opacity:opv,showscale:true,
+          caps:{x_show:false,y_show:false,z_show:false},
+          name:'Orbital',showlegend:false,scene:'scene2',
+        },ISO_IDX).then(doLayout);
+        return;
+      }
+      Plotly.restyle(g,{
+        x:[Array.from(x)],y:[Array.from(y)],z:[Array.from(z)],
+        value:[Array.from(v)],
+        isomin:[iso],isomax:[isohi],
+        colorscale:[cmap],reversescale:[false],
+        opacity:[opv],visible:[true],showscale:[true],
+      },[ISO_IDX]).then(doLayout);
+      return;
+
+    };
+
+    worker.onerror=function(err){
+      activeWorker=null;
+      document.getElementById('spin-wrap').style.display='none';
+      document.getElementById('sinfo').innerHTML+=
+        `<br><span style="color:#e07;font-size:10px">⚠ Worker error: ${err.message}</span>`;
+      worker.terminate();
+    };
+
+    worker.postMessage({
+      n:cur.n, l:cur.lint, m_arg, neff:cur.neff, GRID, A0
+    });
+  }
+
+  window.redraw  =function(){if(cur)draw(cur.mk||'sum');};
+  window.clearOrb=function(){
+    if(activeWorker){activeWorker.terminate();activeWorker=null;}
+    Plotly.restyle(gd(),{visible:[false]},[ISO_IDX]);
+    document.getElementById('sinfo').innerHTML=
+      '<span style="color:#334">Click a node to display its orbital.</span>';
+    document.getElementById('ml-sec').style.display='none';
+    cur=null;
+  };
+
+  // ── Click handler ─────────────────────────────────────────────────────────
+  function onClick(ev){
+    if(!ev.points?.length) return;
+    const cd=ev.points[0].customdata; if(!cd) return;
+    const [lbl,n,l,J,E,neff,lint]=cd;
+    cur={n,l,lint,neff,lbl,mk:'sum'};
+
+    const rmean=0.5*neff*neff*(3-lint*(lint+1)/Math.max(neff*neff,1));
+    const rdisp=(Math.max(3*rmean,8)*A0).toFixed(2);
+    let vld='',vc='#6a9';
+    if(neff<2.5){vld='<br><span style="color:#e07040;font-size:10px">⚠ n*&lt;2.5: core-penetrating</span>';vc='#e07040';}
+    else if(neff<3.5){vld='<br><span style="color:#c0a040;font-size:10px">~ n*&lt;3.5: outer lobe approx</span>';vc='#c0a040';}
+    else vld='<br><span style="color:#4a9;font-size:10px">✓ Rydberg — QDT reliable</span>';
+
+    document.getElementById('sinfo').innerHTML=
+      `<b style="color:${vc}">${lbl}</b>&nbsp;J=${J}<br>`+
+      `n*=${neff.toFixed(4)}&nbsp;l=${lint} (${l})<br>`+
+      `E=${E.toFixed(5)} eV  &lt;r&gt;≈${rdisp} Å`+vld;
+
+    const mb=document.getElementById('ml-btns');
+    mb.innerHTML='';
+    const btn=(txt,mk)=>{
+      const b=document.createElement('button');
+      b.className='mlb'+(mk==='sum'?' on':'');
+      b.textContent=txt;
+      b.onclick=()=>{
+        document.querySelectorAll('.mlb').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); draw(mk);};
+      mb.appendChild(b);
+    };
+    btn('All mₗ (Σ)','sum');
+    btn('Shell P(r)','sph');
+    for(let m=-lint;m<=lint;m++) btn(`m=${m}`,String(m));
+    draw('sum');
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init(){
+    const g=gd();
+    if(!g||!g.data){setTimeout(init,150);return;}
+    g.on('plotly_click',onClick);
+  }
+  document.readyState==='loading'
+    ?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

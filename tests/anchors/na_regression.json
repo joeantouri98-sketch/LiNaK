@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "element": "Na",
+    "T_K": 300.0,
+    "field_V_cm": 100.0,
+    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change.",
+    "sources": {
+      "alpha0": "data_json/Na_polarizability.json",
+      "lifetimes": "data_json/Na_lifetimes.json",
+      "feshbach": "data_json/Na_feshbach.json + feshbach.scattering_length",
+      "pi_mix": "data_json/Na_blackbody.json continuum.sanity",
+      "dyn_shift": "data_json/Na_blackbody.json rydberg_shifts",
+      "fosc_audit": "tests/results/fosc_audit_Na.json"
+    }
+  },
+  "alpha0": {
+    "gs_label": "3s",
+    "alpha0_au": 162.6084,
+    "alpha0_expt_au": 162.7,
+    "C6_au": 1557.9,
+    "C6_expt_au": 1556.0,
+    "tol_rel_pipeline": 1e-5,
+    "tol_rel_expt": 0.005
+  },
+  "dline_lifetime": {
+    "states": {
+      "3p1/2": {
+        "lifetime_ns": 16.294752582061996,
+        "A_total_s": 61369449.763897955
+      },
+      "3p3/2": {
+        "lifetime_ns": 16.236387976957396,
+        "A_total_s": 61590053.24455138
+      }
+    },
+    "tol_rel": 1e-6,
+    "expt_lifetime_ns": 16.23,
+    "tol_rel_expt": 0.02
+  },
+  "feshbach": {
+    "a_bg_a0": 54.54,
+    "resonances": [
+      {"label": "s-wave 905 G", "B0_G": 905.0, "Delta_G": 1.04, "a_bg_a0": 54.54},
+      {"label": "s-wave 851 G", "B0_G": 851.0, "Delta_G": 0.0097, "a_bg_a0": 54.54}
+    ],
+    "checks": {
+      "zero_crossing_offset": "B0 + Delta",
+      "a_at_zero_crossing": 0.0,
+      "a_far_field_B": 0.0,
+      "a_far_field": 54.54
+    },
+    "tol_abs_a0": 1e-9
+  },
+  "continuum_sanity": {
+    "T_K": 300.0,
+    "field_V_cm": 100.0,
+    "mix": true,
+    "states": {
+      "10s": {
+        "Gamma_PI_s": 4.603494,
+        "Gamma_SFI_s": 1.575633,
+        "Gamma_mix_PI_s": 23.82736,
+        "Gamma_mix_SFI_s": 8.165775,
+        "Gamma_ion_s": 38.172263
+      },
+      "20s": {
+        "Gamma_PI_s": 216.377096,
+        "Gamma_SFI_s": 88.373351,
+        "Gamma_mix_PI_s": 161.856735,
+        "Gamma_mix_SFI_s": 65.506727,
+        "Gamma_ion_s": 532.113909
+      },
+      "25s": {
+        "Gamma_PI_s": 247.249239,
+        "Gamma_SFI_s": 123.489905,
+        "Gamma_mix_PI_s": 69.88885,
+        "Gamma_mix_SFI_s": 34.854154,
+        "Gamma_ion_s": 475.482148
+      }
+    },
+    "tol_rel": 1e-5
+  },
+  "rydberg_dyn": {
+    "farley_wing_hz": 2416.665774,
+    "states": {
+      "20s": {"shift_dyn_hz": 3345.467418, "tol_rel": 0.05},
+      "40s": {"shift_dyn_hz": 2365.473091, "tol_rel": 0.05}
+    },
+    "tol_fw_rel": 1e-6
+  },
+  "fosc_quality": {
+    "max_fraction_coulomb": 0.02,
+    "min_numerov_or_nist_channels": 10000,
+    "literature_min_rows": 10,
+    "mid_n_nist_lines": [
+      {"lower": "3s", "upper": "5p"},
+      {"lower": "3s", "upper": "6p"}
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "_source": "Steck, Sodium D Line Data (2021), steck.us/alkalidata",
+  "_isotope": "Na-23 (I=3/2, only stable isotope)",
+  "3s1/2": {"A_MHz": 885.81306440, "B_MHz": 0.0,     "C_kHz": 0.0},
+  "3p1/2": {"A_MHz":  94.44,    "B_MHz": 0.0,     "C_kHz": 0.0},
+  "3p3/2": {"A_MHz":   18.534,   "B_MHz": 2.724, "C_kHz": 0.0}
+}

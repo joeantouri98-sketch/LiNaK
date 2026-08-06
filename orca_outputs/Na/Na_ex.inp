@@ -1,0 +1,13 @@
+! UKS CAM-B3LYP aug-cc-pVTZ VeryTightSCF
+%scf
+  MaxIter 500
+end
+%moinp "Na_gs.gbw"
+%tddft
+  nroots 40
+  maxdim 200
+  tda true
+end
+* xyz 0 2
+Na 0.0 0.0 0.0
+*

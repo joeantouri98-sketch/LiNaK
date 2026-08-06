@@ -1,0 +1,45 @@
+{
+  "element": "Na",
+  "isotope_A": 23,
+  "note": "Literature magnetic Feshbach parameters for elastic a(B) = a_bg (1 - Delta/(B - B0)). Widths and positions from Knoop et al., PRA 83, 042704 (2011) and earlier MIT work. a_bg for |1,1>+|1,1| from the same potentials.",
+  "a_bg_default_a0": 54.54,
+  "a_bg_ref": "Knoop et al., PRA 83, 042704 (2011); |1,1>+|1,1| open channel",
+  "resonances": [
+    {
+      "label": "s-wave 851 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 851.0,
+      "Delta_G": 0.0097,
+      "a_bg_a0": 54.54,
+      "ref": "Inouye et al. Nature 392, 151 (1998); Knoop et al. PRA 83, 042704 (2011) — 85.1 mT, Δ_CC=9.7e-4 mT"
+    },
+    {
+      "label": "s-wave 905 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 905.0,
+      "Delta_G": 1.04,
+      "a_bg_a0": 54.54,
+      "ref": "Stenger et al. PRL 82, 4569 (1999); Knoop et al. — 90.51(4) mT, Δ≈0.104 mT"
+    },
+    {
+      "label": "s-wave 2054 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 2054.0,
+      "Delta_G": 0.12,
+      "a_bg_a0": 54.54,
+      "ref": "Knoop et al. PRA 83, 042704 (2011) — 205.42(4) mT, Δ≈0.012 mT"
+    },
+    {
+      "label": "s-wave 1195 G",
+      "channel": "|1,-1> + |1,-1>",
+      "partial_wave": "s",
+      "B0_G": 1195.0,
+      "Delta_G": -4.0,
+      "a_bg_a0": 54.54,
+      "ref": "Stenger et al. PRL 82, 2422 (1999) — B0=1195 G, Δ=−4 G (fit guide in Fig. 1e); Knoop theory B0=120.75(0.5) mT"
+    }
+  ]
+}

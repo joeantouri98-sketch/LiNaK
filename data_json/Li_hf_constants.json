@@ -1,0 +1,15 @@
+{
+  "_source": "Allegrini et al., J. Phys. Chem. Ref. Data 51 (2022), Table 1 (Li-7 Recommended / w.a.). Li-6 D-line (Gehm / Allegrini) stored under _Li6_D_line for --isotope 6.",
+  "_isotope": "Li-7 (I=3/2, most abundant; default of hyperfine.py Li)",
+  "_note": "For Li-6 Feshbach work use: python hyperfine.py Li --isotope 6 and swap in _Li6_D_line values (or copy them to the main keys).",
+  "2s1/2": {"A_MHz": 401.7520433, "B_MHz": 0.0, "C_kHz": 0.0},
+  "2p1/2": {"A_MHz": 46.005, "B_MHz": 0.0, "C_kHz": 0.0},
+  "2p3/2": {"A_MHz": -3.050, "B_MHz": -0.22, "C_kHz": 0.0},
+  "_Li6_D_line": {
+    "_source": "Gehm, Properties of 6Li (Table 7); Allegrini Table 1 Recommended ground state. A(2p1/2)=17.402 is Allegrini w.a. (Gehm quotes Orth 17.386).",
+    "_isotope": "Li-6 (I=1)",
+    "2s1/2": {"A_MHz": 152.1368407, "B_MHz": 0.0, "C_kHz": 0.0},
+    "2p1/2": {"A_MHz": 17.402, "B_MHz": 0.0, "C_kHz": 0.0},
+    "2p3/2": {"A_MHz": -1.155, "B_MHz": -0.10, "C_kHz": 0.0}
+  }
+}

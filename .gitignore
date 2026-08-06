@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual envs / test caches
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor / OS (do not ship)
+.cursor/
+.vscode/
+.idea/
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Local regenerable ORCA scratch (Na / Na_c1 demos under orca_outputs/ are tracked)
+# Uncomment the next line if you stop shipping ORCA run folders:
+# orca_outputs/
+
+# Local regenerable plots beyond shipped Na samples — keep plots/ tracked for Na / Na_c1
+# Uncomment to stop tracking all HTML plots:
+# plots/

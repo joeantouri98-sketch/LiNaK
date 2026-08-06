@@ -1,0 +1,8 @@
+{
+  "_source": "Tiecke, Properties of Potassium (Table 9); Falke et al., PRA 74, 032503 (2006). Ground A from Arimondo/Beckmann (Allegrini Recommended).",
+  "_isotope": "K-39 (I=3/2, 93% natural; NOT the hyperfine.py default K-41)",
+  "_note": "Run with: python hyperfine.py K --isotope 39. Allegrini notes a split in 4p1/2 literature (~27.78 vs ~28.85 MHz); Falke/Tiecke 27.775 is used here. Full D-line constants for K-41 also exist (Tiecke Table 9 / Falke / Allegrini §4.3.2): A(4s)=127.0069352, A(4p1/2)=15.245, A(4p3/2)=3.363, B(4p3/2)=3.351 MHz — not loaded as main keys; use those if running --isotope 41.",
+  "4s1/2": {"A_MHz": 230.8598601, "B_MHz": 0.0, "C_kHz": 0.0},
+  "4p1/2": {"A_MHz": 27.775, "B_MHz": 0.0, "C_kHz": 0.0},
+  "4p3/2": {"A_MHz": 6.093, "B_MHz": 2.786, "C_kHz": 0.0}
+}

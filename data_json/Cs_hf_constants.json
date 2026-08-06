@@ -1,0 +1,7 @@
+{
+  "_source": "Steck, Cesium D Line Data (2021), steck.us/alkalidata",
+  "_isotope": "Cs-133 (I=7/2, only stable isotope)",
+  "6s1/2": {"A_MHz": 2298.1579425, "B_MHz": 0.0,     "C_kHz": 0.0},
+  "6p1/2": {"A_MHz":  291.9201,    "B_MHz": 0.0,     "C_kHz": 0.0},
+  "6p3/2": {"A_MHz":   50.28827,   "B_MHz": -0.4934, "C_kHz": 0.560}
+}

@@ -1,0 +1,15 @@
+{
+  "_source": "Steck, Rubidium 85 D Line Data v2.3.4 (2025), Table 5 — steck.us/alkalidata",
+  "_isotope": "Rb-85 (I=5/2; only isotope marked stable in nuclear_data.json → default of hyperfine.py Rb)",
+  "_note": "Rb-87 (common BEC isotope) constants are under _Rb87_D_line. Use: python hyperfine.py Rb --isotope 87 and swap those values into the main keys.",
+  "5s1/2": {"A_MHz": 1011.9108130, "B_MHz": 0.0, "C_kHz": 0.0},
+  "5p1/2": {"A_MHz": 120.527, "B_MHz": 0.0, "C_kHz": 0.0},
+  "5p3/2": {"A_MHz": 25.0354, "B_MHz": 25.898, "C_kHz": 0.0},
+  "_Rb87_D_line": {
+    "_source": "Steck, Rubidium 87 D Line Data v2.3.4 (2025), Table 5",
+    "_isotope": "Rb-87 (I=3/2)",
+    "5s1/2": {"A_MHz": 3417.341305452145, "B_MHz": 0.0, "C_kHz": 0.0},
+    "5p1/2": {"A_MHz": 407.25, "B_MHz": 0.0, "C_kHz": 0.0},
+    "5p3/2": {"A_MHz": 84.7185, "B_MHz": 12.4965, "C_kHz": 0.0}
+  }
+}

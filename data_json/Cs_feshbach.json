@@ -1,0 +1,63 @@
+{
+  "element": "Cs",
+  "isotope_A": 133,
+  "note": "Literature magnetic Feshbach parameters for elastic a(B)=a_bg(1−Δ/(B−B0)) in the aa channel |3,+3>+|3,+3| (absolute ground state). High-field s-wave poles and zeros from Berninger et al., PRA 87, 032517 (2013) [arXiv:1212.5584v2] M2012 (Tables 2 & 4). Low-field Chin RMP Table IV values updated with M2012 B0=−12.38 G. Δ for high-field s-waves taken as B_zero−B_pole from Table 2. Cs has many overlapping d/g/i resonances; only the main s-waves plus a few well-characterized higher-ℓ lines are listed. Isolated Chin form is approximate when resonances overlap.",
+  "a_bg_default_a0": 2858,
+  "a_bg_ref": "Berninger et al. PRA 87, 032517 (2013) Table 4 — M2012 triplet scattering length a_T=2858(19) a0. Local a_bg on each resonance may differ (Chin RMP quotes 1720 a0 for the low-field s-wave).",
+  "resonances": [
+    {
+      "label": "s-wave -12.38 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "s",
+      "B0_G": -12.38,
+      "Delta_G": 29.5,
+      "a_bg_a0": 2858,
+      "ref": "Berninger Table 4 s-pole −12.38(8) G; zero crossing 17.12 G (Table 2) → Δ≈29.5 G. Chin RMP Table IV had B0=−11.7 G, Δ=28.7 G, a_bg=1720 a0. Controls a(B) for B≳0 (Cs BEC / Efimov near ~8–20 G)."
+    },
+    {
+      "label": "d-wave 47.97 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "d",
+      "B0_G": 47.97,
+      "Delta_G": 0.16,
+      "a_bg_a0": 926,
+      "ref": "Chin RMP Table IV (Chin/Lange); Berninger Table 2 loss max ≈47.78 G, Δ(d)≈0.16–0.18 G"
+    },
+    {
+      "label": "s-wave 548.78 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "s",
+      "B0_G": 548.78,
+      "Delta_G": 7.48,
+      "a_bg_a0": 2858,
+      "ref": "Berninger Table 4 — −6(34)7s(6) pole 548.78(9) G; zero near 556.26 G (Table 2) → Δ≈7.48 G. Open-channel dominated; overlaps g-wave near 554 G."
+    },
+    {
+      "label": "g-wave 554.06 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "g",
+      "B0_G": 554.06,
+      "Delta_G": 0.33,
+      "a_bg_a0": -1000,
+      "ref": "Berninger Table 1 — g(3) Bmax=554.06(2) G, Bmin=553.73(2) G → Δ=0.33(3) G; local a_bg≈−1000 a0 on shoulder of 549 G s-wave (text §III.2)"
+    },
+    {
+      "label": "s-wave 786.8 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "s",
+      "B0_G": 786.8,
+      "Delta_G": 94.1,
+      "a_bg_a0": 2858,
+      "ref": "Berninger Table 4 — −6(34)6s(6) pole 786.8(6) G; zero near 880.90 G (Table 2) → Δ≈94.1 G. Broad high-field resonance."
+    },
+    {
+      "label": "d-wave 820.37 G",
+      "channel": "|3,+3> + |3,+3>",
+      "partial_wave": "d",
+      "B0_G": 820.37,
+      "Delta_G": 0.96,
+      "a_bg_a0": -4200,
+      "ref": "Berninger Table 1 — −6(34)6d(6) Bmax=820.37(20) G, Bmin=819.41(2) G → Δ=0.96(22) G; local a_bg≈−4200 a0 from broad 787 G s-wave (text §III.2)"
+    }
+  ]
+}

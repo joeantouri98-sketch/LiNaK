@@ -1,0 +1,8 @@
+{
+  "_source": "Allegrini et al., J. Phys. Chem. Ref. Data 51 (2022), Table 8 (210Fr w.a. / Coc, Grossman). Sansonetti, JPCRD 36, 497 (2007).",
+  "_isotope": "Fr-210 (I=6; MOT isotope — Simsarian et al. PRL 76, 3522)",
+  "_note": "Run with: python hyperfine.py Fr --isotope 210. Fr has no stable isotope; hyperfine.py otherwise picks the longest-lived entry in nuclear_data.json. Fr-223 (longest-lived / only natural isotope) has partial D-line data only: A(7s)=7654(2) MHz, A(7p3/2)=83.3(9), B(7p3/2)=308(3) MHz (Coc / Sansonetti); 7p1/2 is not available in the standard compilations, so 210Fr is used as the complete D1+D2 set.",
+  "7s1/2": {"A_MHz": 7195.1, "B_MHz": 0.0, "C_kHz": 0.0},
+  "7p1/2": {"A_MHz": 946.3, "B_MHz": 0.0, "C_kHz": 0.0},
+  "7p3/2": {"A_MHz": 77.95, "B_MHz": 48.4, "C_kHz": 0.0}
+}

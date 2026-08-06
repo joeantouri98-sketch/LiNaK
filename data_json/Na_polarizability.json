@@ -1,0 +1,1399 @@
+{
+  "element": "Na",
+  "gs_label": "3s",
+  "excited_label": "3p1/2",
+  "alpha0_au": 162.6084,
+  "alpha0_expt_au": 162.7,
+  "C6_au": 1557.9,
+  "C6_expt_au": 1556.0,
+  "magic_wavelengths": [
+    {
+      "wl_nm": 285.7067,
+      "alpha_au": -17.4333,
+      "delta_alpha_slope_au_per_nm": -98.2857,
+      "nearby_resonance_nm": 285.385,
+      "nearby_resonance_label": "5p1/2",
+      "robustness": "sensitive"
+    },
+    {
+      "wl_nm": 332.7592,
+      "alpha_au": -24.7538,
+      "delta_alpha_slope_au_per_nm": -20.6733,
+      "nearby_resonance_nm": 330.393,
+      "nearby_resonance_label": "4p1/2",
+      "robustness": "robust"
+    },
+    {
+      "wl_nm": 438.6998,
+      "alpha_au": -196.9623,
+      "delta_alpha_slope_au_per_nm": 354.3862,
+      "nearby_resonance_nm": 439.126,
+      "nearby_resonance_label": "8d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 449.0463,
+      "alpha_au": -219.7914,
+      "delta_alpha_slope_au_per_nm": 362.0246,
+      "nearby_resonance_nm": 449.544,
+      "nearby_resonance_label": "7d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 465.8244,
+      "alpha_au": -265.0567,
+      "delta_alpha_slope_au_per_nm": 294.0584,
+      "nearby_resonance_nm": 466.612,
+      "nearby_resonance_label": "6d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 496.7084,
+      "alpha_au": -391.8002,
+      "delta_alpha_slope_au_per_nm": 296.1077,
+      "nearby_resonance_nm": 497.993,
+      "nearby_resonance_label": "5d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 567.4826,
+      "alpha_au": -2044.2497,
+      "delta_alpha_slope_au_per_nm": 2587.1164,
+      "nearby_resonance_nm": 568.421,
+      "nearby_resonance_label": "4d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 955.0157,
+      "alpha_au": 261.6121,
+      "delta_alpha_slope_au_per_nm": 4.715,
+      "nearby_resonance_nm": 818.55,
+      "nearby_resonance_label": "3d3/2",
+      "robustness": "robust"
+    }
+  ],
+  "n_gs_transitions": 67,
+  "n_ex_transitions": 97,
+  "wl_range_nm": [
+    200.0,
+    2000.0
+  ],
+  "I_ref_kWcm2": 10.0,
+  "point_result": null,
+  "transitions_gs": [
+    {
+      "delta_E_au": 0.07725798829194007,
+      "fosc": 0.32,
+      "sign": 1,
+      "other_label": "3p1/2",
+      "source": "NIST",
+      "wl_nm": 589.7549
+    },
+    {
+      "delta_E_au": 0.07733633784681856,
+      "fosc": 0.641,
+      "sign": 1,
+      "other_label": "3p3/2",
+      "source": "NIST",
+      "wl_nm": 589.1575
+    },
+    {
+      "delta_E_au": 0.13790657065673312,
+      "fosc": 0.00446,
+      "sign": 1,
+      "other_label": "4p1/2",
+      "source": "NIST",
+      "wl_nm": 330.3924
+    },
+    {
+      "delta_E_au": 0.13793203793700085,
+      "fosc": 0.009,
+      "sign": 1,
+      "other_label": "4p3/2",
+      "source": "NIST",
+      "wl_nm": 330.3314
+    },
+    {
+      "delta_E_au": 0.15965570150401795,
+      "fosc": 0.000648,
+      "sign": 1,
+      "other_label": "5p1/2",
+      "source": "NIST",
+      "wl_nm": 285.3846
+    },
+    {
+      "delta_E_au": 0.15966698354592587,
+      "fosc": 0.00131,
+      "sign": 1,
+      "other_label": "5p3/2",
+      "source": "NIST",
+      "wl_nm": 285.3644
+    },
+    {
+      "delta_E_au": 0.16993452366587083,
+      "fosc": 0.000196,
+      "sign": 1,
+      "other_label": "6p1/2",
+      "source": "NIST",
+      "wl_nm": 268.1226
+    },
+    {
+      "delta_E_au": 0.16994040355741893,
+      "fosc": 0.000398,
+      "sign": 1,
+      "other_label": "6p3/2",
+      "source": "NIST",
+      "wl_nm": 268.1133
+    },
+    {
+      "delta_E_au": 0.17560196738247819,
+      "fosc": 8.03e-05,
+      "sign": 1,
+      "other_label": "7p1/2",
+      "source": "NIST",
+      "wl_nm": 259.4691
+    },
+    {
+      "delta_E_au": 0.1756053850694405,
+      "fosc": 0.000164,
+      "sign": 1,
+      "other_label": "7p3/2",
+      "source": "NIST",
+      "wl_nm": 259.464
+    },
+    {
+      "delta_E_au": 0.1790564404163119,
+      "fosc": 4.22e-05,
+      "sign": 1,
+      "other_label": "8p1/2",
+      "source": "NIST",
+      "wl_nm": 254.4632
+    },
+    {
+      "delta_E_au": 0.17905868212496465,
+      "fosc": 8.65e-05,
+      "sign": 1,
+      "other_label": "8p3/2",
+      "source": "NIST",
+      "wl_nm": 254.46
+    },
+    {
+      "delta_E_au": 0.18131700147130297,
+      "fosc": 2.93e-05,
+      "sign": 1,
+      "other_label": "9p1/2",
+      "source": "NIST",
+      "wl_nm": 251.2907
+    },
+    {
+      "delta_E_au": 0.1813185081935122,
+      "fosc": 6.05e-05,
+      "sign": 1,
+      "other_label": "9p3/2",
+      "source": "NIST",
+      "wl_nm": 251.2886
+    },
+    {
+      "delta_E_au": 0.1828767529524043,
+      "fosc": 1.76e-05,
+      "sign": 1,
+      "other_label": "10p1/2",
+      "source": "NIST",
+      "wl_nm": 249.1475
+    },
+    {
+      "delta_E_au": 0.1828778186827474,
+      "fosc": 3.52e-05,
+      "sign": 1,
+      "other_label": "10p3/2",
+      "source": "NIST",
+      "wl_nm": 249.146
+    },
+    {
+      "delta_E_au": 0.1839981585185944,
+      "fosc": 1.78e-05,
+      "sign": 1,
+      "other_label": "11p1/2",
+      "source": "NIST",
+      "wl_nm": 247.629
+    },
+    {
+      "delta_E_au": 0.18399893025436012,
+      "fosc": 3.57e-05,
+      "sign": 1,
+      "other_label": "11p3/2",
+      "source": "NIST",
+      "wl_nm": 247.628
+    },
+    {
+      "delta_E_au": 0.1848313024016387,
+      "fosc": 1.31e-05,
+      "sign": 1,
+      "other_label": "12p1/2",
+      "source": "NIST",
+      "wl_nm": 246.5128
+    },
+    {
+      "delta_E_au": 0.1848318903907935,
+      "fosc": 2.62e-05,
+      "sign": 1,
+      "other_label": "12p3/2",
+      "source": "NIST",
+      "wl_nm": 246.512
+    },
+    {
+      "delta_E_au": 0.18546717592324405,
+      "fosc": 1.01e-05,
+      "sign": 1,
+      "other_label": "13p1/2",
+      "source": "NIST",
+      "wl_nm": 245.6676
+    },
+    {
+      "delta_E_au": 0.18546765366443232,
+      "fosc": 2.03e-05,
+      "sign": 1,
+      "other_label": "13p3/2",
+      "source": "NIST",
+      "wl_nm": 245.667
+    },
+    {
+      "delta_E_au": 0.18596351226854846,
+      "fosc": 7.7e-06,
+      "sign": 1,
+      "other_label": "14p1/2",
+      "source": "NIST",
+      "wl_nm": 245.0119
+    },
+    {
+      "delta_E_au": 0.1859638797617702,
+      "fosc": 1.5e-05,
+      "sign": 1,
+      "other_label": "14p3/2",
+      "source": "NIST",
+      "wl_nm": 245.0114
+    },
+    {
+      "delta_E_au": 0.1863583102366815,
+      "fosc": 6.1e-06,
+      "sign": 1,
+      "other_label": "15p1/2",
+      "source": "NIST",
+      "wl_nm": 244.4929
+    },
+    {
+      "delta_E_au": 0.1863586042312589,
+      "fosc": 1.2e-05,
+      "sign": 1,
+      "other_label": "15p3/2",
+      "source": "NIST",
+      "wl_nm": 244.4925
+    },
+    {
+      "delta_E_au": 0.18667751484909925,
+      "fosc": 5e-06,
+      "sign": 1,
+      "other_label": "16p1/2",
+      "source": "NIST",
+      "wl_nm": 244.0748
+    },
+    {
+      "delta_E_au": 0.1866777353450323,
+      "fosc": 1e-05,
+      "sign": 1,
+      "other_label": "16p3/2",
+      "source": "NIST",
+      "wl_nm": 244.0745
+    },
+    {
+      "delta_E_au": 0.18693924352163427,
+      "fosc": 4.13e-06,
+      "sign": 1,
+      "other_label": "17p1/2",
+      "source": "NIST",
+      "wl_nm": 243.7331
+    },
+    {
+      "delta_E_au": 0.18693942726824514,
+      "fosc": 8.26e-06,
+      "sign": 1,
+      "other_label": "17p3/2",
+      "source": "NIST",
+      "wl_nm": 243.7329
+    },
+    {
+      "delta_E_au": 0.18715650551433674,
+      "fosc": 3.44e-06,
+      "sign": 1,
+      "other_label": "18p1/2",
+      "source": "NIST",
+      "wl_nm": 243.4502
+    },
+    {
+      "delta_E_au": 0.18715665251162544,
+      "fosc": 6.88e-06,
+      "sign": 1,
+      "other_label": "18p3/2",
+      "source": "NIST",
+      "wl_nm": 243.45
+    },
+    {
+      "delta_E_au": 0.18733885565097233,
+      "fosc": 2.130588675208628e-07,
+      "sign": 1,
+      "other_label": "19p1/2",
+      "source": "Numerov",
+      "wl_nm": 243.2132
+    },
+    {
+      "delta_E_au": 0.18733900264826103,
+      "fosc": 4.261177350417256e-07,
+      "sign": 1,
+      "other_label": "19p3/2",
+      "source": "Numerov",
+      "wl_nm": 243.213
+    },
+    {
+      "delta_E_au": 0.18749338655072098,
+      "fosc": 1.6089362974279081e-07,
+      "sign": 1,
+      "other_label": "20p1/2",
+      "source": "Numerov",
+      "wl_nm": 243.0127
+    },
+    {
+      "delta_E_au": 0.1874934967986875,
+      "fosc": 3.2178725948558163e-07,
+      "sign": 1,
+      "other_label": "20p3/2",
+      "source": "Numerov",
+      "wl_nm": 243.0126
+    },
+    {
+      "delta_E_au": 0.18762428763631064,
+      "fosc": 3.6269730434987045e-07,
+      "sign": 1,
+      "other_label": "21p",
+      "source": "Numerov",
+      "wl_nm": 242.8432
+    },
+    {
+      "delta_E_au": 0.18773824728437735,
+      "fosc": 2.6982850252546694e-07,
+      "sign": 1,
+      "other_label": "22p",
+      "source": "Numerov",
+      "wl_nm": 242.6958
+    },
+    {
+      "delta_E_au": 0.18783710296102987,
+      "fosc": 1.9758532691672681e-07,
+      "sign": 1,
+      "other_label": "23p",
+      "source": "Numerov",
+      "wl_nm": 242.568
+    },
+    {
+      "delta_E_au": 0.18792342711882049,
+      "fosc": 1.4148297830044052e-07,
+      "sign": 1,
+      "other_label": "24p",
+      "source": "Numerov",
+      "wl_nm": 242.4566
+    },
+    {
+      "delta_E_au": 0.1879992042211467,
+      "fosc": 9.81713320404113e-08,
+      "sign": 1,
+      "other_label": "25p",
+      "source": "Numerov",
+      "wl_nm": 242.3589
+    },
+    {
+      "delta_E_au": 0.1880661614861507,
+      "fosc": 6.517871878468347e-08,
+      "sign": 1,
+      "other_label": "26p",
+      "source": "Numerov",
+      "wl_nm": 242.2726
+    },
+    {
+      "delta_E_au": 0.18812558514010877,
+      "fosc": 4.0600813001448146e-08,
+      "sign": 1,
+      "other_label": "27p",
+      "source": "Numerov",
+      "wl_nm": 242.1961
+    },
+    {
+      "delta_E_au": 0.1881785409133639,
+      "fosc": 2.296702331278622e-08,
+      "sign": 1,
+      "other_label": "28p",
+      "source": "Numerov",
+      "wl_nm": 242.1279
+    },
+    {
+      "delta_E_au": 0.18822594753897048,
+      "fosc": 1.1072169058662561e-08,
+      "sign": 1,
+      "other_label": "29p",
+      "source": "Numerov",
+      "wl_nm": 242.0669
+    },
+    {
+      "delta_E_au": 0.18826857675269423,
+      "fosc": 3.89447870699909e-09,
+      "sign": 1,
+      "other_label": "30p",
+      "source": "Numerov",
+      "wl_nm": 242.0121
+    },
+    {
+      "delta_E_au": 0.18830701654368998,
+      "fosc": 5.33450244508661e-10,
+      "sign": 1,
+      "other_label": "31p",
+      "source": "Numerov",
+      "wl_nm": 241.9627
+    },
+    {
+      "delta_E_au": 0.18834181815179032,
+      "fosc": 1.5630444278124922e-10,
+      "sign": 1,
+      "other_label": "32p",
+      "source": "Numerov",
+      "wl_nm": 241.918
+    },
+    {
+      "delta_E_au": 0.1883734225688614,
+      "fosc": 1.9479919293435632e-09,
+      "sign": 1,
+      "other_label": "33p",
+      "source": "Numerov",
+      "wl_nm": 241.8774
+    },
+    {
+      "delta_E_au": 0.1884021972881249,
+      "fosc": 5.0961857489757075e-09,
+      "sign": 1,
+      "other_label": "34p",
+      "source": "Numerov",
+      "wl_nm": 241.8405
+    },
+    {
+      "delta_E_au": 0.1884284730534805,
+      "fosc": 8.776720824113925e-09,
+      "sign": 1,
+      "other_label": "35p",
+      "source": "Numerov",
+      "wl_nm": 241.8068
+    },
+    {
+      "delta_E_au": 0.18845254385950555,
+      "fosc": 1.2155843814544113e-08,
+      "sign": 1,
+      "other_label": "36p",
+      "source": "Numerov",
+      "wl_nm": 241.7759
+    },
+    {
+      "delta_E_au": 0.18847466695145532,
+      "fosc": 1.4452984910743753e-08,
+      "sign": 1,
+      "other_label": "37p",
+      "source": "Numerov",
+      "wl_nm": 241.7475
+    },
+    {
+      "delta_E_au": 0.18849502607594062,
+      "fosc": 1.5019228577082846e-08,
+      "sign": 1,
+      "other_label": "38p",
+      "source": "Numerov",
+      "wl_nm": 241.7214
+    },
+    {
+      "delta_E_au": 0.1885137682302502,
+      "fosc": 1.3467146379011263e-08,
+      "sign": 1,
+      "other_label": "39p",
+      "source": "Numerov",
+      "wl_nm": 241.6974
+    },
+    {
+      "delta_E_au": 0.1885311139103171,
+      "fosc": 9.887010662465468e-09,
+      "sign": 1,
+      "other_label": "40p",
+      "source": "Numerov",
+      "wl_nm": 241.6751
+    },
+    {
+      "delta_E_au": 0.18854721011343004,
+      "fosc": 5.086313523249726e-09,
+      "sign": 1,
+      "other_label": "41p",
+      "source": "Numerov",
+      "wl_nm": 241.6545
+    },
+    {
+      "delta_E_au": 0.18856209358891118,
+      "fosc": 9.241008499957118e-10,
+      "sign": 1,
+      "other_label": "42p",
+      "source": "Numerov",
+      "wl_nm": 241.6354
+    },
+    {
+      "delta_E_au": 0.18857594808337141,
+      "fosc": 6.013423251616199e-10,
+      "sign": 1,
+      "other_label": "43p",
+      "source": "Numerov",
+      "wl_nm": 241.6177
+    },
+    {
+      "delta_E_au": 0.18858888384477723,
+      "fosc": 8.923580443000504e-09,
+      "sign": 1,
+      "other_label": "44p",
+      "source": "Numerov",
+      "wl_nm": 241.6011
+    },
+    {
+      "delta_E_au": 0.18860090087312867,
+      "fosc": 3.238715031646368e-08,
+      "sign": 1,
+      "other_label": "45p",
+      "source": "Numerov",
+      "wl_nm": 241.5857
+    },
+    {
+      "delta_E_au": 0.18861214616571442,
+      "fosc": 7.900267108055472e-08,
+      "sign": 1,
+      "other_label": "46p",
+      "source": "Numerov",
+      "wl_nm": 241.5713
+    },
+    {
+      "delta_E_au": 0.18862269322117883,
+      "fosc": 1.5770538058922476e-07,
+      "sign": 1,
+      "other_label": "47p",
+      "source": "Numerov",
+      "wl_nm": 241.5578
+    },
+    {
+      "delta_E_au": 0.18863254203952193,
+      "fosc": 2.7719462220436734e-07,
+      "sign": 1,
+      "other_label": "48p",
+      "source": "Numerov",
+      "wl_nm": 241.5452
+    },
+    {
+      "delta_E_au": 0.18864180286871018,
+      "fosc": 4.442201360454709e-07,
+      "sign": 1,
+      "other_label": "49p",
+      "source": "Numerov",
+      "wl_nm": 241.5333
+    },
+    {
+      "delta_E_au": 0.18865047570874363,
+      "fosc": 6.613979320386058e-07,
+      "sign": 1,
+      "other_label": "50p",
+      "source": "Numerov",
+      "wl_nm": 241.5222
+    },
+    {
+      "delta_E_au": 3.1706911544176806,
+      "fosc": 10.0,
+      "sign": 1,
+      "other_label": "core",
+      "source": "core",
+      "wl_nm": 14.370163406334044
+    }
+  ],
+  "transitions_ex": [
+    {
+      "delta_E_au": -0.07725798829194007,
+      "fosc": 0.32,
+      "sign": -1,
+      "other_label": "3s",
+      "source": "NIST",
+      "wl_nm": 589.7549
+    },
+    {
+      "delta_E_au": 0.04002206981133012,
+      "fosc": 0.171,
+      "sign": 1,
+      "other_label": "4s",
+      "source": "NIST",
+      "wl_nm": 1138.4539
+    },
+    {
+      "delta_E_au": 0.0556634633130211,
+      "fosc": 0.47415,
+      "sign": 1,
+      "other_label": "3d3/2",
+      "source": "NIST",
+      "wl_nm": 818.5491
+    },
+    {
+      "delta_E_au": 0.07401541331974404,
+      "fosc": 0.0142,
+      "sign": 1,
+      "other_label": "5s",
+      "source": "NIST",
+      "wl_nm": 615.5918
+    },
+    {
+      "delta_E_au": 0.08015776852682738,
+      "fosc": 0.05406,
+      "sign": 1,
+      "other_label": "4d3/2",
+      "source": "NIST",
+      "wl_nm": 568.42
+    },
+    {
+      "delta_E_au": 0.08846785600108606,
+      "fosc": 0.00452,
+      "sign": 1,
+      "other_label": "6s",
+      "source": "NIST",
+      "wl_nm": 515.0264
+    },
+    {
+      "delta_E_au": 0.09149397893564037,
+      "fosc": 0.016715,
+      "sign": 1,
+      "other_label": "5d3/2",
+      "source": "NIST",
+      "wl_nm": 497.9921
+    },
+    {
+      "delta_E_au": 0.09593763347447622,
+      "fosc": 0.00209,
+      "sign": 1,
+      "other_label": "7s",
+      "source": "NIST",
+      "wl_nm": 474.926
+    },
+    {
+      "delta_E_au": 0.09764728544073203,
+      "fosc": 0.00748,
+      "sign": 1,
+      "other_label": "6d3/2",
+      "source": "NIST",
+      "wl_nm": 466.6108
+    },
+    {
+      "delta_E_au": 0.10029562534332062,
+      "fosc": 0.00116,
+      "sign": 1,
+      "other_label": "8s",
+      "source": "NIST",
+      "wl_nm": 454.2898
+    },
+    {
+      "delta_E_au": 0.10135459381113429,
+      "fosc": 0.0040905,
+      "sign": 1,
+      "other_label": "7d3/2",
+      "source": "NIST",
+      "wl_nm": 449.5433
+    },
+    {
+      "delta_E_au": 0.10305829238719766,
+      "fosc": 0.0008244999999999999,
+      "sign": 1,
+      "other_label": "9s",
+      "source": "NIST",
+      "wl_nm": 442.1117
+    },
+    {
+      "delta_E_au": 0.10375928570769827,
+      "fosc": 0.0031279999999999997,
+      "sign": 1,
+      "other_label": "8d3/2",
+      "source": "NIST",
+      "wl_nm": 439.1248
+    },
+    {
+      "delta_E_au": 0.10491920456352848,
+      "fosc": 0.0009209999999999999,
+      "sign": 1,
+      "other_label": "10s",
+      "source": "NIST",
+      "wl_nm": 434.2702
+    },
+    {
+      "delta_E_au": 0.1054069048181216,
+      "fosc": 0.00032,
+      "sign": 1,
+      "other_label": "9d3/2",
+      "source": "NIST",
+      "wl_nm": 432.2609
+    },
+    {
+      "delta_E_au": 0.1062320005996094,
+      "fosc": 0.000341,
+      "sign": 1,
+      "other_label": "11s",
+      "source": "NIST",
+      "wl_nm": 428.9035
+    },
+    {
+      "delta_E_au": 0.10658519833503961,
+      "fosc": 0.001175,
+      "sign": 1,
+      "other_label": "10d3/2",
+      "source": "NIST",
+      "wl_nm": 427.4822
+    },
+    {
+      "delta_E_au": 0.10719266463060319,
+      "fosc": 0.00025,
+      "sign": 1,
+      "other_label": "12s",
+      "source": "NIST",
+      "wl_nm": 425.0597
+    },
+    {
+      "delta_E_au": 0.10745626751856917,
+      "fosc": 0.00015,
+      "sign": 1,
+      "other_label": "11d3/2",
+      "source": "NIST",
+      "wl_nm": 424.017
+    },
+    {
+      "delta_E_au": 0.10791669977610795,
+      "fosc": 0.000187,
+      "sign": 1,
+      "other_label": "13s",
+      "source": "NIST",
+      "wl_nm": 422.2079
+    },
+    {
+      "delta_E_au": 0.10811882104807405,
+      "fosc": 0.000112,
+      "sign": 1,
+      "other_label": "12d3/2",
+      "source": "NIST",
+      "wl_nm": 421.4186
+    },
+    {
+      "delta_E_au": 0.10847595096097706,
+      "fosc": 0.000144,
+      "sign": 1,
+      "other_label": "14s",
+      "source": "NIST",
+      "wl_nm": 420.0312
+    },
+    {
+      "delta_E_au": 0.10863430379023196,
+      "fosc": 8.64e-05,
+      "sign": 1,
+      "other_label": "13d3/2",
+      "source": "NIST",
+      "wl_nm": 419.4189
+    },
+    {
+      "delta_E_au": 0.1089168325791184,
+      "fosc": 0.000114,
+      "sign": 1,
+      "other_label": "15s",
+      "source": "NIST",
+      "wl_nm": 418.3309
+    },
+    {
+      "delta_E_au": 0.10904321349808048,
+      "fosc": 6.76e-05,
+      "sign": 1,
+      "other_label": "14d3/2",
+      "source": "NIST",
+      "wl_nm": 417.8461
+    },
+    {
+      "delta_E_au": 0.10927054480505907,
+      "fosc": 9.18e-05,
+      "sign": 1,
+      "other_label": "16s",
+      "source": "NIST",
+      "wl_nm": 416.9768
+    },
+    {
+      "delta_E_au": 0.1093730019152848,
+      "fosc": 5.45e-05,
+      "sign": 1,
+      "other_label": "15d3/2",
+      "source": "NIST",
+      "wl_nm": 416.5862
+    },
+    {
+      "delta_E_au": 0.10955865949091621,
+      "fosc": 7.48e-05,
+      "sign": 1,
+      "other_label": "17s",
+      "source": "NIST",
+      "wl_nm": 415.8802
+    },
+    {
+      "delta_E_au": 0.10964288893734281,
+      "fosc": 4.43e-05,
+      "sign": 1,
+      "other_label": "16d3/2",
+      "source": "NIST",
+      "wl_nm": 415.5607
+    },
+    {
+      "delta_E_au": 0.1097964276053927,
+      "fosc": 6.18e-05,
+      "sign": 1,
+      "other_label": "18s",
+      "source": "NIST",
+      "wl_nm": 414.9796
+    },
+    {
+      "delta_E_au": 0.10986650856278167,
+      "fosc": 3.67e-05,
+      "sign": 1,
+      "other_label": "17d3/2",
+      "source": "NIST",
+      "wl_nm": 414.7149
+    },
+    {
+      "delta_E_au": 0.10999494744378559,
+      "fosc": 5.17e-05,
+      "sign": 1,
+      "other_label": "19s",
+      "source": "NIST",
+      "wl_nm": 414.2307
+    },
+    {
+      "delta_E_au": 0.11005385660723316,
+      "fosc": 2.88e-05,
+      "sign": 1,
+      "other_label": "18d3/2",
+      "source": "NIST",
+      "wl_nm": 414.0089
+    },
+    {
+      "delta_E_au": 0.11016241410494004,
+      "fosc": 4.37e-05,
+      "sign": 1,
+      "other_label": "20s",
+      "source": "NIST",
+      "wl_nm": 413.601
+    },
+    {
+      "delta_E_au": 0.11021242993242111,
+      "fosc": 2.59e-05,
+      "sign": 1,
+      "other_label": "19d3/2",
+      "source": "NIST",
+      "wl_nm": 413.4133
+    },
+    {
+      "delta_E_au": 0.11030459723243766,
+      "fosc": 3.450169015093669e-05,
+      "sign": 1,
+      "other_label": "21s",
+      "source": "Numerov",
+      "wl_nm": 413.0678
+    },
+    {
+      "delta_E_au": 0.11034777768599405,
+      "fosc": 2.21e-05,
+      "sign": 1,
+      "other_label": "20d3/2",
+      "source": "NIST",
+      "wl_nm": 412.9062
+    },
+    {
+      "delta_E_au": 0.11042700922460476,
+      "fosc": 2.9556686730894647e-05,
+      "sign": 1,
+      "other_label": "22s",
+      "source": "Numerov",
+      "wl_nm": 412.6099
+    },
+    {
+      "delta_E_au": 0.11046445678390175,
+      "fosc": 0.0001886557422683636,
+      "sign": 1,
+      "other_label": "21d",
+      "source": "Numerov",
+      "wl_nm": 412.47
+    },
+    {
+      "delta_E_au": 0.11053281052314848,
+      "fosc": 2.549533379373958e-05,
+      "sign": 1,
+      "other_label": "23s",
+      "source": "Numerov",
+      "wl_nm": 412.215
+    },
+    {
+      "delta_E_au": 0.11056533367327392,
+      "fosc": 0.000163154246225441,
+      "sign": 1,
+      "other_label": "22d",
+      "source": "Numerov",
+      "wl_nm": 412.0937
+    },
+    {
+      "delta_E_au": 0.11062494107384284,
+      "fosc": 2.2126214047226837e-05,
+      "sign": 1,
+      "other_label": "24s",
+      "source": "Numerov",
+      "wl_nm": 411.8717
+    },
+    {
+      "delta_E_au": 0.1106533850492068,
+      "fosc": 0.00014199203910342633,
+      "sign": 1,
+      "other_label": "23d",
+      "source": "Numerov",
+      "wl_nm": 411.7658
+    },
+    {
+      "delta_E_au": 0.11070564258534057,
+      "fosc": 1.9307274518585503e-05,
+      "sign": 1,
+      "other_label": "25s",
+      "source": "Numerov",
+      "wl_nm": 411.5714
+    },
+    {
+      "delta_E_au": 0.11073063212442003,
+      "fosc": 0.00012427736136329956,
+      "sign": 1,
+      "other_label": "24d",
+      "source": "Numerov",
+      "wl_nm": 411.4785
+    },
+    {
+      "delta_E_au": 0.11077667902510611,
+      "fosc": 1.692877221515408e-05,
+      "sign": 1,
+      "other_label": "26s",
+      "source": "Numerov",
+      "wl_nm": 411.3075
+    },
+    {
+      "delta_E_au": 0.11079880211705587,
+      "fosc": 0.00010933059457698987,
+      "sign": 1,
+      "other_label": "25d",
+      "source": "Numerov",
+      "wl_nm": 411.2254
+    },
+    {
+      "delta_E_au": 0.11083959386467084,
+      "fosc": 1.4906951064178667e-05,
+      "sign": 1,
+      "other_label": "27s",
+      "source": "Numerov",
+      "wl_nm": 411.074
+    },
+    {
+      "delta_E_au": 0.11085921800271265,
+      "fosc": 9.662734381655187e-05,
+      "sign": 1,
+      "other_label": "26d",
+      "source": "Numerov",
+      "wl_nm": 411.0013
+    },
+    {
+      "delta_E_au": 0.11089556308234437,
+      "fosc": 1.3176515072166107e-05,
+      "sign": 1,
+      "other_label": "28s",
+      "source": "Numerov",
+      "wl_nm": 410.8666
+    },
+    {
+      "delta_E_au": 0.11091309250902215,
+      "fosc": 8.575893354446213e-05,
+      "sign": 1,
+      "other_label": "27d",
+      "source": "Numerov",
+      "wl_nm": 410.8016
+    },
+    {
+      "delta_E_au": 0.11094557890982543,
+      "fosc": 1.1685791303577055e-05,
+      "sign": 1,
+      "other_label": "29s",
+      "source": "Numerov",
+      "wl_nm": 410.6813
+    },
+    {
+      "delta_E_au": 0.11096127087039444,
+      "fosc": 7.640317145948906e-05,
+      "sign": 1,
+      "other_label": "28d",
+      "source": "Numerov",
+      "wl_nm": 410.6233
+    },
+    {
+      "delta_E_au": 0.11099044983220191,
+      "fosc": 1.039371295511435e-05,
+      "sign": 1,
+      "other_label": "30s",
+      "source": "Numerov",
+      "wl_nm": 410.5153
+    },
+    {
+      "delta_E_au": 0.11100456157191736,
+      "fosc": 6.830404300010761e-05,
+      "sign": 1,
+      "other_label": "29d",
+      "source": "Numerov",
+      "wl_nm": 410.4631
+    },
+    {
+      "delta_E_au": 0.11103083733727295,
+      "fosc": 9.267406670357289e-06,
+      "sign": 1,
+      "other_label": "31s",
+      "source": "Numerov",
+      "wl_nm": 410.366
+    },
+    {
+      "delta_E_au": 0.1110435893520679,
+      "fosc": 6.125581095871288e-05,
+      "sign": 1,
+      "other_label": "30d",
+      "source": "Numerov",
+      "wl_nm": 410.3189
+    },
+    {
+      "delta_E_au": 0.11106732941419338,
+      "fosc": 8.280100125445707e-06,
+      "sign": 1,
+      "other_label": "32s",
+      "source": "Numerov",
+      "wl_nm": 410.2312
+    },
+    {
+      "delta_E_au": 0.11107890545067871,
+      "fosc": 5.509337727337821e-05,
+      "sign": 1,
+      "other_label": "31d",
+      "source": "Numerov",
+      "wl_nm": 410.1884
+    },
+    {
+      "delta_E_au": 0.11110044055347364,
+      "fosc": 7.410345936727224e-06,
+      "sign": 1,
+      "other_label": "33s",
+      "source": "Numerov",
+      "wl_nm": 410.1089
+    },
+    {
+      "delta_E_au": 0.11111095085961588,
+      "fosc": 4.968063143686691e-05,
+      "sign": 1,
+      "other_label": "32d",
+      "source": "Numerov",
+      "wl_nm": 410.0701
+    },
+    {
+      "delta_E_au": 0.11113057499765767,
+      "fosc": 6.639942954200814e-06,
+      "sign": 1,
+      "other_label": "34s",
+      "source": "Numerov",
+      "wl_nm": 409.9977
+    },
+    {
+      "delta_E_au": 0.11114012982142335,
+      "fosc": 4.490731908088226e-05,
+      "sign": 1,
+      "other_label": "33d",
+      "source": "Numerov",
+      "wl_nm": 409.9624
+    },
+    {
+      "delta_E_au": 0.1111580267413229,
+      "fosc": 5.954445198625381e-06,
+      "sign": 1,
+      "other_label": "35s",
+      "source": "Numerov",
+      "wl_nm": 409.8964
+    },
+    {
+      "delta_E_au": 0.1111667730800007,
+      "fosc": 4.068192814887078e-05,
+      "sign": 1,
+      "other_label": "34d",
+      "source": "Numerov",
+      "wl_nm": 409.8642
+    },
+    {
+      "delta_E_au": 0.11118312652836887,
+      "fosc": 5.341446369060956e-06,
+      "sign": 1,
+      "other_label": "36s",
+      "source": "Numerov",
+      "wl_nm": 409.8039
+    },
+    {
+      "delta_E_au": 0.11119113788060316,
+      "fosc": 3.692868950571992e-05,
+      "sign": 1,
+      "other_label": "35d",
+      "source": "Numerov",
+      "wl_nm": 409.7744
+    },
+    {
+      "delta_E_au": 0.111206168353373,
+      "fosc": 4.790802641551783e-06,
+      "sign": 1,
+      "other_label": "37s",
+      "source": "Numerov",
+      "wl_nm": 409.719
+    },
+    {
+      "delta_E_au": 0.11121351821780813,
+      "fosc": 3.358452268509125e-05,
+      "sign": 1,
+      "other_label": "36d",
+      "source": "Numerov",
+      "wl_nm": 409.6919
+    },
+    {
+      "delta_E_au": 0.11122737271226835,
+      "fosc": 4.293910459739377e-06,
+      "sign": 1,
+      "other_label": "38s",
+      "source": "Numerov",
+      "wl_nm": 409.6409
+    },
+    {
+      "delta_E_au": 0.11123413458754867,
+      "fosc": 3.0596384862295824e-05,
+      "sign": 1,
+      "other_label": "37d",
+      "source": "Numerov",
+      "wl_nm": 409.616
+    },
+    {
+      "delta_E_au": 0.11124688660234362,
+      "fosc": 3.8437274966966795e-06,
+      "sign": 1,
+      "other_label": "39s",
+      "source": "Numerov",
+      "wl_nm": 409.569
+    },
+    {
+      "delta_E_au": 0.11125309723779131,
+      "fosc": 2.7920071661190542e-05,
+      "sign": 1,
+      "other_label": "38d",
+      "source": "Numerov",
+      "wl_nm": 409.5462
+    },
+    {
+      "delta_E_au": 0.11126489377020969,
+      "fosc": 3.4343331157411647e-06,
+      "sign": 1,
+      "other_label": "40s",
+      "source": "Numerov",
+      "wl_nm": 409.5027
+    },
+    {
+      "delta_E_au": 0.11127066341379127,
+      "fosc": 2.551806064139453e-05,
+      "sign": 1,
+      "other_label": "39d",
+      "source": "Numerov",
+      "wl_nm": 409.4815
+    },
+    {
+      "delta_E_au": 0.11128154121315527,
+      "fosc": 3.0609290582582264e-06,
+      "sign": 1,
+      "other_label": "41s",
+      "source": "Numerov",
+      "wl_nm": 409.4415
+    },
+    {
+      "delta_E_au": 0.11128690661419291,
+      "fosc": 2.3358587549834847e-05,
+      "sign": 1,
+      "other_label": "40d",
+      "source": "Numerov",
+      "wl_nm": 409.4217
+    },
+    {
+      "delta_E_au": 0.11129701267779121,
+      "fosc": 2.7197451235980356e-06,
+      "sign": 1,
+      "other_label": "42s",
+      "source": "Numerov",
+      "wl_nm": 409.3846
+    },
+    {
+      "delta_E_au": 0.11130197383628493,
+      "fosc": 2.1415502868123306e-05,
+      "sign": 1,
+      "other_label": "41d",
+      "source": "Numerov",
+      "wl_nm": 409.3663
+    },
+    {
+      "delta_E_au": 0.1113113816627619,
+      "fosc": 2.4078308656465636e-06,
+      "sign": 1,
+      "other_label": "43s",
+      "source": "Numerov",
+      "wl_nm": 409.3317
+    },
+    {
+      "delta_E_au": 0.11131597532803386,
+      "fosc": 1.966606272887077e-05,
+      "sign": 1,
+      "other_label": "42d",
+      "source": "Numerov",
+      "wl_nm": 409.3148
+    },
+    {
+      "delta_E_au": 0.11132472166671166,
+      "fosc": 2.1231203367472513e-06,
+      "sign": 1,
+      "other_label": "44s",
+      "source": "Numerov",
+      "wl_nm": 409.2827
+    },
+    {
+      "delta_E_au": 0.11132902133740621,
+      "fosc": 1.8091818414558813e-05,
+      "sign": 1,
+      "other_label": "43d",
+      "source": "Numerov",
+      "wl_nm": 409.2669
+    },
+    {
+      "delta_E_au": 0.11133717968692922,
+      "fosc": 1.8642711031365065e-06,
+      "sign": 1,
+      "other_label": "45s",
+      "source": "Numerov",
+      "wl_nm": 409.2369
+    },
+    {
+      "delta_E_au": 0.11134118536304635,
+      "fosc": 1.6677546763397646e-05,
+      "sign": 1,
+      "other_label": "44d",
+      "source": "Numerov",
+      "wl_nm": 409.2222
+    },
+    {
+      "delta_E_au": 0.11134879247273671,
+      "fosc": 1.6306917611811553e-06,
+      "sign": 1,
+      "other_label": "46s",
+      "source": "Numerov",
+      "wl_nm": 409.1942
+    },
+    {
+      "delta_E_au": 0.11135254090359864,
+      "fosc": 1.541081830992949e-05,
+      "sign": 1,
+      "other_label": "45d",
+      "source": "Numerov",
+      "wl_nm": 409.1804
+    },
+    {
+      "delta_E_au": 0.11135967027210071,
+      "fosc": 1.4223104959249079e-06,
+      "sign": 1,
+      "other_label": "47s",
+      "source": "Numerov",
+      "wl_nm": 409.1542
+    },
+    {
+      "delta_E_au": 0.11136319820702957,
+      "fosc": 1.4281842644161097e-05,
+      "sign": 1,
+      "other_label": "46d",
+      "source": "Numerov",
+      "wl_nm": 409.1413
+    },
+    {
+      "delta_E_au": 0.11136984983434337,
+      "fosc": 1.2395958314593625e-06,
+      "sign": 1,
+      "other_label": "48s",
+      "source": "Numerov",
+      "wl_nm": 409.1168
+    },
+    {
+      "delta_E_au": 0.111373120524017,
+      "fosc": 1.328365854508908e-05,
+      "sign": 1,
+      "other_label": "47d",
+      "source": "Numerov",
+      "wl_nm": 409.1048
+    },
+    {
+      "delta_E_au": 0.11137940465810904,
+      "fosc": 1.083405142804929e-06,
+      "sign": 1,
+      "other_label": "49s",
+      "source": "Numerov",
+      "wl_nm": 409.0817
+    },
+    {
+      "delta_E_au": 0.11138249160117179,
+      "fosc": 1.2411471854632478e-05,
+      "sign": 1,
+      "other_label": "48d",
+      "source": "Numerov",
+      "wl_nm": 409.0704
+    },
+    {
+      "delta_E_au": 0.11138833474339772,
+      "fosc": 9.54890513435819e-07,
+      "sign": 1,
+      "other_label": "50s",
+      "source": "Numerov",
+      "wl_nm": 409.0489
+    },
+    {
+      "delta_E_au": 0.1113912379398496,
+      "fosc": 1.1662918744958473e-05,
+      "sign": 1,
+      "other_label": "49d",
+      "source": "Numerov",
+      "wl_nm": 409.0383
+    },
+    {
+      "delta_E_au": 0.11139950653733913,
+      "fosc": 1.1038014169940876e-05,
+      "sign": 1,
+      "other_label": "50d",
+      "source": "Numerov",
+      "wl_nm": 409.0079
+    },
+    {
+      "delta_E_au": 3.1706911544176806,
+      "fosc": 10.0,
+      "sign": 1,
+      "other_label": "core",
+      "source": "core",
+      "wl_nm": 14.370163406334044
+    }
+  ]
+}

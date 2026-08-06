@@ -1,0 +1,99 @@
+{
+  "element": "K",
+  "isotope_A": 39,
+  "note": "Literature magnetic Feshbach parameters for elastic a(B) = a_bg (1 - Delta/(B - B0)), 39K F=1 manifold. Values from D'Errico et al., New J. Phys. 9, 223 (2007) [arXiv:0705.3036v1], Table 1. B0 prefers B_exp when measured, else B_th. Table lists −Δ_th; Delta_G here is the signed width for Eq. (1). Channels are |F,mF>+|F,mF| within F=1. a_T ≈ −33.3 a0 from the same fit.",
+  "a_bg_default_a0": -33,
+  "a_bg_ref": "D'Errico et al., NJP 9, 223 (2007) Table 1; a_bg for |1,+1>+|1,+1| low-field resonance (−33 a0). Each resonance carries its own a_bg_a0.",
+  "resonances": [
+    {
+      "label": "s-wave 25.85 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 25.85,
+      "Delta_G": -0.47,
+      "a_bg_a0": -33,
+      "ref": "D'Errico et al. NJP 9, 223 (2007) Table 1 — |1,1> B_exp=25.85(10) G, B_th=25.9 G, −Δ_th=0.47 G → Δ=−0.47 G, a_bg=−33 a0"
+    },
+    {
+      "label": "s-wave 403.4 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 403.4,
+      "Delta_G": -52,
+      "a_bg_a0": -29,
+      "ref": "D'Errico et al. Table 1 — |1,1> B_exp=403.4(7) G (molecule assoc. ≈401.5 G; B_th=402.4 G), −Δ_th=52 G → Δ=−52 G, a_bg=−29 a0"
+    },
+    {
+      "label": "s-wave 745.1 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 745.1,
+      "Delta_G": -0.4,
+      "a_bg_a0": -35,
+      "ref": "D'Errico et al. Table 1 — |1,1> theory only B_th=745.1 G, −Δ_th=0.4 G → Δ=−0.4 G, a_bg=−35 a0"
+    },
+    {
+      "label": "s-wave 752.3 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 752.3,
+      "Delta_G": -0.4,
+      "a_bg_a0": -35,
+      "ref": "D'Errico et al. Table 1 — |1,1> B_exp=752.3(1) G, B_th=752.4 G, −Δ_th=0.4 G → Δ=−0.4 G, a_bg=−35 a0"
+    },
+    {
+      "label": "s-wave 59.3 G",
+      "channel": "|1,0> + |1,0>",
+      "partial_wave": "s",
+      "B0_G": 59.3,
+      "Delta_G": -9.6,
+      "a_bg_a0": -18,
+      "ref": "D'Errico et al. Table 1 — |0,0> B_exp=59.3(6) G, B_th=58.8 G, −Δ_th=9.6 G → Δ=−9.6 G, a_bg=−18 a0"
+    },
+    {
+      "label": "s-wave 66.0 G",
+      "channel": "|1,0> + |1,0>",
+      "partial_wave": "s",
+      "B0_G": 66.0,
+      "Delta_G": -7.9,
+      "a_bg_a0": -18,
+      "ref": "D'Errico et al. Table 1 — |0,0> B_exp=66.0(9) G, B_th=65.6 G, −Δ_th=7.9 G → Δ=−7.9 G, a_bg=−18 a0"
+    },
+    {
+      "label": "s-wave 471 G",
+      "channel": "|1,0> + |1,0>",
+      "partial_wave": "s",
+      "B0_G": 471.0,
+      "Delta_G": -72,
+      "a_bg_a0": -28,
+      "ref": "D'Errico et al. Table 1 — |0,0> theory only B_th=471 G, −Δ_th=72 G → Δ=−72 G, a_bg=−28 a0 (broad)"
+    },
+    {
+      "label": "s-wave 32.6 G",
+      "channel": "|1,-1> + |1,-1>",
+      "partial_wave": "s",
+      "B0_G": 32.6,
+      "Delta_G": 55,
+      "a_bg_a0": -19,
+      "ref": "D'Errico et al. Table 1 — |-1,-1> B_exp=32.6(1.5) G, B_th=33.6 G, −Δ_th=−55 G → Δ=+55 G, a_bg=−19 a0"
+    },
+    {
+      "label": "s-wave 162.8 G",
+      "channel": "|1,-1> + |1,-1>",
+      "partial_wave": "s",
+      "B0_G": 162.8,
+      "Delta_G": -37,
+      "a_bg_a0": -19,
+      "ref": "D'Errico et al. Table 1 — |-1,-1> B_exp=162.8(9) G, B_th=162.3 G, −Δ_th=37 G → Δ=−37 G, a_bg=−19 a0"
+    },
+    {
+      "label": "s-wave 562.2 G",
+      "channel": "|1,-1> + |1,-1>",
+      "partial_wave": "s",
+      "B0_G": 562.2,
+      "Delta_G": -56,
+      "a_bg_a0": -29,
+      "ref": "D'Errico et al. Table 1 — |-1,-1> B_exp=562.2(1.5) G, B_th=560.7 G, −Δ_th=56 G → Δ=−56 G, a_bg=−29 a0"
+    }
+  ]
+}

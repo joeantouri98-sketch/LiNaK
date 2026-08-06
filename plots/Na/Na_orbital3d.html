@@ -1,0 +1,414 @@
+<html style="width:100%;height:100%;margin:0;padding:0;">
+<head><meta charset="utf-8" /><style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a0a14}
+.plotly-graph-div{width:100vw!important;height:100vh!important}
+#vline{position:fixed;top:8%;left:50%;width:1px;height:84%;
+  background:rgba(80,80,140,0.18);pointer-events:none;z-index:40}
+#op{position:fixed;top:12px;right:12px;width:248px;max-height:calc(100vh - 24px);
+  overflow-y:auto;background:rgba(10,10,22,0.94);border:1px solid #2a2a4a;
+  border-radius:10px;padding:12px 14px;font-family:'Helvetica Neue',Arial,sans-serif;
+  font-size:12px;color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.65);
+  z-index:9999;backdrop-filter:blur(6px)}
+#op h3{margin:0 0 9px;font-size:13px;color:#e0e8ff;border-bottom:1px solid #2a2a5a;
+  padding-bottom:5px;display:flex;align-items:center;gap:7px}
+#op .tog{margin-left:auto;cursor:pointer;font-size:11px;color:#445;user-select:none}
+#op.collapsed>*:not(h3){display:none}
+#op .sec{margin-bottom:10px}
+#op .st{font-weight:bold;color:#7a9eff;font-size:10px;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:4px}
+#op input[type=range]{width:100%;accent-color:#4a7ec7}
+#op select{width:100%;background:#111830;border:1px solid #2a3060;color:#ccc;
+  border-radius:4px;padding:3px 5px;font-size:11px}
+#op button{padding:4px 9px;font-size:11px;border:1px solid #2a3060;border-radius:5px;
+  background:#111830;color:#aac;cursor:pointer;margin:2px}
+#op button:hover{background:#1a2850;color:#e0e8ff}
+#op button.pr{background:#1a3a80;color:#cce;border-color:#2a4aaa}
+#op button.pr:hover{background:#2a4ab0}
+#sinfo{background:#0d0d20;border:1px solid #2a2a4a;border-radius:6px;padding:8px 10px;
+  font-size:11px;color:#9ab;line-height:1.7;margin-bottom:10px;min-height:52px}
+#sinfo b{color:#e0e8ff}
+.mlb{font-size:10px;padding:3px 7px;border-radius:10px;border:1px solid #2a3060;
+  background:#111830;color:#99b;cursor:pointer;margin:2px}
+.mlb.on{background:#1a3a80;color:#cce;border-color:#3a5ac0}
+.mlb:hover{background:#1a2850}
+#spin-wrap{display:none;text-align:center;padding:20px 0}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid #2a3060;
+  border-top-color:#4a7ec7;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style></head>
+<body style="width:100%;height:100%;margin:0;padding:0;background:#0a0a14;">
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.3.1.min.js" integrity="sha256-4rD3fugVb/nVJYUv5Ky3v+fYXoouHaBSP20WIJuEiWg=" crossorigin="anonymous"></script>                <div id="23e07fe9-f1a2-4092-ae46-9c094f0f0457" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("23e07fe9-f1a2-4092-ae46-9c094f0f0457")) {                    Plotly.newPlot(                        "23e07fe9-f1a2-4092-ae46-9c094f0f0457",                        [{"hoverinfo":"skip","line":{"color":"rgba(220,50,50,0.25)","width":1},"mode":"lines","name":"IE limit","scene":"scene","showlegend":true,"x":[-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,4.5,null,-0.5,-0.5,null,0.2142857142857143,0.2142857142857143,null,0.9285714285714286,0.9285714285714286,null,1.6428571428571428,1.6428571428571428,null,2.357142857142857,2.357142857142857,null,3.0714285714285716,3.0714285714285716,null,3.7857142857142856,3.7857142857142856,null,4.5,4.5,null],"y":[3.0,3.0,null,6.857142857142858,6.857142857142858,null,10.714285714285715,10.714285714285715,null,14.571428571428571,14.571428571428571,null,18.42857142857143,18.42857142857143,null,22.285714285714285,22.285714285714285,null,26.142857142857142,26.142857142857142,null,30.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null,3.0,30.0,null],"z":[0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null,0.0,0.0,null],"type":"scatter3d"},{"customdata":[["3p1\u002f2",3,"p","1\u002f2",-3.03678,2.135,1],["3p3\u002f2",3,"p","3\u002f2",-3.03465,2.135,1],["3d3\u002f2",3,"d","3\u002f2",-1.5221,2.98726,2],["3d5\u002f2",3,"d","5\u002f2",-1.52211,2.98726,2],["4s",4,"s","1\u002f2",-1.94772,2.64948,0],["4p1\u002f2",4,"p","1\u002f2",-1.38645,3.135,1],["4p3\u002f2",4,"p","3\u002f2",-1.38576,3.135,1],["4d3\u002f2",4,"d","3\u002f2",-0.85558,3.98726,2],["4d5\u002f2",4,"d","5\u002f2",-0.85558,3.98726,2],["4f5\u002f2",4,"f","5\u002f2",-0.85084,3.9986,3],["4f7\u002f2",4,"f","7\u002f2",-0.85084,3.9986,3],["5s",5,"s","1\u002f2",-1.02272,3.64948,0],["5p1\u002f2",5,"p","1\u002f2",-0.79462,4.135,1],["5p3\u002f2",5,"p","3\u002f2",-0.79432,4.135,1],["5d3\u002f2",5,"d","3\u002f2",-0.5471,4.98726,2],["5d5\u002f2",5,"d","5\u002f2",-0.5471,4.98726,2],["5f5\u002f2",5,"f","5\u002f2",-0.54451,4.9986,3],["5f7\u002f2",5,"f","7\u002f2",-0.54451,4.9986,3],["5g7\u002f2",5,"g","7\u002f2,9\u002f2",-0.54428,4.99976,4],["6s",6,"s","1\u002f2",-0.62945,4.64948,0],["6p1\u002f2",6,"p","1\u002f2",-0.51492,5.135,1],["6p3\u002f2",6,"p","3\u002f2",-0.51476,5.135,1],["6d3\u002f2",6,"d","3\u002f2",-0.37966,5.98726,2],["6d5\u002f2",6,"d","5\u002f2",-0.37966,5.98726,2],["6f5\u002f2",6,"f","5\u002f2",-0.37811,5.9986,3],["6f7\u002f2",6,"f","7\u002f2",-0.37811,5.9986,3],["6g7\u002f2",6,"g","7\u002f2",-0.37797,5.99976,4],["6g9\u002f2",6,"g","9\u002f2",-0.37797,5.99976,4],["7s",7,"s","1\u002f2",-0.42618,5.64948,0],["7p1\u002f2",7,"p","1\u002f2",-0.3607,6.135,1],["7p3\u002f2",7,"p","3\u002f2",-0.36061,6.135,1],["7d3\u002f2",7,"d","3\u002f2",-0.27878,6.98726,2],["7d5\u002f2",7,"d","5\u002f2",-0.27878,6.98726,2],["7f5\u002f2",7,"f","5\u002f2",-0.27778,6.9986,3],["7f7\u002f2",7,"f","7\u002f2",-0.27778,6.9986,3],["7g7\u002f2",7,"g","7\u002f2,9\u002f2",-0.27769,6.99976,4],["8s",8,"s","1\u002f2",-0.3076,6.64948,0],["8p1\u002f2",8,"p","1\u002f2",-0.2667,7.135,1],["8p3\u002f2",8,"p","3\u002f2",-0.26664,7.135,1],["8d3\u002f2",8,"d","3\u002f2",-0.21335,7.98726,2],["8d5\u002f2",8,"d","5\u002f2",-0.21335,7.98726,2],["8f5\u002f2",8,"f","5\u002f2",-0.21267,7.9986,3],["8f7\u002f2",8,"f","7\u002f2",-0.21267,7.9986,3],["8g7\u002f2",8,"g","7\u002f2,9\u002f2",-0.2126,7.99976,4],["9s",9,"s","1\u002f2",-0.23242,7.64948,0],["9p1\u002f2",9,"p","1\u002f2",-0.20519,8.135,1],["9p3\u002f2",9,"p","3\u002f2",-0.20515,8.135,1],["9d3\u002f2",9,"d","3\u002f2",-0.16851,8.98726,2],["9d5\u002f2",9,"d","5\u002f2",-0.16851,8.98726,2],["9f5\u002f2",9,"f","5\u002f2",-0.16803,8.9986,3],["9f7\u002f2",9,"f","7\u002f2",-0.16803,8.9986,3],["9g7\u002f2",9,"g","7\u002f2,9\u002f2",-0.16798,8.99976,4],["10s",10,"s","1\u002f2",-0.18178,8.64948,0],["10p1\u002f2",10,"p","1\u002f2",-0.16275,9.135,1],["10p3\u002f2",10,"p","3\u002f2",-0.16272,9.135,1],["10d3\u002f2",10,"d","3\u002f2",-0.13645,9.98726,2],["10d5\u002f2",10,"d","5\u002f2",-0.13645,9.98726,2],["10f5\u002f2",10,"f","5\u002f2",-0.1361,9.9986,3],["10f7\u002f2",10,"f","7\u002f2",-0.1361,9.9986,3],["10g7\u002f2",10,"g","7\u002f2,9\u002f2",-0.13606,9.99976,4],["11s",11,"s","1\u002f2",-0.14606,9.64948,0],["11p1\u002f2",11,"p","1\u002f2",-0.13223,10.135,1],["11p3\u002f2",11,"p","3\u002f2",-0.13221,10.135,1],["11d3\u002f2",11,"d","3\u002f2",-0.11275,10.98726,2],["11d5\u002f2",11,"d","5\u002f2",-0.11275,10.98726,2],["11f5\u002f2",11,"f","5\u002f2",-0.11247,10.9986,3],["11f7\u002f2",11,"f","7\u002f2",-0.11247,10.9986,3],["11g7\u002f2",11,"g","7\u002f2,9\u002f2",-0.11245,10.99976,4],["12s",12,"s","1\u002f2",-0.11992,10.64948,0],["12p1\u002f2",12,"p","1\u002f2",-0.10956,11.135,1],["12p3\u002f2",12,"p","3\u002f2",-0.10955,11.135,1],["12d3\u002f2",12,"d","3\u002f2",-0.09472,11.98726,2],["12d5\u002f2",12,"d","5\u002f2",-0.09472,11.98726,2],["12f5\u002f2",12,"f","5\u002f2,7\u002f2",-0.09451,11.9986,3],["12g7\u002f2",12,"g","7\u002f2,9\u002f2",-0.09449,11.99976,4],["13s",13,"s","1\u002f2",-0.10022,11.64948,0],["13p1\u002f2",13,"p","1\u002f2",-0.09226,12.135,1],["13p3\u002f2",13,"p","3\u002f2",-0.09224,12.135,1],["13d3\u002f2",13,"d","3\u002f2",-0.08069,12.98726,2],["13d5\u002f2",13,"d","5\u002f2",-0.08069,12.98726,2],["13f5\u002f2",13,"f","5\u002f2,7\u002f2",-0.08052,12.9986,3],["13g7\u002f2",13,"g","7\u002f2,9\u002f2",-0.08051,12.99976,4],["14s",14,"s","1\u002f2",-0.085,12.64948,0],["14p1\u002f2",14,"p","1\u002f2",-0.07875,13.135,1],["14p3\u002f2",14,"p","3\u002f2",-0.07874,13.135,1],["14d3\u002f2",14,"d","3\u002f2",-0.06956,13.98726,2],["14d5\u002f2",14,"d","5\u002f2",-0.06956,13.98726,2],["14f5\u002f2",14,"f","5\u002f2,7\u002f2",-0.06943,13.9986,3],["14g7\u002f2",14,"g","7\u002f2,9\u002f2",-0.06942,13.99976,4],["15s",15,"s","1\u002f2",-0.073,13.64948,0],["15p1\u002f2",15,"p","1\u002f2",-0.06801,14.135,1],["15p3\u002f2",15,"p","3\u002f2",-0.068,14.135,1],["15d3\u002f2",15,"d","3\u002f2",-0.06059,14.98726,2],["15d5\u002f2",15,"d","5\u002f2",-0.06059,14.98726,2],["15f5\u002f2",15,"f","5\u002f2,7\u002f2",-0.06048,14.9986,3],["15g7\u002f2",15,"g","7\u002f2,9\u002f2",-0.06047,14.99976,4],["16s",16,"s","1\u002f2",-0.06338,14.64948,0],["16p1\u002f2",16,"p","1\u002f2",-0.05932,15.135,1],["16p3\u002f2",16,"p","3\u002f2",-0.05932,15.135,1],["16d3\u002f2",16,"d","3\u002f2",-0.05325,15.98726,2],["16d5\u002f2",16,"d","5\u002f2",-0.05325,15.98726,2],["16f5\u002f2",16,"f","5\u002f2,7\u002f2",-0.05316,15.9986,3],["16g7\u002f2",16,"g","7\u002f2,9\u002f2",-0.05315,15.99976,4],["17s",17,"s","1\u002f2",-0.05554,15.64948,0],["17p1\u002f2",17,"p","1\u002f2",-0.0522,16.135,1],["17p3\u002f2",17,"p","3\u002f2",-0.0522,16.135,1],["17d3\u002f2",17,"d","3\u002f2",-0.04716,16.98726,2],["17d5\u002f2",17,"d","5\u002f2",-0.04716,16.98726,2],["17f5\u002f2",17,"f","5\u002f2,7\u002f2",-0.04709,16.9986,3],["17g7\u002f2",17,"g","7\u002f2,9\u002f2",-0.04708,16.99976,4],["18s",18,"s","1\u002f2",-0.04907,16.64948,0],["18p1\u002f2",18,"p","1\u002f2",-0.04629,17.135,1],["18p3\u002f2",18,"p","3\u002f2",-0.04628,17.135,1],["18d3\u002f2",18,"d","3\u002f2",-0.04206,17.98726,2],["18d5\u002f2",18,"d","5\u002f2",-0.04206,17.98726,2],["18f5\u002f2",18,"f","5\u002f2,7\u002f2",-0.042,17.9986,3],["18g7\u002f2",18,"g","7\u002f2",-0.04199,17.99976,4],["18g9\u002f2",18,"g","9\u002f2",-0.04199,17.99976,4],["19s",19,"s","1\u002f2",-0.04367,17.64948,0],["19p1\u002f2",19,"p","1\u002f2",-0.04133,18.135,1],["19p3\u002f2",19,"p","3\u002f2",-0.04132,18.135,1],["19d3\u002f2",19,"d","3\u002f2",-0.03775,18.98726,2],["19d5\u002f2",19,"d","5\u002f2",-0.03775,18.98726,2],["19f5\u002f2",19,"f","5\u002f2,7\u002f2",-0.03769,18.9986,3],["19g7\u002f2",19,"g","7\u002f2,9\u002f2",-0.03769,18.99976,4],["20s",20,"s","1\u002f2",-0.03911,18.64948,0],["20p1\u002f2",20,"p","1\u002f2",-0.03712,19.135,1],["20p3\u002f2",20,"p","3\u002f2",-0.03712,19.135,1],["20d3\u002f2",20,"d","3\u002f2",-0.03406,19.98726,2],["20d5\u002f2",20,"d","5\u002f2",-0.03406,19.98726,2],["20f5\u002f2",20,"f","5\u002f2,7\u002f2",-0.03402,19.9986,3],["20g7\u002f2",20,"g","7\u002f2,9\u002f2",-0.03401,19.99976,4]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e  [click\u2192orbital]\u003cbr\u003en=%{customdata[1]} l=%{customdata[2]} J=%{customdata[3]}\u003cbr\u003eE=%{customdata[4]:.5f} eV  n*=%{customdata[5]:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2196F3","line":{"color":"rgba(255,255,255,0.3)","width":1},"opacity":0.9,"size":[7.455792751628493,7.454066268642528,7.388165987313915,7.541293559502279,7.529385536459005,8.38240028845391,8.381487367162482,7.870643715259939,8.030173937432899,8.087479417875244,8.18605374838417,7.88141469387306,9.013931275660457,9.011845977288417,8.235713730382791,8.39728938541585,8.414557141344826,8.517283774511908,15.999359421470578,8.204386384099587,9.477737518555703,9.474852910103237,8.528915470400051,8.690720517280543,8.68783690380871,8.789911838139185,15.714186181630112,16.0,8.481073151505434,9.843215349703513,9.839819655121522,8.769349682188215,8.931112271504672,8.916467883519125,9.018055212267605,15.649886908217516,8.71829855265527,10.139424497528474,10.135230371052685,8.87746697073839,9.039517748726537,9.032254405879229,9.135011815744363,15.657068683109996,8.867892782655375,10.311658206319812,10.306761952282432,9.378788310831636,9.317514128629448,9.447291359251963,9.545441914334262,15.705731872577616,8.845276444354395,10.544600952527912,10.522808956049388,9.303365378147962,9.489659501197913,9.59978183193514,9.70230096987667,15.810163901270371,9.203619855399129,10.648616269445132,10.624188855390925,9.68017106427764,9.652236863232591,10.126328332356545,10.233396211996281,15.520056824076164,9.33345346785562,10.810756757907424,10.781187724357181,9.812027124955396,9.786576936027622,11.291519403092302,14.303640219395765,9.463307460546767,10.953220637177935,10.920644103965037,9.936563992766786,9.910221315330318,10.885870041516899,13.50350494308341,9.579155861221775,11.09186725940567,11.055579395615915,10.042722476040833,10.032245749994043,10.68753713738559,12.89517162232132,9.681517970654367,11.21800475582506,11.175788715229615,10.146770947716211,10.13785981985573,10.652000299157883,12.55540468266792,9.788888357838637,11.330061455205865,11.28286566252736,10.244506353787248,10.235348505443806,10.69313766568772,12.400756320160955,9.889941621290166,11.43320422592372,11.382909854758516,10.336193330311033,10.328956373980308,10.76043042826317,12.341389874137327,9.984790220348247,11.531112934753295,11.477951346246986,10.426211628238153,10.429377110306744,10.83444908927645,12.329086507122435,14.075114664890998,10.074085539401162,11.730788954304948,11.662622596480126,10.505272875097736,10.499426976588394,10.908663445812287,12.341247145846022,10.158566712734457,11.81957073389356,11.748240835479276,10.583461255819774,10.577783489743673,10.980982243283425,12.366926690461998]},"mode":"markers","name":"NIST","scene":"scene","showlegend":true,"x":[0.85,1.0,2.0,2.15,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,4.15,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,4.15,-0.15,0.85,1.0,2.0,2.15,3.15,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,3.85],"y":[3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0],"z":[-3.03678,-3.034648,-1.5221,-1.522106,-1.947724,-1.386448,-1.385755,-0.855576,-0.85558,-0.850845,-0.850845,-1.022718,-0.794624,-0.794317,-0.547102,-0.547105,-0.544514,-0.544514,-0.54428,-0.629447,-0.514923,-0.514763,-0.379662,-0.379664,-0.37811,-0.37811,-0.377972,-0.377972,-0.426184,-0.360704,-0.360611,-0.278781,-0.278781,-0.277783,-0.277783,-0.277691,-0.307597,-0.266703,-0.266642,-0.213346,-0.213346,-0.212669,-0.212669,-0.212605,-0.232421,-0.20519,-0.205149,-0.168512,-0.168512,-0.168031,-0.168031,-0.167982,-0.181783,-0.162747,-0.162718,-0.136449,-0.136449,-0.136096,-0.136096,-0.136065,-0.14606,-0.132232,-0.132211,-0.112746,-0.112746,-0.112473,-0.112473,-0.11245,-0.119919,-0.109561,-0.109545,-0.094717,-0.094717,-0.094507,-0.094488,-0.100217,-0.092258,-0.092245,-0.08069,-0.08069,-0.080525,-0.08051,-0.084999,-0.078752,-0.078742,-0.069563,-0.069563,-0.069431,-0.069419,-0.073002,-0.068009,-0.068001,-0.060589,-0.060589,-0.060481,-0.060472,-0.063377,-0.059323,-0.059317,-0.053245,-0.053245,-0.053157,-0.053149,-0.055537,-0.052201,-0.052196,-0.04716,-0.04716,-0.047086,-0.04708,-0.049067,-0.046289,-0.046285,-0.042062,-0.042062,-0.041999,-0.041994,-0.041994,-0.043665,-0.041327,-0.041323,-0.037747,-0.037747,-0.037694,-0.03769,-0.039108,-0.037122,-0.037119,-0.034064,-0.034064,-0.034019,-0.034015],"type":"scatter3d"},{"customdata":[["21s",21,"s","\u2014",-0.03524,19.64948,0],["21p",21,"p","\u2014",-0.03356,20.135,1],["21d",21,"d","\u2014",-0.03089,20.98726,2],["21f",21,"f","\u2014",-0.03086,20.9986,3],["21g",21,"g","\u2014",-0.03085,20.99976,4],["22s",22,"s","\u2014",-0.03191,20.64948,0],["22p",22,"p","\u2014",-0.03046,21.135,1],["22d",22,"d","\u2014",-0.02814,21.98726,2],["22f",22,"f","\u2014",-0.02812,21.9986,3],["22g",22,"g","\u2014",-0.02811,21.99976,4],["23s",23,"s","\u2014",-0.02903,21.64948,0],["23p",23,"p","\u2014",-0.02777,22.135,1],["23d",23,"d","\u2014",-0.02575,22.98726,2],["23f",23,"f","\u2014",-0.02572,22.9986,3],["23g",23,"g","\u2014",-0.02572,22.99976,4],["24s",24,"s","\u2014",-0.02652,22.64948,0],["24p",24,"p","\u2014",-0.02542,23.135,1],["24d",24,"d","\u2014",-0.02365,23.98726,2],["24f",24,"f","\u2014",-0.02362,23.9986,3],["24g",24,"g","\u2014",-0.02362,23.99976,4],["25s",25,"s","\u2014",-0.02433,23.64948,0],["25p",25,"p","\u2014",-0.02336,24.135,1],["25d",25,"d","\u2014",-0.02179,24.98726,2],["25f",25,"f","\u2014",-0.02177,24.9986,3],["25g",25,"g","\u2014",-0.02177,24.99976,4],["26s",26,"s","\u2014",-0.02239,24.64948,0],["26p",26,"p","\u2014",-0.02154,25.135,1],["26d",26,"d","\u2014",-0.02015,25.98726,2],["26f",26,"f","\u2014",-0.02013,25.9986,3],["26g",26,"g","\u2014",-0.02013,25.99976,4],["27s",27,"s","\u2014",-0.02068,25.64948,0],["27p",27,"p","\u2014",-0.01992,26.135,1],["27d",27,"d","\u2014",-0.01868,26.98726,2],["27f",27,"f","\u2014",-0.01867,26.9986,3],["27g",27,"g","\u2014",-0.01866,26.99976,4],["28s",28,"s","\u2014",-0.01916,26.64948,0],["28p",28,"p","\u2014",-0.01848,27.135,1],["28d",28,"d","\u2014",-0.01737,27.98726,2],["28f",28,"f","\u2014",-0.01736,27.9986,3],["28g",28,"g","\u2014",-0.01735,27.99976,4],["29s",29,"s","\u2014",-0.0178,27.64948,0],["29p",29,"p","\u2014",-0.01719,28.135,1],["29d",29,"d","\u2014",-0.01619,28.98726,2],["29f",29,"f","\u2014",-0.01618,28.9986,3],["29g",29,"g","\u2014",-0.01618,28.99976,4],["30s",30,"s","\u2014",-0.01658,28.64948,0],["30p",30,"p","\u2014",-0.01603,29.135,1],["30d",30,"d","\u2014",-0.01513,29.98726,2],["30f",30,"f","\u2014",-0.01512,29.9986,3],["30g",30,"g","\u2014",-0.01512,29.99976,4]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e  [click\u2192orbital]\u003cbr\u003en=%{customdata[1]} l=%{customdata[2]} J=%{customdata[3]}\u003cbr\u003eE=%{customdata[4]:.5f} eV  n*=%{customdata[5]:.4f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#FF9800","line":{"color":"rgba(255,255,255,0.3)","width":1},"opacity":0.9,"size":[10.45992029330795,11.72705451771419,10.359726122612658,10.694328048589579,11.970793768321936,10.541272836416784,11.800950575330404,10.432355906119843,10.764124772103791,12.008851492026192,10.616657307364012,11.875372453166165,10.501744917161139,10.83115017418122,12.049679497744833,10.688255333743783,11.947113516623709,10.568262089227119,10.895500892721117,12.09218918724041,10.756687216911383,12.015984265924256,10.632167168751403,10.957373973349096,12.135629169416571,10.822358226967998,12.082017023348683,10.69371632909754,11.016943261813104,12.17924972983042,10.8855418647415,12.145570055439755,10.753094620733545,11.074387628214136,12.222990176544098,10.946510484686055,12.206889166970281,10.810511413538986,11.12989476315478,12.266441020583404,11.005436559609965,12.266163171101352,10.866112943418244,11.183577711550413,12.309362293896696,11.062543165292702,12.323521803634819,10.920061131680379,11.235559801792403,12.351836829968402]},"mode":"markers","name":"QDT model","scene":"scene","showlegend":true,"x":[0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0,0.0,1.0,2.0,3.0,4.0],"y":[21.0,21.0,21.0,21.0,21.0,22.0,22.0,22.0,22.0,22.0,23.0,23.0,23.0,23.0,23.0,24.0,24.0,24.0,24.0,24.0,25.0,25.0,25.0,25.0,25.0,26.0,26.0,26.0,26.0,26.0,27.0,27.0,27.0,27.0,27.0,28.0,28.0,28.0,28.0,28.0,29.0,29.0,29.0,29.0,29.0,30.0,30.0,30.0,30.0,30.0],"z":[-0.035239,-0.03356,-0.030889,-0.030856,-0.030853,-0.031908,-0.030459,-0.028144,-0.028115,-0.028112,-0.029029,-0.027769,-0.025748,-0.025723,-0.02572,-0.026522,-0.02542,-0.023646,-0.023624,-0.023621,-0.024326,-0.023358,-0.021791,-0.021772,-0.02177,-0.022393,-0.021536,-0.020147,-0.020129,-0.020127,-0.020681,-0.019919,-0.018681,-0.018665,-0.018664,-0.019158,-0.018478,-0.01737,-0.017356,-0.017355,-0.017797,-0.017188,-0.016192,-0.01618,-0.016178,-0.016576,-0.016028,-0.01513,-0.015119,-0.015118],"type":"scatter3d"},{"hoverinfo":"skip","mode":"text","scene":"scene","showlegend":false,"text":["3p1\u002f2","3p3\u002f2","3d3\u002f2","3d5\u002f2","4s","4p1\u002f2","4p3\u002f2","4d3\u002f2","4d5\u002f2","4f5\u002f2","4f7\u002f2","5s","5p1\u002f2","5p3\u002f2","5d3\u002f2","5d5\u002f2","5f5\u002f2","5f7\u002f2","5g7\u002f2","6s","6p1\u002f2","6p3\u002f2","6d3\u002f2","6d5\u002f2","6f5\u002f2","6f7\u002f2","6g7\u002f2","6g9\u002f2"],"textfont":{"color":"white","size":9},"textposition":"top center","x":[0.85,1.0,2.0,2.15,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,-0.15,0.85,1.0,2.0,2.15,3.15,2.85,3.85,4.15],"y":[3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0],"z":[-3.03678,-3.034648,-1.5221,-1.522106,-1.947724,-1.386448,-1.385755,-0.855576,-0.85558,-0.850845,-0.850845,-1.022718,-0.794624,-0.794317,-0.547102,-0.547105,-0.544514,-0.544514,-0.54428,-0.629447,-0.514923,-0.514763,-0.379662,-0.379664,-0.37811,-0.37811,-0.377972,-0.377972],"type":"scatter3d"},{"caps":{"x":{"show":false},"y":{"show":false},"z":{"show":false}},"colorscale":[[0.0,"rgb(0,0,0)"],[0.3333333333333333,"rgb(230,0,0)"],[0.6666666666666666,"rgb(255,210,0)"],[1.0,"rgb(255,255,255)"]],"isomax":0.95,"isomin":0.04,"name":"Orbital","opacity":0.55,"reversescale":false,"scene":"scene2","showlegend":false,"showscale":true,"surface":{"count":4},"value":[0.5],"visible":false,"x":[0.0],"y":[0.0],"z":[0.0],"type":"isosurface"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":17,"color":"#f0f0f0"},"text":"\u003cb\u003eNa \u2014 Orbital Viewer\u003c\u002fb\u003e\u003cbr\u003e\u003csup\u003eClick a node (left) \u2192 |\u03c8|\u00b2 isosurface (right)\u003c\u002fsup\u003e","x":0.5,"xanchor":"center"},"font":{"family":"'Helvetica Neue',Arial,sans-serif","color":"#ddd"},"margin":{"l":0,"r":0,"t":65,"b":0},"scene":{"domain":{"x":[0.0,0.49],"y":[0.0,1.0]},"xaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"l"},"tickvals":[0,1,2,3,4],"ticktext":["0(s)","1(p)","2(d)","3(f)","4(g)"],"range":[-0.6,4.6],"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"yaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"n"},"range":[2.5,30.5],"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"zaxis":{"tickfont":{"color":"#aaa","size":10},"title":{"text":"Energy (eV)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333"},"camera":{"eye":{"x":1.8,"y":-1.6,"z":0.9}},"aspectratio":{"x":1.0,"y":1.6,"z":1.2},"bgcolor":"#0d0d1a","aspectmode":"manual","annotations":[{"font":{"color":"rgba(220,80,80,0.7)","size":10},"showarrow":false,"text":"IE","x":2.0,"xanchor":"center","y":30.0,"z":0.0}]},"scene2":{"domain":{"x":[0.51,1.0],"y":[0.0,1.0]},"xaxis":{"title":{"text":"x (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"yaxis":{"title":{"text":"y (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"zaxis":{"title":{"text":"z (\u00c5)"},"gridcolor":"#2a2a3a","backgroundcolor":"#0d0d1a","zerolinecolor":"#333","tickfont":{"color":"#aaa","size":10}},"bgcolor":"#0a0a18","camera":{"eye":{"x":1.5,"y":1.5,"z":1.0}},"aspectmode":"cube"},"legend":{"font":{"color":"#ccc","size":11},"bgcolor":"rgba(15,15,30,0.85)","bordercolor":"#333","borderwidth":1,"x":0.0,"xanchor":"left","y":0.01,"yanchor":"bottom","itemclick":"toggle"},"paper_bgcolor":"#0a0a14","autosize":true},                        {"responsive": true}                    )                };            </script>        </div>
+<div id="vline"></div>
+<div id="op">
+  <h3>🌐 Orbital Viewer <span class="tog" onclick="togOP()">▲</span></h3>
+  <div style="font-size:10px;color:#446;line-height:1.6;margin-bottom:8px;padding:5px 7px;
+    background:rgba(30,30,60,0.5);border-radius:5px;border:1px solid #2a2a4a;">
+    Hydrogen-like |ψ|² with n* = n−δₗ (QDT).<br>
+    <b style="color:#4a9">Valid</b> for Rydberg states (n*≳3.5).<br>
+    <b style="color:#e07040">Approximate</b> for core-penetrating states.
+  </div>
+  <div id="spin-wrap"><div class="spin"></div><br>
+    <span style="font-size:10px;color:#445">Computing…</span></div>
+  <div id="sinfo"><span style="color:#334;">Click a node in the Grotrian<br>
+    to display its |ψ|² orbital.</span></div>
+  <div class="sec" id="ml-sec" style="display:none">
+    <div class="st">m<sub>l</sub> sub-state</div>
+    <div id="ml-btns"></div>
+    <div id="ml-note" style="font-size:10px;color:#446;margin-top:4px;display:none">
+      ⓘ "All mₗ" = Σ|Y_l^m|² = spherically symmetric (radial nodes only).
+      Select individual m for angular lobe structure.
+    </div>
+  </div>
+  <div class="sec">
+    <div class="st">Isovalue (outer) &nbsp;<span id="ivo">0.04</span></div>
+    <input type="range" id="iso-sl" min="0.01" max="0.55" value="0.04" step="0.01"
+           oninput="document.getElementById('ivo').textContent=
+             parseFloat(this.value).toFixed(2);redraw()">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#334">
+      <span>diffuse</span><span>compact</span></div>
+  </div>
+  <div class="sec">
+    <div class="st">Isovalue (inner) &nbsp;<span id="ivhi">0.95</span></div>
+    <input type="range" id="isohi-sl" min="0.50" max="1.00" value="0.95" step="0.01"
+           oninput="document.getElementById('ivhi').textContent=
+             parseFloat(this.value).toFixed(2);redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Surfaces &nbsp;<span id="nsurf">4</span></div>
+    <input type="range" id="surf-sl" min="1" max="6" value="4" step="1"
+           oninput="document.getElementById('nsurf').textContent=this.value;redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Opacity</div>
+    <input type="range" id="op-sl" min="0.05" max="1.0" value="0.55" step="0.05"
+           oninput="redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Colour map</div>
+    <select id="cmap" onchange="redraw()">
+      <option value="auto">H-wavefunction (inferno)</option>
+      <option value="Viridis">Viridis</option>
+      <option value="Plasma">Plasma</option>
+      <option value="Hot">Hot</option>
+      <option value="Electric">Electric</option>
+      <option value="RdBu">RdBu</option>
+    </select>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+    <button class="pr" onclick="redraw()">↺ Redraw</button>
+    <button onclick="clearOrb()">✕ Clear</button>
+  </div>
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:6px;margin-top:4px">
+    <div style="font-size:10px;color:#334;line-height:1.9">
+      <b>Left</b> drag = rotate Grotrian<br>
+      <b>Right</b> drag = rotate orbital<br>
+      Grid: 55³ (computed in browser)
+    </div>
+  </div>
+</div><script>
+(function(){
+  const QD      = {"s": 1.350516, "p": 0.865002, "d": 0.012737, "f": 0.001398, "g": 0.000239};
+  const L_ORDER = ["s", "p", "d", "f", "g"];
+  const GRID    = 55;
+  const ISO_IDX = 4;
+  const A0      = 0.529177;
+
+  const HWAVE = [
+    [0.00,'rgb(22,11,57)'],[0.12,'rgb(69,10,105)'],[0.25,'rgb(117,27,109)'],
+    [0.38,'rgb(164,44,96)'],[0.50,'rgb(204,65,72)'],[0.62,'rgb(235,101,39)'],
+    [0.75,'rgb(251,153,6)'],[0.88,'rgb(246,211,63)'],[1.00,'rgb(255,255,255)'],
+  ];
+
+  let cur=null, activeWorker=null, _lastSurfs=null;
+  window.togOP=function(){
+    const e=document.getElementById('op');
+    e.classList.toggle('collapsed');
+    e.querySelector('.tog').textContent=e.classList.contains('collapsed')?'▼':'▲';
+  };
+  function gd(){return document.querySelector('.plotly-graph-div');}
+
+  // ── All physics lives in this string — injected into a Blob Web Worker ────
+  // Running in a Worker means the main thread (UI + spinner) stays responsive
+  // even while computing an 85³ grid for a high-n g orbital.
+  const WORKER_SRC = `
+    // Associated Laguerre L_p^alpha(x) — overflow-safe recurrence
+    // Intermediate values for large p+alpha can exceed 1e200 (NaN in Float64).
+    // We track a running rescale factor and renormalise when |L|>1e100.
+    function lag(p,alpha,x){
+      const n=x.length;
+      let L0=new Float64Array(n).fill(1);
+      if(p<=0) return L0;
+      let L1=new Float64Array(n);
+      for(let i=0;i<n;i++) L1[i]=1+alpha-x[i];
+      if(p===1) return L1;
+      let Lk=new Float64Array(n), logScale=0;
+      for(let k=2;k<=p;k++){
+        let mx=0;
+        for(let i=0;i<n;i++){
+          Lk[i]=((2*k-1+alpha-x[i])*L1[i]-(k-1+alpha)*L0[i])/k;
+          const a=Math.abs(Lk[i]); if(a>mx) mx=a;
+        }
+        if(mx>1e100){
+          const inv=1/mx;
+          for(let i=0;i<n;i++){Lk[i]*=inv;L1[i]*=inv;L0[i]*=inv;}
+          logScale+=Math.log(mx);
+        }
+        [L0,L1]=[L1,Lk]; Lk=new Float64Array(n);
+      }
+      // Re-apply log-scale (shape preserved; absolute magnitude restored)
+      if(logScale!==0){
+        const s=Math.exp(logScale);
+        for(let i=0;i<n;i++) L1[i]*=s;
+      }
+      return L1;
+    }
+
+    // Associated Legendre P_l^|m|(x) — scalar
+    function legSc(l,am,x){
+      let Pmm=1,f=1;
+      for(let i=1;i<=am;i++) f*=(2*i-1);
+      Pmm=f*Math.pow(Math.max(1-x*x,0),am/2)*(am%2?-1:1);
+      if(l===am) return Pmm;
+      let Pm1=(2*am+1)*x*Pmm,Pk=0;
+      if(l===am+1) return Pm1;
+      for(let k=am+2;k<=l;k++){Pk=((2*k-1)*x*Pm1-(k+am-1)*Pmm)/(k-am);Pmm=Pm1;Pm1=Pk;}
+      return Pm1;
+    }
+
+    // Real spherical harmonic — scalar
+    function Ylm(l,m,cosT,phi){
+      const am=Math.abs(m),P=legSc(l,am,cosT);
+      let r=1; for(let i=l-am+1;i<=l+am;i++) r*=i;
+      const N=Math.sqrt((2*l+1)/(4*Math.PI)/r);
+      if(m===0) return N*P;
+      return m>0?Math.SQRT2*N*P*Math.cos(m*phi):Math.SQRT2*N*P*Math.sin(am*phi);
+    }
+
+    // Build density grid and post result back to main thread
+    self.onmessage=function(e){
+      const {n,l,m_arg,neff,GRID,A0}=e.data;
+
+      // r_max: cover outermost lobe; cap to avoid wasting compute on empty tail
+      const r_max=Math.min(neff*neff*2.2+10, neff*neff*3.0);
+      const rAng =r_max*A0;
+
+      // Cartesian grid — adaptive N, capped at 75 to keep compute < ~5s
+      const N=Math.min(GRID+l*4,75);
+      const co=new Float64Array(N);
+      for(let i=0;i<N;i++) co[i]=-r_max+2*r_max*i/(N-1);
+
+      // Log-spaced 1D radial table — resolves inner lobes of high-n states.
+      // For n*=19: linear spacing at Nr=2048 gives dr≈0.4 a₀ uniformly.
+      //            log spacing gives ~500 pts below r=40 a₀ where inner lobes live.
+      const Nr=2048;
+      const r0=Math.max(0.05,neff*0.008), r1=r_max;
+      const logR0=Math.log(r0), dlogR=(Math.log(r1)-logR0)/(Nr-1);
+      const rArr=new Float64Array(Nr);
+      for(let i=0;i<Nr;i++) rArr[i]=Math.exp(logR0+i*dlogR);
+
+      const nF=Math.max(Math.floor(neff),l+1), pp=Math.max(nF-l-1,0);
+      const rho=new Float64Array(Nr);
+      for(let i=0;i<Nr;i++) rho[i]=2*rArr[i]/neff;
+      const Lv=lag(pp,2*l+1,rho);
+
+      // Build unnormalised R1d; normalise by own max to avoid over/underflow
+      const R1d=new Float64Array(Nr);
+      let Rmx=0;
+      for(let i=0;i<Nr;i++){
+        const v=Math.pow(rho[i],l)*Math.exp(-rho[i]/2)*Lv[i];
+        R1d[i]=v; if(Math.abs(v)>Rmx) Rmx=Math.abs(v);
+      }
+      if(Rmx>0) for(let i=0;i<Nr;i++) R1d[i]/=Rmx;
+
+      // Log-interpolation
+      const rToR=r=>{
+        if(r<=r0) return R1d[0];
+        if(r>=r1) return 0;
+        const fi=(Math.log(r)-logR0)/dlogR;
+        const i0=Math.min(Math.floor(fi),Nr-2),t=fi-i0;
+        return R1d[i0]*(1-t)+R1d[i0+1]*t;
+      };
+
+      const doAll=(m_arg==='all'), doSph=(m_arg===null);
+      const mL=doAll?Array.from({length:2*l+1},(_,i)=>i-l):null;
+
+      const tot=N*N*N;
+      const xA=new Float32Array(tot),yA=new Float32Array(tot),
+            zA=new Float32Array(tot),vA=new Float32Array(tot);
+      let idx=0,mx=0;
+      for(let ix=0;ix<N;ix++){
+        const cx=co[ix],cx2=cx*cx;
+        for(let iy=0;iy<N;iy++){
+          const cy=co[iy],cxy=cx2+cy*cy;
+          for(let iz=0;iz<N;iz++,idx++){
+            const cz=co[iz],r2=cxy+cz*cz,r=Math.sqrt(r2)||1e-15;
+            xA[idx]=cx*A0; yA[idx]=cy*A0; zA[idx]=cz*A0;
+            if(r<0.02||r>=r_max) continue;
+            const Rv=rToR(r),R2=Rv*Rv;
+            let d=0;
+            if(doSph){ d=R2*r2; }
+            else if(doAll){
+              const cosT=cz/r,phi=Math.atan2(cy,cx);
+              for(let mi=0;mi<mL.length;mi++){const y=Ylm(l,mL[mi],cosT,phi);d+=R2*y*y;}
+            } else {
+              const cosT=cz/r,phi=Math.atan2(cy,cx);
+              const y=Ylm(l,m_arg,cosT,phi);d=R2*y*y;
+            }
+            vA[idx]=d; if(d>mx) mx=d;
+          }
+        }
+      }
+      if(mx>0) for(let i=0;i<tot;i++) vA[i]/=mx;
+
+      // Transfer typed arrays (zero-copy) back to main thread
+      self.postMessage(
+        {x:xA,y:yA,z:zA,v:vA,rAng,grid:N},
+        [xA.buffer,yA.buffer,zA.buffer,vA.buffer]
+      );
+    };
+  `;
+
+  // ── Draw — fires Worker, shows spinner immediately ─────────────────────────
+  function draw(mk){
+    if(!cur) return;
+    cur.mk=mk;
+    const g=gd(); if(!g) return;
+
+    // Cancel any in-flight worker
+    if(activeWorker){ activeWorker.terminate(); activeWorker=null; }
+
+    document.getElementById('spin-wrap').style.display='block';
+    document.getElementById('ml-sec').style.display='none';
+
+    const m_arg = mk==='sum'?'all' : mk==='sph'?null : parseInt(mk);
+
+    const blob   = new Blob([WORKER_SRC],{type:'application/javascript'});
+    const worker = new Worker(URL.createObjectURL(blob));
+    activeWorker = worker;
+
+    worker.onmessage=function(e){
+      activeWorker=null;
+      const {x,y,z,v,rAng,grid}=e.data;
+
+      const iso  =parseFloat(document.getElementById('iso-sl').value);
+      const isohi=parseFloat(document.getElementById('isohi-sl').value);
+      const surfs=parseInt(document.getElementById('surf-sl').value);
+      const opv  =parseFloat(document.getElementById('op-sl').value);
+      const cmv  =document.getElementById('cmap').value;
+      const cmap =cmv==='auto'?HWAVE:cmv;
+
+      // surface_count cannot be changed via restyle — need delete+recreate.
+      // We track _lastSurfs so we only do the expensive recreation when the
+      // slider actually changed; otherwise plain restyle keeps ISO_IDX stable.
+      const doLayout=()=>{
+        const mLbl2=mk==='sum'?'Σ mₗ (spherical)':mk==='sph'?'R²·r²':`mₗ=${mk}`;
+        Plotly.relayout(g,{
+          'scene2.xaxis.range':[-rAng,rAng],
+          'scene2.yaxis.range':[-rAng,rAng],
+          'scene2.zaxis.range':[-rAng,rAng],
+          'scene2.annotations':[{x:0,y:0,z:rAng*.88,
+            text:`${cur.lbl}  ${mLbl2}  (grid ${grid}³)`,
+            showarrow:false,font:{color:'rgba(200,210,255,0.7)',size:11},
+            xanchor:'center'}]});
+        document.getElementById('ml-note').style.display=mk==='sum'?'block':'none';
+        document.getElementById('spin-wrap').style.display='none';
+        document.getElementById('ml-sec').style.display='block';
+        worker.terminate();
+      };
+
+      if(surfs!==_lastSurfs){
+        _lastSurfs=surfs;
+        Plotly.deleteTraces(g,ISO_IDX);
+        Plotly.addTraces(g,{
+          type:'isosurface',
+          x:Array.from(x),y:Array.from(y),z:Array.from(z),value:Array.from(v),
+          isomin:iso,isomax:isohi,
+          surface:{count:surfs},
+          colorscale:cmap,reversescale:false,opacity:opv,showscale:true,
+          caps:{x_show:false,y_show:false,z_show:false},
+          name:'Orbital',showlegend:false,scene:'scene2',
+        },ISO_IDX).then(doLayout);
+        return;
+      }
+      Plotly.restyle(g,{
+        x:[Array.from(x)],y:[Array.from(y)],z:[Array.from(z)],
+        value:[Array.from(v)],
+        isomin:[iso],isomax:[isohi],
+        colorscale:[cmap],reversescale:[false],
+        opacity:[opv],visible:[true],showscale:[true],
+      },[ISO_IDX]).then(doLayout);
+      return;
+
+    };
+
+    worker.onerror=function(err){
+      activeWorker=null;
+      document.getElementById('spin-wrap').style.display='none';
+      document.getElementById('sinfo').innerHTML+=
+        `<br><span style="color:#e07;font-size:10px">⚠ Worker error: ${err.message}</span>`;
+      worker.terminate();
+    };
+
+    worker.postMessage({
+      n:cur.n, l:cur.lint, m_arg, neff:cur.neff, GRID, A0
+    });
+  }
+
+  window.redraw  =function(){if(cur)draw(cur.mk||'sum');};
+  window.clearOrb=function(){
+    if(activeWorker){activeWorker.terminate();activeWorker=null;}
+    Plotly.restyle(gd(),{visible:[false]},[ISO_IDX]);
+    document.getElementById('sinfo').innerHTML=
+      '<span style="color:#334">Click a node to display its orbital.</span>';
+    document.getElementById('ml-sec').style.display='none';
+    cur=null;
+  };
+
+  // ── Click handler ─────────────────────────────────────────────────────────
+  function onClick(ev){
+    if(!ev.points?.length) return;
+    const cd=ev.points[0].customdata; if(!cd) return;
+    const [lbl,n,l,J,E,neff,lint]=cd;
+    cur={n,l,lint,neff,lbl,mk:'sum'};
+
+    const rmean=0.5*neff*neff*(3-lint*(lint+1)/Math.max(neff*neff,1));
+    const rdisp=(Math.max(3*rmean,8)*A0).toFixed(2);
+    let vld='',vc='#6a9';
+    if(neff<2.5){vld='<br><span style="color:#e07040;font-size:10px">⚠ n*&lt;2.5: core-penetrating</span>';vc='#e07040';}
+    else if(neff<3.5){vld='<br><span style="color:#c0a040;font-size:10px">~ n*&lt;3.5: outer lobe approx</span>';vc='#c0a040';}
+    else vld='<br><span style="color:#4a9;font-size:10px">✓ Rydberg — QDT reliable</span>';
+
+    document.getElementById('sinfo').innerHTML=
+      `<b style="color:${vc}">${lbl}</b>&nbsp;J=${J}<br>`+
+      `n*=${neff.toFixed(4)}&nbsp;l=${lint} (${l})<br>`+
+      `E=${E.toFixed(5)} eV  &lt;r&gt;≈${rdisp} Å`+vld;
+
+    const mb=document.getElementById('ml-btns');
+    mb.innerHTML='';
+    const btn=(txt,mk)=>{
+      const b=document.createElement('button');
+      b.className='mlb'+(mk==='sum'?' on':'');
+      b.textContent=txt;
+      b.onclick=()=>{
+        document.querySelectorAll('.mlb').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); draw(mk);};
+      mb.appendChild(b);
+    };
+    btn('All mₗ (Σ)','sum');
+    btn('Shell P(r)','sph');
+    for(let m=-lint;m<=lint;m++) btn(`m=${m}`,String(m));
+    draw('sum');
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init(){
+    const g=gd();
+    if(!g||!g.data){setTimeout(init,150);return;}
+    g.on('plotly_click',onClick);
+  }
+  document.readyState==='loading'
+    ?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

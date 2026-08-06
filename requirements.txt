@@ -1,0 +1,9 @@
+# Core AMO pipeline (install from project root)
+numpy>=1.22
+scipy>=1.9
+plotly>=5.0
+
+# Optional extras (uncomment as needed):
+# ARC-Alkali-Rydberg-Calculator   # arc_bridge.py only
+# basis-set-exchange             # ORCA BSE picker / Z>=87 ANO-RCC
+# pytest>=7.0                    # tests/

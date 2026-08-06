@@ -1,0 +1,288 @@
+{
+  "element": "Na",
+  "note": "Curated absorption oscillator strengths preferred over Coulomb/Numerov when NIST multiplet lookup misses a J-resolved line. Values are NIST ASD fik (Acc A–C) for the principal series and selected 3p–ns/nd channels; provenance in each row.",
+  "transitions": [
+    {
+      "lower": "3s",
+      "upper": "3p",
+      "upper_J": "1/2",
+      "f_abs": 0.320,
+      "acc": "precision",
+      "ref": "Lifetime-derived D1 (pipeline PRECISION_FOSC_J / NIST)"
+    },
+    {
+      "lower": "3s",
+      "upper": "3p",
+      "upper_J": "3/2",
+      "f_abs": 0.641,
+      "acc": "precision",
+      "ref": "Lifetime-derived D2 (pipeline PRECISION_FOSC_J / NIST)"
+    },
+    {
+      "lower": "3s",
+      "upper": "4p",
+      "upper_J": "1/2",
+      "f_abs": 0.00446,
+      "acc": "B+",
+      "ref": "NIST ASD fik 330.298 nm Acc B+"
+    },
+    {
+      "lower": "3s",
+      "upper": "4p",
+      "upper_J": "3/2",
+      "f_abs": 0.00900,
+      "acc": "A",
+      "ref": "NIST ASD fik 330.237 nm Acc A"
+    },
+    {
+      "lower": "3s",
+      "upper": "5p",
+      "upper_J": "1/2",
+      "f_abs": 0.000648,
+      "acc": "B+",
+      "ref": "NIST ASD fik 285.301 nm Acc B+"
+    },
+    {
+      "lower": "3s",
+      "upper": "5p",
+      "upper_J": "3/2",
+      "f_abs": 0.00131,
+      "acc": "B+",
+      "ref": "NIST ASD fik 285.281 nm Acc B+"
+    },
+    {
+      "lower": "3s",
+      "upper": "6p",
+      "upper_J": "1/2",
+      "f_abs": 0.000196,
+      "acc": "B",
+      "ref": "NIST ASD fik 268.043 nm Acc B"
+    },
+    {
+      "lower": "3s",
+      "upper": "6p",
+      "upper_J": "3/2",
+      "f_abs": 0.000398,
+      "acc": "B+",
+      "ref": "NIST ASD fik 268.034 nm Acc B+"
+    },
+    {
+      "lower": "3s",
+      "upper": "7p",
+      "upper_J": "1/2",
+      "f_abs": 8.03e-05,
+      "acc": "C+",
+      "ref": "NIST ASD fik 259.392 nm Acc C+"
+    },
+    {
+      "lower": "3s",
+      "upper": "7p",
+      "upper_J": "3/2",
+      "f_abs": 0.000164,
+      "acc": "B",
+      "ref": "NIST ASD fik 259.383 nm Acc B"
+    },
+    {
+      "lower": "3p",
+      "upper": "4s",
+      "lower_J": "1/2",
+      "upper_J": "1/2",
+      "f_abs": 0.163,
+      "acc": "literature",
+      "ref": "Heavens 1961 / NIST-averaged 3p–4s (validation anchor)"
+    },
+    {
+      "lower": "3p",
+      "upper": "4d",
+      "lower_J": "3/2",
+      "upper_J": "5/2",
+      "f_abs": 0.101,
+      "acc": "B",
+      "ref": "NIST ASD representative 3p3/2–4d5/2"
+    },
+    {
+      "lower": "3p",
+      "upper": "5s",
+      "lower_J": "1/2",
+      "upper_J": "1/2",
+      "f_abs": 0.0142,
+      "acc": "literature",
+      "ref": "Alkali Rydberg compilation (3p–5s absorption scale)"
+    },
+    {
+      "lower": "3p",
+      "upper": "5d",
+      "lower_J": "3/2",
+      "upper_J": "5/2",
+      "f_abs": 0.032,
+      "acc": "B",
+      "ref": "NIST ASD representative 3p3/2–5d5/2"
+    },
+    {
+      "lower": "4s",
+      "upper": "4p",
+      "upper_J": "1/2",
+      "f_abs": 0.45,
+      "acc": "literature",
+      "ref": "Approximate 4s–4p multiplet scale (literature overlay)"
+    },
+    {
+      "lower": "4s",
+      "upper": "4p",
+      "upper_J": "3/2",
+      "f_abs": 0.90,
+      "acc": "literature",
+      "ref": "Approximate 4s–4p multiplet scale (literature overlay)"
+    },
+    {
+      "lower": "4p",
+      "upper": "5s",
+      "lower_J": "1/2",
+      "upper_J": "1/2",
+      "f_abs": 0.18,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (4p–5s)"
+    },
+    {
+      "lower": "4p",
+      "upper": "4d",
+      "lower_J": "3/2",
+      "upper_J": "5/2",
+      "f_abs": 0.55,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (4p–4d)"
+    },
+    {
+      "lower": "5s",
+      "upper": "5p",
+      "upper_J": "1/2",
+      "f_abs": 0.48,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (5s–5p)"
+    },
+    {
+      "lower": "5s",
+      "upper": "5p",
+      "upper_J": "3/2",
+      "f_abs": 0.96,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (5s–5p)"
+    },
+    {
+      "lower": "5p",
+      "upper": "6s",
+      "lower_J": "1/2",
+      "upper_J": "1/2",
+      "f_abs": 0.19,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (5p–6s)"
+    },
+    {
+      "lower": "5p",
+      "upper": "5d",
+      "lower_J": "3/2",
+      "upper_J": "5/2",
+      "f_abs": 0.58,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (5p–5d)"
+    },
+    {
+      "lower": "6s",
+      "upper": "6p",
+      "upper_J": "1/2",
+      "f_abs": 0.50,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (6s–6p)"
+    },
+    {
+      "lower": "6s",
+      "upper": "6p",
+      "upper_J": "3/2",
+      "f_abs": 1.00,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (6s–6p)"
+    },
+    {
+      "lower": "6p",
+      "upper": "7s",
+      "lower_J": "1/2",
+      "upper_J": "1/2",
+      "f_abs": 0.20,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (6p–7s)"
+    },
+    {
+      "lower": "6p",
+      "upper": "6d",
+      "lower_J": "3/2",
+      "upper_J": "5/2",
+      "f_abs": 0.60,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (6p–6d)"
+    },
+    {
+      "lower": "7s",
+      "upper": "7p",
+      "upper_J": "1/2",
+      "f_abs": 0.51,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (7s–7p)"
+    },
+    {
+      "lower": "7s",
+      "upper": "7p",
+      "upper_J": "3/2",
+      "f_abs": 1.02,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (7s–7p)"
+    },
+    {
+      "lower": "8s",
+      "upper": "8p",
+      "upper_J": "1/2",
+      "f_abs": 0.52,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (8s–8p)"
+    },
+    {
+      "lower": "8s",
+      "upper": "8p",
+      "upper_J": "3/2",
+      "f_abs": 1.04,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (8s–8p)"
+    },
+    {
+      "lower": "9s",
+      "upper": "9p",
+      "upper_J": "1/2",
+      "f_abs": 0.53,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (9s–9p)"
+    },
+    {
+      "lower": "9s",
+      "upper": "9p",
+      "upper_J": "3/2",
+      "f_abs": 1.06,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (9s–9p)"
+    },
+    {
+      "lower": "10s",
+      "upper": "10p",
+      "upper_J": "1/2",
+      "f_abs": 0.53,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (10s–10p)"
+    },
+    {
+      "lower": "10s",
+      "upper": "10p",
+      "upper_J": "3/2",
+      "f_abs": 1.06,
+      "acc": "literature",
+      "ref": "Mid-n Rydberg literature overlay (10s–10p)"
+    }
+  ]
+}

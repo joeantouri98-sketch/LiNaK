@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: "LiNaK: an alkali-atom AMO pipeline"
+message: "If you use LiNaK, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: Antoury
+    given-names: Youssef
+    email: Joeantouri98@gmail.com
+keywords:
+  - AMO
+  - alkali atoms
+  - Rydberg
+  - polarizability
+  - Feshbach
+  - optical tweezers
+version: "0.1.0"
+date-released: "2026-08-06"
+license: MIT
+abstract: >-
+  LiNaK is a Python NIST/QDT toolkit for neutral alkali atoms (Li–Fr):
+  levels, transitions, lifetimes, polarizability, BBR, tweezers, hyperfine,
+  and Feshbach, with optional ORCA (Neese) and ARC bridges. Limited support
+  for ions and 3d metals (Fe, Cr).
+url: "https://github.com/joeantouri98-sketch/LiNaK"
+repository-code: "https://github.com/joeantouri98-sketch/LiNaK"
+# identifiers:
+#   - type: doi
+#     value: "10.5281/zenodo.XXXXXXX"   # add after Zenodo deposit

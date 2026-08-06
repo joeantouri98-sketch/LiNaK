@@ -1,0 +1,850 @@
+*************************************************
+******************* ORCA 6.1.1 ******************
+*************************************************
+$Calculation_Status
+   &GeometryIndex 1
+   &version [&Type "String"] "6.1.1"
+   &progName [&Type "String"] "ProgCAS"
+   &Status [&Type "String"] "NORMAL TERMINATION"
+$End
+$Geometry
+   &GeometryIndex 1
+   &NAtoms [&Type "Integer"] 1
+   &NCorelessECP [&Type "Integer"] 0
+   &NGhostAtoms [&Type "Integer"] 0
+   &CartesianCoordinates [&Type "Coordinates", &Dim(1,4), &Units "Bohr"] 
+              Na     0.000000000000    0.000000000000    0.000000000000
+$End
+$CAS_SCF_Energies
+   &GeometryIndex 1
+   &finalEnergy [&Type "Double"]      -1.6052137875950893e+02  "Final GS or SA energy"
+   &numOfElectrons [&Type "Integer"] 10
+   &numOfActiveEl [&Type "Integer"] 8 "Number of active electrons"
+   &numOfActiveOrbs [&Type "Integer"] 8 "Number of active orbitals"
+   &numOfFCElectrons [&Type "Integer"] 0
+   &Method [&Type "String"] "CASSCF"
+   &totalEnergy [&Type "ArrayOfDoubles", &Dim (10,1)] "Total energy of each state"
+                                                         0
+
+0                                     -1.6044601917009521e+02
+1                                     -1.6044593319529960e+02
+2                                     -1.6044593317268064e+02
+3                                     -1.6031623488924160e+02
+4                                     -1.6030187102088431e+02
+5                                     -1.6166027033826461e+02
+6                                     -1.6043320022681669e+02
+7                                     -1.6043313987492147e+02
+8                                     -1.6043313986035722e+02
+9                                     -1.6029804584652794e+02
+   &Mult [&Type "ArrayOfIntegers", &Dim (10,1)] "Multiplicity of each state"
+                                                         0
+
+0                                                        3
+1                                                        3
+2                                                        3
+3                                                        3
+4                                                        3
+5                                                        1
+6                                                        1
+7                                                        1
+8                                                        1
+9                                                        1
+   &RelCorr [&Type "String"] "None" "Relativistic correction (SOC and/or SSC)"
+   &NBlocks [&Type "Integer"] 2 "Number of multiplicity blocks"
+   &NRoots [&Type "ArrayOfIntegers", &Dim (2,1)] "Number of roots in each block"
+                                                         0
+
+0                                                        5
+1                                                        5
+   &NTotalRoots [&Type "Integer"] 10 "Total number of roots"
+   &Block [&Type "ArrayOfIntegers", &Dim (10,1)] "Block index of each state"
+                                                         0
+
+0                                                        0
+1                                                        0
+2                                                        0
+3                                                        0
+4                                                        0
+5                                                        1
+6                                                        1
+7                                                        1
+8                                                        1
+9                                                        1
+   &Root [&Type "ArrayOfIntegers", &Dim (10,1)] "Root index within the block"
+                                                         0
+
+0                                                        0
+1                                                        1
+2                                                        2
+3                                                        3
+4                                                        4
+5                                                        0
+6                                                        1
+7                                                        2
+8                                                        3
+9                                                        4
+$End
+$Mulliken_Population_Analysis
+   &GeometryIndex 1
+   &NAtoms [&Type "Integer"] 1
+   &ATNO [&Type "ArrayOfIntegers", &Dim (1,1)] 
+                                                         0
+
+0                                                       11
+   &AtomicCharges [&Type "ArrayOfDoubles", &Dim (1,1)] 
+                                                         0
+
+0                                      9.9999999999999822e-01
+   &Method [&Type "String"] "CASSCF/ALL STATES AVERAGE"
+   &Level [&Type "String"] "Unrelaxed density"
+   &Mult [&Type "Integer"] -1
+   &State [&Type "Integer"] -1
+   &Irrep [&Type "Integer"] 0
+$End
+$Loewdin_Population_Analysis
+   &GeometryIndex 1
+   &NAtoms [&Type "Integer"] 1
+   &ATNO [&Type "ArrayOfIntegers", &Dim (1,1)] 
+                                                         0
+
+0                                                       11
+   &AtomicCharges [&Type "ArrayOfDoubles", &Dim (1,1)] 
+                                                         0
+
+0                                      1.0000000000000000e+00
+   &Method [&Type "String"] "CASSCF/ALL STATES AVERAGE"
+   &Level [&Type "String"] "Unrelaxed density"
+   &Mult [&Type "Integer"] -1
+   &State [&Type "Integer"] -1
+   &Irrep [&Type "Integer"] 0
+$End
+$Mayer_Population_Analysis
+   &GeometryIndex 1
+   &NAtoms [&Type "Integer"] 1 "Total number of atoms"
+   &NBondOrdersPrint [&Type "Integer"] 0 "The number of bond orders larger than threshold"
+   &bondThresh [&Type "Double"]       1.0000000000000001e-01  "The threshold for printing"
+   &ATNO [&Type "ArrayOfIntegers", &Dim (1,1)] "Atomic number of the elements"
+                                                         0
+
+0                                                       11
+   &NA [&Type "ArrayOfDoubles", &Dim (1,1)] "Mulliken gross atomic population"
+                                                         0
+
+0                                      1.0000000000000002e+01
+   &ZA [&Type "ArrayOfDoubles", &Dim (1,1)] "Total nuclear charge"
+                                                         0
+
+0                                      1.1000000000000000e+01
+   &QA [&Type "ArrayOfDoubles", &Dim (1,1)] "Mulliken gross atomic charge"
+                                                         0
+
+0                                      9.9999999999999822e-01
+   &VA [&Type "ArrayOfDoubles", &Dim (1,1)] "Mayer's total valence"
+                                                         0
+
+0                                      2.9287086695509865e+00
+   &BVA [&Type "ArrayOfDoubles", &Dim (1,1)] "Mayer's bonded valence"
+                                                         0
+
+0                                      0.0000000000000000e+00
+   &FA [&Type "ArrayOfDoubles", &Dim (1,1)] "Mayer's free valence"
+                                                         0
+
+0                                      2.9287086695509865e+00
+   &Method [&Type "String"] "CASSCF/ALL STATES AVERAGE"
+   &Level [&Type "String"] "Unrelaxed density"
+   &Mult [&Type "Integer"] -1
+   &State [&Type "Integer"] -1
+   &Irrep [&Type "Integer"] 0
+$End
+$CAS_PT2_Energies
+   &GeometryIndex 1
+   &finalEnergy [&Type "Double"]      -1.6052813349202529e+02  "Final GS or SA energy"
+   &numOfElectrons [&Type "Integer"] 10
+   &numOfActiveEl [&Type "Integer"] 8 "Number of active electrons"
+   &numOfActiveOrbs [&Type "Integer"] 8 "Number of active orbitals"
+   &numOfFCElectrons [&Type "Integer"] 2
+   &Method [&Type "String"] "CASSCF IC-PT2: NEVPT2/CASPT2"
+   &totalEnergy [&Type "ArrayOfDoubles", &Dim (10,1)] "Total energy of each state"
+                                                         0
+
+0                                     -1.6045126848815971e+02
+1                                     -1.6045123989328931e+02
+2                                     -1.6045123988441154e+02
+3                                     -1.6032113504167918e+02
+4                                     -1.6030687901852684e+02
+5                                     -1.6168222351059825e+02
+6                                     -1.6043810368469178e+02
+7                                     -1.6043809968020679e+02
+8                                     -1.6043809967822290e+02
+9                                     -1.6030304604046663e+02
+   &Mult [&Type "ArrayOfIntegers", &Dim (10,1)] "Multiplicity of each state"
+                                                         0
+
+0                                                        3
+1                                                        3
+2                                                        3
+3                                                        3
+4                                                        3
+5                                                        1
+6                                                        1
+7                                                        1
+8                                                        1
+9                                                        1
+   &RelCorr [&Type "String"] "None" "Relativistic correction (SOC and/or SSC)"
+   &NBlocks [&Type "Integer"] 2 "Number of multiplicity blocks"
+   &NRoots [&Type "ArrayOfIntegers", &Dim (2,1)] "Number of roots in each block"
+                                                         0
+
+0                                                        5
+1                                                        5
+   &NTotalRoots [&Type "Integer"] 10 "Total number of roots"
+   &Block [&Type "ArrayOfIntegers", &Dim (10,1)] "Block index of each state"
+                                                         0
+
+0                                                        0
+1                                                        0
+2                                                        0
+3                                                        0
+4                                                        0
+5                                                        1
+6                                                        1
+7                                                        1
+8                                                        1
+9                                                        1
+   &Root [&Type "ArrayOfIntegers", &Dim (10,1)] "Root index within the block"
+                                                         0
+
+0                                                        0
+1                                                        1
+2                                                        2
+3                                                        3
+4                                                        4
+5                                                        0
+6                                                        1
+7                                                        2
+8                                                        3
+9                                                        4
+$End
+$CASSCF_Absorption_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 2
+   &RelCorrection [&Type "Integer"] 1 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CAS"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 4
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (4,11)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3390275261289950e+01         2.6931076036209852e+05         3.7131824909463774e+01         6.8706963490700462e-02         8.3989043718489476e-02         3.9816245069421517e-02         0.0000000000000000e+00        -2.3416395472123552e-01
+1                                      3.3391917519849940e+01         2.6932400607205572e+05         3.7129998717324035e+01         6.5379270743702936e-02         7.9917261485286148e-02        -2.7838383933385646e-01         0.0000000000000000e+00        -1.3869618295887075e-02
+2                                      3.3391917916163337e+01         2.6932400926853920e+05         3.7129998276645061e+01         6.5378263181363624e-02         7.9916028928951527e-02        -3.0186472924809353e-02         0.0000000000000000e+00        -1.6598193627005767e-01
+3                                      3.7068012921516619e+01         2.9897371815257304e+05         3.3447756083017211e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+                                                         8                           9                          10
+
+0                                      0.0000000000000000e+00        -1.6604503201352458e-01         0.0000000000000000e+00
+1                                      0.0000000000000000e+00        -4.7194630747089628e-02         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         2.2683651075907907e-01         0.0000000000000000e+00
+3                                      0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (4,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                           0                           1                           0
+1                                                        0                           0                           2                           0
+2                                                        0                           0                           3                           0
+3                                                        0                           0                           4                           0
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (4,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000000e+00         1.0000000000000000e+00
+1                                      1.0000000000000000e+00         1.0000000000000000e+00
+2                                      1.0000000000000000e+00         1.0000000000000000e+00
+3                                      1.0000000000000000e+00         1.0000000000000000e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_ECD_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 2
+   &RelCorrection [&Type "Integer"] 1 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CAS"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 4
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (4,10)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3390275261289950e+01         2.6931076036209852e+05         3.7131824909463774e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+1                                      3.3391917519849940e+01         2.6932400607205572e+05         3.7129998717324035e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+2                                      3.3391917916163337e+01         2.6932400926853920e+05         3.7129998276645061e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+3                                      3.7068012921516619e+01         2.9897371815257304e+05         3.3447756083017211e+01         0.0000000000000000e+00         4.1573808957289112e-08         0.0000000000000000e+00        -2.0322899980986125e-07         0.0000000000000000e+00
+                                                         8                           9
+
+0                                      0.0000000000000000e+00         0.0000000000000000e+00
+1                                      0.0000000000000000e+00         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         0.0000000000000000e+00
+3                                     -1.4850542938918828e-07         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (4,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                           0                           1                           0
+1                                                        0                           0                           2                           0
+2                                                        0                           0                           3                           0
+3                                                        0                           0                           4                           0
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (4,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000000e+00         1.0000000000000000e+00
+1                                      1.0000000000000000e+00         1.0000000000000000e+00
+2                                      1.0000000000000000e+00         1.0000000000000000e+00
+3                                      1.0000000000000000e+00         1.0000000000000000e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_PT_Energies_Absorption_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 9
+   &RelCorrection [&Type "Integer"] 1 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASNEVDIAG"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 4
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (4,11)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3854221578282107e+01         2.7305274015767110e+05         3.6622961535656508e+01         6.9661622966065137e-02         8.3989043718489476e-02         3.9816245069421517e-02         0.0000000000000000e+00        -2.3416395472123552e-01
+1                                      3.3854330545858559e+01         2.7305361904053862e+05         3.6622843656634927e+01         6.6284646315646664e-02         7.9917261485286148e-02        -2.7838383933385646e-01         0.0000000000000000e+00        -1.3869618295887075e-02
+2                                      3.3854330599843003e+01         2.7305361947595258e+05         3.6622843598235782e+01         6.6283624119537726e-02         7.9916028928951527e-02        -3.0186472924809353e-02         0.0000000000000000e+00        -1.6598193627005767e-01
+3                                      3.7529326916393636e+01         3.0269446683624852e+05         3.3036613138388795e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+                                                         8                           9                          10
+
+0                                      0.0000000000000000e+00        -1.6604503201352458e-01         0.0000000000000000e+00
+1                                      0.0000000000000000e+00        -4.7194630747089628e-02         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         2.2683651075907907e-01         0.0000000000000000e+00
+3                                      0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (4,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                           0                           1                           0
+1                                                        0                           0                           2                           0
+2                                                        0                           0                           3                           0
+3                                                        0                           0                           4                           0
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (4,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000000e+00         1.0000000000000000e+00
+1                                      1.0000000000000000e+00         1.0000000000000000e+00
+2                                      1.0000000000000000e+00         1.0000000000000000e+00
+3                                      1.0000000000000000e+00         1.0000000000000000e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_PT_ECD_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 9
+   &RelCorrection [&Type "Integer"] 1 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASNEVDIAG"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 4
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (4,10)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3854221578282107e+01         2.7305274015767110e+05         3.6622961535656508e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+1                                      3.3854330545858559e+01         2.7305361904053862e+05         3.6622843656634927e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+2                                      3.3854330599843003e+01         2.7305361947595258e+05         3.6622843598235782e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+3                                      3.7529326916393636e+01         3.0269446683624852e+05         3.3036613138388795e+01         0.0000000000000000e+00         4.1573808957289112e-08         0.0000000000000000e+00        -2.0322899980986125e-07         0.0000000000000000e+00
+                                                         8                           9
+
+0                                      0.0000000000000000e+00         0.0000000000000000e+00
+1                                      0.0000000000000000e+00         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         0.0000000000000000e+00
+3                                     -1.4850542938918828e-07         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (4,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                           0                           1                           0
+1                                                        0                           0                           2                           0
+2                                                        0                           0                           3                           0
+3                                                        0                           0                           4                           0
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (4,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000000e+00         1.0000000000000000e+00
+1                                      1.0000000000000000e+00         1.0000000000000000e+00
+2                                      1.0000000000000000e+00         1.0000000000000000e+00
+3                                      1.0000000000000000e+00         1.0000000000000000e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_Absorption_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 2
+   &RelCorrection [&Type "Integer"] 2 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASQDSOC"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 19
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (19,11)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.2991274811010378e+01         2.6609260436282214e+05         3.7580901671227274e+01         0.0000000000000000e+00         0.0000000000000000e+00         6.4051837850551161e-11         0.0000000000000000e+00         7.3100831299785954e-12
+1                                      3.2991707398697798e+01         2.6609609341818665e+05         3.7580408909966124e+01         4.6131464230963226e-07         5.7073476593166880e-07        -3.5073964240439048e-05        -3.2950930946772867e-10        -4.4047614532785720e-04
+2                                      3.2991707711430507e+01         2.6609609594054625e+05         3.7580408553736518e+01         4.6154935837923703e-07         5.7102514935275765e-07        -7.4767345187852280e-04         1.1115011334267309e-09        -6.4104754930717963e-05
+3                                      3.2993048815951411e+01         2.6610691267911531e+05         3.7578880981789773e+01         0.0000000000000000e+00         0.0000000000000000e+00         2.6061084680625928e-08        -2.3582568196517138e-10        -1.5357539916976180e-07
+4                                      3.2993048815969203e+01         2.6610691267925879e+05         3.7578880981769515e+01         0.0000000000000000e+00         0.0000000000000000e+00        -4.4849866171481901e-10        -6.5371922371235250e-10         2.0283368052108820e-09
+5                                      3.3077164763228375e+01         2.6678535361865436e+05         3.7483317072548509e+01         3.2021303224797574e-03         3.9514146629019246e-03         5.7081815145356343e-03         3.1683121370504092e-08         3.6853195855382492e-02
+6                                      3.3077165029432145e+01         2.6678535576573282e+05         3.7483316770884194e+01         3.2021926794777353e-03         3.9514915793603250e-03        -6.2002590731480380e-02         1.1527965348060833e-08        -3.6818606813008681e-03
+7                                      3.3077987061803583e+01         2.6679198590463586e+05         3.7482385260157230e+01         3.4259621042455079e-03         4.2275169960453536e-03         8.9329165083466729e-03        -1.0507776731965547e-11        -5.2535283815392401e-02
+8                                      3.3144718217132279e+01         2.6733020902621187e+05         3.7406920962753951e+01         0.0000000000000000e+00         0.0000000000000000e+00         9.0227383893884279e-11         0.0000000000000000e+00         1.3767371351471096e-11
+9                                      3.3406827146730912e+01         2.6944426033532876e+05         3.7113427421147520e+01         6.5281001385982085e-02         7.9761526722407772e-02         3.8801256086632201e-02         8.6483029157445731e-11        -2.2819463447774899e-01
+10                                     3.3408293049218024e+01         2.6945608363748284e+05         3.7111798943287781e+01         6.2176615921549924e-02         7.5965198155886079e-02        -2.7122152468362065e-01         4.9254795516760406e-08        -1.2497693000659896e-02
+11                                     3.3408293408533027e+01         2.6945608653555403e+05         3.7111798544140605e+01         6.2175672137003576e-02         7.5964044256174104e-02        -3.1148093986007253e-02        -1.2685045443813320e-07        -1.6190823116316719e-01
+12                                     3.6573063906471994e+01         2.9498168470753374e+05         3.3900409816679726e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     3.6573063906472768e+01         2.9498168470753997e+05         3.3900409816679009e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     3.6573063906474317e+01         2.9498168470755243e+05         3.3900409816677573e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     3.6963924635524450e+01         2.9813418942074984e+05         3.3541943040579064e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     3.6963924635525991e+01         2.9813418942076230e+05         3.3541943040577657e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     3.6963924635525991e+01         2.9813418942076230e+05         3.3541943040577657e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     3.7068012921336418e+01         2.9897371815111965e+05         3.3447756083179812e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+                                                         8                           9                          10
+
+0                                     -1.7926507217996577e-12         1.6042467316308533e-12         1.5594466583514209e-12
+1                                      2.6117372207130327e-11         6.1276859283184478e-04        -1.1488483070354463e-10
+2                                     -9.9677785001565264e-11        -8.8882726683383993e-05         4.0738899686077360e-10
+3                                      1.4073675373259375e-09        -1.0904435041571606e-07         9.9760927332626477e-10
+4                                      3.8989365966148332e-09         1.5045486766095902e-09         2.7628774795669546e-09
+5                                     -6.6738995887475589e-08        -5.0603095576536264e-02         1.0166035457586496e-07
+6                                     -2.4300373990088533e-08        -9.6754443756484274e-03         3.7004684063345225e-08
+7                                      1.8195339036236398e-12        -3.7252703970804997e-02        -3.8392158018020118e-11
+8                                      0.0000000000000000e+00         4.1038026680096173e-12         0.0000000000000000e+00
+9                                     -1.9797919695877853e-10        -1.6181223082348842e-01        -1.6018698852559530e-10
+10                                    -1.0438873074152820e-07        -4.7411922274896781e-02         1.5911124309294282e-07
+11                                     2.6974280730479845e-07         2.2086096345567677e-01        -4.1078147054478180e-07
+12                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (19,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                          -1                           1                          -1
+1                                                        0                          -1                           2                          -1
+2                                                        0                          -1                           3                          -1
+3                                                        0                          -1                           4                          -1
+4                                                        0                          -1                           5                          -1
+5                                                        0                          -1                           6                          -1
+6                                                        0                          -1                           7                          -1
+7                                                        0                          -1                           8                          -1
+8                                                        0                          -1                           9                          -1
+9                                                        0                          -1                          10                          -1
+10                                                       0                          -1                          11                          -1
+11                                                       0                          -1                          12                          -1
+12                                                       0                          -1                          13                          -1
+13                                                       0                          -1                          14                          -1
+14                                                       0                          -1                          15                          -1
+15                                                       0                          -1                          16                          -1
+16                                                       0                          -1                          18                          -1
+17                                                       0                          -1                          17                          -1
+18                                                       0                          -1                          19                          -1
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (19,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000009e+00         3.0000000000000009e+00
+1                                      1.0000000000000009e+00         2.9999857166077368e+00
+2                                      1.0000000000000009e+00         2.9999857096224267e+00
+3                                      1.0000000000000009e+00         2.9999999999991362e+00
+4                                      1.0000000000000009e+00         2.9999999999999973e+00
+5                                      1.0000000000000009e+00         2.9011108365324740e+00
+6                                      1.0000000000000009e+00         2.9011104348522023e+00
+7                                      1.0000000000000009e+00         2.8993317030679613e+00
+8                                      1.0000000000000009e+00         3.0000000000000013e+00
+9                                      1.0000000000000009e+00         1.1006682969329045e+00
+10                                     1.0000000000000009e+00         1.0989038549603201e+00
+11                                     1.0000000000000009e+00         1.0989034474248307e+00
+12                                     1.0000000000000009e+00         2.9999999999945661e+00
+13                                     1.0000000000000009e+00         2.9999999999999956e+00
+14                                     1.0000000000000009e+00         2.9999999999999978e+00
+15                                     1.0000000000000009e+00         2.9999999999999991e+00
+16                                     1.0000000000000009e+00         2.9999999999999973e+00
+17                                     1.0000000000000009e+00         2.9999999999999973e+00
+18                                     1.0000000000000009e+00         1.0000000000054381e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_ECD_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 2
+   &RelCorrection [&Type "Integer"] 2 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASQDSOC"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 19
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (19,10)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.2991274811010378e+01         2.6609260436282214e+05         3.7580901671227274e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+1                                      3.2991707398697798e+01         2.6609609341818665e+05         3.7580408909966124e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+2                                      3.2991707711430507e+01         2.6609609594054625e+05         3.7580408553736518e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+3                                      3.2993048815951411e+01         2.6610691267911531e+05         3.7578880981789773e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+4                                      3.2993048815969203e+01         2.6610691267925879e+05         3.7578880981769515e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+5                                      3.3077164763228375e+01         2.6678535361865436e+05         3.7483317072548509e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+6                                      3.3077165029432145e+01         2.6678535576573282e+05         3.7483316770884194e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+7                                      3.3077987061803583e+01         2.6679198590463586e+05         3.7482385260157230e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+8                                      3.3144718217132279e+01         2.6733020902621187e+05         3.7406920962753951e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+9                                      3.3406827146730912e+01         2.6944426033532876e+05         3.7113427421147520e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+10                                     3.3408293049218024e+01         2.6945608363748284e+05         3.7111798943287781e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+11                                     3.3408293408533027e+01         2.6945608653555403e+05         3.7111798544140605e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+12                                     3.6573063906471994e+01         2.9498168470753374e+05         3.3900409816679726e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     3.6573063906472768e+01         2.9498168470753997e+05         3.3900409816679009e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     3.6573063906474317e+01         2.9498168470755243e+05         3.3900409816677573e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     3.6963924635524450e+01         2.9813418942074984e+05         3.3541943040579064e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     3.6963924635525991e+01         2.9813418942076230e+05         3.3541943040577657e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     3.6963924635525991e+01         2.9813418942076230e+05         3.3541943040577657e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     3.7068012921336418e+01         2.9897371815111965e+05         3.3447756083179812e+01         0.0000000000000000e+00        -4.1573808950024786e-08         0.0000000000000000e+00         2.0322899980668974e-07         0.0000000000000000e+00
+                                                         8                           9
+
+0                                      0.0000000000000000e+00         0.0000000000000000e+00
+1                                      0.0000000000000000e+00         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         0.0000000000000000e+00
+3                                      0.0000000000000000e+00         0.0000000000000000e+00
+4                                      0.0000000000000000e+00         0.0000000000000000e+00
+5                                      0.0000000000000000e+00         0.0000000000000000e+00
+6                                      0.0000000000000000e+00         0.0000000000000000e+00
+7                                      0.0000000000000000e+00         0.0000000000000000e+00
+8                                      0.0000000000000000e+00         0.0000000000000000e+00
+9                                      0.0000000000000000e+00         0.0000000000000000e+00
+10                                     0.0000000000000000e+00         0.0000000000000000e+00
+11                                     0.0000000000000000e+00         0.0000000000000000e+00
+12                                     0.0000000000000000e+00         0.0000000000000000e+00
+13                                     0.0000000000000000e+00         0.0000000000000000e+00
+14                                     0.0000000000000000e+00         0.0000000000000000e+00
+15                                     0.0000000000000000e+00         0.0000000000000000e+00
+16                                     0.0000000000000000e+00         0.0000000000000000e+00
+17                                     0.0000000000000000e+00         0.0000000000000000e+00
+18                                     1.4850542935162089e-07         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (19,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                          -1                           1                          -1
+1                                                        0                          -1                           2                          -1
+2                                                        0                          -1                           3                          -1
+3                                                        0                          -1                           4                          -1
+4                                                        0                          -1                           5                          -1
+5                                                        0                          -1                           6                          -1
+6                                                        0                          -1                           7                          -1
+7                                                        0                          -1                           8                          -1
+8                                                        0                          -1                           9                          -1
+9                                                        0                          -1                          10                          -1
+10                                                       0                          -1                          11                          -1
+11                                                       0                          -1                          12                          -1
+12                                                       0                          -1                          13                          -1
+13                                                       0                          -1                          14                          -1
+14                                                       0                          -1                          15                          -1
+15                                                       0                          -1                          16                          -1
+16                                                       0                          -1                          18                          -1
+17                                                       0                          -1                          17                          -1
+18                                                       0                          -1                          19                          -1
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (19,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      1.0000000000000009e+00         3.0000000000000009e+00
+1                                      1.0000000000000009e+00         2.9999857166077368e+00
+2                                      1.0000000000000009e+00         2.9999857096224267e+00
+3                                      1.0000000000000009e+00         2.9999999999991362e+00
+4                                      1.0000000000000009e+00         2.9999999999999973e+00
+5                                      1.0000000000000009e+00         2.9011108365324740e+00
+6                                      1.0000000000000009e+00         2.9011104348522023e+00
+7                                      1.0000000000000009e+00         2.8993317030679613e+00
+8                                      1.0000000000000009e+00         3.0000000000000013e+00
+9                                      1.0000000000000009e+00         1.1006682969329045e+00
+10                                     1.0000000000000009e+00         1.0989038549603201e+00
+11                                     1.0000000000000009e+00         1.0989034474248307e+00
+12                                     1.0000000000000009e+00         2.9999999999945661e+00
+13                                     1.0000000000000009e+00         2.9999999999999956e+00
+14                                     1.0000000000000009e+00         2.9999999999999978e+00
+15                                     1.0000000000000009e+00         2.9999999999999991e+00
+16                                     1.0000000000000009e+00         2.9999999999999973e+00
+17                                     1.0000000000000009e+00         2.9999999999999973e+00
+18                                     1.0000000000000009e+00         1.0000000000054381e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_PT_Energies_Absorption_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 9
+   &RelCorrection [&Type "Integer"] 2 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASPTQDSOC"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 19
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (19,11)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3445295616188680e+01         2.6975452949838800e+05         3.7070739900438845e+01         0.0000000000000000e+00         0.0000000000000000e+00        -5.9204096556786721e-11        -1.4381602625888467e-12        -6.5918885681796605e-12
+1                                      3.3445475725779453e+01         2.6975598218035779e+05         3.7070540268182221e+01         7.5189696793245226e-08         9.1761992740636843e-08        -6.1747432495056008e-06        -6.2200052119549267e-10        -1.7588141258878396e-04
+2                                      3.3445475859023638e+01         2.6975598325504479e+05         3.7070540120496055e+01         7.5228743585259492e-08         9.1809645332635406e-08         3.0006413522011435e-04        -1.1038815814585900e-09         3.0340612680639408e-05
+3                                      3.3446022224746578e+01         2.6976038999224978e+05         3.7069934545569495e+01         0.0000000000000000e+00         0.0000000000000000e+00         1.0537936343287506e-08         5.7666281347189977e-11        -6.2219720098975059e-08
+4                                      3.3446022224755858e+01         2.6976038999232464e+05         3.7069934545559207e+01         0.0000000000000000e+00         0.0000000000000000e+00         1.8298582706201777e-10         2.2232792619359009e-10        -1.6941214422469238e-09
+5                                      3.3531322839917777e+01         2.7044838592374016e+05         3.6975632026214996e+01         3.0906048017536728e-03         3.7621375362926063e-03        -8.5914636199981419e-03         6.4471604003240592e-08        -3.6094630105731142e-02
+6                                      3.3531322939387849e+01         2.7044838672602049e+05         3.6975631916527441e+01         3.0906549628443251e-03         3.7621985853239217e-03         6.0144581481413786e-02         2.7283687391339546e-08         1.7879260995582588e-03
+7                                      3.3531495791189933e+01         2.7044978086997062e+05         3.6975441310517802e+01         3.2623726420774428e-03         3.9712069501786733e-03        -8.6579571517268212e-03        -5.3057037412437581e-12         5.0917688523971744e-02
+8                                      3.3598205803785035e+01         2.7098783346388198e+05         3.6902025718925231e+01         0.0000000000000000e+00         0.0000000000000000e+00        -8.8805587531176842e-11         0.0000000000000000e+00        -1.3388355433128537e-11
+9                                      3.3870238143343784e+01         2.7318192248041014e+05         3.6605643262200481e+01         6.6399250323963058e-02         8.0017836768281336e-02         3.8863757037812918e-02        -9.9957813078509896e-10        -2.2856058378828217e-01
+10                                     3.3870288223090739e+01         2.7318232640085177e+05         3.6605589138027121e+01         6.3193909712569440e-02         7.6154963359363809e-02        -2.7026781607618205e-01        -3.3456690662597351e-07        -6.6951153593638596e-03
+11                                     3.3870288266955328e+01         2.7318232675464358e+05         3.6605589090620107e+01         6.3192950539589829e-02         7.6153807361642734e-02        -4.0899881118520422e-02         8.0974973972306138e-07        -1.6245522544343804e-01
+12                                     3.7037100169069447e+01         2.9872438996341359e+05         3.3475673014931097e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     3.7037100169073312e+01         2.9872438996344479e+05         3.3475673014927601e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     3.7037100169076410e+01         2.9872438996346976e+05         3.3475673014924809e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     3.7425026280830963e+01         3.0185322538945527e+05         3.3128683608061031e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     3.7425026280834835e+01         3.0185322538948647e+05         3.3128683608057607e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     3.7425026280836377e+01         3.0185322538949893e+05         3.3128683608056242e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     3.7529326916394410e+01         3.0269446683625481e+05         3.3036613138388113e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+                                                         8                           9                          10
+
+0                                      0.0000000000000000e+00        -2.0190355659787421e-12         0.0000000000000000e+00
+1                                      1.4224589862000635e-10         2.4655545824759972e-04        -3.4992119082422261e-10
+2                                      2.5615689263986527e-10         2.9165172856132724e-05        -6.2569689978614214e-10
+3                                     -3.5387766208981716e-10        -4.4268630066500337e-08        -2.5077992846289327e-10
+4                                     -1.3634575634094253e-09        -1.1497765032442645e-09        -9.6665378349836338e-10
+5                                     -1.3615103082529696e-07         4.8841600778676539e-02         2.0734457715499904e-07
+6                                     -5.7327908345235316e-08         1.1900891731309680e-02         8.7361637299284247e-08
+7                                      3.9434934039301850e-11         3.6105895966079174e-02        -5.6005700381716777e-11
+8                                      0.0000000000000000e+00        -3.7480433265712172e-12         0.0000000000000000e+00
+9                                      9.3224032095352631e-10        -1.6207252912059716e-01         2.2021926291864614e-09
+10                                     7.3561236553451999e-07        -5.5366473440119551e-02        -1.1185341251286249e-06
+11                                    -1.7040750987993507e-06         2.1929274224643699e-01         2.5949058655442859e-06
+12                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (19,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                          -1                           1                          -1
+1                                                        0                          -1                           2                          -1
+2                                                        0                          -1                           3                          -1
+3                                                        0                          -1                           4                          -1
+4                                                        0                          -1                           5                          -1
+5                                                        0                          -1                           6                          -1
+6                                                        0                          -1                           7                          -1
+7                                                        0                          -1                           8                          -1
+8                                                        0                          -1                           9                          -1
+9                                                        0                          -1                          10                          -1
+10                                                       0                          -1                          11                          -1
+11                                                       0                          -1                          12                          -1
+12                                                       0                          -1                          13                          -1
+13                                                       0                          -1                          14                          -1
+14                                                       0                          -1                          15                          -1
+15                                                       0                          -1                          16                          -1
+16                                                       0                          -1                          17                          -1
+17                                                       0                          -1                          18                          -1
+18                                                       0                          -1                          19                          -1
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (19,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      9.9999999999999978e-01         2.9999999999999938e+00
+1                                      9.9999999999999978e-01         2.9999977035297611e+00
+2                                      9.9999999999999978e-01         2.9999977023925655e+00
+3                                      9.9999999999999978e-01         2.9999999999998566e+00
+4                                      9.9999999999999978e-01         3.0000000000000027e+00
+5                                      9.9999999999999978e-01         2.9058477466413883e+00
+6                                      9.9999999999999978e-01         2.9058476491781748e+00
+7                                      9.9999999999999978e-01         2.9054351192878825e+00
+8                                      9.9999999999999978e-01         3.0000000000000044e+00
+9                                      9.9999999999999978e-01         1.0945648807122670e+00
+10                                     9.9999999999999978e-01         1.0941546481931017e+00
+11                                     9.9999999999999978e-01         1.0941545500649961e+00
+12                                     9.9999999999999978e-01         2.9999999999999925e+00
+13                                     9.9999999999999978e-01         2.9999999999945084e+00
+14                                     9.9999999999999978e-01         2.9999999999999996e+00
+15                                     9.9999999999999978e-01         3.0000000000000000e+00
+16                                     9.9999999999999978e-01         2.9999999999999987e+00
+17                                     9.9999999999999978e-01         2.9999999999999991e+00
+18                                     9.9999999999999978e-01         1.0000000000054980e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$CASSCF_PT_ECD_Spectrum
+   &GeometryIndex 1
+   &Method [&Type "Integer"] 9
+   &RelCorrection [&Type "Integer"] 2 "Type of relativistic treatment in QDPT. 0->Unknow, 1->None, 2->SOC, 3->SSC, 4->SOC/SSC"
+   &DensType [&Type "Integer"] 3 "Type of density (electron/spin ...). 0->Unknow, 1->Electronic, 2->Spin, 3->Trans/Electronic, 4->Tran/Spin"
+   &DeriType [&Type "Integer"] 0 "Type of derivative (w.r.t. to what perturbation). 0->Unknown, 1->No Derivative, 2->Electric/Dipole, 3->Electric/Quad, 4->Magnetic/Dipole, 5->Magnetic/Quad"
+   &DensLevel [&Type "Integer"] 0 "// Source of density: relaxed, unrelaxed, ... 0->Unknown, 1->Linearized, 2->Unrelaxed, 3->Relaxed"
+   &Density_name [&Type "String"] "Tdens-CASPTQDSOC"
+   &Representation [&Type "String"] "Length" "Possible values: Unknown,  Length, Velocity"
+   &PointGroup [&Type "String"] "C1"
+   &DoHigherMoments [&Type "Boolean"] false
+   &NTrans [&Type "Integer"] 19
+   &ExcitationEnergies [&Type "ArrayOfDoubles", &Dim (19,10)] 
+                                                         0                           1                           2                           3                           4                           5                           6                           7
+
+0                                      3.3445295616188680e+01         2.6975452949838800e+05         3.7070739900438845e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+1                                      3.3445475725779453e+01         2.6975598218035779e+05         3.7070540268182221e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+2                                      3.3445475859023638e+01         2.6975598325504479e+05         3.7070540120496055e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+3                                      3.3446022224746578e+01         2.6976038999224978e+05         3.7069934545569495e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+4                                      3.3446022224755858e+01         2.6976038999232464e+05         3.7069934545559207e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+5                                      3.3531322839917777e+01         2.7044838592374016e+05         3.6975632026214996e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+6                                      3.3531322939387849e+01         2.7044838672602049e+05         3.6975631916527441e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+7                                      3.3531495791189933e+01         2.7044978086997062e+05         3.6975441310517802e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+8                                      3.3598205803785035e+01         2.7098783346388198e+05         3.6902025718925231e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+9                                      3.3870238143343784e+01         2.7318192248041014e+05         3.6605643262200481e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+10                                     3.3870288223090739e+01         2.7318232640085177e+05         3.6605589138027121e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+11                                     3.3870288266955328e+01         2.7318232675464358e+05         3.6605589090620107e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+12                                     3.7037100169069447e+01         2.9872438996341359e+05         3.3475673014931097e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+13                                     3.7037100169073312e+01         2.9872438996344479e+05         3.3475673014927601e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+14                                     3.7037100169076410e+01         2.9872438996346976e+05         3.3475673014924809e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+15                                     3.7425026280830963e+01         3.0185322538945527e+05         3.3128683608061031e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+16                                     3.7425026280834835e+01         3.0185322538948647e+05         3.3128683608057607e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+17                                     3.7425026280836377e+01         3.0185322538949893e+05         3.3128683608056242e+01         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00         0.0000000000000000e+00
+18                                     3.7529326916394410e+01         3.0269446683625481e+05         3.3036613138388113e+01         0.0000000000000000e+00         4.1573808960975836e-08         0.0000000000000000e+00        -2.0322899979701340e-07         0.0000000000000000e+00
+                                                         8                           9
+
+0                                      0.0000000000000000e+00         0.0000000000000000e+00
+1                                      0.0000000000000000e+00         0.0000000000000000e+00
+2                                      0.0000000000000000e+00         0.0000000000000000e+00
+3                                      0.0000000000000000e+00         0.0000000000000000e+00
+4                                      0.0000000000000000e+00         0.0000000000000000e+00
+5                                      0.0000000000000000e+00         0.0000000000000000e+00
+6                                      0.0000000000000000e+00         0.0000000000000000e+00
+7                                      0.0000000000000000e+00         0.0000000000000000e+00
+8                                      0.0000000000000000e+00         0.0000000000000000e+00
+9                                      0.0000000000000000e+00         0.0000000000000000e+00
+10                                     0.0000000000000000e+00         0.0000000000000000e+00
+11                                     0.0000000000000000e+00         0.0000000000000000e+00
+12                                     0.0000000000000000e+00         0.0000000000000000e+00
+13                                     0.0000000000000000e+00         0.0000000000000000e+00
+14                                     0.0000000000000000e+00         0.0000000000000000e+00
+15                                     0.0000000000000000e+00         0.0000000000000000e+00
+16                                     0.0000000000000000e+00         0.0000000000000000e+00
+17                                     0.0000000000000000e+00         0.0000000000000000e+00
+18                                    -1.4850542936885922e-07         0.0000000000000000e+00
+   &States [&Type "ArrayOfIntegers", &Dim (19,4)] "The initial and Final states. Col1: Initial State  Col2: Initial Irrep Col3: Final State Col4: Final Irrep"
+                                                         0                           1                           2                           3
+
+0                                                        0                          -1                           1                          -1
+1                                                        0                          -1                           2                          -1
+2                                                        0                          -1                           3                          -1
+3                                                        0                          -1                           4                          -1
+4                                                        0                          -1                           5                          -1
+5                                                        0                          -1                           6                          -1
+6                                                        0                          -1                           7                          -1
+7                                                        0                          -1                           8                          -1
+8                                                        0                          -1                           9                          -1
+9                                                        0                          -1                          10                          -1
+10                                                       0                          -1                          11                          -1
+11                                                       0                          -1                          12                          -1
+12                                                       0                          -1                          13                          -1
+13                                                       0                          -1                          14                          -1
+14                                                       0                          -1                          15                          -1
+15                                                       0                          -1                          16                          -1
+16                                                       0                          -1                          17                          -1
+17                                                       0                          -1                          18                          -1
+18                                                       0                          -1                          19                          -1
+   &Multiplicities [&Type "ArrayOfDoubles", &Dim (19,2)] "Col1: Multiplicity of the initial state  Col2: Multiplicity of the final state"
+                                                         0                           1
+
+0                                      9.9999999999999978e-01         2.9999999999999938e+00
+1                                      9.9999999999999978e-01         2.9999977035297611e+00
+2                                      9.9999999999999978e-01         2.9999977023925655e+00
+3                                      9.9999999999999978e-01         2.9999999999998566e+00
+4                                      9.9999999999999978e-01         3.0000000000000027e+00
+5                                      9.9999999999999978e-01         2.9058477466413883e+00
+6                                      9.9999999999999978e-01         2.9058476491781748e+00
+7                                      9.9999999999999978e-01         2.9054351192878825e+00
+8                                      9.9999999999999978e-01         3.0000000000000044e+00
+9                                      9.9999999999999978e-01         1.0945648807122670e+00
+10                                     9.9999999999999978e-01         1.0941546481931017e+00
+11                                     9.9999999999999978e-01         1.0941545500649961e+00
+12                                     9.9999999999999978e-01         2.9999999999999925e+00
+13                                     9.9999999999999978e-01         2.9999999999945084e+00
+14                                     9.9999999999999978e-01         2.9999999999999996e+00
+15                                     9.9999999999999978e-01         3.0000000000000000e+00
+16                                     9.9999999999999978e-01         2.9999999999999987e+00
+17                                     9.9999999999999978e-01         2.9999999999999991e+00
+18                                     9.9999999999999978e-01         1.0000000000054980e+00
+   &Temperature [&Type "Double"]       3.0000000000000000e+02
+$End
+$Single_Point_Data
+   &GeometryIndex 1
+   &FinalEnergy [&Type "Double"]      -1.6168222351059822e+02  "Final single point energy"
+   &Converged [&Type "Boolean"] true
+$End
+$Calculation_Info
+   &GeometryIndex 1
+   &Mult [&Type "Integer"] 1
+   &Charge [&Type "Integer"] 1
+   &NumOfAtoms [&Type "Integer"] 1
+   &NumOfElectrons [&Type "Integer"] 10
+   &NumOfBasisFuncts [&Type "Integer"] 50
+   &NumOfAuxCBasisFuncts [&Type "Integer"] 0
+   &NumOfAuxJBasisFuncts [&Type "Integer"] 77
+   &NumOfAuxJKBasisFuncts [&Type "Integer"] 0
+   &NumOfCABSBasisFuncts [&Type "Integer"] 0
+$End
+$CASSCF_Dipole_Moment
+   &GeometryIndex 1
+   &dipoleMagnitude [&Type "Double", &Units "a.u."]       4.2763256487143419e-14
+   &dipoleElecContrib [&Type "ArrayOfDoubles", &Dim (3,1)] "Electronic contribution"
+                                                         0
+
+0                                      0.0000000000000000e+00
+1                                      0.0000000000000000e+00
+2                                      0.0000000000000000e+00
+   &dipoleNucContrib [&Type "ArrayOfDoubles", &Dim (3,1)] "Nuclear contribution"
+                                                         0
+
+0                                      0.0000000000000000e+00
+1                                      0.0000000000000000e+00
+2                                      0.0000000000000000e+00
+   &dipoleTotal [&Type "ArrayOfDoubles", &Dim (3,1)] "Total"
+                                                         0
+
+0                                      0.0000000000000000e+00
+1                                      0.0000000000000000e+00
+2                                      0.0000000000000000e+00
+   &doAtomicDipole [&Type "Boolean"] false
+   &Method [&Type "String"] "CASSCF/ALL STATES AVERAGE"
+   &Level [&Type "String"] "Unrelaxed density"
+   &Mult [&Type "Integer"] -1
+   &State [&Type "Integer"] -1
+   &Irrep [&Type "Integer"] 0
+$End
+$Calculation_Timings
+   &GeometryIndex 1
+   &GTOINT [&Type "Double"]       3.1200000000000000e-01
+   &SCF [&Type "Double"]       8.1000000000000016e-02
+   &CASSCF [&Type "Double"]       5.5289999999999999e+01
+   &PROPINT [&Type "Double"]       6.7499999999999716e-01
+   &PROP [&Type "Double"]       4.5999999999999375e-02
+   &SUM [&Type "Double"]       5.6403999999999996e+01
+$End

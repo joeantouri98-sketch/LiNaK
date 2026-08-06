@@ -1,0 +1,3 @@
+# Ignore generated pytest output; keep the folder in git via this file.
+*
+!.gitignore

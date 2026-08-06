@@ -1,0 +1,2509 @@
+{
+  "element": "Na",
+  "ionization_energy_eV": 71.384,
+  "num_levels": 417,
+  "excitations": [
+    {
+      "n": 3,
+      "l": "s",
+      "energy_eV": 0.0,
+      "label": "3s"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 2.102297177,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 2.104429202,
+      "label": "3p"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 3.1913531,
+      "label": "4s"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 3.61697081,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 3.61697701,
+      "label": "3d"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 3.7526285,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 3.7533216,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 4.11635883,
+      "label": "5s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 4.28349647,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 4.28350081,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "f",
+      "energy_eV": 4.2882316,
+      "label": "4f"
+    },
+    {
+      "n": 4,
+      "l": "f",
+      "energy_eV": 4.2882316,
+      "label": "4f"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 4.3444534,
+      "label": "5p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 4.3447597,
+      "label": "5p"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 4.50962989,
+      "label": "6s"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 4.59197201,
+      "label": "5d"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 4.59197449,
+      "label": "5d"
+    },
+    {
+      "n": 5,
+      "l": "f",
+      "energy_eV": 4.594563,
+      "label": "5f"
+    },
+    {
+      "n": 5,
+      "l": "f",
+      "energy_eV": 4.594563,
+      "label": "5f"
+    },
+    {
+      "n": 5,
+      "l": "g",
+      "energy_eV": 4.594797,
+      "label": "5g"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 4.6241543,
+      "label": "6p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 4.6243143,
+      "label": "6p"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 4.71289256,
+      "label": "7s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 4.75941304,
+      "label": "6d"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 4.75941465,
+      "label": "6d"
+    },
+    {
+      "n": 6,
+      "l": "f",
+      "energy_eV": 4.7609672,
+      "label": "6f"
+    },
+    {
+      "n": 6,
+      "l": "f",
+      "energy_eV": 4.7609672,
+      "label": "6f"
+    },
+    {
+      "n": 6,
+      "l": "g",
+      "energy_eV": 4.76110481,
+      "label": "6g"
+    },
+    {
+      "n": 6,
+      "l": "g",
+      "energy_eV": 4.7611053,
+      "label": "6g"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 4.7783733,
+      "label": "7p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 4.7784663,
+      "label": "7p"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 4.8314795,
+      "label": "8s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 4.8602959,
+      "label": "7d"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 4.8602959,
+      "label": "7d"
+    },
+    {
+      "n": 7,
+      "l": "f",
+      "energy_eV": 4.861294,
+      "label": "7f"
+    },
+    {
+      "n": 7,
+      "l": "f",
+      "energy_eV": 4.861294,
+      "label": "7f"
+    },
+    {
+      "n": 7,
+      "l": "g",
+      "energy_eV": 4.86138632,
+      "label": "7g"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 4.8723744,
+      "label": "8p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 4.8724352,
+      "label": "8p"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 4.9066561,
+      "label": "9s"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 4.925731,
+      "label": "8d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 4.925731,
+      "label": "8d"
+    },
+    {
+      "n": 8,
+      "l": "f",
+      "energy_eV": 4.926408,
+      "label": "8f"
+    },
+    {
+      "n": 8,
+      "l": "f",
+      "energy_eV": 4.926408,
+      "label": "8f"
+    },
+    {
+      "n": 8,
+      "l": "g",
+      "energy_eV": 4.9264722,
+      "label": "8g"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 4.93388658,
+      "label": "9p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 4.93392762,
+      "label": "9p"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 4.9572937,
+      "label": "10s"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 4.970565,
+      "label": "9d"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 4.970565,
+      "label": "9d"
+    },
+    {
+      "n": 9,
+      "l": "f",
+      "energy_eV": 4.971046,
+      "label": "9f"
+    },
+    {
+      "n": 9,
+      "l": "f",
+      "energy_eV": 4.971046,
+      "label": "9f"
+    },
+    {
+      "n": 9,
+      "l": "g",
+      "energy_eV": 4.97109449,
+      "label": "9g"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 4.97633022,
+      "label": "10p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 4.9763591,
+      "label": "10p"
+    },
+    {
+      "n": 11,
+      "l": "s",
+      "energy_eV": 4.99301675,
+      "label": "11s"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 5.00262788,
+      "label": "10d"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 5.00262826,
+      "label": "10d"
+    },
+    {
+      "n": 10,
+      "l": "f",
+      "energy_eV": 5.00298074,
+      "label": "10f"
+    },
+    {
+      "n": 10,
+      "l": "f",
+      "energy_eV": 5.00298074,
+      "label": "10f"
+    },
+    {
+      "n": 10,
+      "l": "g",
+      "energy_eV": 5.00301223,
+      "label": "10g"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 5.00684459,
+      "label": "11p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 5.00686591,
+      "label": "11p"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 5.01915758,
+      "label": "12s"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 5.02633094,
+      "label": "11d"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 5.02633118,
+      "label": "11d"
+    },
+    {
+      "n": 11,
+      "l": "f",
+      "energy_eV": 5.0266037,
+      "label": "11f"
+    },
+    {
+      "n": 11,
+      "l": "f",
+      "energy_eV": 5.0266037,
+      "label": "11f"
+    },
+    {
+      "n": 11,
+      "l": "g",
+      "energy_eV": 5.02662738,
+      "label": "11g"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 5.02951609,
+      "label": "12p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 5.02953221,
+      "label": "12p"
+    },
+    {
+      "n": 13,
+      "l": "s",
+      "energy_eV": 5.03886016,
+      "label": "13s"
+    },
+    {
+      "n": 12,
+      "l": "d",
+      "energy_eV": 5.04436022,
+      "label": "12d"
+    },
+    {
+      "n": 12,
+      "l": "d",
+      "energy_eV": 5.04436022,
+      "label": "12d"
+    },
+    {
+      "n": 12,
+      "l": "f",
+      "energy_eV": 5.04457025,
+      "label": "12f"
+    },
+    {
+      "n": 12,
+      "l": "g",
+      "energy_eV": 5.04458872,
+      "label": "12g"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 5.04681945,
+      "label": "13p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 5.04683185,
+      "label": "13p"
+    },
+    {
+      "n": 14,
+      "l": "s",
+      "energy_eV": 5.05407748,
+      "label": "14s"
+    },
+    {
+      "n": 13,
+      "l": "d",
+      "energy_eV": 5.05838693,
+      "label": "13d"
+    },
+    {
+      "n": 13,
+      "l": "d",
+      "energy_eV": 5.05838717,
+      "label": "13d"
+    },
+    {
+      "n": 13,
+      "l": "f",
+      "energy_eV": 5.05855207,
+      "label": "13f"
+    },
+    {
+      "n": 13,
+      "l": "g",
+      "energy_eV": 5.05856658,
+      "label": "13g"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 5.06032492,
+      "label": "14p"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 5.06033472,
+      "label": "14p"
+    },
+    {
+      "n": 15,
+      "l": "s",
+      "energy_eV": 5.06607469,
+      "label": "15s"
+    },
+    {
+      "n": 14,
+      "l": "d",
+      "energy_eV": 5.06951376,
+      "label": "14d"
+    },
+    {
+      "n": 14,
+      "l": "d",
+      "energy_eV": 5.06951389,
+      "label": "14d"
+    },
+    {
+      "n": 14,
+      "l": "f",
+      "energy_eV": 5.06964593,
+      "label": "14f"
+    },
+    {
+      "n": 14,
+      "l": "g",
+      "energy_eV": 5.06965759,
+      "label": "14g"
+    },
+    {
+      "n": 15,
+      "l": "p",
+      "energy_eV": 5.07106803,
+      "label": "15p"
+    },
+    {
+      "n": 15,
+      "l": "p",
+      "energy_eV": 5.07107584,
+      "label": "15p"
+    },
+    {
+      "n": 16,
+      "l": "s",
+      "energy_eV": 5.07569996,
+      "label": "16s"
+    },
+    {
+      "n": 15,
+      "l": "d",
+      "energy_eV": 5.07848836,
+      "label": "15d"
+    },
+    {
+      "n": 15,
+      "l": "d",
+      "energy_eV": 5.07848836,
+      "label": "15d"
+    },
+    {
+      "n": 15,
+      "l": "f",
+      "energy_eV": 5.07859573,
+      "label": "15f"
+    },
+    {
+      "n": 15,
+      "l": "g",
+      "energy_eV": 5.07860528,
+      "label": "15g"
+    },
+    {
+      "n": 16,
+      "l": "p",
+      "energy_eV": 5.07975362,
+      "label": "16p"
+    },
+    {
+      "n": 16,
+      "l": "p",
+      "energy_eV": 5.07976007,
+      "label": "16p"
+    },
+    {
+      "n": 17,
+      "l": "s",
+      "energy_eV": 5.08353997,
+      "label": "17s"
+    },
+    {
+      "n": 16,
+      "l": "d",
+      "energy_eV": 5.08583182,
+      "label": "16d"
+    },
+    {
+      "n": 16,
+      "l": "d",
+      "energy_eV": 5.08583194,
+      "label": "16d"
+    },
+    {
+      "n": 16,
+      "l": "f",
+      "energy_eV": 5.08592034,
+      "label": "16f"
+    },
+    {
+      "n": 16,
+      "l": "g",
+      "energy_eV": 5.08592816,
+      "label": "16g"
+    },
+    {
+      "n": 17,
+      "l": "p",
+      "energy_eV": 5.08687564,
+      "label": "17p"
+    },
+    {
+      "n": 17,
+      "l": "p",
+      "energy_eV": 5.08688097,
+      "label": "17p"
+    },
+    {
+      "n": 18,
+      "l": "s",
+      "energy_eV": 5.09001021,
+      "label": "18s"
+    },
+    {
+      "n": 17,
+      "l": "d",
+      "energy_eV": 5.09191684,
+      "label": "17d"
+    },
+    {
+      "n": 17,
+      "l": "d",
+      "energy_eV": 5.09191696,
+      "label": "17d"
+    },
+    {
+      "n": 17,
+      "l": "f",
+      "energy_eV": 5.09199061,
+      "label": "17f"
+    },
+    {
+      "n": 17,
+      "l": "g",
+      "energy_eV": 5.09199718,
+      "label": "17g"
+    },
+    {
+      "n": 18,
+      "l": "p",
+      "energy_eV": 5.09278808,
+      "label": "18p"
+    },
+    {
+      "n": 18,
+      "l": "p",
+      "energy_eV": 5.09279242,
+      "label": "18p"
+    },
+    {
+      "n": 19,
+      "l": "s",
+      "energy_eV": 5.0954122,
+      "label": "19s"
+    },
+    {
+      "n": 18,
+      "l": "d",
+      "energy_eV": 5.09701544,
+      "label": "18d"
+    },
+    {
+      "n": 18,
+      "l": "d",
+      "energy_eV": 5.09701544,
+      "label": "18d"
+    },
+    {
+      "n": 18,
+      "l": "f",
+      "energy_eV": 5.09707756,
+      "label": "18f"
+    },
+    {
+      "n": 18,
+      "l": "g",
+      "energy_eV": 5.09708301,
+      "label": "18g"
+    },
+    {
+      "n": 18,
+      "l": "g",
+      "energy_eV": 5.09708314,
+      "label": "18g"
+    },
+    {
+      "n": 19,
+      "l": "p",
+      "energy_eV": 5.09774992,
+      "label": "19p"
+    },
+    {
+      "n": 19,
+      "l": "p",
+      "energy_eV": 5.09775364,
+      "label": "19p"
+    },
+    {
+      "n": 20,
+      "l": "s",
+      "energy_eV": 5.09996887,
+      "label": "20s"
+    },
+    {
+      "n": 19,
+      "l": "d",
+      "energy_eV": 5.10132972,
+      "label": "19d"
+    },
+    {
+      "n": 19,
+      "l": "d",
+      "energy_eV": 5.10132984,
+      "label": "19d"
+    },
+    {
+      "n": 19,
+      "l": "f",
+      "energy_eV": 5.10138254,
+      "label": "19f"
+    },
+    {
+      "n": 19,
+      "l": "g",
+      "energy_eV": 5.10138725,
+      "label": "19g"
+    },
+    {
+      "n": 20,
+      "l": "p",
+      "energy_eV": 5.10195472,
+      "label": "20p"
+    },
+    {
+      "n": 20,
+      "l": "p",
+      "energy_eV": 5.10195795,
+      "label": "20p"
+    },
+    {
+      "n": 20,
+      "l": "d",
+      "energy_eV": 5.1050128,
+      "label": "20d"
+    },
+    {
+      "n": 20,
+      "l": "d",
+      "energy_eV": 5.1050128,
+      "label": "20d"
+    },
+    {
+      "n": 20,
+      "l": "f",
+      "energy_eV": 5.10505805,
+      "label": "20f"
+    },
+    {
+      "n": 20,
+      "l": "g",
+      "energy_eV": 5.10506202,
+      "label": "20g"
+    },
+    {
+      "n": 3,
+      "l": "s",
+      "energy_eV": 30.7692,
+      "label": "3s"
+    },
+    {
+      "n": 3,
+      "l": "s",
+      "energy_eV": 30.9327,
+      "label": "3s"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 32.7002,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.0525,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.0956,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.1388,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.1752,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.2915,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.339,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.3625,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.4418,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.5,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.5479,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.5845,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 33.8769,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 34.7895,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 34.973,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 34.812,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 34.8419,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 35.0047,
+      "label": "3p"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 35.4967,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 35.5648,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 35.6299,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 35.7635,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 35.787,
+      "label": "4s"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 35.9844,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.016,
+      "label": "3d"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 36.0529,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 36.1265,
+      "label": "4s"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2145,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2306,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2392,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2456,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2591,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.3167,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.3928,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.2529,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.3286,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.3439,
+      "label": "3d"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.582,
+      "label": "4p"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.6118,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.6406,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.667,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 36.6682,
+      "label": "3d"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.7707,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.8293,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.7759,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.7995,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 36.8383,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 36.8325,
+      "label": "5s"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 36.9033,
+      "label": "5s"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 36.9907,
+      "label": "5s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 36.9131,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 36.9284,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 37.0695,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 37.2002,
+      "label": "4d"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 37.2723,
+      "label": "5s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 37.2916,
+      "label": "6s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 37.3717,
+      "label": "6s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 37.3795,
+      "label": "6s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 37.3921,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 37.4403,
+      "label": "4d"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 37.4608,
+      "label": "6s"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 37.4952,
+      "label": "5d"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 37.5,
+      "label": "5d"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 37.5283,
+      "label": "7s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 37.5461,
+      "label": "6d"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 37.5961,
+      "label": "6d"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 37.6169,
+      "label": "7s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 37.6519,
+      "label": "6d"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 37.6588,
+      "label": "8s"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 37.688,
+      "label": "7s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 37.6979,
+      "label": "7d"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 37.7024,
+      "label": "7d"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 37.7372,
+      "label": "9s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 37.7471,
+      "label": "6s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 37.759,
+      "label": "6d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 37.7667,
+      "label": "8d"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 37.7863,
+      "label": "7d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 37.7935,
+      "label": "10s"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 37.808,
+      "label": "9d"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 37.821,
+      "label": "8s"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 37.8329,
+      "label": "9s"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 37.8417,
+      "label": "10d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 37.8439,
+      "label": "8d"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 37.8547,
+      "label": "7d"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 37.8594,
+      "label": "12s"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 37.8656,
+      "label": "5d"
+    },
+    {
+      "n": 13,
+      "l": "s",
+      "energy_eV": 37.8779,
+      "label": "13s"
+    },
+    {
+      "n": 12,
+      "l": "d",
+      "energy_eV": 37.8849,
+      "label": "12d"
+    },
+    {
+      "n": 14,
+      "l": "s",
+      "energy_eV": 37.8954,
+      "label": "14s"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 37.9006,
+      "label": "9s"
+    },
+    {
+      "n": 15,
+      "l": "s",
+      "energy_eV": 37.9099,
+      "label": "15s"
+    },
+    {
+      "n": 16,
+      "l": "s",
+      "energy_eV": 37.9203,
+      "label": "16s"
+    },
+    {
+      "n": 11,
+      "l": "s",
+      "energy_eV": 37.9264,
+      "label": "11s"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 37.9346,
+      "label": "8d"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 37.9535,
+      "label": "12s"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 37.96,
+      "label": "10s"
+    },
+    {
+      "n": 13,
+      "l": "s",
+      "energy_eV": 37.9725,
+      "label": "13s"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 37.9796,
+      "label": "9d"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 37.9941,
+      "label": "7s"
+    },
+    {
+      "n": 11,
+      "l": "s",
+      "energy_eV": 38.0041,
+      "label": "11s"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 38.0274,
+      "label": "12s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 38.0506,
+      "label": "6d"
+    },
+    {
+      "n": 14,
+      "l": "s",
+      "energy_eV": 38.067,
+      "label": "14s"
+    },
+    {
+      "n": 15,
+      "l": "s",
+      "energy_eV": 38.077,
+      "label": "15s"
+    },
+    {
+      "n": 16,
+      "l": "s",
+      "energy_eV": 38.0884,
+      "label": "16s"
+    },
+    {
+      "n": 17,
+      "l": "s",
+      "energy_eV": 38.0963,
+      "label": "17s"
+    },
+    {
+      "n": 18,
+      "l": "s",
+      "energy_eV": 38.1018,
+      "label": "18s"
+    },
+    {
+      "n": 19,
+      "l": "s",
+      "energy_eV": 38.1068,
+      "label": "19s"
+    },
+    {
+      "n": 20,
+      "l": "s",
+      "energy_eV": 38.1131,
+      "label": "20s"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 38.1281,
+      "label": "8s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 38.1626,
+      "label": "7d"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 38.2113,
+      "label": "9s"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 38.234,
+      "label": "8d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 38.2666,
+      "label": "10s"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 38.283,
+      "label": "9d"
+    },
+    {
+      "n": 11,
+      "l": "s",
+      "energy_eV": 38.3047,
+      "label": "11s"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 38.3166,
+      "label": "10d"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 38.3326,
+      "label": "12s"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 38.3417,
+      "label": "11d"
+    },
+    {
+      "n": 13,
+      "l": "s",
+      "energy_eV": 38.354,
+      "label": "13s"
+    },
+    {
+      "n": 12,
+      "l": "d",
+      "energy_eV": 38.3611,
+      "label": "12d"
+    },
+    {
+      "n": 14,
+      "l": "s",
+      "energy_eV": 38.3698,
+      "label": "14s"
+    },
+    {
+      "n": 13,
+      "l": "d",
+      "energy_eV": 38.3761,
+      "label": "13d"
+    },
+    {
+      "n": 15,
+      "l": "s",
+      "energy_eV": 38.384,
+      "label": "15s"
+    },
+    {
+      "n": 14,
+      "l": "d",
+      "energy_eV": 38.3871,
+      "label": "14d"
+    },
+    {
+      "n": 15,
+      "l": "d",
+      "energy_eV": 38.397,
+      "label": "15d"
+    },
+    {
+      "n": 16,
+      "l": "d",
+      "energy_eV": 38.4042,
+      "label": "16d"
+    },
+    {
+      "n": 17,
+      "l": "d",
+      "energy_eV": 38.4102,
+      "label": "17d"
+    },
+    {
+      "n": 18,
+      "l": "d",
+      "energy_eV": 38.4149,
+      "label": "18d"
+    },
+    {
+      "n": 19,
+      "l": "d",
+      "energy_eV": 38.4208,
+      "label": "19d"
+    },
+    {
+      "n": 20,
+      "l": "d",
+      "energy_eV": 38.4244,
+      "label": "20d"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 38.55673,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 38.7272,
+      "label": "3p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 40.15,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 40.523,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 40.898,
+      "label": "5p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 41.0858,
+      "label": "6p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 41.199,
+      "label": "7p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 41.225,
+      "label": "5p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 41.2698,
+      "label": "8p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 41.2941,
+      "label": "4p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 41.3165,
+      "label": "9p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 41.351,
+      "label": "10p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 41.377,
+      "label": "11p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 41.3941,
+      "label": "12p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 41.4089,
+      "label": "13p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 41.4162,
+      "label": "4p"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 41.4213,
+      "label": "14p"
+    },
+    {
+      "n": 15,
+      "l": "p",
+      "energy_eV": 41.4317,
+      "label": "15p"
+    },
+    {
+      "n": 16,
+      "l": "p",
+      "energy_eV": 41.4371,
+      "label": "16p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 41.4871,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 41.6599,
+      "label": "5p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 41.6908,
+      "label": "6p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 41.7483,
+      "label": "5p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 41.8145,
+      "label": "5p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 41.8345,
+      "label": "6p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 41.9251,
+      "label": "6p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 41.9276,
+      "label": "7p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 41.944,
+      "label": "7p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 42.0114,
+      "label": "6p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 42.0129,
+      "label": "8p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 42.03,
+      "label": "7p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 42.0614,
+      "label": "9p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 42.0642,
+      "label": "8p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 42.0941,
+      "label": "10p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 42.1013,
+      "label": "8p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 42.1085,
+      "label": "7p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 42.1457,
+      "label": "9p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 42.1457,
+      "label": "9p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 42.1758,
+      "label": "8p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 42.1787,
+      "label": "10p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 42.2016,
+      "label": "10p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 42.2045,
+      "label": "11p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 42.2232,
+      "label": "12p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 42.2232,
+      "label": "9p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 42.2376,
+      "label": "13p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 42.2419,
+      "label": "11p"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 42.2491,
+      "label": "14p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 42.2563,
+      "label": "10p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 42.2722,
+      "label": "12p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 42.2808,
+      "label": "11p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 42.2924,
+      "label": "13p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 42.303,
+      "label": "12p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 42.326,
+      "label": "13p"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 42.329,
+      "label": "14p"
+    },
+    {
+      "n": 15,
+      "l": "p",
+      "energy_eV": 42.344,
+      "label": "15p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 42.4787,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 42.8339,
+      "label": "5p"
+    },
+    {
+      "n": 6,
+      "l": "p",
+      "energy_eV": 43.0257,
+      "label": "6p"
+    },
+    {
+      "n": 7,
+      "l": "p",
+      "energy_eV": 43.137,
+      "label": "7p"
+    },
+    {
+      "n": 8,
+      "l": "p",
+      "energy_eV": 43.2085,
+      "label": "8p"
+    },
+    {
+      "n": 9,
+      "l": "p",
+      "energy_eV": 43.2572,
+      "label": "9p"
+    },
+    {
+      "n": 10,
+      "l": "p",
+      "energy_eV": 43.2911,
+      "label": "10p"
+    },
+    {
+      "n": 11,
+      "l": "p",
+      "energy_eV": 43.3178,
+      "label": "11p"
+    },
+    {
+      "n": 12,
+      "l": "p",
+      "energy_eV": 43.3345,
+      "label": "12p"
+    },
+    {
+      "n": 13,
+      "l": "p",
+      "energy_eV": 43.3496,
+      "label": "13p"
+    },
+    {
+      "n": 14,
+      "l": "p",
+      "energy_eV": 43.3617,
+      "label": "14p"
+    },
+    {
+      "n": 15,
+      "l": "p",
+      "energy_eV": 43.3724,
+      "label": "15p"
+    },
+    {
+      "n": 16,
+      "l": "p",
+      "energy_eV": 43.3785,
+      "label": "16p"
+    },
+    {
+      "n": 17,
+      "l": "p",
+      "energy_eV": 43.386,
+      "label": "17p"
+    },
+    {
+      "n": 18,
+      "l": "p",
+      "energy_eV": 43.3921,
+      "label": "18p"
+    },
+    {
+      "n": 19,
+      "l": "p",
+      "energy_eV": 43.3951,
+      "label": "19p"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 43.3965,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 43.4499,
+      "label": "4s"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 43.6118,
+      "label": "5s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 44.0911,
+      "label": "4s"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 44.7367,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 44.7739,
+      "label": "3d"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 44.8101,
+      "label": "3d"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 44.8885,
+      "label": "5s"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 44.9072,
+      "label": "5s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 44.9887,
+      "label": "6s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 45.2252,
+      "label": "4d"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 45.253,
+      "label": "5s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 45.4036,
+      "label": "6s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 45.4038,
+      "label": "4d"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 45.4309,
+      "label": "4d"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 45.4938,
+      "label": "6s"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 45.5289,
+      "label": "7s"
+    },
+    {
+      "n": 4,
+      "l": "d",
+      "energy_eV": 45.5523,
+      "label": "4d"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 45.6205,
+      "label": "5d"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 45.6618,
+      "label": "7s"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 45.7186,
+      "label": "5d"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 45.7186,
+      "label": "5d"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 45.7438,
+      "label": "6s"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 45.754,
+      "label": "7s"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 45.7912,
+      "label": "8s"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 45.8065,
+      "label": "8s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 45.8301,
+      "label": "6d"
+    },
+    {
+      "n": 5,
+      "l": "d",
+      "energy_eV": 45.8732,
+      "label": "5d"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 45.8861,
+      "label": "6d"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 45.8911,
+      "label": "9s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 45.8997,
+      "label": "6d"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 45.9099,
+      "label": "8s"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 45.9405,
+      "label": "9s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 45.9524,
+      "label": "7d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 45.9541,
+      "label": "10s"
+    },
+    {
+      "n": 7,
+      "l": "s",
+      "energy_eV": 45.9763,
+      "label": "7s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 45.9865,
+      "label": "7d"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 46.0001,
+      "label": "9s"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 46.0001,
+      "label": "7d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 46.0275,
+      "label": "8d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 46.0275,
+      "label": "10s"
+    },
+    {
+      "n": 6,
+      "l": "d",
+      "energy_eV": 46.0531,
+      "label": "6d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 46.0565,
+      "label": "8d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 46.0668,
+      "label": "10s"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 46.0686,
+      "label": "8d"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 46.0805,
+      "label": "9d"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 46.101,
+      "label": "9d"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 46.1148,
+      "label": "10d"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 46.1148,
+      "label": "9d"
+    },
+    {
+      "n": 8,
+      "l": "s",
+      "energy_eV": 46.1148,
+      "label": "8s"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 46.1405,
+      "label": "11d"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 46.1492,
+      "label": "10d"
+    },
+    {
+      "n": 7,
+      "l": "d",
+      "energy_eV": 46.156,
+      "label": "7d"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 46.1715,
+      "label": "11d"
+    },
+    {
+      "n": 12,
+      "l": "d",
+      "energy_eV": 46.1903,
+      "label": "12d"
+    },
+    {
+      "n": 9,
+      "l": "s",
+      "energy_eV": 46.1973,
+      "label": "9s"
+    },
+    {
+      "n": 13,
+      "l": "d",
+      "energy_eV": 46.2042,
+      "label": "13d"
+    },
+    {
+      "n": 14,
+      "l": "d",
+      "energy_eV": 46.2162,
+      "label": "14d"
+    },
+    {
+      "n": 8,
+      "l": "d",
+      "energy_eV": 46.2213,
+      "label": "8d"
+    },
+    {
+      "n": 10,
+      "l": "s",
+      "energy_eV": 46.2524,
+      "label": "10s"
+    },
+    {
+      "n": 9,
+      "l": "d",
+      "energy_eV": 46.2679,
+      "label": "9d"
+    },
+    {
+      "n": 11,
+      "l": "s",
+      "energy_eV": 46.2921,
+      "label": "11s"
+    },
+    {
+      "n": 10,
+      "l": "d",
+      "energy_eV": 46.3025,
+      "label": "10d"
+    },
+    {
+      "n": 12,
+      "l": "s",
+      "energy_eV": 46.3215,
+      "label": "12s"
+    },
+    {
+      "n": 11,
+      "l": "d",
+      "energy_eV": 46.325,
+      "label": "11d"
+    },
+    {
+      "n": 13,
+      "l": "s",
+      "energy_eV": 46.3423,
+      "label": "13s"
+    },
+    {
+      "n": 14,
+      "l": "s",
+      "energy_eV": 46.3597,
+      "label": "14s"
+    },
+    {
+      "n": 15,
+      "l": "s",
+      "energy_eV": 46.3701,
+      "label": "15s"
+    },
+    {
+      "n": 16,
+      "l": "s",
+      "energy_eV": 46.3788,
+      "label": "16s"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 66.372,
+      "label": "3p"
+    },
+    {
+      "n": 3,
+      "l": "p",
+      "energy_eV": 67.77,
+      "label": "3p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 69.38,
+      "label": "4p"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 72.68,
+      "label": "4s"
+    },
+    {
+      "n": 4,
+      "l": "s",
+      "energy_eV": 73.32,
+      "label": "4s"
+    },
+    {
+      "n": 3,
+      "l": "d",
+      "energy_eV": 73.72,
+      "label": "3d"
+    },
+    {
+      "n": 5,
+      "l": "s",
+      "energy_eV": 73.94,
+      "label": "5s"
+    },
+    {
+      "n": 6,
+      "l": "s",
+      "energy_eV": 74.39,
+      "label": "6s"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 76.73,
+      "label": "4p"
+    },
+    {
+      "n": 5,
+      "l": "p",
+      "energy_eV": 78.07,
+      "label": "5p"
+    },
+    {
+      "n": 4,
+      "l": "p",
+      "energy_eV": 78.93,
+      "label": "4p"
+    }
+  ]
+}

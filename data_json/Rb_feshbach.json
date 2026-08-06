@@ -1,0 +1,53 @@
+{
+  "element": "Rb",
+  "isotope_A": 87,
+  "note": "Literature magnetic Feshbach parameters for elastic a(B)=a_bg(1−Δ/(B−B0)) in 87Rb |1,+1>+|1,+1| (aa). Positions Bexp and theoretical elastic widths Δ from Marte et al., PRL 89, 283202 (2002) [arXiv:cond-mat/0210651v2] Table I (l=0 s-wave rows). a_bg≈100 a0 from Chin RMP Table IV. Marte Δ is listed in mG and converted to G here. Many narrow d-wave (l=2) loss peaks in Table I omitted (Δ≪0.1 mG). 85Rb has a separate broad resonance near 155 G (Claussen/Chin; not this isotope).",
+  "a_bg_default_a0": 100,
+  "a_bg_ref": "Chin et al., Rev. Mod. Phys. 82, 1225 (2010) Table IV — 87Rb aa a_bg=100 a0",
+  "resonances": [
+    {
+      "label": "s-wave 406.23 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 406.23,
+      "Delta_G": 0.0004,
+      "a_bg_a0": 100,
+      "ref": "Marte Table I — Bexp=406.23 G, Δ_th=0.4 mG; l=0 (1,2)−4, mF=2"
+    },
+    {
+      "label": "s-wave 685.43 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 685.43,
+      "Delta_G": 0.017,
+      "a_bg_a0": 100,
+      "ref": "Marte Table I — Bexp=685.43 G, Δ_th=17 mG; Chin RMP quotes Δ=0.006 G"
+    },
+    {
+      "label": "s-wave 911.74 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 911.74,
+      "Delta_G": 0.0013,
+      "a_bg_a0": 100,
+      "ref": "Marte Table I — Bexp=911.74 G, Δ_th=1.3 mG (used to refine potential); Chin RMP Δ=0.0013 G"
+    },
+    {
+      "label": "s-wave 1007.34 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "s",
+      "B0_G": 1007.34,
+      "Delta_G": 0.17,
+      "a_bg_a0": 100,
+      "ref": "Marte Table I — Bexp=1007.34 G, Δ_th=170 mG (broadest; usable for a(B) tuning). Chin/Dürr quote B0=1007.4 G, Δ=0.21 G"
+    }
+  ],
+  "_85Rb_note": {
+    "isotope_A": 85,
+    "channel": "ee (highest F=2 stretched)",
+    "B0_G": 155.04,
+    "Delta_G": 10.7,
+    "a_bg_a0": -443,
+    "ref": "Chin RMP Table IV / Claussen et al. (2003). Not loaded; use a separate file if 85Rb plots are needed"
+  }
+}

@@ -1,0 +1,7 @@
+What to check:
+1- fik
+2- gkAki
+3- Tab-delimited or Csv
+4- eV
+5- log(gf)
+6- Only with transition probabilities

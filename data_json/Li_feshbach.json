@@ -1,0 +1,36 @@
+{
+  "element": "Li",
+  "isotope_A": 6,
+  "note": "Literature magnetic Feshbach parameters for elastic a(B) = a_bg (1 - Delta/(B - B0)). Broad 6Li resonances from Zürn et al., PRL 110, 135301 (2013) [arXiv:1211.1512v2], Table 2 'Present fit' (local fits near each pole; paper notes these Δ, a_bg do not correctly reproduce the zeroes of a(B)). Channels |12>, |13>, |23> are pairs among the three lowest Zeeman states |1>, |2>, |3>. Optional narrow |12> pole near 543 G omitted.",
+  "a_bg_default_a0": -1582,
+  "a_bg_ref": "Zürn et al., PRL 110, 135301 (2013); a_bg for |12> from Table 2 Present fit (−1582 a0). Each resonance carries its own a_bg_a0.",
+  "resonances": [
+    {
+      "label": "s-wave 832.18 G",
+      "channel": "|1> + |2>",
+      "partial_wave": "s",
+      "B0_G": 832.18,
+      "Delta_G": -262.3,
+      "a_bg_a0": -1582,
+      "ref": "Zürn et al. PRL 110, 135301 (2013) Table 2 — |12> Present fit: B0=832.18(8) G, Δ=−262.3(3) G, a_bg=−1582(1) a0"
+    },
+    {
+      "label": "s-wave 689.68 G",
+      "channel": "|1> + |3>",
+      "partial_wave": "s",
+      "B0_G": 689.68,
+      "Delta_G": -166.6,
+      "a_bg_a0": -1770,
+      "ref": "Zürn et al. PRL 110, 135301 (2013) Table 2 — |13> Present fit: B0=689.68(8) G, Δ=−166.6(3) G, a_bg=−1770(5) a0"
+    },
+    {
+      "label": "s-wave 809.76 G",
+      "channel": "|2> + |3>",
+      "partial_wave": "s",
+      "B0_G": 809.76,
+      "Delta_G": -200.2,
+      "a_bg_a0": -1642,
+      "ref": "Zürn et al. PRL 110, 135301 (2013) Table 2 — |23> Present fit: B0=809.76(5) G, Δ=−200.2(5) G, a_bg=−1642(5) a0"
+    }
+  ]
+}

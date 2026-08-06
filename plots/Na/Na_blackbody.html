@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Na - Blackbody Radiation</title>
+<style>
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    background:#0a0d14; color:#c8d0e0;
+    font-family:'Helvetica Neue', Arial, sans-serif; }
+  #bb-bar {
+    position:fixed; top:0; left:0; right:0; height:44px; z-index:100;
+    display:flex; align-items:center; gap:12px; padding:0 14px;
+    background:rgba(10,13,20,0.96); border-bottom:1px solid #1e2840;
+    box-sizing:border-box;
+  }
+  #bb-bar label { font-size:12px; color:#7a9eff; letter-spacing:.4px;
+    text-transform:uppercase; font-weight:600; }
+  #bb-view {
+    background:#111830; border:1px solid #2a3060; border-radius:6px;
+    color:#e0e8ff; font-size:13px; padding:6px 10px; min-width:220px;
+  }
+  #bb-title { margin-left:auto; font-size:13px; color:#8a9ac0; }
+  #bb-frame {
+    position:fixed; top:44px; left:0; right:0; bottom:0;
+    width:100%; height:calc(100vh - 44px); border:0; background:#0a0d14;
+  }
+</style>
+</head>
+<body>
+  <div id="bb-bar">
+    <label for="bb-view">Plot</label>
+    <select id="bb-view">
+    <option value="Na_blackbody_shifts.html">Energy shifts vs T</option>
+    <option value="Na_blackbody_rates.html">Depopulation Gamma_BBR vs n</option>
+    <option value="Na_blackbody_pi.html">Photoionization / SFI vs n</option>
+    <option value="Na_blackbody_alpha.html">Rydberg alpha / BBR shift vs n</option>
+    </select>
+    <span id="bb-title">Na blackbody</span>
+  </div>
+  <iframe id="bb-frame" src="Na_blackbody_shifts.html" title="Na blackbody plot"></iframe>
+  <script>
+  (function(){
+    const sel = document.getElementById('bb-view');
+    const frame = document.getElementById('bb-frame');
+    sel.addEventListener('change', function(){ frame.src = sel.value; });
+  })();
+  </script>
+</body>
+</html>

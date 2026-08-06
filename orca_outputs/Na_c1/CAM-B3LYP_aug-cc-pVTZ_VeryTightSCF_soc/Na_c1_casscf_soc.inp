@@ -1,0 +1,17 @@
+! RHF aug-cc-pVTZ SARC/J VeryTightSCF SC-NEVPT2
+%scf
+  MaxIter 500
+end
+%casscf
+  nel 8
+  norb 8
+  mult 1,3
+  nroots 5,5
+  MaxIter 200
+  rel
+    DoSOC true
+  end
+end
+* xyz 1 1
+Na 0.0 0.0 0.0
+*
