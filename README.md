@@ -130,7 +130,7 @@ python compare_elements.py
 
 ---
 
-## Outputs (where things land)
+## Outputs
 
 | Output | Location |
 |--------|----------|
