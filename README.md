@@ -315,6 +315,8 @@ BibTeX: [`REFERENCES.bib`](REFERENCES.bib).
 
 ## Contributing / status notes
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for bug reports, pull requests, and how to add new elements.
+
 - Prefer regenerating JSON via scripts over hand-editing physics outputs.  
 - Do not invent NIST tables; drop ASD exports into `NIST Levels/` / `f_values/`.  
 - Ions and 3d metals are **limited support** (Overview §17).  

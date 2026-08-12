@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: Antoury
     given-names: Youssef
+    orcid: https://orcid.org/0009-0009-4665-0029
     email: Joeantouri98@gmail.com
 keywords:
   - AMO
