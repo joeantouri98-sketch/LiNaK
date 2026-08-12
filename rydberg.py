@@ -138,6 +138,8 @@ def normalize_term(term):
 
 _SUP_DIGITS = str.maketrans('0123456789+-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻')
 _SUB_DIGITS = str.maketrans('0123456789+-', '₀₁₂₃₄₅₆₇₈₉₊₋')
+_FROM_SUP = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻', '0123456789+-')
+_FROM_SUB = str.maketrans('₀₁₂₃₄₅₆₇₈₉₊₋', '0123456789+-')
 
 
 def _to_sup(text):
@@ -146,6 +148,13 @@ def _to_sup(text):
 
 def _to_sub(text):
     return str(text).translate(_SUB_DIGITS)
+
+
+def unicode_digits_to_plain(text):
+    """Map Unicode sub/sup digits → normal ASCII (Plotly hover shrinks them)."""
+    if not text:
+        return text
+    return str(text).translate(_FROM_SUB).translate(_FROM_SUP)
 
 
 def j_to_plain(j_str):
@@ -286,26 +295,28 @@ def label_to_pretty(label):
     """
     Convert a stored ASCII key to a readable display label.
     Accepts new keys (3s_3Po_2), legacy (3s_3Po2), metal TM keys, and
-    old Unicode pretty.
+    old Unicode pretty. Always returns full-size digits (no Unicode sub/sup).
     """
     if not label:
         return label
     # Transition-metal ASD keys: config_prefix_term_J
     _metal = metal_ascii_to_pretty(label)
     if _metal:
-        return _metal
+        return unicode_digits_to_plain(_metal)
     # Strip old Unicode sub/sup if present → rebuild from ASCII when possible
     # Multiplet with underscore before J: 3s_3Po_2 / 3d_2_3h2o_3h2
     m = re.match(r'^(\d+)([spdfgh])_(.+)_(\d+h\d+|\d+)$', label)
     if m:
         n, l, t_norm, j_txt = m.groups()
-        return f"{n}{l} {term_to_pretty(t_norm)} J={j_to_plain(j_txt)}"
+        return unicode_digits_to_plain(
+            f"{n}{l} {term_to_pretty(t_norm)} J={j_to_plain(j_txt)}")
     # Legacy multiplet without J underscore: 3s_3Po2
     m = re.match(r'^(\d+)([spdfgh])_([0-9A-Za-z]+?)(\d+h\d+|\d+)$', label)
     if m:
         n, l, t_norm, j_txt = m.groups()
         if t_norm:
-            return f"{n}{l} {term_to_pretty(t_norm)} J={j_to_plain(j_txt)}"
+            return unicode_digits_to_plain(
+                f"{n}{l} {term_to_pretty(t_norm)} J={j_to_plain(j_txt)}")
     # Alkali fine structure: keep full-size ASCII (3p1/2)
     m = re.match(r'^(\d+)([spdfgh])(\d+/\d+)$', label)
     if m:
@@ -313,10 +324,8 @@ def label_to_pretty(label):
     m = re.match(r'^(\d+)([spdfgh])(\d+)$', label)
     if m and m.group(2) != 's':
         return f"{m.group(1)}{m.group(2)}{m.group(3)}"
-    # Already a plain pretty form (has ' J=')
-    if ' J=' in label or '°' in label:
-        return label
-    return label
+    # Already a pretty form, or old Unicode pretty (3p₁/₂) — normalize digits
+    return unicode_digits_to_plain(label)
 
 
 def label_to_html(label):

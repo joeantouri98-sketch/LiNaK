@@ -43,20 +43,23 @@ except ImportError:
 
 from parse_orca import deduplicate_excitations
 from species import resolve_species
-from rydberg import label_to_pretty, label_to_html, label_to_unicode
+from rydberg import (
+    label_to_pretty, label_to_html, label_to_unicode, unicode_digits_to_plain,
+)
 
 # Filled after rydberg JSON load — ASCII key → Unicode display label
 pretty_by_label = {}
 
 
 def _disp(label):
-    """Readable spectroscopic label (full-size digits: '3s 3P° J=2')."""
+    """Readable spectroscopic label (full-size digits: '3s 3P° J=2', '3p1/2')."""
     if not label:
         return label
-    # Prefer rydberg/JSON pretty (metals: a⁵D J=4); else derive from ASCII key
+    # Prefer rydberg/JSON pretty (metals); else derive from ASCII key.
+    # Always strip Unicode sub/sup — Plotly hover draws them too small.
     pretty = pretty_by_label.get(label)
     if pretty:
-        return pretty
+        return unicode_digits_to_plain(pretty)
     return label_to_pretty(label)
 
 
@@ -327,11 +330,11 @@ if os.path.exists(rydberg_file):
         for _ex in rydberg_excitations:
             _lab = _ex.get('label')
             if _lab:
-                pretty_by_label[_lab] = (
+                pretty_by_label[_lab] = unicode_digits_to_plain(
                     _ex.get('label_pretty') or label_to_pretty(_lab))
         _gs_block = rydberg_data.get('ground_state') or {}
         if _gs_block.get('label'):
-            pretty_by_label[_gs_block['label']] = (
+            pretty_by_label[_gs_block['label']] = unicode_digits_to_plain(
                 _gs_block.get('label_pretty')
                 or label_to_pretty(_gs_block['label']))
     except Exception as e:
@@ -356,7 +359,7 @@ if os.path.exists(transitions_file):
                 (_t.get('lower_label'), _t.get('lower_label_pretty')),
             ):
                 if _lab and _pretty and _lab not in pretty_by_label:
-                    pretty_by_label[_lab] = _pretty
+                    pretty_by_label[_lab] = unicode_digits_to_plain(_pretty)
     except Exception as e:
         print(f"  Could not load transitions: {e}")
 else:
@@ -802,7 +805,8 @@ def add_rydberg_traces(fig, sorted_ryd, rydberg_energy_counts, rydberg_excitatio
         deg = rydberg_energy_counts[ryd_e]
         meta = level_meta.get(ryd_e, {})
         label = meta.get('label') or ryd_label_lookup.get(ryd_e, 'Rydberg')
-        label_show = meta.get('label_pretty') or _disp(label)
+        label_show = unicode_digits_to_plain(
+            meta.get('label_pretty') or _disp(label))
         theo = bool(meta.get('theoretical'))
         src = meta.get('source', 'QDT model')
         unc = meta.get('uncertainty_eV')
@@ -1142,8 +1146,10 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
 
         # Draw both absorption (upward) and emission (downward) arrows
         for direction in ("absorption", "emission"):
-            _ulp = t.get('upper_label_pretty') or _disp(t['upper_label'])
-            _llp = t.get('lower_label_pretty') or _disp(t['lower_label'])
+            _ulp = unicode_digits_to_plain(
+                t.get('upper_label_pretty') or _disp(t['upper_label']))
+            _llp = unicode_digits_to_plain(
+                t.get('lower_label_pretty') or _disp(t['lower_label']))
             if direction == "absorption":
                 x_vals = [x_pos, x_pos]
                 y_vals = [y_lower, y_upper]
@@ -1632,8 +1638,10 @@ if use_transitions:
         _all_transitions_for_panel.append({
             'ul': _t['upper_label'],
             'll': _t['lower_label'],
-            'ulp': _t.get('upper_label_pretty') or _disp(_t['upper_label']),
-            'llp': _t.get('lower_label_pretty') or _disp(_t['lower_label']),
+            'ulp': unicode_digits_to_plain(
+                _t.get('upper_label_pretty') or _disp(_t['upper_label'])),
+            'llp': unicode_digits_to_plain(
+                _t.get('lower_label_pretty') or _disp(_t['lower_label'])),
             'un': _t['upper_n'] if _t.get('upper_n') is not None else '',
             'ln': _t['lower_n'] if _t.get('lower_n') is not None else '',
             'uj': _t.get('upper_J', ''),

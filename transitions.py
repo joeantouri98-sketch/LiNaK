@@ -190,13 +190,14 @@ if _is_metal:
     # label -> ionization-relative energy (eV)
     from rydberg import (
         label_to_pretty as _label_to_pretty,
+        unicode_digits_to_plain as _digits_plain,
         normalize_term as _normalize_term,
         split_asd_term as _split_asd_term,
     )
     state_by_label = {
         gs_label: {
             'label': gs_label,
-            'label_pretty': (
+            'label_pretty': _digits_plain(
                 _gs_meta.get('label_pretty')
                 or _label_to_pretty(gs_label)
             ),
@@ -216,7 +217,7 @@ if _is_metal:
         if lab not in state_by_label:
             state_by_label[lab] = {
                 'label': lab,
-                'label_pretty': (
+                'label_pretty': _digits_plain(
                     ex.get('label_pretty') or _label_to_pretty(lab)
                 ),
                 'energy': E,
