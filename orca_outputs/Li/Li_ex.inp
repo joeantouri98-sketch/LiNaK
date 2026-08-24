@@ -1,0 +1,13 @@
+! UKS CAM-B3LYP aug-cc-pVTZ VeryTightSCF
+%scf
+  MaxIter 500
+end
+%moinp "Li_gs.gbw"
+%tddft
+  nroots 20
+  maxdim 100
+  tda true
+end
+* xyz 0 2
+Li 0.0 0.0 0.0
+*

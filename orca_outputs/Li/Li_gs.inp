@@ -1,0 +1,7 @@
+! UKS CAM-B3LYP aug-cc-pVTZ VeryTightSCF
+%scf
+  MaxIter 500
+end
+* xyz 0 2
+Li 0.0 0.0 0.0
+*
