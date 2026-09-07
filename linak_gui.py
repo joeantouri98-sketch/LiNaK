@@ -26,17 +26,19 @@ at the right place; the choice is remembered next time.
 import hashlib
 import json
 import re
-import shlex
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, QSettings, Qt, QUrl
-from PySide6.QtGui import QAction, QDesktopServices, QFont, QTextCursor
+from PySide6.QtGui import QAction, QDesktopServices, QDoubleValidator, QFont, QIntValidator, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
+    QComboBox,
     QFileDialog,
+    QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -47,6 +49,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QSplitter,
     QStackedWidget,
     QStatusBar,
@@ -68,89 +71,226 @@ APP_NAME = "ControlPanel"
 # PIPELINE STAGE DEFINITIONS
 # ============================================================================
 # Each stage maps to one existing script, run exactly as the CLI would run
-# it: [script] + positional(el) + <user-editable CLI flags>. "default_flags"
-# pre-fills the editable flags field so every script's options are visible
-# and changeable in the UI, not hardcoded. "stdin" (if present) answers any
-# input() prompts with defaults so the stage can complete unattended.
-# "outputs" are glob patterns (with {el} substituted) used only to find what
-# got produced, not required for the script to succeed.
+# it: [script] + positional(el) + <flags built from the form below>. "flags"
+# is a schema (mirroring each script's own argparse definitions, including
+# their --help text) that the UI turns into a labeled form -- checkboxes for
+# on/off flags, dropdowns for fixed choices, validated text fields for
+# numbers -- so nothing requires typing raw CLI syntax. "stdin" (if present)
+# answers any input() prompts with defaults so the stage can complete
+# unattended. "outputs" are glob patterns (with {el} substituted) used only
+# to find what got produced, not required for the script to succeed.
+#
+# Flag spec kinds:
+#   flag     - QCheckBox; presence/absence of a bare switch (e.g. --no-pi)
+#   choice   - QComboBox; one of a fixed set of values (e.g. --line D1/D2)
+#   int/float- validated QLineEdit; omitted from the command if left blank
+#   str      - QLineEdit; omitted from the command if left blank
+#   strlist  - QLineEdit; space-separated values become separate argv tokens
+#              (for argparse nargs='+' flags like --states)
 
 PIPELINE = [
     dict(id="rydberg", label="Rydberg series", symbol="QDT", script="rydberg.py",
          desc="NIST levels + quantum defect theory -> Rydberg series.",
          positional=lambda el: [el],
-         default_flags=lambda el: "--n-max 50",
+         flags=[
+             dict(name="--n-max", kind="int", label="Max n", default="50",
+                  help="Maximum principal quantum number for the Rydberg series."),
+             dict(name="--nist-only", kind="flag", label="NIST-only (no QDT model)",
+                  help="Write NIST ASD term levels only, no quantum-defect series. "
+                       "Auto-enabled for 3d transition metals regardless."),
+         ],
          outputs=["data_json/{el}_rydberg.json"]),
+
     dict(id="transitions", label="Transitions", symbol="E1", script="transitions.py",
          desc="Applies electric-dipole selection rules to the level set.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="",
+                  help="Only keep transitions above this wavelength."),
+             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="",
+                  help="Only keep transitions below this wavelength."),
+             dict(name="--n-max", kind="int", label="Max n", default="",
+                  help="Only include states with n <= this value."),
+             dict(name="--visible", kind="flag", label="Visible only (380-750 nm)",
+                  help="Shorthand for --wl-min 380 --wl-max 750."),
+             dict(name="--uv", kind="flag", label="UV only (10-400 nm)",
+                  help="Shorthand for --wl-min 10 --wl-max 400."),
+             dict(name="--ir", kind="flag", label="IR only (750 nm - 1 mm)",
+                  help="Shorthand for --wl-min 750 --wl-max 1e6."),
+         ],
          outputs=["data_json/{el}_transitions.json"]),
+
     dict(id="lifetimes", label="Lifetimes", symbol="A/tau", script="lifetimes.py",
          desc="Einstein A coefficients and radiative lifetimes.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--n-max", kind="int", label="Max n (Rydberg cutoff)", default="",
+                  help="Max principal quantum number for Rydberg transitions."),
+             dict(name="--orca-only", kind="flag", label="ORCA oscillator strengths only",
+                  help="Only use ORCA TD-DFT oscillator strengths."),
+             dict(name="--nist-only", kind="flag", label="NIST/Rydberg transitions only",
+                  help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
+         ],
          outputs=["data_json/{el}_lifetimes.json"]),
+
     dict(id="polarizability", label="Polarizability", symbol="alpha(w)",
          script="polarizability.py",
          desc="Dynamic polarizability, C6, magic wavelengths, AC Stark.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--excited", kind="str", label="Excited state label", default="",
+                  help="e.g. 3p3/2. Default: lowest dipole-allowed state from ground."),
+             dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)", default="200",
+                  help="Lower bound of the alpha(omega) wavelength scan."),
+             dict(name="--wl-max", kind="float", label="Scan max wavelength (nm)", default="2000",
+                  help="Upper bound of the alpha(omega) wavelength scan."),
+             dict(name="--n-grid", kind="int", label="Wavelength grid points", default="2000",
+                  help="Density of the alpha(omega) wavelength grid."),
+             dict(name="--intensity", kind="float", label="AC Stark intensity (kW/cm^2)", default="10",
+                  help="Peak intensity for the AC Stark / trap-depth panel."),
+             dict(name="--waist", kind="float", label="Beam waist (um)", default="1",
+                  help="1/e^2 beam waist for trap-frequency estimates."),
+             dict(name="--wl", kind="float", label="Point-calc wavelength (nm)", default="",
+                  help="Optional single wavelength for an AC Stark point calculation."),
+             dict(name="--heteronuclear", kind="flag", label="Heteronuclear C6 combining rule",
+                  help="Use the London combining rule for cross-species C6 (only matters with --all)."),
+         ],
          outputs=["data_json/{el}_polarizability.json",
                   "plots/{el}/{el}_polarizability.html",
                   "plots/{el}/{el}_magic_wavelengths.html"]),
+
     dict(id="blackbody", label="Blackbody (BBR)", symbol="BBR", script="blackbody.py",
          desc="Static + dynamic BBR shifts, depopulation, photoionization.",
          positional=lambda el: [el],
-         default_flags=lambda el: "--T 300",
+         flags=[
+             dict(name="--excited", kind="str", label="Excited state label", default="",
+                  help="e.g. 3p3/2. Default: auto (first fine-structure partner)."),
+             dict(name="--T", kind="float", label="Temperature (K)", default="300",
+                  help="Temperature for shifts, rates, and photoionization."),
+             dict(name="--n-min", kind="int", label="Min n for BBR-rates table", default="",
+                  help="Default: ground n + 2."),
+             dict(name="--no-rates", kind="flag", label="Skip depopulation rates",
+                  help="Skip the bound-bound Gamma_BBR table (shifts only)."),
+             dict(name="--shift-n-min", kind="int", label="Min n for Rydberg shift table", default="",
+                  help="Lower bound of the on-the-fly alpha(0) / BBR-shift table."),
+             dict(name="--shift-n-max", kind="int", label="Max n for Rydberg shift table", default="",
+                  help="Default: series n_max minus the pad (see below)."),
+             dict(name="--state", kind="str", label="Extra states (e.g. 20s,25s)", default="",
+                  help="Comma-separated extra state labels to include in the shift table."),
+             dict(name="--no-rydberg-shifts", kind="flag", label="Skip high-n Rydberg shift table"),
+             dict(name="--no-rydberg-dyn", kind="flag", label="Skip dynamic Planck integral",
+                  help="Static (Itano) shift only for high-n Rydberg states."),
+             dict(name="--no-rydberg-cont", kind="flag", label="Skip TRK/tail/continuum completion"),
+             dict(name="--n-tail-max", kind="int", label="QDT discrete tail max n", default="200"),
+             dict(name="--n-pad", kind="int", label="Headroom below series n_max", default="5"),
+             dict(name="--pi-n-min", kind="int", label="Min n for photoionization table", default="",
+                  help="Default: same as the BBR-rates min n."),
+             dict(name="--no-pi", kind="flag", label="Skip continuum photoionization / quenching"),
+             dict(name="--field", kind="float", label="Extraction field for SFI (V/cm)", default="",
+                  help="Enables Beterov selective-field-ionization rates."),
+             dict(name="--no-mix", kind="flag", label="Skip multi-step BBR mixing"),
+             dict(name="--t1", kind="float", label="Mix ion-gate start (s)", default="0.0000003"),
+             dict(name="--t2", kind="float", label="Mix ion-gate end (s)", default="0.0000021"),
+             dict(name="--mix-dn-max", kind="int", label="Max |delta n| for mix partners", default="3"),
+         ],
          outputs=["data_json/{el}_blackbody.json",
                   "plots/{el}/{el}_blackbody.html"]),
+
     dict(id="tweezer", label="Optical tweezer", symbol="R_sc", script="tweezer.py",
          desc="Tweezer photon scattering rate & recoil heating.",
          positional=lambda el: [el],
-         default_flags=lambda el: "--wl 1064 --intensity 50 --waist 1",
+         flags=[
+             dict(name="--wl", kind="float", label="Trap wavelength (nm)", default="1064"),
+             dict(name="--intensity", kind="float", label="Peak intensity (kW/cm^2)", default="50"),
+             dict(name="--waist", kind="float", label="Beam waist (um)", default="1"),
+             dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)", default="400"),
+             dict(name="--wl-max", kind="float", label="Scan max wavelength (nm)", default="1600"),
+             dict(name="--n-grid", kind="int", label="Wavelength grid points", default="1500"),
+         ],
          outputs=["data_json/{el}_tweezer.json",
                   "plots/{el}/{el}_tweezer.html"]),
+
     dict(id="hyperfine", label="Hyperfine / Zeeman", symbol="F", script="hyperfine.py",
          desc="Breit-Rabi diagonalization; needs {el}_hf_constants.json.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
+                  help="Default: most abundant stable isotope."),
+             dict(name="--states", kind="strlist", label="States (e.g. 3s1/2 3p1/2 3p3/2)", default="",
+                  help="Space-separated state labels; default: everything in hf_constants.json."),
+             dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="500"),
+             dict(name="--B-points", kind="int", label="B-field sample points", default="500"),
+         ],
          outputs=["data_json/{el}_hyperfine.json",
                   "plots/{el}/{el}_hyperfine.html",
                   "plots/{el}/{el}_zeeman.html"]),
+
     dict(id="feshbach", label="Feshbach resonances", symbol="a(B)", script="feshbach.py",
          desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
+                  help="Default: auto from the resonances in the JSON file."),
+             dict(name="--B-points", kind="int", label="B-field sample points", default=""),
+             dict(name="--kT-uK", kind="float", label="Collision energy (uK)", default="1",
+                  help="Collision energy as a temperature, for the sigma(B) panel."),
+             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
+                  help="Default: isotope_A from the feshbach JSON."),
+         ],
          outputs=["data_json/{el}_feshbach_out.json",
                   "plots/{el}/{el}_feshbach.html"]),
+
     dict(id="grotrian", label="Grotrian diagram", symbol="hv", script="plotinteractive.py",
          desc="Interactive level diagram (plotinteractive.py).",
          positional=lambda el: [el],
-         default_flags=lambda el: "--plots 1",
+         flags=[
+             dict(name="--plots", kind="choice", label="Plots to generate",
+                  choices=["1", "2", "3", "4"], default="1",
+                  help="1=Grotrian only, 2=+spectrum, 3=+excited-excited Grotrian, "
+                       "4=+3D visualization (all)."),
+             dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
+                  help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
+         ],
          stdin="1\n1\n1\n",
          outputs=["plots/{el}/{el}_grotrian.html"]),
+
     dict(id="spectra", label="Spectrum", symbol="lambda", script="spectra.py",
          desc="Absorption + emission spectral bar chart.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="200"),
+             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="900"),
+         ],
          outputs=["plots/{el}/{el}_spectra.html"]),
+
     dict(id="orbital3d", label="Orbital viewer", symbol="psi^2", script="orbital3d.py",
          desc="3D |psi|^2 isosurfaces for each Rydberg state.",
          positional=lambda el: [el],
-         default_flags=lambda el: "",
+         flags=[
+             dict(name="--n-max", kind="int", label="Max n", default="10"),
+             dict(name="--grid", kind="int", label="Grid points per axis", default="55"),
+             dict(name="--isovalue", kind="float", label="Isovalue (outer)", default="0.04"),
+         ],
          outputs=["plots/{el}/{el}_orbital3d.html"]),
+
     dict(id="compare", label="Compare elements", symbol="Sigma",
          script="compare_elements.py",
          desc="Adds this element to the cross-element CompTable.",
-         positional=lambda el: [],
-         default_flags=lambda el: f"--elements {el}",
+         positional=lambda el: ["--elements", el],
+         flags=[
+             dict(name="--T", kind="float", label="Temperature (K)", default="300",
+                  help="Temperature for Doppler broadening in the CompTable."),
+         ],
          outputs=["data_json/comparison_table.json", "plots/comparison_table.html"]),
+
     dict(id="scattering", label="Scattering rate", symbol="R(D)",
          script="scattering_rate.py",
-         desc="Near-resonant MOT scattering-rate widget (D2 line).",
-         positional=lambda el: [],
-         default_flags=lambda el: f"--element {el} --line D2",
+         desc="Near-resonant MOT scattering-rate widget.",
+         positional=lambda el: ["--element", el],
+         flags=[
+             dict(name="--line", kind="choice", label="D-line",
+                  choices=["D1", "D2"], default="D2"),
+         ],
          outputs=["plots/scattering_rate.html"]),
 ]
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
@@ -308,6 +448,7 @@ class MainWindow(QMainWindow):
         stage_box = QGroupBox("Pipeline stages")
         st = QVBoxLayout(stage_box)
         self.stage_list = QListWidget()
+        self.stage_list.setMaximumHeight(190)
         for stage in PIPELINE:
             item = QListWidgetItem(f"[{stage['symbol']}]  {stage['label']}")
             item.setData(Qt.UserRole, stage["id"])
@@ -320,17 +461,23 @@ class MainWindow(QMainWindow):
         self.stage_list.currentItemChanged.connect(self._on_stage_selected)
         st.addWidget(self.stage_desc)
 
-        flags_row = QHBoxLayout()
-        flags_row.addWidget(QLabel("CLI flags:"))
-        self.flags_input = QLineEdit()
-        self.flags_input.setFont(mono)
-        self.flags_input.setPlaceholderText("extra flags for this stage, e.g. --n-max 30")
-        flags_row.addWidget(self.flags_input, stretch=1)
-        defaults_btn = QPushButton("Defaults")
-        defaults_btn.setToolTip("Reset the flags field to this stage's defaults for the current species.")
-        defaults_btn.clicked.connect(self._refresh_flags_field)
-        flags_row.addWidget(defaults_btn)
-        st.addLayout(flags_row)
+        st.addWidget(QLabel("Options for this stage:"))
+        self.flags_form = QFormLayout()
+        self.flags_form.setLabelAlignment(Qt.AlignRight)
+        flags_holder = QWidget()
+        flags_holder.setLayout(self.flags_form)
+        flags_scroll = QScrollArea()
+        flags_scroll.setWidget(flags_holder)
+        flags_scroll.setWidgetResizable(True)
+        flags_scroll.setMaximumHeight(230)
+        flags_scroll.setFrameShape(QScrollArea.StyledPanel)
+        st.addWidget(flags_scroll)
+        self._flag_widgets: dict[str, tuple[str, QWidget]] = {}
+
+        self.cmd_preview = QLabel("")
+        self.cmd_preview.setWordWrap(True)
+        self.cmd_preview.setFont(mono)
+        st.addWidget(self.cmd_preview)
 
         run_row = QHBoxLayout()
         self.run_btn = QPushButton("Run selected stage")
@@ -439,24 +586,101 @@ class MainWindow(QMainWindow):
             self.species_list.addItem(species)
         self._refresh_stage_markers()
         self._refresh_species_outputs()
+        self._update_cmd_preview()
 
-    # ── stage selection / run ───────────────────────────────────────────
+    # ── stage selection / dynamic options form ──────────────────────────
     def _on_stage_selected(self, current, _previous):
         if current is None:
             self.stage_desc.setText("")
-            self.flags_input.setText("")
+            self._build_flags_form(None)
             return
         stage_id = current.data(Qt.UserRole)
         stage = STAGE_BY_ID[stage_id]
         self.stage_desc.setText(stage["desc"].replace("{el}", self.current_species or "<el>"))
-        self._refresh_flags_field()
+        self._build_flags_form(stage)
 
-    def _refresh_flags_field(self):
+    def _build_flags_form(self, stage):
+        """Rebuild the options form for the selected stage: one labeled,
+        tooltipped widget per CLI flag (checkbox / dropdown / validated
+        text field), generated from that script's own argparse schema."""
+        while self.flags_form.rowCount():
+            self.flags_form.removeRow(0)
+        self._flag_widgets = {}
+        if stage is None:
+            self.cmd_preview.setText("")
+            return
+
+        for spec in stage.get("flags", []):
+            kind = spec["kind"]
+            help_text = spec.get("help", "")
+            if kind == "flag":
+                w = QCheckBox()
+                w.stateChanged.connect(self._update_cmd_preview)
+            elif kind == "choice":
+                w = QComboBox()
+                w.addItems(spec["choices"])
+                default = spec.get("default")
+                if default in spec["choices"]:
+                    w.setCurrentText(default)
+                w.currentTextChanged.connect(self._update_cmd_preview)
+            else:  # int, float, str, strlist
+                w = QLineEdit(spec.get("default", ""))
+                if kind == "int":
+                    w.setValidator(QIntValidator())
+                elif kind == "float":
+                    w.setValidator(QDoubleValidator())
+                w.textChanged.connect(self._update_cmd_preview)
+            w.setToolTip(help_text or spec["label"])
+            self._flag_widgets[spec["name"]] = (kind, w)
+            label = QLabel(spec["label"])
+            label.setToolTip(help_text or spec["label"])
+            self.flags_form.addRow(label, w)
+
+        self._update_cmd_preview()
+
+    def _collect_extra_args(self):
+        """Turn the current options-form values into an argv list."""
+        args = []
+        for name, (kind, w) in self._flag_widgets.items():
+            if kind == "flag":
+                if w.isChecked():
+                    args.append(name)
+            elif kind == "choice":
+                args += [name, w.currentText()]
+            elif kind == "strlist":
+                text = w.text().strip()
+                if text:
+                    args.append(name)
+                    args += text.split()
+            else:  # int, float, str
+                text = w.text().strip()
+                if text:
+                    args += [name, text]
+        return args
+
+    def _update_cmd_preview(self, *_unused):
         stage = self._selected_stage()
         if stage is None:
-            self.flags_input.setText("")
+            self.cmd_preview.setText("")
             return
-        self.flags_input.setText(stage["default_flags"](self.current_species))
+        species = self.current_species or "<species>"
+        args = [stage["script"], *stage["positional"](species), *self._collect_extra_args()]
+        self.cmd_preview.setText("$ python " + " ".join(args))
+
+    def _stdin_for_stage(self, stage, extra_args):
+        """plotinteractive.py answers 3 prompts before writing plot 1-3, but
+        --plots 4 continues past that into two more (launch orbital3d? /
+        launch spectra?) that only appear when it doesn't exit early."""
+        base = stage.get("stdin")
+        if stage["id"] == "grotrian" and base:
+            plots_val = "1"
+            if "--plots" in extra_args:
+                idx = extra_args.index("--plots")
+                if idx + 1 < len(extra_args):
+                    plots_val = extra_args[idx + 1]
+            if plots_val.strip() == "4":
+                base += "n\nn\n"
+        return base
 
     def _selected_stage(self):
         item = self.stage_list.currentItem()
@@ -483,13 +707,8 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Busy", "A stage is already running.")
             return
 
-        try:
-            extra_flags = shlex.split(self.flags_input.text().strip())
-        except ValueError as exc:
-            QMessageBox.warning(self, "Bad CLI flags", f"Couldn't parse the flags field:\n{exc}")
-            return
-
-        args = [stage["script"], *stage["positional"](self.current_species), *extra_flags]
+        extra_args = self._collect_extra_args()
+        args = [stage["script"], *stage["positional"](self.current_species), *extra_args]
         self.console.clear()
         self._log(f"$ {sys.executable} {' '.join(args)}")
         self.statusBar().showMessage(f"Running {stage['label']} for {self.current_species}...")
@@ -508,7 +727,7 @@ class MainWindow(QMainWindow):
         self.process = proc
         self.current_stage = stage
         proc.start()
-        stdin_text = stage.get("stdin")
+        stdin_text = self._stdin_for_stage(stage, extra_args)
         if stdin_text and proc.waitForStarted(3000):
             proc.write(stdin_text.encode())
             proc.closeWriteChannel()
@@ -628,32 +847,38 @@ class MainWindow(QMainWindow):
 
     def _local_plot_copy(self, path: Path) -> Path:
         """
-        Return a copy of a generated Plotly HTML file with the CDN
-        <script> tag rewritten to point at the bundled vendor/plotly.min.js,
-        so plots render without the embedded browser needing internet
-        access (the CDN tag also carries a subresource-integrity hash,
-        which fails outright if the fetch is blocked or offline). Cached
-        by content hash + mtime so repeat views are instant and nothing
-        under plots/ is ever modified.
+        Return a locally-renderable copy of a generated Plotly HTML file.
+        The *whole directory* it lives in is mirrored into a temp cache
+        with every .html file's CDN <script> tag rewritten to the bundled
+        vendor/plotly.min.js -- not just the one file being opened. That
+        matters because "hub" pages such as <el>_blackbody.html embed
+        sibling files (<el>_blackbody_shifts.html, etc.) in an <iframe> by
+        a same-directory relative path, and that link only resolves if the
+        sibling sits patched right next to it -- otherwise the hub loads
+        but its embedded frame is blank / still hits the CDN.
+        Cached by mtime, so repeat views are instant; nothing under
+        plots/ on disk is ever modified.
         """
-        if not VENDOR_PLOTLY_JS.exists():
-            return path  # no bundled copy shipped; fall back to the CDN tag as-is
+        if not VENDOR_PLOTLY_JS.exists() or not path.exists():
+            return path  # no bundled copy shipped, or file vanished; use as-is
+        src_dir = path.parent
+        key = hashlib.sha1(str(src_dir.resolve()).encode("utf-8")).hexdigest()[:16]
+        dest_dir = self._plot_cache_dir / key
         try:
-            src_mtime = path.stat().st_mtime
-        except OSError:
-            return path
-        key = hashlib.sha1(str(path.resolve()).encode("utf-8")).hexdigest()[:16]
-        cached = self._plot_cache_dir / f"{key}_{path.name}"
-        try:
-            if cached.exists() and cached.stat().st_mtime >= src_mtime:
-                return cached
-            html = path.read_text(encoding="utf-8", errors="replace")
+            dest_dir.mkdir(parents=True, exist_ok=True)
             vendor_url = QUrl.fromLocalFile(str(VENDOR_PLOTLY_JS)).toString()
-            patched, n = PLOTLY_CDN_TAG_RE.subn(f'<script src="{vendor_url}"></script>', html, count=1)
-            cached.write_text(patched if n else html, encoding="utf-8")
-            return cached
+            for src_file in src_dir.glob("*.html"):
+                dest_file = dest_dir / src_file.name
+                if dest_file.exists() and dest_file.stat().st_mtime >= src_file.stat().st_mtime:
+                    continue
+                html = src_file.read_text(encoding="utf-8", errors="replace")
+                patched, n = PLOTLY_CDN_TAG_RE.subn(
+                    f'<script src="{vendor_url}"></script>', html, count=1)
+                dest_file.write_text(patched if n else html, encoding="utf-8")
         except OSError:
             return path
+        candidate = dest_dir / path.name
+        return candidate if candidate.exists() else path
 
     def _open_fallback_in_browser(self):
         if self.fallback_path is not None:
