@@ -2,26 +2,11 @@
 """
 LiNaK Desktop Control Panel
 ----------------------------
-A plain, native desktop GUI (PySide6/Qt) for the LiNaK alkali-atom AMO
-pipeline: run pipeline stages for a species and browse both freshly
-produced and already-on-disk plots/JSON, with the Plotly HTML plots
-rendered directly inside the window.
-
-This does not reimplement any physics -- it runs your existing scripts
-(rydberg.py, transitions.py, lifetimes.py, ...) as subprocesses with the
-same non-interactive flags you'd use from the command line, then loads
-the JSON/HTML files those scripts already produce.
-
 Install (one-time):
     pip install PySide6
 
 Run:
     python linak_gui.py
-
-Place this file inside your LiNaK project root (same folder as
-rydberg.py) and it will find everything automatically. If it's
-somewhere else, use File > Open LiNaK project folder... to point it
-at the right place; the choice is remembered next time.
 """
 import hashlib
 import json
@@ -67,26 +52,6 @@ except ImportError:
 ORG_NAME = "LiNaK"
 APP_NAME = "ControlPanel"
 
-# ============================================================================
-# PIPELINE STAGE DEFINITIONS
-# ============================================================================
-# Each stage maps to one existing script, run exactly as the CLI would run
-# it: [script] + positional(el) + <flags built from the form below>. "flags"
-# is a schema (mirroring each script's own argparse definitions, including
-# their --help text) that the UI turns into a labeled form -- checkboxes for
-# on/off flags, dropdowns for fixed choices, validated text fields for
-# numbers -- so nothing requires typing raw CLI syntax. "stdin" (if present)
-# answers any input() prompts with defaults so the stage can complete
-# unattended. "outputs" are glob patterns (with {el} substituted) used only
-# to find what got produced, not required for the script to succeed.
-#
-# Flag spec kinds:
-#   flag     - QCheckBox; presence/absence of a bare switch (e.g. --no-pi)
-#   choice   - QComboBox; one of a fixed set of values (e.g. --line D1/D2)
-#   int/float- validated QLineEdit; omitted from the command if left blank
-#   str      - QLineEdit; omitted from the command if left blank
-#   strlist  - QLineEdit; space-separated values become separate argv tokens
-#              (for argparse nargs='+' flags like --states)
 
 PIPELINE = [
     dict(id="rydberg", label="Rydberg series", symbol="QDT", script="rydberg.py",
@@ -98,6 +63,9 @@ PIPELINE = [
              dict(name="--nist-only", kind="flag", label="NIST-only (no QDT model)",
                   help="Write NIST ASD term levels only, no quantum-defect series. "
                        "Auto-enabled for 3d transition metals regardless."),
+             dict(name="--nist-dir", kind="str", label="NIST levels directory (override)", default="",
+                  help="Override the 'NIST Levels/' folder the script reads from. "
+                       "Leave blank to use the default next to the scripts."),
          ],
          outputs=["data_json/{el}_rydberg.json"]),
 
@@ -231,7 +199,7 @@ PIPELINE = [
          flags=[
              dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
                   help="Default: auto from the resonances in the JSON file."),
-             dict(name="--B-points", kind="int", label="B-field sample points", default=""),
+             dict(name="--B-points", kind="int", label="B-field sample points", default="2000"),
              dict(name="--kT-uK", kind="float", label="Collision energy (uK)", default="1",
                   help="Collision energy as a temperature, for the sigma(B) panel."),
              dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
@@ -241,13 +209,22 @@ PIPELINE = [
                   "plots/{el}/{el}_feshbach.html"]),
 
     dict(id="grotrian", label="Grotrian diagram", symbol="hv", script="plotinteractive.py",
-         desc="Interactive level diagram (plotinteractive.py).",
+         desc="Interactive level diagram (plotinteractive.py). Needs ORCA data "
+              "already generated (runorca.py) for this species.",
          positional=lambda el: [el],
          flags=[
              dict(name="--plots", kind="choice", label="Plots to generate",
-                  choices=["1", "2", "3", "4"], default="1",
-                  help="1=Grotrian only, 2=+spectrum, 3=+excited-excited Grotrian, "
-                       "4=+3D visualization (all)."),
+                  choices=[
+                      ("1", "1- Grotrian diagram only"),
+                      ("2", "2- Grotrian + Spectrum"),
+                      ("3", "3- Grotrian + Spectrum + Excited\u2194excited Grotrian"),
+                      ("4", "4- All four, incl. 3D view (default)"),
+                  ],
+                  default="4",
+                  help="Cumulative, not exclusive: each option always includes every "
+                       "plot below it too, so '2' already writes both the Grotrian "
+                       "diagram and the Spectrum. Matches the script's own default "
+                       "of generating all four."),
              dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
                   help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
          ],
@@ -285,21 +262,21 @@ PIPELINE = [
 
     dict(id="scattering", label="Scattering rate", symbol="R(D)",
          script="scattering_rate.py",
-         desc="Near-resonant MOT scattering-rate widget.",
+         desc="Near-resonant MOT scattering-rate widget. The generated plot "
+              "already contains both D1 and D2 (and all six alkalis), each "
+              "selectable from a dropdown inside the plot itself.",
          positional=lambda el: ["--element", el],
          flags=[
-             dict(name="--line", kind="choice", label="D-line",
-                  choices=["D1", "D2"], default="D2"),
+             dict(name="--line", kind="choice", label="Line shown when the plot first opens",
+                  choices=["D1", "D2"], default="D2",
+                  help="Both D1 and D2 are already selectable inside the generated "
+                       "plot for every element -- this only sets which one is "
+                       "visible before you touch the dropdown."),
          ],
          outputs=["plots/scattering_rate.html"]),
 ]
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
 
-# CDN <script> tag Plotly emits (fig.to_html(include_plotlyjs='cdn')), e.g.
-#   <script src="https://cdn.plot.ly/plotly-4.0.0.min.js" integrity="..."
-#     crossorigin="anonymous"></script>
-# Matched loosely (any attributes) so it still works if the CDN host/version
-# changes between plotly package versions.
 PLOTLY_CDN_TAG_RE = re.compile(
     r'<script\b[^>]*\bsrc="[^"]*plotly[^"]*\.js"[^>]*>\s*</script>',
     re.IGNORECASE,
@@ -307,9 +284,8 @@ PLOTLY_CDN_TAG_RE = re.compile(
 VENDOR_PLOTLY_JS = Path(__file__).resolve().parent / "vendor" / "plotly.min.js"
 
 
-# ============================================================================
+
 # DISK SCANNING HELPERS
-# ============================================================================
 
 def is_project_root(path: Path) -> bool:
     return (path / "constants.py").exists() and (path / "rydberg.py").exists()
@@ -352,9 +328,8 @@ def shared_outputs(root: Path):
     return items
 
 
-# ============================================================================
+
 # MAIN WINDOW
-# ============================================================================
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -378,7 +353,7 @@ class MainWindow(QMainWindow):
         shutil.rmtree(self._plot_cache_dir, ignore_errors=True)
         super().closeEvent(event)
 
-    # ── project root ────────────────────────────────────────────────────
+    # project root 
     def _resolve_root(self) -> Path:
         here = Path(__file__).resolve().parent
         if is_project_root(here):
@@ -415,13 +390,13 @@ class MainWindow(QMainWindow):
         self.current_species = ""
         self._refresh_all()
 
-    # ── UI ───────────────────────────────────────────────────────────────
+    # UI
     def _build_ui(self):
         mono = QFont("Consolas")
         mono.setStyleHint(QFont.Monospace)
         mono.setPointSize(9)
 
-        # -- Left: species, stages, console --------------------------------
+        # -- Left: species, stages, console 
         left = QWidget()
         left_layout = QVBoxLayout(left)
 
@@ -570,7 +545,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar())
         self._update_status()
 
-    # ── species ──────────────────────────────────────────────────────────
+    # species
     def _set_species_from_input(self):
         self._set_species(self.species_input.text())
 
@@ -588,7 +563,7 @@ class MainWindow(QMainWindow):
         self._refresh_species_outputs()
         self._update_cmd_preview()
 
-    # ── stage selection / dynamic options form ──────────────────────────
+    # stage selection / dynamic options form
     def _on_stage_selected(self, current, _previous):
         if current is None:
             self.stage_desc.setText("")
@@ -618,11 +593,15 @@ class MainWindow(QMainWindow):
                 w.stateChanged.connect(self._update_cmd_preview)
             elif kind == "choice":
                 w = QComboBox()
-                w.addItems(spec["choices"])
+                for choice in spec["choices"]:
+                    value, shown = choice if isinstance(choice, tuple) else (choice, choice)
+                    w.addItem(shown, userData=value)
                 default = spec.get("default")
-                if default in spec["choices"]:
-                    w.setCurrentText(default)
-                w.currentTextChanged.connect(self._update_cmd_preview)
+                if default is not None:
+                    idx = w.findData(default)
+                    if idx >= 0:
+                        w.setCurrentIndex(idx)
+                w.currentIndexChanged.connect(self._update_cmd_preview)
             else:  # int, float, str, strlist
                 w = QLineEdit(spec.get("default", ""))
                 if kind == "int":
@@ -646,7 +625,7 @@ class MainWindow(QMainWindow):
                 if w.isChecked():
                     args.append(name)
             elif kind == "choice":
-                args += [name, w.currentText()]
+                args += [name, w.currentData()]
             elif kind == "strlist":
                 text = w.text().strip()
                 if text:
@@ -764,7 +743,7 @@ class MainWindow(QMainWindow):
         self.console.insertPlainText(text + ("\n" if newline else ""))
         self.console.ensureCursorVisible()
 
-    # ── output lists / viewer ───────────────────────────────────────────
+    # output lists / viewer
     def _refresh_stage_markers(self):
         for i in range(self.stage_list.count()):
             item = self.stage_list.item(i)
@@ -856,11 +835,10 @@ class MainWindow(QMainWindow):
         a same-directory relative path, and that link only resolves if the
         sibling sits patched right next to it -- otherwise the hub loads
         but its embedded frame is blank / still hits the CDN.
-        Cached by mtime, so repeat views are instant; nothing under
-        plots/ on disk is ever modified.
+        Cached by mtime, so repeat views are instant.
         """
         if not VENDOR_PLOTLY_JS.exists() or not path.exists():
-            return path  # no bundled copy shipped, or file vanished; use as-is
+            return path  
         src_dir = path.parent
         key = hashlib.sha1(str(src_dir.resolve()).encode("utf-8")).hexdigest()[:16]
         dest_dir = self._plot_cache_dir / key
