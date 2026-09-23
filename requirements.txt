@@ -1,3 +1,8 @@
+# Desktop GUI
+PySide6>=6.5
+
+# Optional GUI HTML rendering:
+# PySide6-Addons>=6.5
 # Core AMO pipeline (install from project root)
 numpy>=1.22
 scipy>=1.9

@@ -41,6 +41,110 @@ pip install pytest                         # tests/
 
 ---
 
+## Desktop GUI
+
+LiNaK includes a native PySide6 desktop control panel named
+`linak_gui.py`.
+
+The GUI provides:
+
+- Species selection
+- Pipeline-stage controls
+- Command previews
+- Console output from running stages
+- HTML plot browsing
+- JSON data browsing
+- A species overview dashboard
+- Pipeline completion status
+- Rydberg, transition, lifetime, optical, blackbody, hyperfine, and Feshbach summaries
+- Feshbach resonance and channel tables
+- Hyperfine clock frequency and wavelength information
+
+### GUI requirements
+
+The GUI requires:
+
+- Python 3.9 or newer
+- PySide6
+- The normal LiNaK dependencies listed in `requirements.txt`
+
+Install the dependencies from the project root:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+For inline HTML and Plotly rendering inside the GUI, install:
+
+```bash
+python -m pip install PySide6-Addons
+```
+
+If `PySide6-Addons` is unavailable, the GUI still starts. HTML plots can
+be opened with the system browser instead.
+
+### Launching the GUI
+
+Run the GUI from the LiNaK project root:
+
+```bash
+python linak_gui.py
+```
+
+On Windows, this is also valid:
+
+```bat
+py linak_gui.py
+```
+
+The project root should contain:
+
+```text
+linak_gui.py
+constants.py
+rydberg.py
+data_json/
+plots/
+```
+
+If the GUI is started from another directory, use:
+
+```text
+File > Open LiNaK project folder...
+```
+
+and select the folder containing `constants.py` and `rydberg.py`.
+
+### GUI workflow
+
+1. Launch `linak_gui.py`.
+2. Select or enter a species, such as `Na`, `K`, or `Na_c1`.
+3. Select a pipeline stage.
+4. Configure the stage options.
+5. Click **Run selected stage**.
+6. Monitor output in the **Console** tab.
+7. Review calculated results in the **Overview** tab.
+8. Use the HTML and JSON tabs for detailed output files.
+
+The Overview tab reads existing files from `data_json/`. It does not
+recalculate the physics independently. Run the relevant pipeline stages
+first if a section reports that data is unavailable.
+
+### GUI dependency checks
+
+Check PySide6:
+
+```bash
+python -c "from PySide6.QtWidgets import QApplication; print('PySide6 OK')"
+```
+
+Check optional Qt WebEngine support:
+
+```bash
+python -c "from PySide6.QtWebEngineWidgets import QWebEngineView; print('Qt WebEngine OK')"
+```
+
+
 ## Inputs you need on disk
 
 | Path | Purpose |
