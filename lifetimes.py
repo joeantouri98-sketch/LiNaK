@@ -48,9 +48,9 @@ from constants import (
     ATOMIC_MASS_AMU,
 )
 
-# ============================================================================
+
 # SPECTROSCOPY HELPERS (module-local)
-# ============================================================================
+
 
 L_CHAR = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5}
 L_INT  = {v: k for k, v in L_CHAR.items()}
@@ -58,9 +58,9 @@ L_INT  = {v: k for k, v in L_CHAR.items()}
 # Reference temperature for Doppler width (typical vapour cell)
 T_DOPPLER_K = 300.0   # K
 
-# ============================================================================
+
 # ARGUMENT PARSING
-# ============================================================================
+
 
 parser = argparse.ArgumentParser(description='Compute Einstein A and lifetimes')
 parser.add_argument('element',
@@ -80,9 +80,9 @@ except ValueError as _exc:
     raise SystemExit(str(_exc))
 element = _sp["species_id"]
 
-# ============================================================================
+
 # LOAD DATA
-# ============================================================================
+
 
 rydberg_file    = f"data_json/{element}_rydberg.json"
 transitions_file = f"data_json/{element}_transitions.json"
@@ -181,7 +181,6 @@ IE      = rydberg_data['ionization_energy_eV']
 n_start = rydberg_data.get('n_start', 2)
 transitions = trans_data['transitions']
 
-# Recompute metal flag now that rydberg/trans JSON are loaded
 _is_metal = (
     is_transition_metal_species(element)
     or 'no QDT' in (rydberg_data.get('method') or '')
@@ -203,17 +202,14 @@ if _is_metal:
     print("  Metal path: NIST gA/fik only (no Numerov / Coulomb)")
 # A_ul = (EINSTEIN_PREFACTOR / lambda_nm^2) * (g_lower / g_upper) * f_lu
 # with EINSTEIN_PREFACTOR = 6.6703e13 s⁻¹·nm² (constants.py)
-#
 # Oscillator strength source priority:
 #   1. ORCA fosc if transition involves ground state and ORCA data exists
 #   2. Hydrogenic / Coulomb approximation via quantum defects (Rydberg series)
-#
 # Hydrogenic fosc approximation (Coulomb approximation):
 #   f_lu = (2/3) * (E_upper - E_lower)/Ry * |<n*_l|r|n*_u>|^2 * (g_u/g_l)
 #   For s-p transitions: f ≈ (64/(3√3)) * n*^(-3) * n'^(-3) * transition_factor
 #   We use the simple scaling: f ∝ n*^-3 relative to known value
-#   Best approach: use the Coulomb approximation formula directly
-# ============================================================================
+
 
 def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
     """
@@ -307,9 +303,8 @@ def default_lower_J(l_char):
     return '1/2' if l_char == 's' else None
 
 
-# ============================================================================
+
 # BUILD TRANSITION TABLE WITH A COEFFICIENTS
-# ============================================================================
 
 qd = rydberg_data.get('quantum_defects', {})
 _z_core = float(rydberg_data.get('z_core') or (_sp.get('charge', 0) + 1) or 1)
@@ -355,7 +350,7 @@ for t in transitions:
     fosc_acc    = None    # NIST Acc string or None
     fosc_delta  = None    # fractional 1-sigma uncertainty
 
-    # --- Metal path: published ASD gA / fik only (no Numerov/Coulomb) ---
+    # Metal path: published ASD gA / fik only (no Numerov/Coulomb)
     if _is_metal:
         _J_up = t.get('upper_J')
         _J_lo = t.get('lower_J')
@@ -422,9 +417,9 @@ for t in transitions:
         })
         continue
 
-    # --- Priority 1: NIST experimental f-values ---
+    # Priority 1: NIST experimental f-values
     # Prefer J-resolved lookup when the transition label carries J (e.g. 3p3/2).
-    # Ions: term+J first so ¹P₁ / ³P₁ do not share one f. Neutrals unchanged.
+    # Ions: term+J first so ¹P₁ / ³P₁ do not share one f.
     # Fall back to nl-averaged multiplet f_eff for states without J labels.
     _ll_nl = re.sub(r'(\d+[spdfg]).*', r'\1', ll)
     _ul_nl = re.sub(r'(\d+[spdfg]).*', r'\1', ul)
@@ -435,8 +430,7 @@ for t in transitions:
     if (nist_fosc_jt or nist_fosc_j or nist_fosc) and not args.orca_only:
         _f = None
         if _is_ion and nist_fosc_jt and _J_up and _term_up:
-            # Exact (term_lo, term_up) key; if lower has no term (e.g. '2p'),
-            # unique-match on (nl,nl,*,term_up,J).
+            # Exact (term_lo, term_up) key; if lower has no term (e.g. '2p'), unique-match on (nl,nl,*,term_up,J).
             _jtkey = (_ll_nl, _ul_nl, _term_lo or '', _term_up, _J_up)
             _f = nist_fosc_jt.get(_jtkey)
             _hit_key = _jtkey if _f else None
@@ -458,7 +452,7 @@ for t in transitions:
                     g_upper = _gJ_u
                 if _gJ_l:
                     g_lower = _gJ_l
-        # Skip plain J lookup for ion multiplet labels — same J merges ¹P/³P.
+        # Skip plain J lookup for ion multiplet labels, same J merges ¹P/³P.
         if fosc is None and _J_up and nist_fosc_j and not _term_up:
             _jkey = (_ll_nl, _ul_nl, _J_up)
             _f = nist_fosc_j.get(_jkey)
@@ -474,7 +468,7 @@ for t in transitions:
                     g_upper = _gJ_u
                 if _gJ_l:
                     g_lower = _gJ_l
-        # Multiplet nl average also merges ion terms — skip when term is known.
+        # Multiplet nl average also merges ion terms, skip when term is known.
         if fosc is None and nist_fosc and not _term_up:
             _key  = (_ll_nl, _ul_nl)
             _key2 = (_ul_nl, _ll_nl)
@@ -487,7 +481,7 @@ for t in transitions:
                 fosc_delta  = (0.01 if fosc_acc == 'precision'
                                else ACC_UNCERTAINTY.get(fosc_acc, 0.50))
 
-    # --- Priority 1b: curated literature overlay ---
+    # Priority 1b: curated literature overlay
     if fosc is None and (literature_fosc_j or literature_fosc) and not args.orca_only:
         if _J_up and literature_fosc_j:
             _jkey = (_ll_nl, _ul_nl, _J_up)
@@ -513,13 +507,13 @@ for t in transitions:
                 fosc_acc    = 'literature'
                 fosc_delta  = 0.20
 
-    # --- Priority 2: ORCA TD-DFT for ground state transitions ---
-    # Match ONLY when a TD-DFT root lies close in energy to the spectroscopic
-    # level. A fractional window that grows toward IE (old: up to 0.5 eV) wrongly
+    # Priority 2: ORCA TD-DFT for ground state transitions
+    # Match ONLY when a TD-DFT root lies close in energy to the spectroscopic level. 
+    # A fractional window that grows toward IE (old: up to 0.5 eV) wrongly
     # assigns high-n Rydberg np→gs lines to the highest valence/continuum-like
     # ORCA root, freezing their lifetime near ~0.4 us. Absolute 0.10 eV covers
     # typical CAM-B3LYP valence shifts (Na 3p ~0.07 eV, 4p ~0.08 eV) while
-    # rejecting Rydberg latch-on. Roots within 0.25 eV of IE are discarded —
+    # rejecting Rydberg latch-on. Roots within 0.25 eV of IE are discarded
     # standard bases do not describe those diffuse states.
     if fosc is None and not args.nist_only and ll == gs_label and orca_fosc:
         exc_ev = dE
@@ -533,9 +527,8 @@ for t in transitions:
             fosc_source = 'ORCA'
             fosc_delta  = 0.05   # ~5% fosc accuracy for CAM-B3LYP
 
-    # --- EOM excited->excited fosc (EOM-CCSD only) ---
-    # Match upper and lower states by energy to their ORCA state indices,
-    # then look up the excited->excited transition moment.
+    #EOM excited->excited fosc (EOM-CCSD only)
+    # Match upper and lower states by energy to their ORCA state indices, then look up the excited->excited transition moment.
     if fosc is None and ee_fosc and ll != gs_label and orca_data:
         orca_excitations = orca_data.get('excitations', [])
         upper_E = t['upper_energy_eV'] + IE    # convert abs to excitation eV
@@ -559,7 +552,7 @@ for t in transitions:
                 fosc_source = 'EOM-CCSD'
                 fosc_delta  = 0.05
 
-    # --- QD Numerov radial (preferred theoretical fallback; alkalis only) ---
+    #QD Numerov radial (preferred theoretical fallback; alkalis only)
     if fosc is None and not args.orca_only and not _is_metal:
         delta_u = qd.get(lu_char, 0.0)
         delta_l = qd.get(ll_char, 0.0)
@@ -587,7 +580,7 @@ for t in transitions:
                 if _gJ_l:
                     g_lower = _gJ_l
 
-    # --- Coulomb approximation (last resort; alkalis only) ---
+    #Coulomb approximation (last resort; alkalis only)
     if fosc is None and not args.orca_only and not _is_metal:
         delta_u = qd.get(lu_char, 0.0)
         delta_l = qd.get(ll_char, 0.0)
@@ -635,10 +628,9 @@ for t in transitions:
 
 print(f"  Transitions with A coefficients: {len(transition_table)}")
 
-# ============================================================================
+
 # COMPUTE LIFETIMES
 # For each excited state: tau = 1 / sum(A_ul for all l below u)
-# ============================================================================
 
 # Group A coefficients by upper state
 A_by_upper = defaultdict(list)
@@ -682,7 +674,7 @@ for state_label, tlist in sorted(A_by_upper.items(),
                 quality_delta = d
                 quality_acc   = ch.get('fosc_acc') or ch.get('fosc_source', '?')
 
-    # ── Einstein B coefficients ──────────────────────────────────────────────
+    # Einstein B coefficients 
     # Computed for the DOMINANT decay channel (highest A).
     # B₂₁ = A₂₁ · c³ / (8πhν³)          stimulated emission [m³ J⁻¹ s⁻²]
     # B₁₂ = (g₂/g₁) · B₂₁                absorption
@@ -722,9 +714,8 @@ for state_label, tlist in sorted(A_by_upper.items(),
     I_sat_Wm2  = dom_E_J / (2.0 * sigma_peak_m2 * tau_s)
     I_sat_mWcm2 = I_sat_Wm2 * 1e3 / 1e4   # mW/cm²
 
-    # ── Doppler-broadened quantities ─────────────────────────────────────────
-    # In a real vapour cell / MOT the dominant broadening is Doppler (Gaussian),
-    # not the natural linewidth (Lorentzian). The Doppler FWHM is:
+    # Doppler-broadened quantities
+    #The Doppler FWHM is:
     #   Δν_D = (ν₀/c) · √(8·k_B·T·ln2 / m)
     # Peak cross-section with Doppler broadening (CompTable / compare_elements):
     #   σ_peak_dop = σ_peak_nat · (Δν_nat / Δν_D) · √(ln2/π)
@@ -797,7 +788,7 @@ for state_label, tlist in sorted(A_by_upper.items(),
         v_cap_ms = Gamma_s / dom_k
 
     else:
-        # Mass unknown — set all mass-dependent quantities to None
+        # Mass unknown , set all mass-dependent quantities to None
         delta_nu_dop = sigma_peak_dop_m2 = sigma_peak_dop_cm2 = None
         I_sat_dop_Wm2 = I_sat_dop_mWcm2 = None
         v_rec_ms = v_rec_cms_val = E_rec_J = E_rec_nK = None
@@ -844,10 +835,10 @@ for state_label, tlist in sorted(A_by_upper.items(),
         # Natural linewidth
         'delta_nu_nat_Hz':    delta_nu_nat,
         'delta_nu_nat_MHz':   delta_nu_nat / 1e6,
-        # Peak absorption cross-section — natural (Lorentzian) broadening
+        # Peak absorption cross-section , natural (Lorentzian) broadening
         'sigma_peak_nat_m2':  sigma_peak_m2,
         'sigma_peak_nat_cm2': sigma_peak_cm2,
-        # Saturation intensity — natural broadening
+        # Saturation intensity , natural broadening
         'I_sat_nat_W_m2':     I_sat_Wm2,
         'I_sat_nat_mWcm2':    I_sat_mWcm2,
         # Doppler broadening (T=300 K)
@@ -856,10 +847,10 @@ for state_label, tlist in sorted(A_by_upper.items(),
             element, ATOMIC_MASS_AMU.get(_sp.get("symbol"), 0.0)),
         'delta_nu_dop_Hz':    delta_nu_dop,
         'delta_nu_dop_MHz':   delta_nu_dop / 1e6,
-        # Peak absorption cross-section — Doppler (Gaussian) broadening
+        # Peak absorption cross-section , Doppler (Gaussian) broadening
         'sigma_peak_dop_m2':  sigma_peak_dop_m2,
         'sigma_peak_dop_cm2': sigma_peak_dop_cm2,
-        # Saturation intensity — Doppler broadening (always > nat value)
+        # Saturation intensity , Doppler broadening (always > nat value)
         'I_sat_dop_W_m2':     I_sat_dop_Wm2,
         'I_sat_dop_mWcm2':    I_sat_dop_mWcm2,
         # Recoil quantities (per absorbed photon, dominant channel wavelength)
@@ -872,9 +863,9 @@ for state_label, tlist in sorted(A_by_upper.items(),
         'v_cap_ms':           v_cap_ms,
     })
 
-# ============================================================================
-# SAVE OUTPUT (before console report so a print encoding failure cannot drop JSON)
-# ============================================================================
+
+# SAVE OUTPUT
+
 
 output = {
     'species_id':        element,
@@ -897,9 +888,9 @@ with open(out_file, 'w', encoding='utf-8') as f:
 
 print(f"\n  Saved: {out_file}")
 
-# ============================================================================
+
 # PRINT RESULTS
-# ============================================================================
+
 
 print(f"\n{'-'*90}")
 print(f"  {'State':>6}  {'tau (ns)':>9}  {'+/-sig':>8}  {'+/-%':>5}  "
@@ -999,9 +990,9 @@ if known:
 
 print(f"\n{'='*65}\n")
 
-# ============================================================================
+
 # EINSTEIN B COEFFICIENTS + DERIVED QUANTITIES SUMMARY
-# ============================================================================
+
 
 # Show for all states with NIST or ORCA dominant source (reliable A values)
 reliable = [lt for lt in lifetime_table
@@ -1013,7 +1004,7 @@ if reliable:
     print(f"{'='*115}")
 
     # Table 1: natural broadening
-    print(f"\n  ── Natural (Lorentzian) broadening ──")
+    print(f"\n  Natural (Lorentzian) broadening")
     print(f"  {'State':>6}  {'τ (ns)':>9}  {'B₂₁':>15}  {'B₁₂':>15}  "
           f"{'Δν_nat (MHz)':>13}  {'σ_nat (cm²)':>12}  {'I_sat_nat (mW/cm²)':>19}")
     print(f"  {'─'*115}")
@@ -1029,7 +1020,7 @@ if reliable:
               f"{dnu:>13.4f}  {sig:>12.4e}  {isat:>19.4f}")
 
     # Table 2: Doppler broadening + recoil
-    print(f"\n  ── Doppler (Gaussian) broadening + recoil ──")
+    print(f"\n  Doppler (Gaussian) broadening + recoil ")
     print(f"  {'State':>6}  {'Δν_D (MHz)':>11}  {'σ_dop (cm²)':>12}  {'I_sat_dop (mW/cm²)':>19}  "
           f"{'v_rec (cm/s)':>13}  {'E_rec (nK)':>11}  {'T_Dop (μK)':>11}  {'v_cap (m/s)':>12}")
     print(f"  {'─'*115}")

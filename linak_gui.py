@@ -29,6 +29,7 @@ import hashlib
 import html
 import io
 import json
+import os
 import re
 import shutil
 import sys
@@ -86,33 +87,6 @@ except ImportError:
 
 ORG_NAME = "LiNaK"
 APP_NAME = "ControlPanel"
-
-# ============================================================================
-# PIPELINE STAGE DEFINITIONS
-# ============================================================================
-# Each stage maps to one existing script, run exactly as the CLI would run
-# it: [script] + positional(el) + <flags built from the form below>. "flags"
-# is a schema (mirroring each script's own argparse definitions, including
-# their --help text, cross-checked against HTMLs/Pipeline Overview.html
-# section 17) that the UI turns into a labeled form -- checkboxes for on/off
-# flags, dropdowns for fixed choices, validated text fields for numbers, a
-# file-browse field for paths -- so nothing requires typing raw CLI syntax.
-# "stdin" (if present) answers any input() prompts with defaults so the
-# stage can complete unattended. "outputs" are glob patterns (with {el}
-# substituted) used only to find what got produced, not required for the
-# script to succeed.
-#
-# Flag spec kinds:
-#   flag     - QCheckBox; presence/absence of a bare switch (e.g. --no-pi)
-#   choice   - QComboBox; one of a fixed set of values (e.g. --line D1/D2).
-#              Entries may be plain strings or (value, shown_label) tuples
-#              so the dropdown can show a clearer label than the raw value.
-#   int/float- validated QLineEdit; omitted from the command if left blank
-#   str      - QLineEdit; omitted from the command if left blank
-#   strlist  - QLineEdit; space-separated values become separate argv tokens
-#              (for argparse nargs='+' flags like --states)
-#   path     - QLineEdit + Browse... button; omitted if left blank
-
 ELEMENT_FAMILIES = {'alkali': ['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'], 'alkalis': ['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'], 'alkaline_earth': ['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra'], 'alkaline-earth': ['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra'], 'halogen': ['F', 'Cl', 'Br', 'I', 'At', 'Ts'], 'halogens': ['F', 'Cl', 'Br', 'I', 'At', 'Ts'], 'noble_gases': ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og'], 'noblegases': ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og'], 'chalcogens': ['O', 'S', 'Se', 'Te', 'Po', 'Lv'], 'pnictogens': ['N', 'P', 'As', 'Sb', 'Bi', 'Mc'], 'carbon_group': ['C', 'Si', 'Ge', 'Sn', 'Pb', 'Fl'], 'boron_group': ['B', 'Al', 'Ga', 'In', 'Tl', 'Nh'], 'transition': ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'], 'transition_metals': ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'], 'lanthanides': ['La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu'], 'actinides': ['Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']}
 
 PIPELINE = [
@@ -375,14 +349,13 @@ PIPELINE = [
               "generated (the ORCA stage above) for this species.",
          positional=lambda el: [el],
          flags=[
-             # These are interactive answers consumed by plotinteractive.py.
-             # They are converted to stdin, not command-line arguments.
+             # These are interactive answers consumed by plotinteractive.py. They are converted to stdin, not command-line arguments.
              dict(name="__energy_shift", kind="choice",
                   label="Energy reference",
                   choices=[
-                      ("1", "1 — Excitation energies"),
-                      ("2", "2 — Absolute energies"),
-                      ("3", "3 — Custom shift"),
+                      ("1", "Excitation energies"),
+                      ("2", "Absolute energies"),
+                      ("3", "Custom shift"),
                   ],
                   default="1",
                   stdin_only=True),
@@ -442,8 +415,8 @@ PIPELINE = [
              dict(name="__filter_ie", kind="choice",
                   label="Filter levels above ionization",
                   choices=[
-                      ("y", "Yes — filter them out"),
-                      ("n", "No — keep all levels"),
+                      ("y", "Filter above ionization"),
+                      ("n", "Keep all levels"),
                   ],
                   default="y",
                   stdin_only=True),
@@ -451,11 +424,11 @@ PIPELINE = [
              dict(name="__transition_display", kind="choice",
                   label="NIST/Rydberg transitions",
                   choices=[
-                      ("1", "1 — All"),
-                      ("2", "2 — Visible only"),
-                      ("3", "3 — UV + visible"),
-                      ("4", "4 — Custom wavelength range"),
-                      ("5", "5 — None"),
+                      ("1", "All"),
+                      ("2", "Visible only"),
+                      ("3", "UV + visible"),
+                      ("4", "Custom wavelength range"),
+                      ("5", "None"),
                   ],
                   default="1",
                   stdin_only=True),
@@ -463,11 +436,11 @@ PIPELINE = [
              dict(name="__orca_display", kind="choice",
                   label="ORCA transitions",
                   choices=[
-                      ("1", "1 — All"),
-                      ("2", "2 — Visible only"),
-                      ("3", "3 — UV + visible"),
-                      ("4", "4 — Custom wavelength range"),
-                      ("5", "5 — None"),
+                      ("1", "All"),
+                      ("2", "Visible only"),
+                      ("3", "UV + visible"),
+                      ("4", "Custom wavelength range"),
+                      ("5", "None"),
                   ],
                   default="1",
                   stdin_only=True),
@@ -475,10 +448,10 @@ PIPELINE = [
              dict(name="__plot3_choice", kind="choice",
                   label="Plot 3 transitions",
                   choices=[
-                      ("1", "1 — NIST only"),
-                      ("2", "2 — NIST + Numerov, n ≤ 8"),
-                      ("3", "3 — NIST + Numerov, n ≤ 12"),
-                      ("4", "4 — All theoretical"),
+                      ("1", "NIST only"),
+                      ("2", "NIST + Numerov, n ≤ 8"),
+                      ("3", "NIST + Numerov, n ≤ 12"),
+                      ("4", "All theoretical"),
                   ],
                   default="1",
                   stdin_only=True),
@@ -574,8 +547,7 @@ PIPELINE = [
 ]
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
 
-# Short physics context per stage for the Help dialog's "Pipeline stages" tab,
-# summarized from HTMLs/Pipeline Overview.html.
+# Short physics context per stage for the Help dialog's "Pipeline stages" tab, summarized from HTMLs/Pipeline Overview.html.
 STAGE_PHYSICS = {
     "runorca": (
         "Runs ORCA quantum chemistry to get excitation energies and oscillator "
@@ -680,18 +652,67 @@ PLOTLY_CDN_TAG_RE = re.compile(
 )
 VENDOR_PLOTLY_JS = Path(__file__).resolve().parent / "vendor" / "plotly.min.js"
 
+def _is_within_project(root: Path, candidate: Path) -> bool:
+    """
+    Return True if candidate resolves to a path contained by the LiNaK root.
+    This blocks overwriting arbitrary files outside the project.
+    """
+    try:
+        root_resolved = root.resolve()
+        candidate_resolved = candidate.resolve(strict=False)
+    except Exception:
+        return False
+    return candidate_resolved == root_resolved or root_resolved in candidate_resolved.parents
 
-# ============================================================================
+
+def _ensure_project_safe_path(root: Path, target: Path) -> Path:
+    """
+    Validate that target is inside the LiNaK project root and return it.
+    Prevents accidental writes outside the repo.
+    """
+    target = target.expanduser()
+    if not _is_within_project(root, target):
+        raise ValueError(
+            f"Refusing to write outside the LiNaK project folder:\n{target}\n\n"
+            f"Allowed root: {root}"
+        )
+    return target
+
+
+def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
+    """
+    Write text atomically to a file in the same directory.
+    This avoids leaving a truncated file on crash or partial write.
+    """
+    path = path.expanduser()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(
+        prefix=f".{path.stem}_",
+        suffix=path.suffix,
+        dir=str(path.parent),
+    )
+    try:
+        with os.fdopen(fd, "w", encoding=encoding, newline="") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, path)
+    except Exception:
+        try:
+            os.unlink(temp_name)
+        except OSError:
+            pass
+        raise
+
+
 # Custom dataset editor templates
-# ============================================================================
+
 JSON_DATASET_TEMPLATES = {'new': '{}', 'feshbach': '{\n  "element": "",\n  "isotope": null,\n  "a_bg": null,\n  "resonances": [\n    {\n      "B0": null,\n      "Delta": null,\n      "width": null,\n      "channel": ""\n    }\n  ]\n}', 'transitions': '{\n  "element": "",\n  "source": "manual",\n  "transitions": [\n    {\n      "lower_state": "",\n      "upper_state": "",\n      "wavelength_nm": null,\n      "oscillator_strength": null\n    }\n  ]\n}', 'lifetimes': '{\n  "element": "",\n  "states": [\n    {\n      "state": "",\n      "lifetime_ns": null,\n      "A_total_s_inv": null\n    }\n  ]\n}', 'polarizability': '{\n  "element": "",\n  "state": "",\n  "wavelength_nm": [],\n  "alpha_au": []\n}', 'blackbody': '{\n  "element": "",\n  "temperature_K": null,\n  "states": [\n    {\n      "state": "",\n      "shift_Hz": null,\n      "rate_s_inv": null\n    }\n  ]\n}', 'hyperfine': '{\n  "element": "",\n  "isotope": null,\n  "states": [\n    {\n      "label": "",\n      "I": null,\n      "J": null,\n      "F": null,\n      "A_MHz": null,\n      "B_MHz": null\n    }\n  ]\n}', 'rydberg': '{\n  "element": "",\n  "levels": [\n    {\n      "state": "",\n      "n": null,\n      "l": null,\n      "energy_cm1": null\n    }\n  ]\n}'}
 
 CSV_DATASET_TEMPLATES = {'new': [['column_1', 'column_2'], ['', '']], 'lines': [['element', 'isotope', 'lower_state', 'upper_state', 'wavelength_nm', 'oscillator_strength'], ['', '', '', '', '', '']], 'levels': [['element', 'isotope', 'state', 'energy_cm1', 'uncertainty_cm1'], ['', '', '', '', '']], 'nuclear_data': [['element', 'isotope', 'nuclear_spin_I', 'magnetic_moment', 'quadrupole_moment'], ['', '', '', '', '']], 'transitions': [['element', 'isotope', 'lower_state', 'upper_state', 'wavelength_nm', 'oscillator_strength'], ['', '', '', '', '', '']], 'lifetimes': [['element', 'state', 'lifetime_ns', 'A_total_s_inv'], ['', '', '', '']]}
 
 
-# ============================================================================
 # DISK SCANNING HELPERS
-# ============================================================================
 
 def is_project_root(path: Path) -> bool:
     return (path / "constants.py").exists() and (path / "rydberg.py").exists()
@@ -752,9 +773,8 @@ def open_pipeline_overview_html(root: Path, parent_widget):
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(candidates[0])))
 
 
-# ============================================================================
+
 # HELP DIALOG
-# ============================================================================
 
 class HelpDialog(QDialog):
     """Tabbed help: CLI flags reference (auto-generated from PIPELINE, so it
@@ -1602,9 +1622,7 @@ class SpeciesOverviewWidget(QWidget):
 
         rows = []
 
-        # These are the physically useful scalar results emitted by
-        # blackbody.py. The search is recursive because some outputs are
-        # nested under result/shift/rates/continuum sections.
+        # These are the physically useful scalar results emitted by blackbody.py. The search is recursive because some outputs are nested under result/shift/rates/continuum sections.
         scalar_fields = (
             ("Temperature", ("T_K", "temperature_K", "T")),
             ("State", ("state", "state_label", "excited_state", "excited")),
@@ -1825,7 +1843,7 @@ class SpeciesOverviewWidget(QWidget):
             constants.resizeColumnsToContents()
             constants.resizeRowsToContents()
 
-            # Show every row; do not put a vertical scrollbar inside this table.
+            
             header_height = constants.horizontalHeader().height()
             frame_height = constants.frameWidth() * 2
             row_height = constants.verticalHeader().defaultSectionSize()
@@ -1933,8 +1951,6 @@ class SpeciesOverviewWidget(QWidget):
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
 
-        # Make the whole resonance table visible. The containing overview
-        # remains scrollable, but the table itself has no vertical scrollbar.
         header_height = table.horizontalHeader().height()
         frame_height = table.frameWidth() * 2
         row_height = table.verticalHeader().defaultSectionSize()
@@ -2027,8 +2043,6 @@ class MainWindow(QMainWindow):
         self.process: QProcess | None = None
         self.current_stage = None
         self.fallback_path: Path | None = None
-
-        # Interactive prompt state for plotinteractive.py.
         self._interactive_stage = None
         self._prompt_buffer = ""
         self._answered_prompt_keys = set()
@@ -2047,7 +2061,7 @@ class MainWindow(QMainWindow):
         shutil.rmtree(self._basis_cache_dir, ignore_errors=True)
         super().closeEvent(event)
 
-    # ── project root ────────────────────────────────────────────────────
+    # project root
     def _resolve_root(self) -> Path:
         here = Path(__file__).resolve().parent
         if is_project_root(here):
@@ -2055,7 +2069,7 @@ class MainWindow(QMainWindow):
         saved = self.settings.value("root_path", "")
         if saved and is_project_root(Path(saved)):
             return Path(saved)
-        return here  # invalid; user is warned in the status bar
+        return here
 
     def _build_menu(self):
         file_menu = self.menuBar().addMenu("&File")
@@ -2281,13 +2295,13 @@ class MainWindow(QMainWindow):
         self.current_species = ""
         self._refresh_all()
 
-    # ── UI ───────────────────────────────────────────────────────────────
+    # UI 
     def _build_ui(self):
         mono = QFont("Consolas")
         mono.setStyleHint(QFont.Monospace)
         mono.setPointSize(9)
 
-        # -- Left: species, stages, options form, console -------------------
+        #Left: species, stages, options form, console
         left = QWidget()
         left_layout = QVBoxLayout(left)
 
@@ -2360,7 +2374,7 @@ class MainWindow(QMainWindow):
         st.addLayout(run_row)
         left_layout.addWidget(stage_box, stretch=3)
 
-        # -- Right: output browser + viewer ---------------------------------
+        # Right: output browser + viewer
         right = QWidget()
         right.setSizePolicy(
             right.sizePolicy().horizontalPolicy(),
@@ -2395,8 +2409,6 @@ class MainWindow(QMainWindow):
         self.shared_outputs_list.itemClicked.connect(self._on_output_clicked)
         tabs.addTab(self.shared_outputs_list, "Shared / cross-element")
 
-        # The tabs and viewer are placed in a vertical splitter so the
-        # boundary can be dragged manually.
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(tabs)
 
@@ -2420,10 +2432,10 @@ class MainWindow(QMainWindow):
 
         if HAS_WEBENGINE:
             self.web_view = QWebEngineView()
-            self.viewer_stack.addWidget(self.web_view)  # index 0
+            self.viewer_stack.addWidget(self.web_view) 
         else:
             self.web_view = None
-            self.viewer_stack.addWidget(QLabel("(unused)"))  # keep index alignment
+            self.viewer_stack.addWidget(QLabel("(unused)"))
 
         self.json_view = QPlainTextEdit()
         self.json_view.setReadOnly(True)
@@ -2476,7 +2488,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar())
         self._update_status()
 
-    # ── species ──────────────────────────────────────────────────────────
+    #species
     def _set_species_from_input(self):
         self._set_species(self.species_input.text())
 
@@ -2495,7 +2507,7 @@ class MainWindow(QMainWindow):
         self._refresh_overview()
         self._update_cmd_preview()
 
-    # ── stage selection / dynamic options form ──────────────────────────
+    # stage selection 
     def _on_stage_selected(self, current, _previous):
         if current is None:
             self.stage_desc.setText("")
@@ -2552,12 +2564,6 @@ class MainWindow(QMainWindow):
                 row_widget = container
             else:  # int, float, str, strlist
                 value_widget = QLineEdit(spec.get("default", ""))
-                # Do not use restrictive Qt validators here.
-                # This allows values such as:
-                #   -5.139
-                #   1e-6
-                #   -2.4e0
-                # while the target script performs final validation.
                 value_widget.textChanged.connect(self._update_cmd_preview)
                 row_widget = value_widget
 
@@ -2769,8 +2775,7 @@ class MainWindow(QMainWindow):
         """Turn the current options-form values into an argv list."""
         args = []
         for name, (kind, w) in self._flag_widgets.items():
-            # Fields beginning with "__" are GUI-only stdin answers.
-            # They must not be passed to argparse as command-line flags.
+            # Fields beginning with "__" are GUI-only stdin answers. They must not be passed to argparse as command-line flags.
             if name.startswith("__"):
                 continue
             if kind == "flag":
@@ -2828,9 +2833,6 @@ class MainWindow(QMainWindow):
         self._interactive_stage = stage
         self._prompt_buffer = ""
         self._answered_prompt_keys = set()
-
-        # Returning None keeps stdin open. Responses are sent by
-        # _respond_to_plotinteractive_prompt().
         return None
 
     def _grotrian_value(self, key, fallback=""):
@@ -3045,8 +3047,6 @@ class MainWindow(QMainWindow):
         proc = QProcess(self)
         proc.setWorkingDirectory(str(self.root))
 
-        # Force child Python processes to use UTF-8 on Windows.
-        # This prevents UnicodeEncodeError for characters such as →, ⚠, and μ.
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUTF8", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
@@ -3106,7 +3106,7 @@ class MainWindow(QMainWindow):
         self.console.insertPlainText(text + ("\n" if newline else ""))
         self.console.ensureCursorVisible()
 
-    # ── output lists / viewer ───────────────────────────────────────────
+    # output lists / viewer
     def _refresh_stage_markers(self):
         for i in range(self.stage_list.count()):
             item = self.stage_list.item(i)
@@ -3231,7 +3231,7 @@ class MainWindow(QMainWindow):
         plots/ on disk is ever modified.
         """
         if not VENDOR_PLOTLY_JS.exists() or not path.exists():
-            return path  # no bundled copy shipped, or file vanished; use as-is
+            return path  
         src_dir = path.parent
         key = hashlib.sha1(str(src_dir.resolve()).encode("utf-8")).hexdigest()[:16]
         dest_dir = self._plot_cache_dir / key

@@ -15,16 +15,21 @@ Usage:
     python runorca.py Li --basis-file "Basis sets/Li/Li-cc-pCVTZ.txt"
     python runorca.py Fr --functional-gs B3LYP --functional-ex CAM-B3LYP
     python runorca.py Na --outname UKS          -> data_json/Na_UKS.json
-                                           and orca_outputs/Na/<func>_<basis>_UKS/
+                                            and orca_outputs/Na/<func>_<basis>_UKS/
     ORCA files land in orca_outputs/<species_id>/<run_tag>/ (always a subfolder);
     run_tag includes functional, basis, SCF keyword, optional mode/outname.
     JSON stays flat under data_json/.
+
+SECURITY NOTE:
+  - ORCA resolution: uses ORCA_EXE environment variable or shutil.which("orca")
+  - Subprocess execution: uses argument lists, not shell=True
 """
 
 import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -55,7 +60,7 @@ from parse_orca import (
     deduplicate_excitations,
 )
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
+# ── CLI ─────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(description="Run ORCA and save data_json output")
 parser.add_argument("target", nargs="?", default=None,
                     help="Element symbol, Z, or ion species id "
@@ -161,7 +166,7 @@ def effective_scf_keyword(calc_mode):
 
 
 def build_run_tag(functional_gs, functional_ex, basis_tag, outname, calc_mode,
-                  soc_recipe=None, soc_norb=None, scf_keyword=None):
+                   soc_recipe=None, soc_norb=None, scf_keyword=None):
     """
     Folder name under orca_outputs/<El>/: join all distinguishing pieces.
     Example: CAM-B3LYP_aug-cc-pVTZ_VeryTightSCF
@@ -234,6 +239,33 @@ ANO_RCC_BASIS_TIERS = {
 }
 
 
+def resolve_orca_executable():
+    """
+    Resolve ORCA executable from environment variable or system PATH.
+    
+    Checks:
+    1. ORCA_EXE environment variable (if set and file exists)
+    2. shutil.which("orca") — searches system PATH
+    
+    Raises RuntimeError if not found.
+    """
+    env_value = os.environ.get("ORCA_EXE")
+    if env_value:
+        candidate = os.path.expanduser(env_value)
+        if os.path.isfile(candidate):
+            return candidate
+        raise RuntimeError(
+            f"ORCA_EXE environment variable points to a missing file: {candidate}")
+    
+    resolved = shutil.which("orca")
+    if resolved:
+        return resolved
+    
+    raise RuntimeError(
+        "ORCA executable not found on system PATH. "
+        "Either add orca to PATH or set ORCA_EXE environment variable.")
+
+
 def resolve_scf_keyword(calc_mode):
     """Return an explicit ORCA SCF keyword, or None to keep mode defaults."""
     if args.scf_tightness is None:
@@ -264,7 +296,7 @@ def is_neutral_target(Z, symbol):
     return TARGET.lower() == symbol.lower()
 
 
-# ── Directories ───────────────────────────────────────────────────────────────
+# ── Directories ──────────────────────────────────────────────────────────────
 BASE_DIR = "orca_outputs"
 JSON_DIR = "data_json"
 os.makedirs(BASE_DIR, exist_ok=True)
@@ -276,29 +308,43 @@ def orca_terminated_ok(text: str) -> bool:
 
 
 def run_orca(inp_path: str, out_path: str) -> None:
-    """Run ORCA; raise if the process or normal termination fails."""
+    """
+    Run ORCA; raise if the process or normal termination fails.
+    
+    SECURITY: Uses argument list (not shell=True) to prevent shell injection.
+    ORCA is resolved via resolve_orca_executable() (environment or PATH).
+    """
     inp_abs = os.path.abspath(inp_path)
     out_abs = os.path.abspath(out_path)
     work_dir = os.path.dirname(inp_abs) or "."
     inp_base = os.path.basename(inp_abs)
+    
+    orca_exe = resolve_orca_executable()
+    
     result = subprocess.run(
-        f'orca "{inp_base}"',
-        shell=True,
+        [orca_exe, inp_base],
+        shell=False,
         cwd=work_dir,
         capture_output=True,
         text=True,
         errors="ignore",
     )
+    
     with open(out_abs, "w", encoding="utf-8", errors="ignore") as f:
         if result.stdout:
             f.write(result.stdout)
         if result.stderr:
             f.write(result.stderr)
+    
     if result.returncode != 0:
         tail = ((result.stderr or "") + (result.stdout or ""))[-800:]
         raise RuntimeError(
             f"ORCA failed for {inp_path} (code {result.returncode})\n{tail}")
-    if not orca_terminated_ok(open(out_abs, encoding="utf-8", errors="ignore").read()):
+    
+    with open(out_abs, encoding="utf-8", errors="ignore") as f:
+        out_text = f.read()
+    
+    if not orca_terminated_ok(out_text):
         raise RuntimeError(f"ORCA did not terminate normally: {out_path}")
 
 
@@ -460,7 +506,6 @@ def resolve_basis_file(spec, symbol, basis_root='Basis sets'):
         f"{spec}.txt",
         f"{symbol}-{spec}.txt",
     ]
-    # If user passed Li-cc-pCVTZ, also try as-is under Basis sets/Li/
     if not stem.lower().startswith(f"{symbol.lower()}-"):
         candidates.insert(0, os.path.join(basis_root, symbol, f"{symbol}-{stem}.txt"))
     for c in candidates:
@@ -582,8 +627,6 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
                     symbol, charge, mult, functional=functional_gs,
                     relativistic_mode=relativistic_mode, scf_keyword=gs_scf))
 
-            # Reusing GS orbitals across different functionals is inconsistent;
-            # with split functionals the EX job runs its own SCF (legacy behavior).
             moinp = None if functional_gs != functional_ex else gbw_name
             if moinp is None:
                 print(f"  Split functionals ({functional_gs} GS / {functional_ex} EX): "
@@ -612,7 +655,6 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
             _ot.get_recipe_soc = _orig_soc
             _ot._build_ano_rcc_block = _orig_ano
 
-    # Tag external path for JSON metadata (basename already in chosen_basis)
     if external_basis_path is not None:
         chosen_basis = f"file:{external_basis_path}"
     return paths, gbw_name, chosen_basis
