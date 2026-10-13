@@ -6,7 +6,7 @@ import math
 import os
 import re
 
-import blackbody as bb
+import linak.physics.blackbody as bb
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

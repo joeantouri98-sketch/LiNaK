@@ -56,7 +56,7 @@ def test_multiplet_f_rebuilt_from_lines(na_network):
 
 def test_s_to_p_scale_depends_on_gap(na_network):
     """NIST/Numerov for Na s->p is ~1.0 for near pairs and ~1.37 for far pairs."""
-    from qdt_radial import numerov_scale_for
+    from linak.physics.qdt_radial import numerov_scale_for
     cal = na_network["numerov_cal_types"]
     info = cal["types"][("s", "p")]
     assert info["gap_dependent"]

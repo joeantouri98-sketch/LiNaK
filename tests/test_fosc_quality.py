@@ -14,8 +14,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from fosc_audit import build_scorecard  # noqa: E402
 from helpers import write_result_summary
-from qdt_radial import numerov_fosc
-from alpha_core import load_literature_fvalues, load_nist_fvalues
+from linak.physics.qdt_radial import numerov_fosc
+from linak.physics.polarizability_core import load_literature_fvalues, load_nist_fvalues
 
 
 def test_fosc_audit_scorecard_writes(results_dir, data_dir, anchors):
@@ -58,8 +58,12 @@ def test_nist_mid_n_principal_series_present():
 def test_numerov_scale_from_nist_overlap_na(data_dir):
     """Scale is derived from Na NIST∩Numerov; must bring median ratio ~1."""
     import json
-    from alpha_core import load_nist_fvalues
-    from qdt_radial import fit_numerov_scale_from_nist, numerov_fosc_scaled, numerov_fosc
+    from linak.physics.polarizability_core import load_nist_fvalues
+    from linak.physics.qdt_radial import (
+        fit_numerov_scale_from_nist,
+        numerov_fosc_scaled,
+        numerov_fosc,
+    )
 
     ryd = json.loads((data_dir / "Na_rydberg.json").read_text(encoding="utf-8"))
     qd = ryd["quantum_defects"]
@@ -77,7 +81,7 @@ def test_numerov_scale_from_nist_overlap_na(data_dir):
 def test_numerov_scale_no_hardcoded_element_table():
     """fit_numerov_scale_from_nist must not embed per-element constants."""
     import inspect
-    from qdt_radial import fit_numerov_scale_from_nist
+    from linak.physics.qdt_radial import fit_numerov_scale_from_nist
     src = inspect.getsource(fit_numerov_scale_from_nist)
     for token in ("'Na'", '"Na"', "'Li'", "'Rb'", "'Cs'", "'Fr'", "'K'"):
         assert token not in src

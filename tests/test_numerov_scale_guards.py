@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from qdt_radial import numerov_scale_for, GAP_KNOTS
+from linak.physics.qdt_radial import numerov_scale_for, GAP_KNOTS
 
 CAL = {
     "global": {"scale": 3.3},

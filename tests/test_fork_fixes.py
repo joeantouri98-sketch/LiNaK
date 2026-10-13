@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 import pytest
 
-import hyperfine as hf
+import linak.physics.hyperfine as hf
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -74,7 +74,7 @@ def test_clock_wavelength_uses_exact_c():
 
 # ── P43: GAMESS L (SP) shells ────────────────────────────────────────────────
 def test_gamess_L_shell_becomes_S_and_P():
-    import orca_templates as ot
+    import linak.integrations.orca_templates as ot
     txt = "$DATA\nLITHIUM\nS   2\n1 10.0 0.5\n2 2.0 0.6\nL   2\n1 0.9 0.1 0.2\n2 0.3 0.4 0.5\nD 1\n1 0.2 1.0\n$END"
     out = ot._basis_block_from_gamess(txt, 'Li')
     kinds = [ln.split()[0] for ln in out.splitlines() if ln.strip()[:1] in 'SPD' and len(ln.split()) == 2]
@@ -84,7 +84,7 @@ def test_gamess_L_shell_becomes_S_and_P():
 
 # ── P18: one D-line table ────────────────────────────────────────────────────
 def test_dline_tables_share_one_source():
-    from dline_literature import LITERATURE, dline_transitions
+    from linak.core.dline_literature import LITERATURE, dline_transitions
     for el, rec in LITERATURE.items():
         tr = {t['label'].split('\u2192')[0]: t for t in dline_transitions(el)}
         assert tr[rec['np'] + '3/2']['fosc'] == rec['fosc_D2']
@@ -97,7 +97,7 @@ def test_dline_tables_share_one_source():
 
 # ── P28: non-LS downward channel carries g_lower/g_upper ─────────────────────
 def test_non_ls_downward_channel_has_g_ratio():
-    import polarizability as p
+    import linak.physics.polarizability as p
     d = p.load_element('Na', os.path.join(ROOT, 'data_json'))
     d['ls_mode'] = False
     tr = p.build_transitions_for_state('3p3/2', d, d['transitions'])
@@ -107,14 +107,14 @@ def test_non_ls_downward_channel_has_g_ratio():
 
 # ── P39 / P44: species without a QDT scheme ──────────────────────────────────
 def test_transition_metal_rejected_for_alpha():
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     with pytest.raises(SystemExit):
         ac.require_alpha_species('Fe', 'test')
     assert ac.require_alpha_species('Na', 'test')['species_id'] == 'Na'
 
 
 def test_nist_only_rydberg_json_selects_line_list_path(tmp_path, monkeypatch):
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     (tmp_path / 'data_json').mkdir()
     monkeypatch.chdir(tmp_path)
     assert not ac.is_transition_metal_species('Na')
@@ -172,19 +172,19 @@ def test_peak_cross_section_lorentzian_convention():
 @pytest.mark.parametrize('args,exact', [((2, 1, 1, 0), 0.4161967), ((3, 2, 2, 1), 0.6957847),
                                         ((4, 3, 3, 2), 1.0175189), ((3, 1, 2, 0), 0.4348654)])
 def test_coulomb_fosc_hydrogen_limit_low_n(args, exact):
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     assert ac.coulomb_fosc(*args, 0.0, 0.0) == pytest.approx(exact, rel=1e-5)
 
 
 @pytest.mark.parametrize('args,exact', [((30, 2, 29, 1), 1.658130), ((60, 2, 59, 1), 3.058680),
                                         ((100, 2, 99, 1), 4.934668), ((150, 1, 5, 0), 3.7547e-6)])
 def test_coulomb_fosc_hydrogen_limit_high_n(args, exact):
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     assert ac.coulomb_fosc(*args, 0.0, 0.0) == pytest.approx(exact, rel=0.02)   # Numerov, log-space start
 
 
 def test_coulomb_fosc_alkali_close_to_nist():
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     nist = ac.load_nist_fvalues('Na', os.path.join(ROOT, 'f_values'), verbose=False)['fosc']
     q = json.load(open(os.path.join(ROOT, 'data_json', 'Na_rydberg.json')))['quantum_defects']
     r = []
@@ -196,9 +196,9 @@ def test_coulomb_fosc_alkali_close_to_nist():
 
 
 def test_tail_partner_interpolation_matches_exact():
-    import blackbody as bb
-    import alpha_core as ac
-    import polarizability as p
+    import linak.physics.blackbody as bb
+    import linak.physics.polarizability_core as ac
+    import linak.physics.polarizability as p
     data = p.load_element('Na', os.path.join(ROOT, 'data_json'))
     tail = bb.discrete_tail_partners('40d', data, 51, 200)
     assert tail

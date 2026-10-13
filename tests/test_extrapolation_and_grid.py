@@ -11,7 +11,7 @@ import re
 import numpy as np
 import pytest
 
-import qdt_radial as Q
+import linak.physics.qdt_radial as Q
 
 
 @pytest.fixture(scope="module")

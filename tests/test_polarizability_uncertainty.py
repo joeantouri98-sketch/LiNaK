@@ -7,8 +7,8 @@ import math
 import numpy as np
 import pytest
 
-import alpha_core as ac
-import polarizability as pz
+import linak.physics.polarizability_core as ac
+import linak.physics.polarizability as pz
 
 
 def _tr(dE, f, sign=1, sigma=0.0):

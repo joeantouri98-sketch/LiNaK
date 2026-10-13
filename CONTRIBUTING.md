@@ -24,9 +24,8 @@ with:
    page, etc.) in a comment and, if applicable, in `REFERENCES.bib`.
 5. Run the test suite before opening a pull request:
    ```bash
-   pip install -r requirements.txt
-   pip install pytest
-   pytest tests/
+   uv sync --dev
+   uv run pytest tests/
    ```
 6. Open a pull request describing what changed and why, and reference any
    related issue.

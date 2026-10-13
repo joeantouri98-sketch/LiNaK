@@ -2,7 +2,7 @@
 
 **LiNaK**: an alkali-atom AMO pipeline (Li–Fr): NIST / QDT levels → transitions → lifetimes → polarizability → BBR → optical tweezers → hyperfine → Feshbach → interactive plots. Optional ORCA TD-DFT / SOC overlays and an optional ARC levels bridge.
 
-Physics derivations and full CLI: [`HTMLs/Pipeline Overview.html`](HTMLs/Pipeline%20Overview.html) (§16 Na walkthrough, §17 flags).  
+Physics derivations and full CLI: [`resources/HTMLs/Pipeline Overview.html`](resources/HTMLs/Pipeline%20Overview.html) (§16 Na walkthrough, §17 flags).
 Bibliography: [`REFERENCES.md`](REFERENCES.md) · BibTeX: [`REFERENCES.bib`](REFERENCES.bib).
 
 > **Naming:** this toolkit is **LiNaK**. **ORCA** in the docs always means the Neese quantum-chemistry package (`runorca.py`), not this pipeline.
@@ -24,27 +24,86 @@ The pipeline has been exercised end-to-end for the alkalis and for Fe and Cr. **
 ## Requirements
 
 - Python 3.9+ recommended  
-- Run all commands from the **project root** (so `data_json/`, `NIST Levels/`, `f_values/` resolve)  
-- ORCA (optional; only for `runorca.py` / `orca_to_json.py`)  
+- Run commands through the packaged entry points; generated data remains in `data_json/` and reference data lives under `resources/`.
+- ORCA (optional; only for the ORCA pipeline stages)
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
-Core: `numpy`, `scipy`, `plotly`. Optional extras (commented in `requirements.txt`):
+The project now has an installable `src/linak` application package. Use these
+stable entry points:
 
-```text
-pip install ARC-Alkali-Rydberg-Calculator   # arc_bridge.py only
-pip install basis-set-exchange             # heavy-element ORCA bases (e.g. Fr)
-pip install pytest                         # tests/
+```bash
+uv run linak-gui       # desktop application
+uv run linak            # same application (GUI is the default)
+uv run python -m linak  # module form
 ```
+
+### Build a macOS application
+
+The GUI can be frozen into a macOS `.app` bundle with PyInstaller:
+
+```bash
+uv sync --dev
+uv run pyinstaller packaging/LiNaK.spec
+open dist/LiNaK.app
+```
+
+The checked-in spec packages the application shell and Python/Qt runtime plus
+the read-only reference datasets and local Plotly JavaScript. The GUI can
+operate on an external LiNaK project directory; set
+`LINAK_PROJECT_ROOT` when launching the bundle from another directory. ORCA
+remains an external installation and must be available on `PATH`.
+
+Generated application data remains project-owned. Set `LINAK_PROJECT_ROOT`
+when the GUI should operate on a particular checkout:
+
+```bash
+LINAK_PROJECT_ROOT=/path/to/LiNaK uv run linak-gui
+```
+
+This creates (or updates) the project-local `.venv` and installs the locked
+runtime dependencies. Run Python and project commands through `uv run` so they
+always use that environment:
+
+```bash
+uv run linak --pipeline rydberg Na --n-max 50
+uv run pytest tests/
+```
+
+Optional integrations can be installed with extras:
+
+```bash
+uv sync --extra arc       # ARC levels integration
+uv sync --extra basis     # heavy-element ORCA bases (e.g. Fr)
+uv sync --extra web       # inline Qt WebEngine/HTML rendering
+```
+
+Development tools are in the `dev` dependency group:
+
+```bash
+uv sync --dev
+```
+
+### Build the Windows executable
+
+Run this from PowerShell on Windows, or from a Windows CI runner:
+
+```powershell
+uv sync --dev
+.\packaging\build_windows.ps1 -Clean
+```
+
+The default build is a windowed one-folder application at
+`dist/windows/LiNaK/LiNaK.exe`. ORCA remains an external installation and is
+not bundled into the executable.
 
 ---
 
 ## Desktop GUI
 
-LiNaK includes a native PySide6 desktop control panel named
-`linak_gui.py`.
+LiNaK includes a native PySide6 desktop control panel exposed as `linak-gui`.
 
 The GUI provides:
 
@@ -66,18 +125,18 @@ The GUI requires:
 
 - Python 3.9 or newer
 - PySide6
-- The normal LiNaK dependencies listed in `requirements.txt`
+- The normal LiNaK dependencies installed by `uv sync`
 
 Install the dependencies from the project root:
 
 ```bash
-python -m pip install -r requirements.txt
+uv sync
 ```
 
 For inline HTML and Plotly rendering inside the GUI, install:
 
 ```bash
-python -m pip install PySide6-Addons
+uv sync --extra web
 ```
 
 If `PySide6-Addons` is unavailable, the GUI still starts. HTML plots can
@@ -88,7 +147,7 @@ be opened with the system browser instead.
 Run the GUI from the LiNaK project root:
 
 ```bash
-python linak_gui.py
+uv run python linak_gui.py
 ```
 
 On Windows, this is also valid:
@@ -135,13 +194,13 @@ first if a section reports that data is unavailable.
 Check PySide6:
 
 ```bash
-python -c "from PySide6.QtWidgets import QApplication; print('PySide6 OK')"
+uv run python -c "from PySide6.QtWidgets import QApplication; print('PySide6 OK')"
 ```
 
 Check optional Qt WebEngine support:
 
 ```bash
-python -c "from PySide6.QtWebEngineWidgets import QWebEngineView; print('Qt WebEngine OK')"
+uv run python -c "from PySide6.QtWebEngineWidgets import QWebEngineView; print('Qt WebEngine OK')"
 ```
 
 
@@ -164,19 +223,19 @@ Pre-built JSON under `data_json/` lets you plot without re-running the whole cha
 Minimal path if ORCA is not installed:
 
 ```bash
-python rydberg.py Na --n-max 50
-python transitions.py Na
-python lifetimes.py Na
+uv run python rydberg.py Na --n-max 50
+uv run python transitions.py Na
+uv run python lifetimes.py Na
 
-python polarizability.py Na
-python blackbody.py Na --T 300
-python tweezer.py Na --wl 1064 --intensity 50 --waist 1
-python hyperfine.py Na
-python feshbach.py Na
+uv run python polarizability.py Na
+uv run python blackbody.py Na --T 300
+uv run python tweezer.py Na --wl 1064 --intensity 50 --waist 1
+uv run python hyperfine.py Na
+uv run python feshbach.py Na
 
-python plotinteractive.py Na --plots 1
-python compare_elements.py
-python scattering_rate.py --element Na --line D2
+uv run python plotinteractive.py Na --plots 1
+uv run python compare_elements.py
+uv run python scattering_rate.py --element Na --line D2
 ```
 
 `rydberg.py` prompts for `n-max` if you omit `--n-max` (default prompt 30).  
@@ -190,46 +249,46 @@ Recommended order for a fresh neutral alkali (example Na). Scripts that support 
 
 ```bash
 # Optional structure overlays (separate ORCA jobs - never one mixed job)
-python runorca.py Na                         # TD-DFT → data_json/Na.json
-python runorca.py Na --mode soc              # SOC → data_json/Na_soc*.json
-# or reuse outs: python orca_to_json.py Na [--run TAG] [--outname SUFFIX]
+uv run python runorca.py Na                         # TD-DFT → data_json/Na.json
+uv run python runorca.py Na --mode soc              # SOC → data_json/Na_soc*.json
+# or reuse outs: uv run python orca_to_json.py Na [--run TAG] [--outname SUFFIX]
 
 # Levels → network → rates
-python rydberg.py Na --n-max 50
-python transitions.py Na
-python lifetimes.py Na                       # no --all
+uv run python rydberg.py Na --n-max 50
+uv run python transitions.py Na
+uv run python lifetimes.py Na                       # no --all
 
 # Trap / BBR / structure
-python polarizability.py Na                  # also: --all
-python blackbody.py Na --T 300               # also: --all
-python tweezer.py Na --wl 1064 --intensity 50
-python hyperfine.py Na                       # also: --all
-python feshbach.py Na                        # skip Fr (no FR JSON)
+uv run python polarizability.py Na                  # also: --all
+uv run python blackbody.py Na --T 300               # also: --all
+uv run python tweezer.py Na --wl 1064 --intensity 50
+uv run python hyperfine.py Na                       # also: --all
+uv run python feshbach.py Na                        # skip Fr (no FR JSON)
 
 # Visualization
-python spectra.py Na
-python orbital3d.py Na
-python plotinteractive.py Na --plots 1       # 1=grotrian; higher N adds more
-python compare_elements.py                   # CompTable for Li-Fr
-python scattering_rate.py --element Na --line D2
+uv run python spectra.py Na
+uv run python orbital3d.py Na
+uv run python plotinteractive.py Na --plots 1       # 1=grotrian; higher N adds more
+uv run python compare_elements.py                   # CompTable for Li-Fr
+uv run python scattering_rate.py --element Na --line D2
 ```
 
 Batch helpers (where implemented):
 
 ```bash
-python polarizability.py --all
-python blackbody.py --all
-python tweezer.py --all
-python hyperfine.py --all
-python feshbach.py --all          # every element that has *_feshbach.json
-python compare_elements.py        # default: all six alkalis at T=300 K
+uv run python polarizability.py --all
+uv run python blackbody.py --all
+uv run python tweezer.py --all
+uv run python hyperfine.py --all
+uv run python feshbach.py --all          # every element that has *_feshbach.json
+uv run python compare_elements.py        # default: all six alkalis at T=300 K
 ```
 
 After any lifetimes / NIST refresh, rebuild CompTable:
 
 ```bash
-python lifetimes.py Na            # repeat for Li K Rb Cs Fr as needed
-python compare_elements.py
+uv run python lifetimes.py Na            # repeat for Li K Rb Cs Fr as needed
+uv run python compare_elements.py
 ```
 
 ---
@@ -254,11 +313,11 @@ Energy convention in pipeline rydberg JSON: **ionization-relative** (continuum =
 TD-DFT and SOC are **separate** `runorca.py` invocations (`--mode` is exclusive).
 
 ```bash
-python runorca.py Na
-python runorca.py Na --mode soc --soc-recipe nevpt2
-python orca_to_json.py Na --run <TAG>          # re-parse without re-running
-python plotinteractive.py Na -e v13 --plots 1  # overlay a tagged JSON
-python plotinteractive.py Na --soc-only --plots 1
+uv run python runorca.py Na
+uv run python runorca.py Na --mode soc --soc-recipe nevpt2
+uv run python orca_to_json.py Na --run <TAG>          # re-parse without re-running
+uv run python plotinteractive.py Na -e v13 --plots 1  # overlay a tagged JSON
+uv run python plotinteractive.py Na --soc-only --plots 1
 ```
 
 Useful flags: `--outname SUFFIX`, `--nroots`, `--functional-gs` / `--functional-ex`, `--scf-tightness`, `--basis-tightness` (heavy Z), `--basis-file`. Full list: Overview §17.
@@ -268,8 +327,8 @@ Useful flags: `--outname SUFFIX`, `--nroots`, `--functional-gs` / `--functional-
 ## Optional: ARC levels only
 
 ```bash
-pip install ARC-Alkali-Rydberg-Calculator
-python arc_bridge.py Na --n-max 50
+uv sync --extra arc
+uv run python arc_bridge.py Na --n-max 50
 # → data_json/arc/Na_rydberg.json
 ```
 
@@ -289,21 +348,21 @@ Fe and Cr (and the alkalis) have been tested on this limited / full path as appr
 **Ion example** (`Na_c1` = Na⁺; ids from `species.py`; outputs shipped):
 
 ```bash
-python runorca.py Na_c1 --mode soc
-python rydberg.py Na_c1 --n-max 30
-python transitions.py Na_c1
-python lifetimes.py Na_c1
-python plotinteractive.py Na_c1 --plots 1
+uv run python runorca.py Na_c1 --mode soc
+uv run python rydberg.py Na_c1 --n-max 30
+uv run python transitions.py Na_c1
+uv run python lifetimes.py Na_c1
+uv run python plotinteractive.py Na_c1 --plots 1
 ```
 
 **3d metal example** (Fe / Cr; tested; regenerate locally or [ask](#contact) for outputs):
 
 ```bash
-python rydberg.py Fe                 # NIST terms; --nist-only auto for 3d
-python transitions.py Fe
-python lifetimes.py Fe --nist-only
-python runorca.py Fe --mode soc --soc-recipe nevpt2
-python plotinteractive.py Fe --soc-only --plots 1
+uv run python rydberg.py Fe                 # NIST terms; --nist-only auto for 3d
+uv run python transitions.py Fe
+uv run python lifetimes.py Fe --nist-only
+uv run python runorca.py Fe --mode soc --soc-recipe nevpt2
+uv run python plotinteractive.py Fe --soc-only --plots 1
 ```
 
 ---
@@ -312,13 +371,13 @@ python plotinteractive.py Fe --soc-only --plots 1
 
 ```bash
 # Near-resonant MOT scattering widget (not tweezer R_sc)
-python scattering_rate.py --element Na --line D2
+uv run python scattering_rate.py --element Na --line D2
 
 # CompTable temperature / subset
-python compare_elements.py --T 500 --elements Li Na K
+uv run python compare_elements.py --T 500 --elements Li Na K
 
 # Rebuild nuclear moments table for hyperfine
-python hyperfine.py --build-nuclear-data \
+uv run python hyperfine.py --build-nuclear-data \
   --magn-csv Moments/magn_mom_recomm.csv \
   --elec-csv Moments/elec_mom_recomm.csv
 
