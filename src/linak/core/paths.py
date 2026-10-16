@@ -3,32 +3,62 @@
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 from pathlib import Path
 
 
 RESOURCES_DIR = "resources"
-DATA_JSON_DIR = f"{RESOURCES_DIR}/data_json"
-PLOTS_DIR = f"{RESOURCES_DIR}/plots"
-BASIS_SETS_DIR = f"{RESOURCES_DIR}/Basis sets"
-ORCA_OUTPUTS_DIR = f"{RESOURCES_DIR}/orca_outputs"
+RUNTIME_DIR = ".linak"
+
+
+def _is_checkout(path: Path) -> bool:
+    return (path / "pyproject.toml").is_file() and (path / "src/linak").is_dir()
+
+
+def user_data_root() -> Path:
+    """Return a writable per-user directory for application data."""
+    if sys.platform == "win32":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData/Local"))
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library/Application Support"
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    root = base / "LiNaK"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
 
 
 def project_root() -> Path:
-    """Return the selected project root for legacy pipeline files."""
+    """Return the selected project root, or the current directory."""
     configured = os.environ.get("LINAK_PROJECT_ROOT")
     if configured:
         return Path(configured).expanduser().resolve()
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
     return Path.cwd()
+
+
+def writable_root() -> Path:
+    """Return the project-local or per-user writable data directory."""
+    root = project_root()
+    if _is_checkout(root):
+        return root / RUNTIME_DIR
+    return user_data_root()
 
 
 def resource_root() -> Path:
     """Return the read-only resources bundled with the application."""
     if getattr(sys, "frozen", False):
         return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
-    return Path(__file__).resolve().parents[3]
+
+    checkout_root = Path(__file__).resolve().parents[3]
+    if (checkout_root / RESOURCES_DIR).is_dir():
+        return checkout_root
+
+    installed_root = Path(sys.prefix)
+    if (installed_root / RESOURCES_DIR).is_dir():
+        return installed_root
+
+    return checkout_root
 
 
 def resource_path(*parts: str) -> Path:
@@ -44,14 +74,26 @@ def reference_path(*parts: str) -> Path:
     return resource_path(RESOURCES_DIR, *parts)
 
 
-def user_data_root() -> Path:
-    """Return a writable per-user directory for generated application data."""
-    if sys.platform == "win32":
-        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData/Local"))
-    elif sys.platform == "darwin":
-        base = Path.home() / "Library/Application Support"
-    else:
-        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
-    root = base / "LiNaK"
-    root.mkdir(parents=True, exist_ok=True)
-    return root
+DATA_JSON_DIR = str(writable_root() / "data")
+PLOTS_DIR = str(writable_root() / "plots")
+BASIS_SETS_DIR = str(reference_path("Basis sets"))
+ORCA_OUTPUTS_DIR = str(writable_root() / "orca_outputs")
+
+
+def _seed_data_dir() -> None:
+    """Copy bundled/reference JSON inputs into the writable data directory."""
+    source = reference_path("data_json")
+    target = Path(DATA_JSON_DIR)
+    if not source.is_dir():
+        return
+    target.mkdir(parents=True, exist_ok=True)
+    for path in source.rglob("*"):
+        if not path.is_file():
+            continue
+        destination = target / path.relative_to(source)
+        if not destination.exists():
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, destination)
+
+
+_seed_data_dir()

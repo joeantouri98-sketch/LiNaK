@@ -1,6 +1,6 @@
 [project]
 name = "LiNak"
-version = "1.3.0"
+dynamic = ["version"]
 description = "An integrated computational toolkit for alkali-atom AMO physics"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -25,11 +25,26 @@ linak = "linak.cli:main"
 linak-gui = "linak.gui.app:main"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+fallback_version = "0+unknown"
+tag_regex = "^(?:[\\w-]+-)?[vV]?\\.?(?P<version>\\d+(?:\\.\\d+){0,2}[^+]*)(?:\\+.*)?$"
+
+[tool.setuptools.data-files]
+"resources/Basis sets" = ["resources/Basis sets/*.*"]
+"resources/Basis sets/Li" = ["resources/Basis sets/Li/*.*"]
+"resources/HTMLs" = ["resources/HTMLs/*.*"]
+"resources/Moments" = ["resources/Moments/*.*"]
+"resources/NIST Levels" = ["resources/NIST Levels/*.*"]
+"resources/data_json" = ["resources/data_json/*.*"]
+"resources/data_json/arc" = ["resources/data_json/arc/*.*"]
+"resources/f_values" = ["resources/f_values/*.*"]
+"resources/vendor" = ["resources/vendor/*.*"]
 
 
 

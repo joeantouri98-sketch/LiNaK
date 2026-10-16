@@ -40,3 +40,4 @@ Thumbs.db
 # Local regenerable plots beyond shipped Na samples — keep resources/plots/ tracked for Na / Na_c1
 # Uncomment to stop tracking all HTML plots:
 # resources/plots/
+.linak/

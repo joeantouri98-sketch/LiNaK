@@ -2882,14 +2882,16 @@ class MainWindow(QMainWindow):
             elements = self._compare_elements_from_form()
             if not elements:
                 self.cmd_preview.setText(
-                    "$ python compare_elements.py --elements <enter elements>"
+                    "$ linak --pipeline compare_elements "
+                    "--elements <enter elements>"
                 )
                 return
             extra = ["--elements", *elements, *extra]
 
         args = [stage["script"], *stage["positional"](species), *extra]
         self.cmd_preview.setText(
-            "$ python " + " ".join(str(value) for value in args)
+            "$ linak --pipeline "
+            + " ".join(str(value) for value in args)
         )
 
     def _stdin_for_stage(self, stage, extra_args):
@@ -3071,7 +3073,7 @@ class MainWindow(QMainWindow):
         return STAGE_BY_ID[item.data(Qt.UserRole)]
 
     def _run_stage(self):
-        if not is_project_root(self.root):
+        if not is_project_root(self.root) and not reference_path("data_json").is_dir():
             QMessageBox.warning(
                 self, "No project folder",
                 "Use File > Open LiNaK project folder... to point this app "
@@ -3148,6 +3150,8 @@ class MainWindow(QMainWindow):
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUTF8", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
+        if is_project_root(self.root):
+            env.insert("LINAK_PROJECT_ROOT", str(self.root))
         proc.setProcessEnvironment(env)
 
         proc.setProgram(sys.executable)

@@ -20,8 +20,6 @@ datas = [
     (str(ROOT / "resources" / "HTMLs"), "resources/HTMLs"),
     (str(ROOT / "resources" / "data_json"), "resources/data_json"),
     (str(ROOT / "resources" / "Basis sets"), "resources/Basis sets"),
-    (str(ROOT / "resources" / "plots"), "resources/plots"),
-    (str(ROOT / "resources" / "orca_outputs"), "resources/orca_outputs"),
 ]
 
 a = Analysis(

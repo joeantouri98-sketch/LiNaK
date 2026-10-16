@@ -23,8 +23,6 @@ data_sources = [
     "HTMLs",
     "data_json",
     "Basis sets",
-    "plots",
-    "orca_outputs",
 ]
 datas = [
     (str(ROOT / "resources" / name), f"resources/{name}")
