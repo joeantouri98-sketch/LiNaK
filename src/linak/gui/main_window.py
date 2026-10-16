@@ -3123,7 +3123,7 @@ class MainWindow(QMainWindow):
                     if box.clickedButton() is not run_btn:
                         return
 
-        args = [
+        pipeline_args = [
             str(value)
             for value in [
                 stage["script"],
@@ -3132,7 +3132,9 @@ class MainWindow(QMainWindow):
             ]
         ]
         if getattr(sys, "frozen", False):
-            args = ["--pipeline", *args]
+            args = ["--pipeline", *pipeline_args]
+        else:
+            args = ["-m", "linak", "--pipeline", *pipeline_args]
 
         self.console.clear()
         self._log(f"$ {sys.executable} {' '.join(args)}")
