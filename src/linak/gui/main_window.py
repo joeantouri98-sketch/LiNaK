@@ -72,7 +72,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from linak.core.paths import project_root, reference_path, resource_path
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, project_root, reference_path, resource_path
 from .project_io import (
     atomic_write_text,
     ensure_project_safe_path,
@@ -152,7 +152,7 @@ PIPELINE = [
                        "the orca_outputs/ run folder. Use this to keep a method-comparison "
                        "run separate from your main result."),
          ],
-         outputs=["data_json/{el}.json", "data_json/{el}_soc.json"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}.json", f"{DATA_JSON_DIR}/{{el}}_soc.json"]),
 
     dict(id="orca_to_json", label="Re-parse ORCA output", symbol="->JSON",
          script="orca_to_json.py",
@@ -166,7 +166,7 @@ PIPELINE = [
              dict(name="--outname", kind="str", label="Output name suffix", default="",
                   help="Write data_json/<species>_<SUFFIX>.json instead of <species>.json."),
          ],
-         outputs=["data_json/{el}.json"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}.json"]),
 
     dict(id="rydberg", label="Rydberg series", symbol="QDT", script="rydberg.py",
          desc="NIST levels + quantum defect theory -> Rydberg series.",
@@ -182,7 +182,7 @@ PIPELINE = [
                   help="Override the 'NIST Levels/' folder the script reads from. "
                        "Leave blank to use the default next to the scripts."),
          ],
-         outputs=["data_json/{el}_rydberg.json"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_rydberg.json"]),
 
     dict(id="transitions", label="Transitions", symbol="E1", script="transitions.py",
          desc="Applies electric-dipole selection rules to the level set.",
@@ -201,7 +201,7 @@ PIPELINE = [
              dict(name="--ir", kind="flag", label="IR only (750 nm - 1 mm)",
                   help="Shorthand for --wl-min 750 --wl-max 1e6."),
          ],
-         outputs=["data_json/{el}_transitions.json"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_transitions.json"]),
 
     dict(id="lifetimes", label="Lifetimes", symbol="A/tau", script="lifetimes.py",
          desc="Einstein A coefficients and radiative lifetimes.",
@@ -214,7 +214,7 @@ PIPELINE = [
              dict(name="--nist-only", kind="flag", label="NIST/Rydberg transitions only",
                   help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
          ],
-         outputs=["data_json/{el}_lifetimes.json"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_lifetimes.json"]),
 
     dict(id="polarizability", label="Polarizability", symbol="alpha(w)",
          script="polarizability.py",
@@ -246,9 +246,9 @@ PIPELINE = [
                   default="",
                   help="Example: 20s. Prints alpha(0) for one state and exits."),
          ],
-         outputs=["data_json/{el}_polarizability.json",
-                  "plots/{el}/{el}_polarizability.html",
-                  "plots/{el}/{el}_magic_wavelengths.html"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_polarizability.json",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_polarizability.html",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_magic_wavelengths.html"]),
 
     dict(id="blackbody", label="Blackbody (BBR)", symbol="BBR", script="blackbody.py",
          desc="Static + dynamic BBR shifts, depopulation, photoionization.",
@@ -286,10 +286,10 @@ PIPELINE = [
                   default="3"),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Process every element with a valid BBR dataset."),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
          ],
-         outputs=["data_json/{el}_blackbody.json",
-                  "plots/{el}/{el}_blackbody.html"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_blackbody.json",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_blackbody.html"]),
 
     dict(id="tweezer", label="Optical tweezer", symbol="R_sc", script="tweezer.py",
          desc="Tweezer photon scattering rate & recoil heating.",
@@ -303,10 +303,10 @@ PIPELINE = [
              dict(name="--n-grid", kind="int", label="Wavelength grid points", default="1500"),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Run the tweezer tool for every element with both polarizability and lifetimes."),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
          ],
-         outputs=["data_json/{el}_tweezer.json",
-                  "plots/{el}/{el}_tweezer.html"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_tweezer.json",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_tweezer.html"]),
 
     dict(id="hyperfine", label="Hyperfine / Zeeman", symbol="F", script="hyperfine.py",
          desc="Breit-Rabi diagonalization; needs {el}_hf_constants.json.",
@@ -327,12 +327,12 @@ PIPELINE = [
                   help="CSV file for magnetic moments."),
              dict(name="--elec-csv", kind="str", label="Electric moment CSV", default="Moments/elec_mom_recomm.csv",
                   help="CSV file for electric moments."),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
              dict(name="--output-dir", kind="str", label="Output directory", default=""),
          ],
-         outputs=["data_json/{el}_hyperfine.json",
-                  "plots/{el}/{el}_hyperfine.html",
-                  "plots/{el}/{el}_zeeman.html"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_hyperfine.json",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_hyperfine.html",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_zeeman.html"]),
 
     dict(id="feshbach", label="Feshbach resonances", symbol="a(B)", script="feshbach.py",
          desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
@@ -349,11 +349,11 @@ PIPELINE = [
                   help="Default: isotope_A from the feshbach JSON."),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Process every element with a valid *_feshbach.json file."),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
              dict(name="--output-dir", kind="str", label="Output directory", default=""),
          ],
-         outputs=["data_json/{el}_feshbach_out.json",
-                  "plots/{el}/{el}_feshbach.html"]),
+         outputs=[f"{DATA_JSON_DIR}/{{el}}_feshbach_out.json",
+                  f"{PLOTS_DIR}/{{el}}/{{el}}_feshbach.html"]),
 
     dict(id="grotrian", label="Grotrian diagram", symbol="hv", script="plotinteractive.py",
          desc="Interactive level diagram (plotinteractive.py). Needs ORCA data already "
@@ -501,7 +501,7 @@ PIPELINE = [
                   help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
          ],
          stdin="1\n1\n1\n",
-         outputs=["plots/{el}/{el}_grotrian.html"]),
+         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_grotrian.html"]),
 
     dict(id="spectra", label="Spectrum", symbol="lambda", script="spectra.py",
          desc="Absorption + emission spectral bar chart.",
@@ -509,9 +509,9 @@ PIPELINE = [
          flags=[
              dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="200"),
              dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="900"),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
          ],
-         outputs=["plots/{el}/{el}_spectra.html"]),
+         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_spectra.html"]),
 
     dict(id="orbital3d", label="Orbital viewer", symbol="psi^2", script="orbital3d.py",
          desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
@@ -525,9 +525,9 @@ PIPELINE = [
              dict(name="--grid", kind="int", label="Grid points per axis", default="",
                   help="Blank = 96 (volume, max 128) or 55 (isosurface, max 75)."),
              dict(name="--isovalue", kind="float", label="Lowest level / outer isovalue", default="0.04"),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
          ],
-         outputs=["plots/{el}/{el}_orbital3d.html"]),
+         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_orbital3d.html"]),
 
     dict(id="compare", label="Compare elements", symbol="Sigma",
          script="compare_elements.py",
@@ -540,8 +540,8 @@ PIPELINE = [
              dict(name="--T", kind="float", label="Temperature (K)", default="300",
                   help="Temperature for Doppler broadening in the CompTable."),
          ],
-         outputs=["data_json/comparison_table.json",
-                  "plots/comparison_table.html"]),
+         outputs=[f"{DATA_JSON_DIR}/comparison_table.json",
+                  f"{PLOTS_DIR}/comparison_table.html"]),
 
     dict(id="scattering", label="Scattering rate", symbol="R(D)",
          script="scattering_rate.py",
@@ -555,10 +555,10 @@ PIPELINE = [
                   label="Line shown when the plot first opens",
                   choices=["D1", "D2"], default="D2",
                   help="Both D1 and D2 are selectable inside the generated plot."),
-             dict(name="--data-dir", kind="str", label="Data directory", default="data_json"),
-             dict(name="--output-dir", kind="str", label="Output directory", default="plots"),
+             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
+             dict(name="--output-dir", kind="str", label="Output directory", default=PLOTS_DIR),
          ],
-         outputs=["plots/scattering_rate.html"]),
+         outputs=[f"{PLOTS_DIR}/scattering_rate.html"]),
 
 ]
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
@@ -735,7 +735,7 @@ def isotope_prerequisite_issues(root: Path, stage_id: str, element: str, A):
     import the physics modules). Returns a list of (severity, text); severity is 'error' when the
     stage cannot give a result for that isotope and 'warning' when it runs on approximations."""
     issues = []
-    data = Path(root) / "data_json"
+    data = Path(root) / DATA_JSON_DIR
 
     def _load(name):
         try:
@@ -809,7 +809,7 @@ def is_project_root_legacy(path: Path) -> bool:
 
 def rydberg_species_legacy(root: Path):
     """Species that already have at least a Rydberg JSON on disk."""
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if not data_dir.exists():
         return []
     suffix = "_rydberg.json"
@@ -819,10 +819,10 @@ def rydberg_species_legacy(root: Path):
 def species_outputs_legacy(root: Path, species: str):
     """(path, kind) pairs for one species: its plots and its JSON files."""
     items = []
-    plot_dir = root / "plots" / species
+    plot_dir = root / PLOTS_DIR / species
     if plot_dir.exists():
         items += [(p, "PLOT") for p in sorted(plot_dir.glob("*.html"))]
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if data_dir.exists():
         items += [(p, "JSON") for p in sorted(data_dir.glob(f"{species}_*.json"))]
         exact = data_dir / f"{species}.json"
@@ -835,10 +835,10 @@ def shared_outputs_legacy(root: Path):
     """Cross-element outputs that live directly under plots/ and data_json/
     (not inside a per-species subfolder): CompTable, C6 matrix, etc."""
     items = []
-    plots_root = root / "plots"
+    plots_root = root / PLOTS_DIR
     if plots_root.exists():
         items += [(p, "PLOT") for p in sorted(plots_root.glob("*.html"))]
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if data_dir.exists():
         for name in ("comparison_table.json", "nuclear_data.json"):
             p = data_dir / name
@@ -2077,7 +2077,7 @@ class SpeciesOverviewWidget(QWidget):
             ("feshbach", "_feshbach.json"),
             ("feshbach_result", "_feshbach_out.json"),
         ):
-            path = self.root / "data_json" / f"{self.species}{suffix}"
+            path = self.root / DATA_JSON_DIR / f"{self.species}{suffix}"
             if path.exists():
                 data, error = self._load_json(path)
                 if error:
@@ -2347,7 +2347,7 @@ class MainWindow(QMainWindow):
                 dataset_name,
                 JSON_DATASET_TEMPLATES["new"],
             )
-            default_path = self.root / "data_json"
+            default_path = self.root / DATA_JSON_DIR
 
         else:
             initial_text = CSV_DATASET_TEMPLATES.get(
@@ -3352,7 +3352,7 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.fallback_path)))
 
     def _open_file_dialog(self):
-        start_dir = str(self.root / "plots")
+        start_dir = str(self.root / PLOTS_DIR)
         path_str, _filter = QFileDialog.getOpenFileName(
             self, "Open plot or JSON file", start_dir,
             "Plots and data (*.html *.json);;All files (*)",

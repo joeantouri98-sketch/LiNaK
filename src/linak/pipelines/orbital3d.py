@@ -48,11 +48,12 @@ import argparse, json, os, sys
 
 from linak.physics.rydberg import label_to_unicode
 from linak.core.species import resolve_species
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 #  CLI 
 p = argparse.ArgumentParser()
 p.add_argument("element",    nargs="?", default=None)
-p.add_argument("--data-dir", default="data_json")
+p.add_argument("--data-dir", default=DATA_JSON_DIR)
 p.add_argument("--n-max",    type=int,   default=10)
 p.add_argument("--render",   choices=["volume", "isosurface"], default="volume",
                help="volume (default): WebGL2 raymarched volume | "
@@ -93,7 +94,7 @@ if element is None:
 _species = resolve_species(element.strip())
 element = _species["species_id"]
 species_label = _species["label"]
-out_dir = os.path.join("plots", element)
+out_dir = os.path.join(PLOTS_DIR, element)
 os.makedirs(out_dir, exist_ok=True)
 
 # Load 

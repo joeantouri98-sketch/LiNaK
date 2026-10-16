@@ -12,7 +12,7 @@ Usage:
     python runorca.py Fe --mode tddft --nroots 20
     python runorca.py Fr --scf-tightness tight --basis-tightness vtz
     python runorca.py Na --pick-basis
-    python runorca.py Li --basis-file "Basis sets/Li/Li-cc-pCVTZ.txt"
+    python runorca.py Li --basis-file "resources/Basis sets/Li/Li-cc-pCVTZ.txt"
     python runorca.py Fr --functional-gs B3LYP --functional-ex CAM-B3LYP
     python runorca.py Na --outname UKS          -> data_json/Na_UKS.json
                                             and orca_outputs/Na/<func>_<basis>_UKS/
@@ -28,6 +28,7 @@ SECURITY NOTE:
 import argparse
 import json
 import os
+from linak.core.paths import BASIS_SETS_DIR, DATA_JSON_DIR, ORCA_OUTPUTS_DIR
 import re
 import shutil
 import subprocess
@@ -101,7 +102,7 @@ parser.add_argument("--pick-basis", action="store_true",
                          "(default: Z>=87 only). Embeds the choice as inline NewGTO.")
 parser.add_argument("--basis-file", default=None, metavar="PATH",
                     help="External basis file (GAMESS-US or ORCA format from "
-                         "basissetexchange.org). Resolves under Basis sets/ "
+                    "basissetexchange.org). Resolves under resources/Basis sets/ "
                          "when given a bare name/stem. Overrides --pick-basis "
                          "and embeds as inline NewGTO + AutoAux.")
 parser.add_argument("--outname", default=None, metavar="SUFFIX",
@@ -205,7 +206,7 @@ def resolve_basis_choice(symbol, Z, relativistic_mode):
         if external_path is None:
             raise FileNotFoundError(
                 f"--basis-file '{args.basis_file}' not found for {symbol}. "
-                f"Tried paths under Basis sets/{symbol}/ and as given."
+                f"Tried paths under {BASIS_SETS_DIR}/{symbol}/ and as given."
             )
         if args.pick_basis:
             print("  (--pick-basis ignored; --basis-file takes precedence)")
@@ -297,8 +298,8 @@ def is_neutral_target(Z, symbol):
 
 
 # ── Directories ──────────────────────────────────────────────────────────────
-BASE_DIR = "orca_outputs"
-JSON_DIR = "data_json"
+BASE_DIR = ORCA_OUTPUTS_DIR
+JSON_DIR = DATA_JSON_DIR
 os.makedirs(BASE_DIR, exist_ok=True)
 os.makedirs(JSON_DIR, exist_ok=True)
 
@@ -481,10 +482,10 @@ def resolve_bse_basis(symbol, z, relativistic_mode):
     )
 
 
-def resolve_basis_file(spec, symbol, basis_root='Basis sets'):
+def resolve_basis_file(spec, symbol, basis_root=BASIS_SETS_DIR):
     """
     Resolve --basis-file to an absolute path.
-    Accepts absolute/relative paths, or bare names/stems under Basis sets/.
+    Accepts absolute/relative paths, or bare names/stems under resources/Basis sets/.
     Examples for Li: Li-cc-pCVTZ.txt, cc-pCVTZ, Li-cc-pCVTZ
     """
     if not spec:

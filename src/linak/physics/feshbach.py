@@ -35,7 +35,7 @@ Data sources
 Outputs
 -------
     data_json/<element>_feshbach_out.json   computed scales + a(B) samples
-    plots/<element>/<element>_feshbach.html interactive Plotly
+    resources/plots/<element>/<element>_feshbach.html interactive Plotly
 
 Usage
 -----
@@ -53,6 +53,7 @@ import os
 import sys
 
 import numpy as np
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 try:
     import plotly.graph_objects as go
@@ -83,9 +84,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument('element', nargs='?', default=None)
 parser.add_argument('--all', action='store_true',
                     help='Run every element that has *_feshbach.json')
-parser.add_argument('--data-dir', default='data_json')
+parser.add_argument('--data-dir', default=DATA_JSON_DIR)
 parser.add_argument('--output-dir', default=None,
-                    help='Plot directory (default: plots/<element>)')
+                    help=f'Plot directory (default: {PLOTS_DIR}/<element>)')
 parser.add_argument('--B-max', type=float, default=None,
                     help='Max B field in Gauss (default: auto from resonances)')
 parser.add_argument('--B-points', type=int, default=2000,
@@ -103,7 +104,7 @@ parser.add_argument('--isotope', type=int, default=None,
 # DATA LOADING
 
 
-def get_available_elements(data_dir='data_json'):
+def get_available_elements(data_dir=DATA_JSON_DIR):
     """Neutrals that have a literature feshbach parameter file (ions excluded)."""
     from linak.core.species import is_ion_id
     out = []
@@ -117,7 +118,7 @@ def get_available_elements(data_dir='data_json'):
     return sorted(out)
 
 
-def load_feshbach_params(element, data_dir='data_json'):
+def load_feshbach_params(element, data_dir=DATA_JSON_DIR):
     path = os.path.join(data_dir, f'{element}_feshbach.json')
     if not os.path.exists(path):
         raise FileNotFoundError(
@@ -155,7 +156,7 @@ def _checked_C6(value, source):
     return value
 
 
-def load_C6_au(element, data_dir='data_json'):
+def load_C6_au(element, data_dir=DATA_JSON_DIR):
     """Prefer polarizability pipeline C₆; fall back to experimental table."""
     path = os.path.join(data_dir, f'{element}_polarizability.json')
     if os.path.exists(path):
@@ -170,7 +171,7 @@ def load_C6_au(element, data_dir='data_json'):
     raise ValueError(f'No C₆ available for {element}')
 
 
-def load_mass_amu(element, isotope_A=None, data_dir='data_json'):
+def load_mass_amu(element, isotope_A=None, data_dir=DATA_JSON_DIR):
     """Mass of the isotope actually used: explicit isotope_A, else the most abundant natural
     isotope (constants.default_isotope_A). Precise table first, then nuclear_data.json 'mass_amu'
     if it ever carries one, then the elemental fallback (flagged in the source string)."""
@@ -322,7 +323,7 @@ def multi_resonance_a(B, resonances, a_bg_default):
 # COMPUTE
 
 
-def compute_element(element, data_dir='data_json', isotope_A=None,
+def compute_element(element, data_dir=DATA_JSON_DIR, isotope_A=None,
                     B_max=None, B_points=2000, kT_uK=1.0, channel=None):
     params = load_feshbach_params(element, data_dir)
     A = isotope_A or params.get('isotope_A') or default_isotope_A(element)
@@ -582,7 +583,7 @@ def plot_feshbach(result, output_dir):
 
 # JSON OUTPUT
 
-def write_output_json(result, data_dir='data_json'):
+def write_output_json(result, data_dir=DATA_JSON_DIR):
     el = result['element']
     path = os.path.join(data_dir, f'{el}_feshbach_out.json')
 
@@ -667,7 +668,7 @@ def run_one(element, args):
         print(f"    - {r['label']:20s}  B0={r['B0_G']:7.1f} G  "
               f"Delta={r['Delta_G']:6.3f} G  [{r['channel']}]")
 
-    out_dir = args.output_dir or os.path.join('plots', element)
+    out_dir = args.output_dir or os.path.join(PLOTS_DIR, element)
     plot_feshbach(result, out_dir)
     write_output_json(result, args.data_dir)
     return result

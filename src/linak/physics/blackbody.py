@@ -16,7 +16,7 @@ Shift validation: Itano <E^2>_T to <0.02%; Farley-Wing high-n asymptotic
 delta_nu = pi (kB T)^2 / (3 h c^3) = 2416.666 Hz at 300 K.
 
 Data: rydberg / transitions / polarizability cache / lifetimes JSON
-Outputs: data_json/<el>_blackbody.json, plots/<el>/<el>_blackbody.html
+Outputs: data_json/<el>_blackbody.json, resources/plots/<el>/<el>_blackbody.html
 
 Usage:
     python blackbody.py Na
@@ -47,6 +47,7 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 import numpy as np
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 try:
     import plotly.graph_objects as go
@@ -216,7 +217,7 @@ def bbr_total_shift_damped_hz(transitions_list, T_K, n_pts=2000, omega_max_facto
     return val_J / H_SI
 
 
-def load_gamma_map(element, data_dir='data_json'):
+def load_gamma_map(element, data_dir=DATA_JSON_DIR):
     """Map state label -> A_total_s from lifetimes.json (for damped alpha)."""
     path = os.path.join(data_dir, f'{element}_lifetimes.json')
     if not os.path.isfile(path):
@@ -482,7 +483,7 @@ def label_degeneracy(label):
     return 2 * (2 * L + 1)
 
 
-def load_lifetimes_json(element, data_dir='data_json'):
+def load_lifetimes_json(element, data_dir=DATA_JSON_DIR):
     path = os.path.join(data_dir, f'{element}_lifetimes.json')
     if not os.path.exists(path):
         return None
@@ -597,7 +598,7 @@ def bbr_depopulation(state, graph, T_K, top_n=5):
     )
 
 
-def run_rates(element, T_K=300.0, n_min=None, data_dir='data_json'):
+def run_rates(element, T_K=300.0, n_min=None, data_dir=DATA_JSON_DIR):
     """
     Compute Gamma_BBR / tau_eff for all states with n >= n_min.
     Default n_min = n_start + 2 (skip lowest optical manifold).
@@ -781,7 +782,7 @@ def rydberg_shift_for_state(label, data, T_K, gamma_map=None, do_dyn=True,
 def run_rydberg_shifts(element, data, T_K=300.0, n_min=None, n_max=None,
                        extra_states=None, n_pad=N_PAD_DEFAULT, table=True,
                        do_dyn=True, do_cont=True, n_tail_max=N_TAIL_DEFAULT,
-                       data_dir='data_json'):
+                       data_dir=DATA_JSON_DIR):
     """
     Static + optional damped-dynamic BBR shifts from on-the-fly alpha networks.
 
@@ -1293,7 +1294,7 @@ def apply_beterov_mixing(rows, graph, T_K, t1_s, t2_s, dn_max=3,
 def run_continuum(element, data, T_K=300.0, n_min=None, rates=None,
                   extra_states=None, field_V_cm=None,
                   do_mix=True, t1_s=0.3e-6, t2_s=2.1e-6, mix_dn_max=3,
-                  data_dir='data_json'):
+                  data_dir=DATA_JSON_DIR):
     """
     Continuum BBR photoionization (Beterov eq.27) + optional SFI (eq.30)
     + optional multi-step mixing (eq.35).
@@ -1479,7 +1480,7 @@ def run_continuum(element, data, T_K=300.0, n_min=None, rates=None,
 
 # MAIN COMPUTATION PER ELEMENT
 
-def run_element(element, excited_label=None, T_K=300.0, data_dir='data_json',
+def run_element(element, excited_label=None, T_K=300.0, data_dir=DATA_JSON_DIR,
                 do_rates=True, n_min=None,
                 do_rydberg_shifts=True, shift_n_min=None, shift_n_max=None,
                 extra_states=None, n_pad=N_PAD_DEFAULT, do_rydberg_dyn=True,
@@ -2191,11 +2192,11 @@ if __name__ == '__main__':
     parser.add_argument('--mix-dn-max', type=int, default=3,
                         help='Max |dn| for mix partners (default: 3)')
     parser.add_argument('--all', action='store_true')
-    parser.add_argument('--data-dir', default='data_json')
+    parser.add_argument('--data-dir', default=DATA_JSON_DIR)
     args = parser.parse_args()
 
     DATA_DIR = args.data_dir
-    os.makedirs('plots', exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     print(f"blackbody.py v{__version__}")
 
     extra_states = None
@@ -2217,7 +2218,7 @@ if __name__ == '__main__':
         elements = [require_alpha_species(args.element, "blackbody.py")["species_id"]]
 
     for el in elements:
-        el_out_dir = os.path.join('plots', el)
+        el_out_dir = os.path.join(PLOTS_DIR, el)
         os.makedirs(el_out_dir, exist_ok=True)
         result = run_element(
             el, excited_label=args.excited, T_K=args.T,

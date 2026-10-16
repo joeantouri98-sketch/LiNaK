@@ -50,12 +50,12 @@ Data sources:
 
 Outputs:
   data_json/<element>_polarizability.json
-  plots/<element>/_polarizability.html         α(ω) + magic λ + AC Stark upgrade
+    resources/plots/<element>/_polarizability.html α(ω) + magic λ + AC Stark upgrade
                                                 (dual μK axis, intensity slider,
                                                  point calculator with trap freq)
-  plots/<element>/_magic_wavelengths.html      Grotrian-style magic λ atlas
-  plots/C6_matrix.html                         cross-element C₆ heatmap
-  plots/alpha_validation.html                  α(0) computed vs experiment
+    resources/plots/<element>/_magic_wavelengths.html Grotrian-style magic λ atlas
+    resources/plots/C6_matrix.html                cross-element C₆ heatmap
+    resources/plots/alpha_validation.html         α(0) computed vs experiment
 
 Usage:
   python polarizability.py Na
@@ -87,6 +87,7 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 import numpy as np
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 try:
     import plotly.graph_objects as go
@@ -390,7 +391,7 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
-                data_dir='data_json', isotope_A=None):
+                data_dir=DATA_JSON_DIR, isotope_A=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
@@ -1175,7 +1176,7 @@ def plot_magic_wavelengths(result, out_dir):
     return out_file
 
 
-# PLOTTING ; CROSS-ELEMENT (saved to plots)
+# PLOTTING ; CROSS-ELEMENT (saved to resources/plots)
 
 
 def plot_alpha_validation(results, out_dir):
@@ -1371,7 +1372,7 @@ def _trim_transitions(trans_list):
 
 # MAIN
 
-def save_json(result, data_dir='data_json'):
+def save_json(result, data_dir=DATA_JSON_DIR):
     """Save polarizability results to data_json/<element>_polarizability.json."""
     el = result['element']
     out = dict(
@@ -1408,7 +1409,7 @@ def main():
     parser.add_argument('--wl-max', type=float, default=2000.0)
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--heteronuclear', action='store_true')
-    parser.add_argument('--data-dir', default='data_json')
+    parser.add_argument('--data-dir', default=DATA_JSON_DIR)
     parser.add_argument('--n-grid', type=int, default=2000)
     parser.add_argument('--isotope', type=int, default=None,
                         help='Mass number A used for the trap-frequency mass (default: most abundant natural isotope)')
@@ -1420,7 +1421,7 @@ def main():
     args = parser.parse_args()
 
     data_dir = args.data_dir
-    os.makedirs('plots', exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     print(f"polarizability.py v{__version__}")
 
     from linak.physics.polarizability_core import require_alpha_species
@@ -1459,7 +1460,7 @@ def main():
 
     all_results = []
     for el in elements:
-        el_out_dir = os.path.join("plots", el)
+        el_out_dir = os.path.join(PLOTS_DIR, el)
         os.makedirs(el_out_dir, exist_ok=True)
         result = run_element(
             el,
@@ -1483,19 +1484,19 @@ def main():
 
     if len(all_results) > 1:
         print("\n" + "=" * 65)
-        print("  Generating cross-element plots → plots/")
+        print(f"  Generating cross-element plots → {PLOTS_DIR}/")
         print("=" * 65)
-        plot_alpha_validation(all_results, "plots")
-        plot_C6_matrix(all_results, "plots", heteronuclear=args.heteronuclear)
+        plot_alpha_validation(all_results, PLOTS_DIR)
+        plot_C6_matrix(all_results, PLOTS_DIR, heteronuclear=args.heteronuclear)
     elif len(all_results) == 1:
-        plot_alpha_validation(all_results, "plots")
+        plot_alpha_validation(all_results, PLOTS_DIR)
 
     print("\n" + "=" * 65)
     print("  Summary")
     print("=" * 65)
     for r in all_results:
         el = r["element"]
-        print(f"    plots/{el}/{el}_polarizability.html")
+        print(f"    {PLOTS_DIR}/{el}/{el}_polarizability.html")
         print(f"    data_json/{el}_polarizability.json")
     print("\n" + "=" * 65 + "\n")
 

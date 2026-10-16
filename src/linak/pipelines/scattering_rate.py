@@ -15,7 +15,7 @@ Physics:
 Data source: data_json/comparison_table.json (from compare_elements.py)
 Falls back to hardcoded values if JSON not found.
 
-Output: plots/scattering_rate.html
+Output: resources/plots/scattering_rate.html
 
 Usage:
     python scattering_rate.py
@@ -42,8 +42,10 @@ except ImportError:
 parser = argparse.ArgumentParser(description='Generate scattering rate widget')
 parser.add_argument('--element',    default=None, help='Default element (Li/Na/K/Rb/Cs/Fr)')
 parser.add_argument('--line',       default='D2', choices=['D1','D2'], help='D1 or D2 line')
-parser.add_argument('--data-dir',   default='data_json', help='Data directory')
-parser.add_argument('--output-dir', default='plots',     help='Output directory')
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
+
+parser.add_argument('--data-dir',   default=DATA_JSON_DIR, help='Data directory')
+parser.add_argument('--output-dir', default=PLOTS_DIR,     help='Output directory')
 args = parser.parse_args()
 
 os.makedirs(args.output_dir, exist_ok=True)

@@ -39,6 +39,7 @@ import os
 import re
 import sys
 import argparse
+from linak.core.paths import DATA_JSON_DIR
 import numpy as np
 from collections import defaultdict
 
@@ -132,7 +133,7 @@ def j_selection_rule(j_upper, j_lower):
 # LOAD DATA
 
 
-rydberg_file = f"data_json/{element}_rydberg.json"
+rydberg_file = f"{DATA_JSON_DIR}/{element}_rydberg.json"
 
 if not os.path.exists(rydberg_file):
     print(f"Error: {rydberg_file} not found. Run rydberg.py first.")
@@ -365,8 +366,8 @@ if _is_metal:
               f"({t['delta_E_eV']:.4f} eV)  "
               f"[J={t['upper_J']} -> J={t['lower_J']}]  [NIST]")
 
-    os.makedirs('data_json', exist_ok=True)
-    out_file = f"data_json/{element}_transitions.json"
+    os.makedirs(DATA_JSON_DIR, exist_ok=True)
+    out_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
     output = {
         'species_id': element,
         'element': _sp["symbol"],
@@ -586,8 +587,8 @@ for t in sorted(transitions, key=lambda x: x['wavelength_nm']):
 
 # SAVE
 
-os.makedirs('data_json', exist_ok=True)
-out_file = f"data_json/{element}_transitions.json"
+os.makedirs(DATA_JSON_DIR, exist_ok=True)
+out_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
 
 output = {
     'species_id'           : element,

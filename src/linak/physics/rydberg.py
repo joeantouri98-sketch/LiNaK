@@ -6,7 +6,7 @@ import re
 import sys
 import argparse
 import numpy as np
-from linak.core.paths import reference_path
+from linak.core.paths import DATA_JSON_DIR, reference_path
 
 from linak.core.constants import (HARTREE_TO_EV, ATOMIC_MASS_AMU, ISOTOPE_MASS_AMU, default_isotope_A)
 
@@ -1251,8 +1251,8 @@ def main():
                 disp = s.get('label_pretty') or s['label']
                 print(f"    {disp:20s}  {e_exc:10.6f} eV")
 
-        os.makedirs('data_json', exist_ok=True)
-        json_file = f'data_json/{element}_rydberg.json'
+        os.makedirs(DATA_JSON_DIR, exist_ok=True)
+        json_file = f'{DATA_JSON_DIR}/{element}_rydberg.json'
         data = {
             'species_id': element,
             'element': sp["symbol"],
@@ -1374,9 +1374,9 @@ def main():
     print(f"Energy range: {min(s['energy_eV'] for s in states):.4f} to "
           f"{max(s['energy_eV'] for s in states):.4f} eV")
 
-    os.makedirs('data_json', exist_ok=True)
+    os.makedirs(DATA_JSON_DIR, exist_ok=True)
 
-    json_file = f'data_json/{element}_rydberg.json'
+    json_file = f'{DATA_JSON_DIR}/{element}_rydberg.json'
     data = {
         'species_id':           element,
         'element':              sp["symbol"],

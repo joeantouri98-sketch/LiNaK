@@ -10,7 +10,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import QMessageBox
 
-from linak.core.paths import reference_path
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, reference_path
 
 
 def is_project_root(path: Path) -> bool:
@@ -20,7 +20,7 @@ def is_project_root(path: Path) -> bool:
 
 def rydberg_species(root: Path) -> list[str]:
     """Return species with a Rydberg dataset on disk."""
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if not data_dir.exists():
         return []
     suffix = "_rydberg.json"
@@ -30,11 +30,11 @@ def rydberg_species(root: Path) -> list[str]:
 def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
     """Return plot and JSON output files for one species."""
     items: list[tuple[Path, str]] = []
-    plot_dir = root / "plots" / species
+    plot_dir = root / PLOTS_DIR / species
     if plot_dir.exists():
         items.extend((path, "PLOT") for path in sorted(plot_dir.glob("*.html")))
 
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if data_dir.exists():
         items.extend(
             (path, "JSON")
@@ -49,11 +49,11 @@ def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
 def shared_outputs(root: Path) -> list[tuple[Path, str]]:
     """Return cross-element output files from the project root."""
     items: list[tuple[Path, str]] = []
-    plots_root = root / "plots"
+    plots_root = root / PLOTS_DIR
     if plots_root.exists():
         items.extend((path, "PLOT") for path in sorted(plots_root.glob("*.html")))
 
-    data_dir = root / "data_json"
+    data_dir = root / DATA_JSON_DIR
     if data_dir.exists():
         for name in ("comparison_table.json", "nuclear_data.json"):
             path = data_dir / name

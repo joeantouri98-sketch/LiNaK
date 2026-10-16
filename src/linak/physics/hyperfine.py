@@ -42,7 +42,7 @@ import sys
 from collections import defaultdict
 
 import numpy as np
-from linak.core.paths import reference_path
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, reference_path
 
 try:
     import plotly.graph_objects as go
@@ -75,9 +75,9 @@ parser.add_argument('--B-max',     type=float, default=500.0,
                     help='Max B field for Breit-Rabi diagram in Gauss (default: 500)')
 parser.add_argument('--B-points',  type=int,   default=500,
                     help='Number of B-field points (default: 500)')
-parser.add_argument('--data-dir',  default='data_json')
+parser.add_argument('--data-dir',  default=DATA_JSON_DIR)
 parser.add_argument('--output-dir',default=None,
-                    help='Output directory (default: plots/<element>)')
+                    help='Output directory (default: resources/plots/<element>)')
 parser.add_argument('--all',       action='store_true',
                     help='Run all elements with available hf_constants')
 parser.add_argument('--build-nuclear-data', action='store_true',
@@ -675,7 +675,7 @@ def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_
 
 
 def run_element(element, isotope_A=None, state_labels=None,
-                B_max=500.0, B_points=500, data_dir='data_json'):
+                B_max=500.0, B_points=500, data_dir=DATA_JSON_DIR):
 
     print(f"\n{'='*65}")
     print(f"  {element}  — Hyperfine Structure")
@@ -1575,7 +1575,7 @@ if __name__ == '__main__':
         elements = [require_neutral_species(args.element, "hyperfine.py")["species_id"]]
 
     for el in elements:
-        out_dir = args.output_dir or os.path.join('plots', el)
+        out_dir = args.output_dir or os.path.join(PLOTS_DIR, el)
         os.makedirs(out_dir, exist_ok=True)
 
         result = run_element(

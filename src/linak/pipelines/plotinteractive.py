@@ -30,6 +30,7 @@ import json
 import os
 import sys
 import numpy as np
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 from collections import defaultdict
 
 try:
@@ -104,7 +105,7 @@ def _extra_matches_species(path, species_id):
     return s == sid or s.startswith(sid + "_")
 
 
-def _resolve_extra_json(spec, element, data_dir='data_json'):
+def _resolve_extra_json(spec, element, data_dir=DATA_JSON_DIR):
     """
     Resolve --extra argument to a filesystem path.
     Accepts absolute/relative paths, bare filenames under data_json/,
@@ -235,13 +236,13 @@ _plots_max = _parse_plots_max(_cli.plots)
 if _plots_max < 4:
     print(f" --plots: writing plots 1..{_plots_max} only "
           f"(skipping {', '.join(str(n) for n in range(_plots_max+1, 5))})")
-json_file = f"data_json/{element}.json"
-soc_file = f"data_json/{element}_soc.json"
+json_file = f"{DATA_JSON_DIR}/{element}.json"
+soc_file = f"{DATA_JSON_DIR}/{element}_soc.json"
 if not os.path.exists(soc_file):
     # runorca.py appends recipe/norb suffixes for non-default SOC runs
     # (e.g. Cl_soc_casscf.json, Rb_soc_norb8.json), use the newest match.
     import glob as _glob
-    _soc_variants = sorted(_glob.glob(f"data_json/{element}_soc*.json"),
+    _soc_variants = sorted(_glob.glob(f"{DATA_JSON_DIR}/{element}_soc*.json"),
                            key=os.path.getmtime, reverse=True)
     if _soc_variants:
         soc_file = _soc_variants[0].replace("\\", "/")
@@ -316,7 +317,7 @@ if extra_overlays:
           + ', '.join(e['name'] for e in extra_overlays))
 
 # Try to load Rydberg data
-rydberg_file = f"data_json/{element}_rydberg.json"
+rydberg_file = f"{DATA_JSON_DIR}/{element}_rydberg.json"
 rydberg_data = None
 rydberg_excitations = []
 use_rydberg = False
@@ -341,7 +342,7 @@ if os.path.exists(rydberg_file):
         print(f"  Could not load Rydberg data: {e}")
 
 # Try to load transitions
-transitions_file = f"data_json/{element}_transitions.json"
+transitions_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
 transitions_data = []
 use_transitions = False
 
@@ -366,7 +367,7 @@ else:
     print(f"  (No transitions file found , run transitions.py {element} to generate)")
 
 # Try to load lifetimes data
-lifetimes_file = f"data_json/{element}_lifetimes.json"
+lifetimes_file = f"{DATA_JSON_DIR}/{element}_lifetimes.json"
 lifetimes_by_state  = {}   # state_label -> lifetime entry dict
 fosc_by_transition  = {}   # (upper_label, lower_label) -> fosc
 A_by_transition     = {}   # (upper_label, lower_label) -> A_s
@@ -1406,7 +1407,7 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
 # OUTPUT DIRECTORY
 # ============================================================================
 
-output_dir = f"plots/{element}"
+output_dir = os.path.join(PLOTS_DIR, element)
 os.makedirs(output_dir, exist_ok=True)
 
 # ============================================================================
@@ -5684,7 +5685,7 @@ if _orb_ans not in ('n', 'no'):
 
         if _result.returncode == 0:
             _orb_file = os.path.join(
-                "plots", element, f"{element}_orbital3d.html")
+              PLOTS_DIR, element, f"{element}_orbital3d.html")
             if os.path.exists(_orb_file):
                 print(f"\n   Orbital viewer saved: {os.path.abspath(_orb_file)}")
                 print(f"   6. {element}_orbital3d.html        "
@@ -5741,7 +5742,7 @@ if _spec_ans not in ('n', 'no'):
 
         # data-dir: pass through so spectra.py finds the JSON files
         if '--data-dir' not in ' '.join(_extra_flags):
-            _extra_flags += ['--data-dir', 'data_json']
+            _extra_flags += ['--data-dir', DATA_JSON_DIR]
 
         _cmd = [sys.executable, _spectra_script, element] + _extra_flags
         print(f"\n  Running: {' '.join(_cmd)}")
@@ -5751,7 +5752,7 @@ if _spec_ans not in ('n', 'no'):
 
         if _result.returncode == 0:
             _spec_file = os.path.join(
-                "plots", element, f"{element}_spectra.html")
+              PLOTS_DIR, element, f"{element}_spectra.html")
             if os.path.exists(_spec_file):
                 print(f"\n  Spectra viewer saved: {os.path.abspath(_spec_file)}")
                 print(f"   7. {element}_spectra.html          "

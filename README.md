@@ -163,7 +163,7 @@ linak_gui.py
 constants.py
 rydberg.py
 data_json/
-plots/
+resources/plots/
 ```
 
 If the GUI is started from another directory, use:
@@ -300,8 +300,8 @@ uv run python compare_elements.py
 | Levels, transitions, lifetimes, α, BBR, tweezer, hf, FR | `data_json/<El>_*.json` |
 | ORCA parsed JSON | `data_json/<El>.json`, `data_json/<El>_soc*.json`, or `--outname` |
 | ORCA run folders | `orca_outputs/<El>/<run_tag>/` |
-| Element plots | `plots/<El>/` (Grotrian, spectrum, tweezer, BBR, Feshbach, …). Shipped samples: `plots/Na/`, `plots/Na_c1/` |
-| CompTable | regenerate: `python compare_elements.py` → `plots/comparison_table.html` + `data_json/comparison_table.json` |
+| Element plots | `resources/plots/<El>/` (Grotrian, spectrum, tweezer, BBR, Feshbach, …). Shipped samples: `resources/plots/Na/`, `resources/plots/Na_c1/` |
+| CompTable | regenerate: `python compare_elements.py` → `resources/plots/comparison_table.html` + `data_json/comparison_table.json` |
 | ARC levels (optional) | `data_json/arc/<El>_rydberg.json` only |
 
 Energy convention in pipeline rydberg JSON: **ionization-relative** (continuum = 0, ground = −IE). NIST ASD files on disk are ground-relative; `rydberg.py` converts.
@@ -426,7 +426,7 @@ Optional side inputs:
 | `f_values/` | ASD line / \(f\) exports |
 | `Moments/` | Nuclear-moment CSVs for hyperfine rebuild |
 | `orca_outputs/` | ORCA run directories (when ORCA is used) |
-| `plots/` | Interactive HTML outputs (Na / Na⁺ samples shipped; regenerate others) |
+| `resources/plots/` | Interactive HTML outputs (Na / Na⁺ samples shipped; regenerate others) |
 | `HTMLs/Pipeline Overview.html` | Physics + CLI reference |
 | `tools/` | Maintainer helpers (regen / audit); not required for daily runs |
 | `tests/` | Pytest checks |
@@ -483,7 +483,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for bug reports, pull requests, and how
 - Prefer regenerating JSON via scripts over hand-editing physics outputs.  
 - Do not invent NIST tables; drop ASD exports into `NIST Levels/` / `f_values/`.  
 - Ions and 3d metals are **limited support** (Overview §17).  
-- CompTable: `python compare_elements.py` → `plots/comparison_table.html`.  
+- CompTable: `python compare_elements.py` → `resources/plots/comparison_table.html`.
 - Keep Overview and README CLI examples in sync when flags change.
 
 ---

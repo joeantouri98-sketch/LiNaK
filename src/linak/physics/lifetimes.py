@@ -28,6 +28,7 @@ import sys
 import argparse
 import math
 from collections import defaultdict
+from linak.core.paths import DATA_JSON_DIR
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -84,14 +85,14 @@ element = _sp["species_id"]
 # LOAD DATA
 
 
-rydberg_file    = f"data_json/{element}_rydberg.json"
-transitions_file = f"data_json/{element}_transitions.json"
-orca_file       = f"data_json/{element}.json"
+rydberg_file    = f"{DATA_JSON_DIR}/{element}_rydberg.json"
+transitions_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
+orca_file       = f"{DATA_JSON_DIR}/{element}.json"
 if not os.path.exists(orca_file):
     # SOC-first ions write data_json/<id>_soc*.json (same as plotinteractive).
     import glob as _glob
     _soc_hits = sorted(
-        _glob.glob(f"data_json/{element}_soc*.json"),
+        _glob.glob(f"{DATA_JSON_DIR}/{element}_soc*.json"),
         key=os.path.getmtime, reverse=True)
     if _soc_hits:
         orca_file = _soc_hits[0].replace("\\", "/")
@@ -1315,7 +1316,7 @@ output = {
     },
 }
 
-out_file = f"data_json/{element}_lifetimes.json"
+out_file = f"{DATA_JSON_DIR}/{element}_lifetimes.json"
 with open(out_file, 'w', encoding='utf-8') as f:
     json.dump(output, f, indent=2)
 

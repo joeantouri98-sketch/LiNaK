@@ -17,7 +17,7 @@ import os
 import re
 
 import numpy as np
-from linak.core.paths import reference_path
+from linak.core.paths import DATA_JSON_DIR, reference_path
 
 from linak.core.constants import (
     EV_TO_HARTREE,
@@ -230,7 +230,7 @@ def is_transition_metal_species(element):
     and any species whose data_json/<El>_rydberg.json was built with `rydberg.py --nist-only`
     (method 'NIST ASD levels (no QDT)'), so the later stages see the same level scheme."""
     try:
-        _rf = os.path.join('data_json', f"{str(element).strip()}_rydberg.json")
+        _rf = os.path.join(DATA_JSON_DIR, f"{str(element).strip()}_rydberg.json")
         if os.path.exists(_rf):
             with open(_rf) as _f:
                 if 'no QDT' in str(json.load(_f).get('method', '')):
@@ -282,7 +282,7 @@ def load_nist_metal_lines(element, f_values_dir=None, verbose=True,
         return out
 
     if max_ek_eV is None:
-        _ryd_file = os.path.join('data_json', f"{element}_rydberg.json")
+        _ryd_file = os.path.join(DATA_JSON_DIR, f"{element}_rydberg.json")
         try:
             with open(_ryd_file) as _rf:
                 max_ek_eV = float(json.load(_rf)['ionization_energy_eV'])
@@ -505,7 +505,7 @@ def load_nist_fvalues(element, f_values_dir=None, verbose=True,
         _is_ion = False
 
     if max_ek_eV is None:
-        _ryd_file = os.path.join('data_json', f"{element}_rydberg.json")
+        _ryd_file = os.path.join(DATA_JSON_DIR, f"{element}_rydberg.json")
         try:
             with open(_ryd_file) as _rf:
                 max_ek_eV = float(json.load(_rf)['ionization_energy_eV'])
@@ -810,7 +810,7 @@ def load_nist_fvalues(element, f_values_dir=None, verbose=True,
     fosc_legacy = dict(nist_fosc)
     n_mult_fixed = n_mult_dropped = 0
     if not _is_ion and nist_fosc_jl:
-        from qdt_radial import build_true_multiplet_f
+        from linak.physics.qdt_radial import build_true_multiplet_f
         _true = build_true_multiplet_f(nist_fosc_jl)
         for _key in list(nist_fosc):
             _ml = re.match(r'^\d+([spdfg])$', _key[0])
@@ -931,7 +931,7 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
 # ELEMENT DATA LOADER
 
 
-def load_element(element, data_dir='data_json', f_values_dir=None, verbose=True):
+def load_element(element, data_dir=DATA_JSON_DIR, f_values_dir=None, verbose=True):
     """
     Load rydberg + transitions JSON for one element.
     Returns a dict with everything needed for polarizability calculations.
@@ -1024,7 +1024,7 @@ def load_element(element, data_dir='data_json', f_values_dir=None, verbose=True)
     )
 
 
-def get_available_elements(data_dir='data_json'):
+def get_available_elements(data_dir=DATA_JSON_DIR):
     """Find neutrals with rydberg + transitions JSON (ions excluded for Tier C)."""
     from linak.core.species import is_ion_id
     available = []
@@ -1055,7 +1055,7 @@ def require_alpha_species(raw, context="this script"):
     return sp
 
 
-def load_cached_transitions(element, data_dir='data_json'):
+def load_cached_transitions(element, data_dir=DATA_JSON_DIR):
     """
     Load precomputed transitions_gs / transitions_ex from
     data_json/<element>_polarizability.json if present.
@@ -1233,7 +1233,9 @@ def _ls_state_term(t, state_label, data):
     fine-structure lines. f_ik > 0; sign = +1 upward (state is the lower level), -1 downward
     (the g_lower/g_upper emission factor is included in f_ik).
     """
-    from qdt_radial import (parse_J2_set, nist_line_f, ls_line_f, numerov_scale_for)
+    from linak.physics.qdt_radial import (
+        parse_J2_set, nist_line_f, ls_line_f, numerov_scale_for,
+    )
     ul, ll = t['upper_label'], t['lower_label']
     Lu, Ll = L_CHAR.get(t['upper_l'], -1), L_CHAR.get(t['lower_l'], -1)
     if Lu < 0 or Ll < 0 or abs(Lu - Ll) != 1:

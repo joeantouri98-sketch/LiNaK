@@ -25,7 +25,7 @@ Usage:
   python spectra.py Na_c1 --wl-min 25 --wl-max 50
 
 Output:
-  plots/<element>/<element>_spectra.html   — standalone interactive HTML
+  resources/plots/<element>/<element>_spectra.html — standalone interactive HTML
 """
 
 import argparse
@@ -46,7 +46,9 @@ except ImportError:
 parser = argparse.ArgumentParser(description="Absorption + emission spectral bar viewer")
 parser.add_argument("element",    nargs="?", default=None,
                     help="Species id: Na or ion stem Na_c1")
-parser.add_argument("--data-dir", default="data_json")
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
+
+parser.add_argument("--data-dir", default=DATA_JSON_DIR)
 parser.add_argument("--wl-min",   type=float, default=200.0)
 parser.add_argument("--wl-max",   type=float, default=900.0)
 args = parser.parse_args()
@@ -97,7 +99,7 @@ except ValueError:
     element = _raw if "_" in _raw else _raw.capitalize()
     species_label = element
     is_ion = "_" in element
-out_dir = os.path.join("plots", element)
+out_dir = os.path.join(PLOTS_DIR, element)
 os.makedirs(out_dir, exist_ok=True)
 
 # DATA LOADING

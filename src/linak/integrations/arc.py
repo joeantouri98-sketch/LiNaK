@@ -25,7 +25,7 @@ import os
 from fractions import Fraction
 
 import numpy as np
-from linak.core.paths import project_root
+from linak.core.paths import DATA_JSON_DIR, project_root
 
 try:
     import arc  # type: ignore[import-not-found]
@@ -45,7 +45,7 @@ except ImportError as exc:
     arc = None
     ARC_IMPORT_ERROR = exc
 
-DATA_ARC = str(project_root() / "data_json" / "arc")
+DATA_ARC = str(project_root() / DATA_JSON_DIR / "arc")
 
 # Match rydberg.py wavelength conversion (eV -> nm from ground)
 HC_EV_NM = 1239.84

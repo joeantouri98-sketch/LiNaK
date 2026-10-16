@@ -43,7 +43,7 @@ Data sources:
 
 Outputs:
     data_json/<element>_tweezer.json
-    plots/<element>/<element>_tweezer.html
+    resources/plots/<element>/<element>_tweezer.html
 
 Usage:
     python tweezer.py Na
@@ -60,6 +60,7 @@ import os
 import sys
 
 import numpy as np
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 try:
     import plotly.graph_objects as go
@@ -120,7 +121,7 @@ DEFAULT_WAIST_UM = 1.0
 # LIFETIMES → Γ LOOKUP
 
 
-def load_gamma_map(element, data_dir='data_json'):
+def load_gamma_map(element, data_dir=DATA_JSON_DIR):
     """
     Map state label → {A_s, lifetime_ns, E_rec_J, mass_amu} from lifetimes JSON.
     Returns (gamma_map, mass_amu or None).
@@ -384,7 +385,7 @@ def compute_spectra(transitions, wl_min, wl_max, n_grid, I_kWcm2, mass_amu):
 
 def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
                 waist_um=DEFAULT_WAIST_UM, wl_min=400.0, wl_max=1600.0,
-                n_grid=1500, data_dir='data_json'):
+                n_grid=1500, data_dir=DATA_JSON_DIR):
     print(f"\n{'='*65}")
     print(f"  {element}  —  Optical tweezer scattering & heating")
     print(f"{'='*65}")
@@ -728,7 +729,7 @@ def _clean(obj):
     return obj
 
 
-def save_json(result, data_dir='data_json'):
+def save_json(result, data_dir=DATA_JSON_DIR):
     el = result['element']
     pt = result['point']
     out = dict(
@@ -769,11 +770,11 @@ if __name__ == '__main__':
     parser.add_argument('--wl-max', type=float, default=1600.0)
     parser.add_argument('--n-grid', type=int, default=1500)
     parser.add_argument('--all', action='store_true')
-    parser.add_argument('--data-dir', default='data_json')
+    parser.add_argument('--data-dir', default=DATA_JSON_DIR)
     args = parser.parse_args()
 
     data_dir = args.data_dir
-    os.makedirs('plots', exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     print(f"tweezer.py v{__version__}")
 
     from linak.physics.polarizability_core import require_alpha_species
@@ -797,7 +798,7 @@ if __name__ == '__main__':
         elements = [require_alpha_species(args.element, "tweezer.py")["species_id"]]
 
     for el in elements:
-        el_out = os.path.join('plots', el)
+        el_out = os.path.join(PLOTS_DIR, el)
         os.makedirs(el_out, exist_ok=True)
         result = run_element(
             el,

@@ -19,7 +19,7 @@ whose pipeline has not been run yet.
 
 Outputs:
   data_json/comparison_table.json    — machine-readable summary
-  plots/comparison_table.html        — interactive sortable HTML table
+  resources/plots/comparison_table.html — interactive sortable HTML table
 
 Usage:
   python compare_elements.py
@@ -32,6 +32,7 @@ import os
 import sys
 import math
 import argparse
+from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
 
 
 # ARGUMENT PARSING
@@ -43,9 +44,9 @@ parser.add_argument('--T',        type=float, default=300.0,
 parser.add_argument('--elements', nargs='+',
                     default=['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'],
                     help='Elements to include (default: all 6 alkalis)')
-parser.add_argument('--data-dir', default='data_json',
+parser.add_argument('--data-dir', default=DATA_JSON_DIR,
                     help='Directory containing JSON data files (default: data_json)')
-parser.add_argument('--output-dir', default='plots',
+parser.add_argument('--output-dir', default=PLOTS_DIR,
                     help='Output directory for HTML table (default: plots)')
 args = parser.parse_args()
 
@@ -432,7 +433,7 @@ for el in elements:
         print(f"    SOC: {row['soc_meV']:.2f} meV")
     table_data.append(row)
 
-# Save JSON under data_json/ (HTML stays under --output-dir, default plots/)
+# Save JSON under data_json/ (HTML stays under --output-dir, default resources/plots/)
 json_out = os.path.join(DATA_DIR, 'comparison_table.json')
 with open(json_out, 'w', encoding='utf-8') as f:
     json.dump({'T_K': T_K, 'elements': table_data}, f, indent=2)

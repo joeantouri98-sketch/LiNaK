@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PLOTS_DIR = ROOT / "resources" / "plots"
 PI = math.pi
 
 # Accepted experimental D2 anchors (Steck Na/Rb/Cs; Sansonetti K; NIST Li; Simsarian Fr)
@@ -44,7 +45,7 @@ def _find(obj, key):
 
 
 def main() -> int:
-    comp_path = ROOT / "plots" / "comparison_table.json"
+    comp_path = PLOTS_DIR / "comparison_table.json"
     comp = json.loads(comp_path.read_text(encoding="utf-8"))
     check(comp["T_K"] == 300.0, "compare T_K=300")
     rows = {r["element"]: r for r in comp["elements"]}
@@ -116,7 +117,7 @@ def main() -> int:
     print("=== tweezer ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
         tw = json.loads((ROOT / "data_json" / f"{el}_tweezer.json").read_text(encoding="utf-8"))
-        html = ROOT / "plots" / el / f"{el}_tweezer.html"
+        html = PLOTS_DIR / el / f"{el}_tweezer.html"
         check(
             html.exists() and html.stat().st_size > 1000,
             f"{el} tweezer.html size={html.stat().st_size if html.exists() else 0}",
@@ -136,7 +137,7 @@ def main() -> int:
         )
         fout = ROOT / "data_json" / f"{el}_feshbach_out.json"
         fin = ROOT / "data_json" / f"{el}_feshbach.json"
-        html = ROOT / "plots" / el / f"{el}_feshbach.html"
+        html = PLOTS_DIR / el / f"{el}_feshbach.html"
         if not fout.exists():
             check(
                 False,
@@ -157,7 +158,7 @@ def main() -> int:
 
     print("=== spectra ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
-        p = ROOT / "plots" / el / f"{el}_spectra.html"
+        p = PLOTS_DIR / el / f"{el}_spectra.html"
         check(
             p.exists() and p.stat().st_size > 1000,
             f"{el} spectra.html size={p.stat().st_size if p.exists() else 0}",

@@ -126,7 +126,7 @@ class HelpDialog(QDialog):
         <h3>Offline plot rendering</h3>
         <p>Plots can be rendered using the bundled local
         <code>vendor/plotly.min.js</code> file. The GUI does not modify original
-        files under <code>plots/</code>.</p>
+        files under <code>resources/plots/</code>.</p>
         <h3>ORCA stages</h3>
         <p>The ORCA stages require ORCA to be installed and callable as
         <code>orca</code> on the system PATH. SOC and NEVPT2 calculations can

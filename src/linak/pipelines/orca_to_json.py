@@ -21,6 +21,7 @@ Usage:
 import argparse
 import json
 import os
+from linak.core.paths import DATA_JSON_DIR, ORCA_OUTPUTS_DIR
 import re
 import sys
 
@@ -31,7 +32,7 @@ from linak.integrations.orca_parser import (
     parse_ground_energy, parse_excitations, deduplicate_excitations,
 )
 
-OUT = "data_json"
+OUT = DATA_JSON_DIR
 SYMBOL_TO_Z = {sym: z for z, (sym, _c, _m) in ELEMENTS.items()}
 
 
@@ -93,7 +94,7 @@ def _infer_nroots(inp_text):
 
 def _list_run_dirs(species_id):
     """Return (legacy_flat_dir_or_None, [(tag, path), ...]) under orca_outputs/<id>."""
-    base = os.path.join("orca_outputs", species_id)
+    base = os.path.join(ORCA_OUTPUTS_DIR, species_id)
     if not os.path.isdir(base):
         return None, []
     legacy = None
@@ -117,7 +118,7 @@ def find_orca_run_dir(species_id, run_tag=None):
     """
     legacy, runs = _list_run_dirs(species_id)
     if run_tag:
-        path = os.path.join("orca_outputs", species_id, run_tag)
+        path = os.path.join(ORCA_OUTPUTS_DIR, species_id, run_tag)
         if os.path.isfile(os.path.join(path, f"{species_id}_ex.out")):
             return path, run_tag
         available = [t for t, _ in runs]

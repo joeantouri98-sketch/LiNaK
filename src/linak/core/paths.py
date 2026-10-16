@@ -7,6 +7,13 @@ import sys
 from pathlib import Path
 
 
+RESOURCES_DIR = "resources"
+DATA_JSON_DIR = f"{RESOURCES_DIR}/data_json"
+PLOTS_DIR = f"{RESOURCES_DIR}/plots"
+BASIS_SETS_DIR = f"{RESOURCES_DIR}/Basis sets"
+ORCA_OUTPUTS_DIR = f"{RESOURCES_DIR}/orca_outputs"
+
+
 def project_root() -> Path:
     """Return the selected project root for legacy pipeline files."""
     configured = os.environ.get("LINAK_PROJECT_ROOT")
@@ -34,7 +41,7 @@ def resource_path(*parts: str) -> Path:
 
 def reference_path(*parts: str) -> Path:
     """Return a read-only reference asset from the resources directory."""
-    return resource_path("resources", *parts)
+    return resource_path(RESOURCES_DIR, *parts)
 
 
 def user_data_root() -> Path:
