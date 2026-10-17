@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-from feshbach import multi_resonance_a, scattering_length
+from linak.physics.feshbach import multi_resonance_a, scattering_length
 
 from helpers import write_result_summary
 

@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from scipy.special import eval_genlaguerre
 
-from qdt_radial import radial_wavefunction, radial_dipole
+from linak.physics.qdt_radial import radial_wavefunction, radial_dipole
 
 _trapz = getattr(np, "trapezoid", None) or np.trapz
 

@@ -37,6 +37,7 @@ Thumbs.db
 # Uncomment the next line if you stop shipping ORCA run folders:
 # orca_outputs/
 
-# Local regenerable plots beyond shipped Na samples — keep plots/ tracked for Na / Na_c1
+# Local regenerable plots beyond shipped Na samples — keep resources/plots/ tracked for Na / Na_c1
 # Uncomment to stop tracking all HTML plots:
-# plots/
+# resources/plots/
+.linak/

@@ -87,7 +87,7 @@ See `data_json/<El>_feshbach.json` notes for resonance-by-resonance refs.
 | Sibalic17 | N. Šibalić *et al.*, *Comput. Phys. Commun.* **220**, 319 (2017) | ARC alkali Rydberg library |
 | Robertson21 | E. J. Robertson *et al.*, *Comput. Phys. Commun.* **261**, 107814 (2021) | ARC 3.0 divalent / extensions |
 
-License: BSD-3-Clause. Install separately: `pip install ARC-Alkali-Rydberg-Calculator`.
+License: BSD-3-Clause. Install separately with `uv sync --extra arc`.
 
 ---
 

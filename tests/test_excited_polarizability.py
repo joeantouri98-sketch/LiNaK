@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-import alpha_core as A
+import linak.physics.polarizability_core as A
 
 ARC_VALENCE = {          # a.u.
     "3s": 162.09, "3p1/2": 360.55, "3p3/2": 362.27, "4s": 3101.44,

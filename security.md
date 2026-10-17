@@ -43,7 +43,7 @@ This project enforces the following practices:
 - Validate file paths before writing to ensure they remain within the project
 - Use atomic writes (temporary file + `os.replace(...)`) for user-edited data
 - Avoid silent writes to external directories; surface warnings instead
-- Keep generated outputs under `data_json/`, `orca_outputs/`, or `plots/` by default
+- Keep generated outputs under `resources/data_json/`, `resources/orca_outputs/`, or `resources/plots/` by default
 
 ### Code patterns
 The following patterns are **prohibited** in project code:

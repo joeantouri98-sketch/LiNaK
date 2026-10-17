@@ -1,0 +1,65 @@
+name: Build release artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pyside6-windows:
+    name: LiNaK Windows executable
+    runs-on: windows-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build application
+        shell: pwsh
+        run: .\packaging\build_pyside6.ps1 -Clean
+
+      - name: Archive application
+        shell: pwsh
+        run: Compress-Archive -Path dist\pyside6\LiNaK.exe -DestinationPath LiNaK-windows-${{ github.ref_name }}.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiNaK-windows-${{ github.ref_name }}
+          path: LiNaK-windows-${{ github.ref_name }}.zip
+
+  pyside6-macos:
+    name: LiNaK macOS application
+    runs-on: macos-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build application
+        run: ./packaging/build_pyside6.sh --clean
+
+      - name: Archive application
+        run: ditto -c -k --sequesterRsrc --keepParent dist/pyside6/LiNaK.app LiNaK-macos-${{ github.ref_name }}.zip
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiNaK-macos-${{ github.ref_name }}
+          path: LiNaK-macos-${{ github.ref_name }}.zip

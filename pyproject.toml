@@ -1,0 +1,61 @@
+[project]
+name = "LiNak"
+dynamic = ["version"]
+description = "An integrated computational toolkit for alkali-atom AMO physics"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "LiNaK contributors" },
+]
+dependencies = [
+    "numpy>=1.22",
+    "plotly>=5.0",
+    "pyside6>=6.5",
+    "scipy>=1.9",
+]
+
+[dependency-groups]
+dev = [
+    "imageio",
+    "nuitka==4.1.1",
+    "pytest>=7.0",
+]
+
+[project.scripts]
+linak = "linak.cli:main"
+linak-gui = "linak.gui.app:main"
+
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+fallback_version = "0+unknown"
+tag_regex = "^(?:[\\w-]+-)?[vV]?\\.?(?P<version>\\d+(?:\\.\\d+){0,2}[^+]*)(?:\\+.*)?$"
+
+[tool.setuptools.data-files]
+"resources/Basis sets" = ["resources/Basis sets/*.*"]
+"resources/Basis sets/Li" = ["resources/Basis sets/Li/*.*"]
+"resources/HTMLs" = ["resources/HTMLs/*.*"]
+"resources/Moments" = ["resources/Moments/*.*"]
+"resources/NIST Levels" = ["resources/NIST Levels/*.*"]
+"resources/data_json" = ["resources/data_json/*.*"]
+"resources/data_json/arc" = ["resources/data_json/arc/*.*"]
+"resources/f_values" = ["resources/f_values/*.*"]
+"resources/vendor" = ["resources/vendor/*.*"]
+
+
+
+[project.optional-dependencies]
+arc = [
+    "arc-alkali-rydberg-calculator",
+]
+basis = [
+    "basis-set-exchange",
+]
+web = [
+    "pyside6-addons>=6.5",
+]

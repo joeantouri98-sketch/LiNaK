@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Shared fixtures for pipeline regression tests.
 
-All paths stay under tests/ or the repo root data_json/. Artifacts go to
+All paths stay under tests/ or the repository resources/. Artifacts go to
 tests/results/ only.
 """
 from __future__ import annotations
@@ -11,12 +11,13 @@ import sys
 from pathlib import Path
 
 import pytest
+from linak.core.paths import DATA_JSON_DIR
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = Path(__file__).resolve().parent
 RESULTS = TESTS / "results"
 ANCHORS = TESTS / "anchors" / "na_regression.json"
-DATA_JSON = ROOT / "data_json"
+DATA_JSON = ROOT / DATA_JSON_DIR
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
