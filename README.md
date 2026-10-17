@@ -64,15 +64,24 @@ uv run linak            # same application (GUI is the default)
 uv run python -m linak  # module form
 ```
 
-### Build a macOS application
+### Build the application
 
-The GUI can be frozen into a macOS `.app` bundle with PyInstaller:
+The GUI is deployed with the Qt-supported `pyside6-deploy` tool. It
+uses Nuitka and the checked-in `pysidedeploy.spec` to include the Python/Qt
+runtime and the read-only `resources/` tree:
 
 ```bash
 uv sync --dev
-uv run pyinstaller packaging/LiNaK.spec
-open dist/LiNaK.app
+uv run pyside6-deploy -c pysidedeploy.spec
+open dist/pyside6/LiNaK.app
 ```
+
+The repeatable build wrappers are `./packaging/build_pyside6.sh --clean` on
+macOS/Linux and `.\packaging\build_pyside6.ps1 -Clean` in PowerShell on Windows.
+The wrappers use `--mode onefile` by default. On Windows the result is a
+self-contained `dist/pyside6/LiNaK.exe`, on Linux `dist/pyside6/LiNaK.bin`,
+and on macOS `dist/pyside6/LiNaK.app` (macOS always produces an application
+bundle as Nuitka's one-file mode is not supported for macOS).
 
 Package versions are derived from Git tags. Push a tag such as `v1.4.2` to
 run `.github/workflows/build-release.yml`; GitHub Actions builds downloadable
@@ -114,19 +123,6 @@ Development tools are in the `dev` dependency group:
 ```bash
 uv sync --dev
 ```
-
-### Build the Windows executable
-
-Run this from PowerShell on Windows, or from a Windows CI runner:
-
-```powershell
-uv sync --dev
-.\packaging\build_windows.ps1 -Clean
-```
-
-The default build is a windowed one-folder application at
-`dist/windows/LiNaK/LiNaK.exe`. ORCA remains an external installation and is
-not bundled into the executable.
 
 ---
 
@@ -189,7 +185,6 @@ The project root should contain:
 
 ```text
 pyproject.toml
-src/linak/
 resources/                 # read-only reference data
 .linak/                    # generated data, plots, and ORCA outputs
 ```
@@ -216,8 +211,6 @@ and select the folder containing `constants.py` and `rydberg.py`.
 The Overview tab reads existing files from `data_json/`. It does not
 recalculate the physics independently. Run the relevant pipeline stages
 first if a section reports that data is unavailable.
-
-### GUI dependency checks
 
 Check PySide6:
 

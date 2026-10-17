@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def _configure_frozen_qt_webengine() -> None:
-    """Point QtWebEngine at its helper inside a PyInstaller app bundle."""
+    """Point QtWebEngine at its helper inside a frozen app bundle."""
     if not getattr(sys, "frozen", False) or os.environ.get("QTWEBENGINEPROCESS_PATH"):
         return
 

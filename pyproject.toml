@@ -16,8 +16,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "imageio",
+    "nuitka==4.1.1",
     "pytest>=7.0",
-    "pyinstaller>=6.0",
 ]
 
 [project.scripts]

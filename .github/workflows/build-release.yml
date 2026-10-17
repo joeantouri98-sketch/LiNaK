@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  windows-exe:
-    name: Windows executable
+  pyside6-windows:
+    name: LiNaK Windows executable
     runs-on: windows-latest
     steps:
       - name: Check out tagged source
@@ -24,13 +24,13 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Build executable
+      - name: Build application
         shell: pwsh
-        run: .\packaging\build_windows.ps1 -Clean
+        run: .\packaging\build_pyside6.ps1 -Clean
 
-      - name: Archive executable
+      - name: Archive application
         shell: pwsh
-        run: Compress-Archive -Path dist\windows\LiNaK -DestinationPath LiNaK-windows-${{ github.ref_name }}.zip
+        run: Compress-Archive -Path dist\pyside6\LiNaK.exe -DestinationPath LiNaK-windows-${{ github.ref_name }}.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -38,8 +38,8 @@ jobs:
           name: LiNaK-windows-${{ github.ref_name }}
           path: LiNaK-windows-${{ github.ref_name }}.zip
 
-  macos-app:
-    name: macOS application
+  pyside6-macos:
+    name: LiNaK macOS application
     runs-on: macos-latest
     steps:
       - name: Check out tagged source
@@ -52,14 +52,11 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install build dependencies
-        run: uv sync --dev
-
       - name: Build application
-        run: uv run pyinstaller --noconfirm --clean packaging/LiNaK.spec
+        run: ./packaging/build_pyside6.sh --clean
 
       - name: Archive application
-        run: ditto -c -k --sequesterRsrc --keepParent dist/LiNaK.app LiNaK-macos-${{ github.ref_name }}.zip
+        run: ditto -c -k --sequesterRsrc --keepParent dist/pyside6/LiNaK.app LiNaK-macos-${{ github.ref_name }}.zip
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4

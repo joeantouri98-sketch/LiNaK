@@ -48,7 +48,22 @@ def writable_root() -> Path:
 def resource_root() -> Path:
     """Return the read-only resources bundled with the application."""
     if getattr(sys, "frozen", False):
-        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+        # PyInstaller sets _MEIPASS
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass)
+        
+        # Nuitka macOS app bundle: executable is in .../Contents/MacOS/
+        # Resources are in .../Contents/Resources/
+        executable = Path(sys.executable)
+        if executable.parent.name == "MacOS":
+            bundle_root = executable.parents[1]  # .../Contents/
+            resources_dir = bundle_root / "Resources"
+            if resources_dir.is_dir():
+                return resources_dir
+        
+        # Default: executable's parent directory
+        return executable.parent
 
     checkout_root = Path(__file__).resolve().parents[3]
     if (checkout_root / RESOURCES_DIR).is_dir():

@@ -20,11 +20,19 @@ def is_project_root(path: Path) -> bool:
 
 def rydberg_species(root: Path) -> list[str]:
     """Return species with a Rydberg dataset on disk."""
+    species = []
     data_dir = root / DATA_JSON_DIR
-    if not data_dir.exists():
-        return []
-    suffix = "_rydberg.json"
-    return sorted(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
+    if data_dir.exists():
+        suffix = "_rydberg.json"
+        species.extend(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
+    
+    # Also check bundled resources for reference species
+    resources_data_dir = reference_path("data_json")
+    if resources_data_dir.exists():
+        suffix = "_rydberg.json"
+        species.extend(p.name[: -len(suffix)] for p in resources_data_dir.glob(f"*{suffix}"))
+    
+    return sorted(set(species))
 
 
 def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
