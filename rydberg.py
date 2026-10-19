@@ -957,8 +957,70 @@ def rydberg_energy(n, l_char, delta, ry_eff=None):
     return -ry_eff / (n_eff ** 2)
 
 
+RITZ_MIN_POINTS = 6        # distinct measured n required per orbital
+RITZ_MAX_RMS = 2e-3        # reject the fit if the residual in delta exceeds this
+
+
+def fit_ritz_defects(ionization_energy, levels, ry_eff=None):
+    """
+    Energy-dependent quantum defect  delta(n) = d0 + d2 / (n - d0)^2  (Ritz, 2 terms)
+    fitted per orbital to the MEASURED (non-theoretical) levels.
+
+    A single averaged defect (compute_quantum_defects) is dominated by the
+    precisely known low-n levels (Na p: 0.8650 vs the Rydberg limit 0.8549), which
+    mis-places high-n levels by ~1.5 % of the n* gap between neighbouring series
+    (np vs ns) and wrecks near-resonant quantities (Rydberg polarizabilities
+    +20..30 %). Levels of one n are averaged over J with weights 2J+1. The lowest two
+    n of a series (core penetration beyond a 2-term Ritz law) are left out.
+    Returns {orbital: {delta0, delta2, n_min, n_max, n_points, rms}}; orbitals with
+    too few points or a poor fit are omitted (constant defect is used for them).
+    """
+    if ry_eff is None:
+        ry_eff = Ry
+    acc = {}
+    for lv in levels:
+        if lv.get('theoretical'):
+            continue
+        binding = ionization_energy - lv['energy_eV']
+        if binding <= 0 or lv['l'] not in 'spdfg':
+            continue
+        j = parse_j(lv['J'])
+        g = 2 * j + 1 if j is not None else 1.0
+        acc.setdefault(lv['l'], {}).setdefault(lv['n'], []).append(
+            (lv['n'] - float(np.sqrt(ry_eff / binding)), g))
+    out = {}
+    for l_char, by_n in acc.items():
+        ns_all = sorted(by_n)
+        n_lo = ns_all[0] + 2
+        ns = np.array([n for n in ns_all if n >= n_lo], dtype=float)
+        if ns.size < RITZ_MIN_POINTS:
+            continue
+        ds = np.array([sum(d * g for d, g in by_n[int(n)]) / sum(g for _, g in by_n[int(n)])
+                       for n in ns])
+        d0 = float(ds[-1])
+        c = None
+        for _ in range(30):
+            x = 1.0 / (ns - d0) ** 2
+            M = np.vstack([np.ones_like(x), x]).T
+            c = np.linalg.lstsq(M, ds, rcond=None)[0]
+            d0 = float(c[0])
+        rms = float(np.sqrt(np.mean((c[0] + c[1] / (ns - c[0]) ** 2 - ds) ** 2)))
+        if np.isfinite(rms) and rms < RITZ_MAX_RMS:
+            out[l_char] = dict(delta0=float(c[0]), delta2=float(c[1]), n_min=int(ns[0]),
+                               n_max=int(ns[-1]), n_points=int(ns.size), rms=rms)
+    return out
+
+
+def ritz_delta(ritz, l_char, n, default):
+    """delta(n) from fit_ritz_defects(), or `default` (constant defect) if unavailable."""
+    p = (ritz or {}).get(l_char)
+    if not p:
+        return default
+    return p['delta0'] + p['delta2'] / (n - p['delta0']) ** 2
+
+
 def generate_rydberg_series(ionization_energy, quantum_defects, nist_lookup,
-                             n_start, n_max, ry_eff=None):
+                             n_start, n_max, ry_eff=None, ritz=None):
     """
     Generate Rydberg series with J-resolved levels where NIST data exists.
 
@@ -1043,7 +1105,7 @@ def generate_rydberg_series(ionization_energy, quantum_defects, nist_lookup,
                 # series: those states are core-filled, not Rydberg states.
                 if l_char in min_nist_n and n < min_nist_n[l_char]:
                     continue
-                delta = quantum_defects.get(l_char, 0.0)
+                delta = ritz_delta(ritz, l_char, n, quantum_defects.get(l_char, 0.0))
                 E = rydberg_energy(n, l_char, delta, ry_eff=ry_eff)
                 if E is None or E >= 0:
                     continue
@@ -1217,6 +1279,11 @@ def main():
     quantum_defects = compute_quantum_defects(
         ionization_energy, levels, ry_eff=ry_eff)
 
+    ritz = fit_ritz_defects(ionization_energy, levels, ry_eff=ry_eff)
+    for _l, _p in ritz.items():
+        print(f"  Ritz {_l}: delta(n) = {_p['delta0']:.5f} + {_p['delta2']:+.4f}/(n-delta)^2  "
+              f"({_p['n_points']} measured n={_p['n_min']}..{_p['n_max']}, rms {_p['rms']:.1e})")
+
     nist_lookup = build_nist_lookup(ionization_energy, levels)
     print(f"\nNIST lookup table : {len(nist_lookup)} unique (n, l, J, term) entries")
 
@@ -1266,7 +1333,7 @@ def main():
 
     print(f"\nGenerating Rydberg series for {element} (n={n_start}..{n_max})...")
     states = generate_rydberg_series(ionization_energy, quantum_defects,
-                                     nist_lookup, n_start, n_max, ry_eff=ry_eff)
+                                     nist_lookup, n_start, n_max, ry_eff=ry_eff, ritz=ritz)
 
     if not states:
         print("No states generated.")
@@ -1296,6 +1363,7 @@ def main():
         'z_core':               z_core,
         'rydberg_constant_eV':  ry_eff,
         'quantum_defects':      quantum_defects,
+        'quantum_defects_ritz': ritz,
         'qd_notes': (
             'Averaged with inverse-variance weights from ASD Uncertainty (eV); '
             'theoretical [ ] levels excluded from the QD fit but kept in excitations.'

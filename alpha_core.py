@@ -27,8 +27,9 @@ from constants import (
     C6_EXPT,
 )
 
-
+# ============================================================================
 # ELEMENT / SPECTROSCOPY TABLES (not universal CODATA — stay here)
+# ============================================================================
 
 L_CHAR = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
 
@@ -73,9 +74,9 @@ ALPHA_CORE_AU = {
 }
 CORE_ELECTRONS = {'Li': 2, 'Na': 10, 'K': 18, 'Rb': 36, 'Cs': 54, 'Fr': 86}
 
-
+# ============================================================================
 # CONVERSIONS & HELPERS
-
+# ============================================================================
 
 def omega_au_from_nm(wl_nm):
     """Convert wavelength in nm to angular frequency in atomic units."""
@@ -141,8 +142,10 @@ def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
     return max(f, 0.0)
 
 
-
+# ============================================================================
 # NIST F-VALUE LOADER  (shared by polarizability, blackbody, lifetimes)
+# ============================================================================
+
 
 def unwrap_asd_field(val):
     """Normalize one NIST ASD cell (Excel '=""…""' wrapping, quotes, brackets)."""
@@ -801,7 +804,10 @@ def load_nist_fvalues(element, f_values_dir='f_values', verbose=True,
         lines=[],
     )
 
+
+# ============================================================================
 # LITERATURE OVERLAY (curated f above Coulomb / Numerov)
+# ============================================================================
 
 def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
     """
@@ -830,8 +836,9 @@ def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
         up = row.get('upper')
         f = row.get('f_abs')
         ref = str(row.get('ref') or '')
-        # Only accept rows that explicitly cite NIST ASD (no guessed overlays).
-        if 'NIST ASD' not in ref:
+        # Only accept rows that explicitly cite NIST ASD or a named independent calculation
+        # (ARC model-potential tables; used only where NIST lists no f). No guessed overlays.
+        if 'NIST ASD' not in ref and not ref.startswith('ARC '):
             continue
         if not lo or not up or f is None:
             continue
@@ -858,8 +865,9 @@ def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
                 n_rows=len(raw.get('transitions', [])), path=path)
 
 
-
+# ============================================================================
 # ELEMENT DATA LOADER
+# ============================================================================
 
 def load_element(element, data_dir='data_json', f_values_dir='f_values', verbose=True):
     """
@@ -1007,8 +1015,9 @@ def default_excited_label(data, all_transitions=None):
     return candidates[0]
 
 
-
+# ============================================================================
 # OSCILLATOR STRENGTH LOOKUP
+# ============================================================================
 
 def get_fosc(lower_label, upper_label, lower_n, upper_n,
              lower_l, upper_l, nist_fosc, qd, upper_J_str=None,
@@ -1139,8 +1148,9 @@ def get_fosc(lower_label, upper_label, lower_n, upper_n,
     return 0.0, 'unknown'
 
 
-
+# ============================================================================
 # TRANSITION NETWORK FOR ONE STATE
+# ============================================================================
 
 def _ls_state_term(t, state_label, data):
     """
@@ -1161,15 +1171,26 @@ def _ls_state_term(t, state_label, data):
     src_mult = 'unknown'
     lines = {}
     src_line = None
+    # Priority 1 (same as get_fosc): lifetime-derived precision D-line f, per J_upper, s -> p only.
+    prec = (data.get('precision_fosc_j') or {}).get((lo_nl, up_nl)) if Ll == 0 else None
     for jl in JL:
         for ju in JU:
+            if prec:
+                _jf = prec.get(f"{ju}/2" if ju % 2 else str(ju // 2))
+                if _jf is not None:
+                    lines[(jl, ju)] = float(_jf)
+                    src_line = 'precision'
+                    continue
             hit = nist_line_f(jl_data, lo_nl, up_nl, Lu, ju, Ll, jl)
             if hit is not None:
                 lines[(jl, ju)] = hit[0]
                 src_line = 'NIST'
                 continue
             if f_mult is None:
-                scale = numerov_scale_for(data.get('numerov_cal_types'), t['lower_l'], t['upper_l'])
+                _qd = data['qd']
+                _gap = abs((t['upper_n'] - _qd.get(t['upper_l'], 0.0)) - (t['lower_n'] - _qd.get(t['lower_l'], 0.0)))
+                scale = numerov_scale_for(data.get('numerov_cal_types'), t['lower_l'], t['upper_l'], gap=_gap,
+                                          n_star_upper=max(t['upper_n'] - _qd.get(t['upper_l'], 0.0), t['lower_n'] - _qd.get(t['lower_l'], 0.0)))
                 f_mult, src_mult = get_fosc(
                     ll, ul, t['lower_n'], t['upper_n'], t['lower_l'], t['upper_l'],
                     data['nist_fosc'], data['qd'], upper_J_str=None,
@@ -1293,7 +1314,10 @@ def build_transitions_for_state(state_label, data, all_transitions):
 
     return result
 
+
+# ============================================================================
 # DYNAMIC POLARIZABILITY
+# ============================================================================
 
 def alpha_real(omega_au, transitions_list):
     """

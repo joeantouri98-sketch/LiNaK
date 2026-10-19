@@ -75,7 +75,7 @@ DLINES_FALLBACK = {
 }
 
 SRC_COLORS = {
-    "NIST": "#1a6eb5", "precision": "#1a6eb5",
+    "NIST": "#1a6eb5", "precision": "#1a6eb5", "NIST-extrap": "#5b9bd5",
     "literature": "#c47a00", "lit": "#c47a00",
     "ORCA": "#c0392b", "EOM-CCSD": "#c0392b",
     "Numerov": "#0e7c6b",

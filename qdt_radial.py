@@ -40,8 +40,18 @@ def _potential(r: np.ndarray, l: int, z_core: float = 1.0) -> np.ndarray:
     return -z / r + 0.5 * l * (l + 1) / (r * r)
 
 
+# Radial step used when n_grid is not given. A fixed 4000-point grid has a step of
+# ~3.5 a0 at n* ~ 48 (r_max = 6 n*^2) and cannot resolve the core region that
+# controls far-pair matrix elements: Na 5s->50p came out at 0.30 of the converged value
+# (0.73 of ARC) and 3d->40f at 0.89. A step of 0.125 a0 converges all tested pairs
+# to <= 0.7 % (grid scaling is capped at N_GRID_MAX).
+H_TARGET = 0.125
+N_GRID_MIN = 4000
+N_GRID_MAX = 150000
+
+
 def radial_wavefunction(n: int, l: int, delta: float,
-                        n_grid: int = 4000, r_min: float = 1e-4,
+                        n_grid=None, r_min: float = 1e-4,
                         z_core: float = 1.0):
     """
     Normalized radial reduced wavefunction u(r)=r R(r) on a linear grid.
@@ -58,6 +68,8 @@ def radial_wavefunction(n: int, l: int, delta: float,
     E = binding_au(ns, z_core=z)
     # Classical outer turning scale ~ 2 n*^2 / Z; pad generously for high n*
     r_max = max(40.0, 6.0 * ns * ns / max(z, 1.0))
+    if n_grid is None:
+        n_grid = int(min(N_GRID_MAX, max(N_GRID_MIN, math.ceil(r_max / H_TARGET))))
     r = np.linspace(r_min, r_max, n_grid)
     h = r[1] - r[0]
     V = _potential(r, l, z_core=z)
@@ -116,7 +128,7 @@ def radial_wavefunction(n: int, l: int, delta: float,
 
 
 @lru_cache(maxsize=512)
-def _cached_wave(n: int, l: int, delta_key: float, n_grid: int = 4000,
+def _cached_wave(n: int, l: int, delta_key: float, n_grid=None,
                  z_core: float = 1.0):
     """Cache waves keyed by rounded quantum defect and core charge."""
     return radial_wavefunction(n, l, delta_key, n_grid=n_grid, z_core=z_core)
@@ -124,7 +136,7 @@ def _cached_wave(n: int, l: int, delta_key: float, n_grid: int = 4000,
 
 def radial_dipole(n_lower, l_lower, delta_lower,
                   n_upper, l_upper, delta_upper,
-                  n_grid: int = 4000, z_core: float = 1.0) -> float:
+                  n_grid=None, z_core: float = 1.0) -> float:
     """
     Radial dipole R = ∫ u_l(r) u_u(r) r dr  (atomic units).
     Requires |l_upper - l_lower| = 1.
@@ -164,9 +176,10 @@ def numerov_fosc(n_upper, l_upper, n_lower, l_lower,
         return 0.0
     if abs(l_upper - l_lower) != 1:
         return 0.0
-    # Same-n / near-degenerate guard (mirrors coulomb_fosc)
-    if (ns_u ** 2 - ns_l ** 2) < 0.5 * ns_u:
-        return 0.0
+    # No near-degeneracy guard here: it exists in coulomb_fosc because the closed form diverges
+    # as n*_u -> n*_l, but the numerical radial integral is finite and well behaved for
+    # same-n l -> l+-1 pairs (checked against hydrogen). Dropping it restores the microwave
+    # channels (e.g. nd -> nf) that blackbody coupling needs. f stays > 0 only if dE > 0.
 
     E_u = binding_au(ns_u, z_core=z)
     E_l = binding_au(ns_l, z_core=z)
@@ -271,6 +284,10 @@ def fit_numerov_scale_from_nist(qd: dict, nist_fosc: dict,
     info["median_ratio_raw"] = float(np.median(arr))
     info["p16"] = float(np.percentile(arr, 16))
     info["p84"] = float(np.percentile(arr, 84))
+
+    # Robust fit: median over ratios already inside the physical window.
+    # Pathological weak-line ratios (near poles / tiny Numerov f) are excluded
+    # from the estimator but still reported in p16/p84 of the raw set.
     inliers = arr[(arr >= scale_lo) & (arr <= scale_hi)]
     info["n_inliers"] = int(inliers.size)
     if inliers.size < min_pairs:
@@ -301,8 +318,9 @@ def numerov_fosc_scaled(n_upper, l_upper, n_lower, l_lower,
     return f * s
 
 
-
+# ---------------------------------------------------------------------------
 # Fine-structure (LS-coupling) line strengths and per-transition-type scale
+# ---------------------------------------------------------------------------
 
 def _fact(n2: int) -> float:
     """(n2/2)! for a non-negative integer n2 that is even (i.e. integer argument)."""
@@ -405,6 +423,42 @@ def ls_group_branching(Lu: int, Ju2_set, Ll: int, Jl2_set):
     return ratio, gU, gL
 
 
+# Gap dependence of the Numerov renormalisation.  NIST/Numerov is NOT a constant for
+# a transition type: for Na s->p it is 1.005 (11 pairs) when the n* gap is < 1.5 and
+# 1.36 (18 pairs) for gaps > 4, while the remaining types are flat within noise.  The
+# QDT Numerov integral with a cut-off Coulomb core is accurate when the overlap is in
+# the outer region (small gap) and misses the core-penetration contribution for
+# distant pairs.  A single type-wide scale (1.27 for s->p) therefore over-scales the
+# near-resonant channels (20s->20p) that dominate Rydberg polarizabilities by ~27 %.
+GAP_KNOTS = (1.5, 4.0)       # n* gap below/above which the near/far value applies
+NEAR_DEG_FRAC = 0.5          # n*_u^2 - n*_l^2 < NEAR_DEG_FRAC * n*_u  ==  same-n / near-degenerate pair
+GAP_MIN_BIN = 5              # inliers required in EACH bin to switch the profile on
+GAP_MIN_CONTRAST = 0.20      # |far/near - 1| must exceed ~2x the Numerov model uncertainty (0.10)
+
+
+def is_near_degenerate(ns_u: float, ns_l: float) -> bool:
+    """Same-n style pair (e.g. nd->nf) whose Coulomb closed form diverges; the Numerov integral does not."""
+    return (ns_u ** 2 - ns_l ** 2) < NEAR_DEG_FRAC * ns_u
+
+
+def _gap_profile(vals, scale_lo, scale_hi):
+    """Near/far Numerov scales for one transition type, or {'gap_dependent': False}."""
+    g1, g2 = GAP_KNOTS
+    pts = [(r, g) for (r, g) in vals if scale_lo <= r <= scale_hi]
+    near = [r for r, g in pts if g < g1]
+    far = [r for r, g in pts if g >= g2]
+    out = {"gap_dependent": False, "n_near": len(near), "n_far": len(far),
+           "scale_near": None, "scale_far": None}
+    if near:
+        out["scale_near"] = float(np.median(near))
+    if far:
+        out["scale_far"] = float(np.median(far))
+    if (len(near) >= GAP_MIN_BIN and len(far) >= GAP_MIN_BIN
+            and abs(out["scale_far"] / out["scale_near"] - 1.0) > GAP_MIN_CONTRAST):
+        out["gap_dependent"] = True
+    return out
+
+
 def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
                                min_pairs: int = 5, min_f: float = 1e-8,
                                scale_lo: float = 0.25, scale_hi: float = 4.0,
@@ -425,6 +479,7 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
     scale, n_pairs, n_inliers, p16, p84, rel_spread (= (p84-p16)/(2 median)).
     """
     pairs = {}
+    near_deg = []
     for key, f_nist in (nist_fosc or {}).items():
         if not isinstance(key, tuple) or len(key) != 2:
             continue
@@ -446,13 +501,17 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
             lo, up, dl, du = b, a, db, da
         if min(nsa, nsb) <= gate:
             continue
+        if is_near_degenerate(max(nsa, nsb), min(nsa, nsb)):
+            near_deg.append(f_nist)   # kept out of the type fits (see numerov_scale_for)
+            continue
         f_num = numerov_fosc(up[0], up[1], lo[0], lo[1], du, dl, z_core=z_core)
         if f_num < min_f or not math.isfinite(f_num):
             continue
-        pairs.setdefault((L_INT[lo[1]], L_INT[up[1]]), []).append(f_nist / f_num)
+        pairs.setdefault((L_INT[lo[1]], L_INT[up[1]]), []).append(
+            (f_nist / f_num, abs(nsb - nsa)))
 
     def _info(vals):
-        arr = np.asarray(vals, dtype=float)
+        arr = np.asarray([v[0] if isinstance(v, tuple) else v for v in vals], dtype=float)
         inl = arr[(arr >= scale_lo) & (arr <= scale_hi)]
         info = {"n_pairs": int(arr.size), "n_inliers": int(inl.size), "scale": 1.0,
                 "applied": False, "p16": None, "p84": None, "rel_spread": None}
@@ -475,16 +534,36 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
         info["source"] = "type" if info["applied"] else "global_fallback"
         if not info["applied"]:
             info["scale"] = glob["scale"]
+        info.update(_gap_profile(v, scale_lo, scale_hi))
         types[k] = info
-    return {"global": glob, "types": types}
+    return {"global": glob, "types": types, "gap_knots": list(GAP_KNOTS),
+            "near_degenerate_pairs_excluded": len(near_deg)}
 
 
-def numerov_scale_for(cal: dict, l_lower: str, l_upper: str) -> float:
-    """Scale for a (lower l, upper l) type from fit_numerov_scales_by_type()."""
+def numerov_scale_for(cal: dict, l_lower: str, l_upper: str, gap=None, n_star_upper=None) -> float:
+    """
+    Scale for a (lower l, upper l) type from fit_numerov_scales_by_type().
+
+    `gap` = n*_upper - n*_lower (>0). When given and the type has a fitted gap
+    profile (info['gap_dependent']), the scale is the near value below GAP_KNOTS[0],
+    the far value above GAP_KNOTS[1] and linear in between; otherwise the
+    type-wide median is returned.
+
+    Near-degenerate (same-n) pairs, recognised from gap and `n_star_upper`, get scale 1.0: they were
+    excluded from the fits, the NIST/Numerov ratio of such pairs measured ~1.00 (Na d->p 0.95-1.04),
+    and the unscaled radial integral agrees with hydrogen to ~1%.
+    """
     if not cal:
+        return 1.0
+    if gap is not None and n_star_upper is not None and is_near_degenerate(
+            float(n_star_upper), float(n_star_upper) - abs(float(gap))):
         return 1.0
     t = cal.get("types", {}).get((l_lower, l_upper))
     if t is not None:
+        if gap is not None and t.get("gap_dependent"):
+            g1, g2 = cal.get("gap_knots", GAP_KNOTS)
+            w = min(1.0, max(0.0, (abs(float(gap)) - g1) / (g2 - g1)))
+            return float((1.0 - w) * t["scale_near"] + w * t["scale_far"])
         return float(t["scale"])
     return float(cal.get("global", {}).get("scale", 1.0))
 

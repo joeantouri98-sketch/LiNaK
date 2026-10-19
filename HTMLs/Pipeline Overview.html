@@ -2122,7 +2122,7 @@ p {
         <h4>Structure &amp; spectroscopy</h4>
         <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.8">
           <li><b>One active electron:</b> alkalis treated as $[\text{core}]^+\,nl_j$ with frozen core</li>
-          <li><b>QDT:</b> $\delta_l$ constant in $n$ (Rydberg-Ritz corrections neglected unless noted)</li>
+          <li><b>QDT:</b> $\delta_l$ from NIST levels; Ritz $\delta(n)$ fit used for model levels beyond the tables (needs ≥6 measured points, else constant)</li>
           <li><b>Electric dipole (E1):</b> $\lambda \gg a_0$; magnetic and quadrupole transitions dropped</li>
           <li><b>$\Delta S=0$:</b> spin does not flip in E1; intercombination lines excluded from E1 network</li>
           <li><b>TD-DFT (ORCA):</b> centroids and $f_{\rm osc}$ for screening; not a replacement for SOC fine structure. For transition metals, <code>--mode auto</code> stays TD-DFT screening; use <code>--mode soc</code> for fine structure</li>
@@ -2366,8 +2366,14 @@ p {
     <p>
       Because $\delta_l(n)$ is very weakly $n$-dependent (Rydberg-Ritz correction
       $\delta_l \approx \delta_l^{(0)} + \delta_l^{(2)}/n_{\rm eff}^2 + \ldots$),
-      averaging over all available $n$ gives an excellent single-number approximation
-      for extrapolation to large $n$.
+      averaging over all available $n$ gives a single-number approximation. It is dominated by the
+      low-$n$ levels, though: for Na $p$ the average is 0.8650 but the Rydberg limit is 0.8547, and
+      that 1.5% error in near-resonant gaps becomes a ~20% error in Rydberg polarizabilities.
+      <span class="file-badge">rydberg.py</span> therefore also fits
+      $\delta(n)=\delta_0+\delta_2/(n-\delta_0)^2$ per orbital to the <em>measured</em> levels
+      (J-averaged with $2J+1$ weights, lowest two $n$ dropped, at least 6 points, rms &lt; 2e-3) and uses it
+      only for 'QDT model' levels beyond the NIST tables. NIST levels are never replaced. The averages above
+      remain the written <code>quantum_defects</code>; the fit is saved as <code>quantum_defects_ritz</code>.
     </p>
 
     <div class="annotation">
@@ -2853,18 +2859,21 @@ p {
     <p>The pipeline uses a strict priority order for $f_{lu}$:</p>
     <table class="def-table">
       <tr><th>Priority</th><th>Source</th><th>Uncertainty</th><th>When used</th></tr>
-      <tr><td>1 (best)</td><td>NIST / precision D-line $f$</td><td>0.3-50% (Acc A→E)</td><td>$f_{\rm values}/{\rm element\_lines}$ (+ lifetime-derived D overlays)</td></tr>
+      <tr><td>1 (best)</td><td>Precision D-line overlay, then NIST $f$ (J-resolved lines, else the multiplet aggregate)</td><td>0.3-50% (Acc A→E)</td><td>$f_{\rm values}/{\rm element\_lines}$ (+ lifetime-derived D overlays). NIST values are never overwritten</td></tr>
       <tr><td>2</td><td>Literature overlay</td><td>~10-20%</td><td>$f_{\rm values}/{\rm element\_literature.json}$ curated rows</td></tr>
       <tr><td>3</td><td>ORCA TD-DFT / EOM-CCSD $f$</td><td>~5%</td><td>Ground→excited (TD-DFT) or excited→excited (EOM) only when energy-matched (see ORCA match window below)</td></tr>
-      <tr><td>4</td><td>QD Numerov radial $f$ (NIST-overlap scaled)</td><td>~10-20% after scale</td><td>Primary theoretical fallback; runtime $s=\mathrm{median}(f_{\rm NIST}/f_{\rm Numerov})$ from that element's own multiplet overlaps (<span class="file-badge">qdt_radial.py</span>)</td></tr>
+      <tr><td>3b</td><td>NIST-extrap (Seaton extrapolation of a NIST series)</td><td>5-30%, propagated</td><td>Only channels with no $f$ above it: $f n^{*3}=a+b/n^{*2}$ fitted per J-resolved series on the last 6 NIST points (rms &lt; 5%). Also replaces the Numerov value where a series exists</td></tr>
+      <tr><td>4</td><td>QD Numerov radial $f$ (scaled per $l\to l'$ type)</td><td>~10-20% after scale</td><td>Theoretical fallback; one scale per $(l_{\rm lower},l_{\rm upper})$ fitted on NIST pairs with $n^*&gt;2.5$, with a gap profile for $s\to p$ (<span class="file-badge">qdt_radial.py</span>)</td></tr>
       <tr><td>5 (worst)</td><td>Coulomb closed form</td><td>30-50%</td><td>Last resort if Numerov returns 0</td></tr>
     </table>
     <div class="annotation amber">
       <span class="icon">🔗</span>
       <p><b>Trust note:</b> Alkali lifetime channels are almost entirely NIST +
-      scaled Numerov (Coulomb fraction ≈ 0). The scale is computed at load time
+      NIST-extrap + scaled Numerov (Coulomb fraction ≈ 0). The scales are computed at load time
       from each element's own NIST∩Numerov ratios (robust inliers in [0.25, 4];
-      no hardcoded element table). Direct Beterov $\Gamma_{\rm PI}$ is unchanged
+      no hardcoded element table). Where a NIST $f$ and the scaled model differ by more than 1.5×
+      the pair is listed in <code>nist_model_comparison</code> (flag only; neither value is overridden, and
+      <code>model_unreliable</code> marks rows where the <em>model</em> fails, e.g. Na $3d\to np$). Direct Beterov $\Gamma_{\rm PI}$ is unchanged
       by $f$ sources; mix rates and high-$n$ dyn BBR <em>do</em> move when
       partner $A$ values change. Static Itano high-$n$ shifts remain diagnostic
       only. Scorecard: <code>python tools/fosc_audit.py Na</code> →
@@ -4197,31 +4206,45 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
 
     <h4>Priority 4: QD Numerov for high-n Rydberg (e.g. 20s → 4p)</h4>
     <p>
-      Channels such as $20s\to 4p$ have no NIST/literature $f$, and ORCA does not
+      Channels such as $20s\to 4p$ have no NIST/literature $f$, no NIST series to extrapolate
+      (the NIST $np\to ns$ column is too sparse and inconsistent at this $n$), and ORCA does not
       assign a root under the $0.10\,\mathrm{eV}$ / $\mathrm{IE}-0.25\,\mathrm{eV}$
-      match window. The pipeline uses QD Numerov radial $f$, then multiplies by the
-      Na NIST-overlap scale $s=\mathrm{median}(f_{\rm NIST}/f_{\rm Numerov})=1.384$
-      (178 inliers of 193 NIST multiplet pairs). Bare multiplet $f$ for $20s\to 4p$:
+      match window. The pipeline uses QD Numerov radial $f$ for the line, then multiplies by the
+      scale for its type. For $s\to p$ the NIST/Numerov ratio depends on the gap
+      $\Delta n^*=|n^*_u-n^*_l|$: $s_{\rm near}=1.006$ (gap &lt; 1.5), $s_{\rm far}=1.359$ (gap ≥ 4),
+      linear in between (37 NIST pairs). This profile is used only when far/near differ by more than 20%.
+      The levels come from the Ritz expansion $\delta(n)=\delta_0+\delta_2/(n-\delta_0)^2$
+      (Na $s$: $1.3478+0.0639/(n-\delta)^2$; $p$: $0.8547+0.1176/(n-\delta)^2$), not a constant defect.
+      The radial grid step is 0.125 $a_0$ (so high-$n$ orbitals are converged).
     </p>
     <div class="math-block">
-      <div class="math-label">Scaled Numerov f for Na 20s → 4p</div>
-      $$n^*_{20s} = 20 - \delta_s = 20 - 1.3505 = 18.649,\quad
-        n^*_{4p} = 4 - \delta_p = 4 - 0.8650 = 3.135$$
-      $$f_{\rm bare} = f_{\rm Numerov}(20s,4p) = 8.962\times 10^{-5}$$
-      $$f = s\cdot f_{\rm bare} = 1.384\times 8.962\times 10^{-5}
-         = 1.241\times 10^{-4}$$
+      <div class="math-label">Scaled Numerov f for Na 20s → 4p₃/₂</div>
+      $$n^*_{20s} = 20 - \delta_s(20) = 20 - 1.3480 = 18.652,\quad
+        n^*_{4p} = 4 - \delta_p(4) = 3.133,\quad \Delta n^* = 15.5$$
+      $$f_{\rm bare} = f_{\rm Numerov}(20s,4p_{3/2}) = 6.81\times 10^{-5},\quad
+        s_{\rm far}=1.359$$
+      $$f = s\cdot f_{\rm bare} = 1.359\times 6.81\times 10^{-5} = 9.26\times 10^{-5}$$
     </div>
-    <p>Einstein $A$ for the $20s\to 4p_{3/2}$ channel ($\lambda=920.69\,\mathrm{nm}$, $g_l/g_u=3$):</p>
+    <p>Fine structure: the multiplet $f$ is split between $4p_{1/2}$ and $4p_{3/2}$ with 6j weights (2:1 here), not by $g$-weights alone. Einstein $A$ for the $20s\to 4p_{3/2}$ line ($\lambda=920.69\,\mathrm{nm}$, $g_l/g_u=4/2$):</p>
     <div class="math-block green">
       <div class="math-label">Na 20s → 4p₃/₂ via scaled Numerov</div>
-      $$A = \frac{6.6703\times 10^{13}}{(920.69)^2}\cdot\frac{3}{1}\cdot 1.241\times 10^{-4}
-         \approx 2.93\times 10^{4}\,\mathrm{s}^{-1}$$
+      $$A = \frac{6.6703\times 10^{13}}{(920.69)^2}\cdot 2\cdot 9.26\times 10^{-5}
+         \approx 1.46\times 10^{4}\,\mathrm{s}^{-1}$$
       $$\text{source tag: Numerov (not Coulomb)}$$
     </div>
     <p>
       The $20s$ lifetime itself is still set mostly by NIST $20s\to 3p$ channels;
       Numerov fills the many mid-/high-$n$ partners that NIST does not tabulate.
       Coulomb is not used for this channel.
+    </p>
+    <h4>Priority 3b: NIST-extrap and J-less labels</h4>
+    <p>
+      NIST lists $3s\to np$ only to about $n=18$ (and those values are 1.3-1.45× above the smooth physical curve for $n\ge12$; their uncertainty is raised to 40%, values unchanged). For $3s\to np$, $n\ge19$ the curated literature tier supplies model-potential values whose threshold limit (0.137 Mb) lies inside the measured/calculated range, so this channel is not extrapolated. NIST lists $3p\to ns/nd$ to $n\approx20$. Beyond that the Seaton
+      relation $f\,n^{*3}=2\,{\rm Ry}\,df/dE$ is smooth through threshold, so each J-resolved series is fitted with
+      $y=a+b/n^{*2}$ on its last 6 NIST points (accepted if rms &lt; 5%). Uncertainty = NIST accuracy ⊕ fit rms ⊕
+      window-to-window spread ⊕ half the model difference. For levels without $J$ (QDT-model $n\ge21$) the
+      multiplet aggregate $f$ is the sum over NIST lines (not the former mean-over-lower-$J$ sum, which was 1.45-1.48×
+      too large for $p\leftrightarrow d$, $d\leftrightarrow f$), and the fine-structure rates are averaged statistically.
     </p>
 
     <h4>Einstein B coefficients (written to Na_lifetimes.json)</h4>
@@ -4334,9 +4357,9 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
     <table class="def-table">
       <tr><th>Quantity</th><th>Symbol</th><th>Value</th><th>Source</th><th>Script</th></tr>
       <tr><td>Ionization energy</td><td>$E_{\rm IE}$</td><td>5.139077 eV</td><td>NIST ASD</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect s</td><td>$\bar\delta_s$</td><td>1.3505</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect p</td><td>$\bar\delta_p$</td><td>0.8650</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect d</td><td>$\bar\delta_d$</td><td>0.0127</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>Quantum defect s</td><td>$\bar\delta_s$</td><td>1.3505 (Ritz $\delta_0$ 1.3478)</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>Quantum defect p</td><td>$\bar\delta_p$</td><td>0.8650 (Ritz $\delta_0$ 0.8547)</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>Quantum defect d</td><td>$\bar\delta_d$</td><td>0.0127 (Ritz $\delta_0$ 0.0149)</td><td>NIST levels</td><td>rydberg.py</td></tr>
       <tr><td>TD-DFT 3p energy</td><td>$\Omega_{\rm TD}$</td><td>2.107 eV</td><td>ORCA CAM-B3LYP/aug-cc-pVTZ</td><td>runorca.py</td></tr>
       <tr><td>TD-DFT error</td><td>$\Delta E$</td><td>2.6 meV (0.1%)</td><td>vs NIST 2.1044 eV</td><td>runorca.py</td></tr>
       <tr><td>D1 wavelength</td><td>$\lambda_{\rm D1}$</td><td>589.755 nm</td><td>NIST</td><td>transitions.py</td></tr>

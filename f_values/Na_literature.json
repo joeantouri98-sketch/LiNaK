@@ -1,12 +1,12 @@
 {
   "element": "Na",
-  "note": "Curated absorption oscillator strengths preferred over Coulomb/Numerov when NIST multiplet lookup misses a J-resolved line. Values are NIST ASD fik (Acc A–C) for the principal series and selected 3p–ns/nd channels; provenance in each row.",
+  "note": "Curated absorption oscillator strengths preferred over Coulomb/Numerov when NIST multiplet lookup misses a J-resolved line. Values are NIST ASD fik (Acc A\u2013C) for the principal series and selected 3p\u2013ns/nd channels; provenance in each row. Rows citing 'ARC' are independent model-potential calculations used only where NIST lists no f.",
   "transitions": [
     {
       "lower": "3s",
       "upper": "3p",
       "upper_J": "1/2",
-      "f_abs": 0.320,
+      "f_abs": 0.32,
       "acc": "precision",
       "ref": "Lifetime-derived D1 (pipeline PRECISION_FOSC_J / NIST)"
     },
@@ -30,7 +30,7 @@
       "lower": "3s",
       "upper": "4p",
       "upper_J": "3/2",
-      "f_abs": 0.00900,
+      "f_abs": 0.009,
       "acc": "A",
       "ref": "NIST ASD fik 330.237 nm Acc A"
     },
@@ -89,7 +89,7 @@
       "upper_J": "1/2",
       "f_abs": 0.163,
       "acc": "literature",
-      "ref": "Heavens 1961 / NIST-averaged 3p–4s (validation anchor)"
+      "ref": "Heavens 1961 / NIST-averaged 3p\u20134s (validation anchor)"
     },
     {
       "lower": "3p",
@@ -98,7 +98,7 @@
       "upper_J": "5/2",
       "f_abs": 0.101,
       "acc": "B",
-      "ref": "NIST ASD representative 3p3/2–4d5/2"
+      "ref": "NIST ASD representative 3p3/2\u20134d5/2"
     },
     {
       "lower": "3p",
@@ -107,7 +107,7 @@
       "upper_J": "1/2",
       "f_abs": 0.0142,
       "acc": "literature",
-      "ref": "Alkali Rydberg compilation (3p–5s absorption scale)"
+      "ref": "Alkali Rydberg compilation (3p\u20135s absorption scale)"
     },
     {
       "lower": "3p",
@@ -116,7 +116,7 @@
       "upper_J": "5/2",
       "f_abs": 0.032,
       "acc": "B",
-      "ref": "NIST ASD representative 3p3/2–5d5/2"
+      "ref": "NIST ASD representative 3p3/2\u20135d5/2"
     },
     {
       "lower": "4s",
@@ -124,15 +124,15 @@
       "upper_J": "1/2",
       "f_abs": 0.45,
       "acc": "literature",
-      "ref": "Approximate 4s–4p multiplet scale (literature overlay)"
+      "ref": "Approximate 4s\u20134p multiplet scale (literature overlay)"
     },
     {
       "lower": "4s",
       "upper": "4p",
       "upper_J": "3/2",
-      "f_abs": 0.90,
+      "f_abs": 0.9,
       "acc": "literature",
-      "ref": "Approximate 4s–4p multiplet scale (literature overlay)"
+      "ref": "Approximate 4s\u20134p multiplet scale (literature overlay)"
     },
     {
       "lower": "4p",
@@ -141,7 +141,7 @@
       "upper_J": "1/2",
       "f_abs": 0.18,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (4p–5s)"
+      "ref": "Mid-n Rydberg literature overlay (4p\u20135s)"
     },
     {
       "lower": "4p",
@@ -150,7 +150,7 @@
       "upper_J": "5/2",
       "f_abs": 0.55,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (4p–4d)"
+      "ref": "Mid-n Rydberg literature overlay (4p\u20134d)"
     },
     {
       "lower": "5s",
@@ -158,7 +158,7 @@
       "upper_J": "1/2",
       "f_abs": 0.48,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (5s–5p)"
+      "ref": "Mid-n Rydberg literature overlay (5s\u20135p)"
     },
     {
       "lower": "5s",
@@ -166,7 +166,7 @@
       "upper_J": "3/2",
       "f_abs": 0.96,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (5s–5p)"
+      "ref": "Mid-n Rydberg literature overlay (5s\u20135p)"
     },
     {
       "lower": "5p",
@@ -175,7 +175,7 @@
       "upper_J": "1/2",
       "f_abs": 0.19,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (5p–6s)"
+      "ref": "Mid-n Rydberg literature overlay (5p\u20136s)"
     },
     {
       "lower": "5p",
@@ -184,41 +184,41 @@
       "upper_J": "5/2",
       "f_abs": 0.58,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (5p–5d)"
+      "ref": "Mid-n Rydberg literature overlay (5p\u20135d)"
     },
     {
       "lower": "6s",
       "upper": "6p",
       "upper_J": "1/2",
-      "f_abs": 0.50,
+      "f_abs": 0.5,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (6s–6p)"
+      "ref": "Mid-n Rydberg literature overlay (6s\u20136p)"
     },
     {
       "lower": "6s",
       "upper": "6p",
       "upper_J": "3/2",
-      "f_abs": 1.00,
+      "f_abs": 1.0,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (6s–6p)"
+      "ref": "Mid-n Rydberg literature overlay (6s\u20136p)"
     },
     {
       "lower": "6p",
       "upper": "7s",
       "lower_J": "1/2",
       "upper_J": "1/2",
-      "f_abs": 0.20,
+      "f_abs": 0.2,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (6p–7s)"
+      "ref": "Mid-n Rydberg literature overlay (6p\u20137s)"
     },
     {
       "lower": "6p",
       "upper": "6d",
       "lower_J": "3/2",
       "upper_J": "5/2",
-      "f_abs": 0.60,
+      "f_abs": 0.6,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (6p–6d)"
+      "ref": "Mid-n Rydberg literature overlay (6p\u20136d)"
     },
     {
       "lower": "7s",
@@ -226,7 +226,7 @@
       "upper_J": "1/2",
       "f_abs": 0.51,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (7s–7p)"
+      "ref": "Mid-n Rydberg literature overlay (7s\u20137p)"
     },
     {
       "lower": "7s",
@@ -234,7 +234,7 @@
       "upper_J": "3/2",
       "f_abs": 1.02,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (7s–7p)"
+      "ref": "Mid-n Rydberg literature overlay (7s\u20137p)"
     },
     {
       "lower": "8s",
@@ -242,7 +242,7 @@
       "upper_J": "1/2",
       "f_abs": 0.52,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (8s–8p)"
+      "ref": "Mid-n Rydberg literature overlay (8s\u20138p)"
     },
     {
       "lower": "8s",
@@ -250,7 +250,7 @@
       "upper_J": "3/2",
       "f_abs": 1.04,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (8s–8p)"
+      "ref": "Mid-n Rydberg literature overlay (8s\u20138p)"
     },
     {
       "lower": "9s",
@@ -258,7 +258,7 @@
       "upper_J": "1/2",
       "f_abs": 0.53,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (9s–9p)"
+      "ref": "Mid-n Rydberg literature overlay (9s\u20139p)"
     },
     {
       "lower": "9s",
@@ -266,7 +266,7 @@
       "upper_J": "3/2",
       "f_abs": 1.06,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (9s–9p)"
+      "ref": "Mid-n Rydberg literature overlay (9s\u20139p)"
     },
     {
       "lower": "10s",
@@ -274,7 +274,7 @@
       "upper_J": "1/2",
       "f_abs": 0.53,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (10s–10p)"
+      "ref": "Mid-n Rydberg literature overlay (10s\u201310p)"
     },
     {
       "lower": "10s",
@@ -282,7 +282,738 @@
       "upper_J": "3/2",
       "f_abs": 1.06,
       "acc": "literature",
-      "ref": "Mid-n Rydberg literature overlay (10s–10p)"
+      "ref": "Mid-n Rydberg literature overlay (10s\u201310p)"
+    },
+    {
+      "lower": "3s",
+      "upper": "19p",
+      "upper_J": "1/2",
+      "f_abs": 1.9956e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "19p",
+      "upper_J": "3/2",
+      "f_abs": 4.1782e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "20p",
+      "upper_J": "1/2",
+      "f_abs": 1.6832e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "20p",
+      "upper_J": "3/2",
+      "f_abs": 3.5247e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "21p",
+      "upper_J": "1/2",
+      "f_abs": 1.4332e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "21p",
+      "upper_J": "3/2",
+      "f_abs": 3.0018e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "22p",
+      "upper_J": "1/2",
+      "f_abs": 1.2308e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "22p",
+      "upper_J": "3/2",
+      "f_abs": 2.5782e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "23p",
+      "upper_J": "1/2",
+      "f_abs": 1.0651e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "23p",
+      "upper_J": "3/2",
+      "f_abs": 2.2314e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "24p",
+      "upper_J": "1/2",
+      "f_abs": 9.2804e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "24p",
+      "upper_J": "3/2",
+      "f_abs": 1.9444e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "25p",
+      "upper_J": "1/2",
+      "f_abs": 8.1369e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "25p",
+      "upper_J": "3/2",
+      "f_abs": 1.705e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "26p",
+      "upper_J": "1/2",
+      "f_abs": 7.1749e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "26p",
+      "upper_J": "3/2",
+      "f_abs": 1.5036e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "27p",
+      "upper_J": "1/2",
+      "f_abs": 6.3597e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "27p",
+      "upper_J": "3/2",
+      "f_abs": 1.3328e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "28p",
+      "upper_J": "1/2",
+      "f_abs": 5.6641e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "28p",
+      "upper_J": "3/2",
+      "f_abs": 1.1871e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "29p",
+      "upper_J": "1/2",
+      "f_abs": 5.0669e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "29p",
+      "upper_J": "3/2",
+      "f_abs": 1.062e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "30p",
+      "upper_J": "1/2",
+      "f_abs": 4.5512e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "30p",
+      "upper_J": "3/2",
+      "f_abs": 9.5399e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "31p",
+      "upper_J": "1/2",
+      "f_abs": 4.1035e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "31p",
+      "upper_J": "3/2",
+      "f_abs": 8.6018e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "32p",
+      "upper_J": "1/2",
+      "f_abs": 3.7129e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "32p",
+      "upper_J": "3/2",
+      "f_abs": 7.7834e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "33p",
+      "upper_J": "1/2",
+      "f_abs": 3.3705e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "33p",
+      "upper_J": "3/2",
+      "f_abs": 7.066e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "34p",
+      "upper_J": "1/2",
+      "f_abs": 3.0692e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "34p",
+      "upper_J": "3/2",
+      "f_abs": 6.4345e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "35p",
+      "upper_J": "1/2",
+      "f_abs": 2.8028e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "35p",
+      "upper_J": "3/2",
+      "f_abs": 5.8763e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "36p",
+      "upper_J": "1/2",
+      "f_abs": 2.5665e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "36p",
+      "upper_J": "3/2",
+      "f_abs": 5.3811e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "37p",
+      "upper_J": "1/2",
+      "f_abs": 2.3562e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "37p",
+      "upper_J": "3/2",
+      "f_abs": 4.9401e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "38p",
+      "upper_J": "1/2",
+      "f_abs": 2.1682e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "38p",
+      "upper_J": "3/2",
+      "f_abs": 4.5463e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "39p",
+      "upper_J": "1/2",
+      "f_abs": 1.9998e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "39p",
+      "upper_J": "3/2",
+      "f_abs": 4.1933e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "40p",
+      "upper_J": "1/2",
+      "f_abs": 1.8485e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "40p",
+      "upper_J": "3/2",
+      "f_abs": 3.876e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "41p",
+      "upper_J": "1/2",
+      "f_abs": 1.7121e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "41p",
+      "upper_J": "3/2",
+      "f_abs": 3.5901e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "42p",
+      "upper_J": "1/2",
+      "f_abs": 1.5888e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "42p",
+      "upper_J": "3/2",
+      "f_abs": 3.3317e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "43p",
+      "upper_J": "1/2",
+      "f_abs": 1.4771e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "43p",
+      "upper_J": "3/2",
+      "f_abs": 3.0975e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "44p",
+      "upper_J": "1/2",
+      "f_abs": 1.3757e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "44p",
+      "upper_J": "3/2",
+      "f_abs": 2.8849e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "45p",
+      "upper_J": "1/2",
+      "f_abs": 1.2834e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "45p",
+      "upper_J": "3/2",
+      "f_abs": 2.6913e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "46p",
+      "upper_J": "1/2",
+      "f_abs": 1.1991e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "46p",
+      "upper_J": "3/2",
+      "f_abs": 2.5147e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "47p",
+      "upper_J": "1/2",
+      "f_abs": 1.1221e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "47p",
+      "upper_J": "3/2",
+      "f_abs": 2.3532e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "48p",
+      "upper_J": "1/2",
+      "f_abs": 1.0516e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "48p",
+      "upper_J": "3/2",
+      "f_abs": 2.2053e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "49p",
+      "upper_J": "1/2",
+      "f_abs": 9.8685e-08,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "49p",
+      "upper_J": "3/2",
+      "f_abs": 2.0696e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "50p",
+      "upper_J": "1/2",
+      "f_abs": 9.2734e-08,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "50p",
+      "upper_J": "3/2",
+      "f_abs": 1.9448e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher"
+    },
+    {
+      "lower": "3s",
+      "upper": "21p",
+      "f_abs": 4.435e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "22p",
+      "f_abs": 3.809e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "23p",
+      "f_abs": 3.2965e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "24p",
+      "f_abs": 2.8724e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "25p",
+      "f_abs": 2.5187e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "26p",
+      "f_abs": 2.2211e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "27p",
+      "f_abs": 1.9688e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "28p",
+      "f_abs": 1.7535e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "29p",
+      "f_abs": 1.5687e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "30p",
+      "f_abs": 1.4091e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "31p",
+      "f_abs": 1.2705e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "32p",
+      "f_abs": 1.1496e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "33p",
+      "f_abs": 1.0437e-06,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "34p",
+      "f_abs": 9.5037e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "35p",
+      "f_abs": 8.6791e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "36p",
+      "f_abs": 7.9476e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "37p",
+      "f_abs": 7.2963e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "38p",
+      "f_abs": 6.7145e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "39p",
+      "f_abs": 6.1931e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "40p",
+      "f_abs": 5.7245e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "41p",
+      "f_abs": 5.3022e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "42p",
+      "f_abs": 4.9205e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "43p",
+      "f_abs": 4.5746e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "44p",
+      "f_abs": 4.2606e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "45p",
+      "f_abs": 3.9747e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "46p",
+      "f_abs": 3.7138e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "47p",
+      "f_abs": 3.4753e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "48p",
+      "f_abs": 3.2569e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "49p",
+      "f_abs": 3.0565e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    },
+    {
+      "lower": "3s",
+      "upper": "50p",
+      "f_abs": 2.8721e-07,
+      "acc": "C+",
+      "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 3s->np high n; NIST lists no f for n>=19. Smooth df/dE gives sigma_th=0.137 Mb vs measured 0.129 and theory 0.105-0.143 (Theodosiou 2022, Table I); NIST n>11 is 1.3-1.45x higher (J-summed multiplet f for levels without J)"
+    }
+  ],
+  "nist_series_caveats": [
+    {
+      "lower": "3s",
+      "upper_l": "p",
+      "n_min": 12,
+      "rel_unc": 0.4,
+      "ref": "Theodosiou, arXiv:2212.00577 (2022): NBS/NIST 3s->np deviates from the smooth df/dE curve for n>11 and carries 25-50% error; NIST/ARC = 1.3-1.45 at n=12-18, 0.8 at n=8-10"
     }
   ]
 }

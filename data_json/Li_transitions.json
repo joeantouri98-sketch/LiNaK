@@ -1,5 +1,9 @@
 {
+  "species_id": "Li",
   "element": "Li",
+  "label": "Li",
+  "kind": "neutral",
+  "charge": 0,
   "ionization_energy_eV": 5.391714996,
   "total_states": 292,
   "total_transitions": 14292,

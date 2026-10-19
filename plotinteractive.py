@@ -2851,6 +2851,7 @@ _emis_lines = []   # all transitions (emission)
 
 _SOURCE_GROUPS = {
     'NIST': 'NIST', 'precision': 'NIST',
+    'NIST-extrap': 'NIST-extrap',
     'literature': 'literature',
     'ORCA': 'ORCA', 'EOM-CCSD': 'ORCA',
     'Numerov': 'Numerov',
@@ -3002,6 +3003,7 @@ def _make_spectrum(lines, wl_arr, broadening, T_K=300.0, sigma_inst_nm=_SIGMA_IN
 _nist_lines   = [r for r in _abs_lines if r['src'] == 'NIST']
 _orca_lines   = [r for r in _abs_lines if r['src'] == 'ORCA']
 _num_lines    = [r for r in _abs_lines if r['src'] == 'Numerov']
+_nxt_lines    = [r for r in _abs_lines if r['src'] == 'NIST-extrap']
 _lit_lines    = [r for r in _abs_lines if r['src'] == 'literature']
 _coul_lines   = [r for r in _abs_lines if r['src'] == 'Coulomb']
 
@@ -3009,6 +3011,7 @@ _SRC_LINE_GROUPS = [
     ('NIST', _nist_lines),
     ('ORCA', _orca_lines),
     ('Numerov', _num_lines),
+    ('NIST-extrap', _nxt_lines),
     ('literature', _lit_lines),
     ('Coulomb', _coul_lines),
     ('All', _abs_lines),
@@ -3026,6 +3029,7 @@ for _src_key, _lines in _SRC_LINE_GROUPS:
 # Shown as vertical lines at each wavelength, height = fosc, coloured by source
 _SRC_COLORS = {
     'NIST': '#1a6eb5', 'ORCA': '#c0392b', 'Numerov': '#0e7c6b',
+    'NIST-extrap': '#5b9bd5',
     'literature': '#c47a00', 'Coulomb': '#27ae60',
 }
 _SRC_COLORS_JS = json.dumps(_SRC_COLORS)   # serialised for JS f-string injection

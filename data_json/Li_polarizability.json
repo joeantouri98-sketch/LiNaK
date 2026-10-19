@@ -2,15 +2,15 @@
   "element": "Li",
   "gs_label": "2s",
   "excited_label": "2p1/2",
-  "alpha0_au": 162.8257,
+  "alpha0_au": 162.8261,
   "alpha0_expt_au": 164.0,
-  "C6_au": 1357.89,
+  "C6_au": 1357.9,
   "C6_expt_au": 1393.0,
   "magic_wavelengths": [
     {
-      "wl_nm": 225.3987,
-      "alpha_au": -22.9873,
-      "delta_alpha_slope_au_per_nm": -0.1733,
+      "wl_nm": 225.3513,
+      "alpha_au": -22.9764,
+      "delta_alpha_slope_au_per_nm": -0.1729,
       "nearby_resonance_nm": 230.186,
       "nearby_resonance_label": "50p",
       "robustness": "robust"
@@ -32,25 +32,25 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 235.5449,
-      "alpha_au": -25.7415,
-      "delta_alpha_slope_au_per_nm": -14.2276,
+      "wl_nm": 235.5456,
+      "alpha_au": -25.7434,
+      "delta_alpha_slope_au_per_nm": -14.2538,
       "nearby_resonance_nm": 235.965,
       "nearby_resonance_label": "10p1/2",
       "robustness": "robust"
     },
     {
-      "wl_nm": 236.9974,
-      "alpha_au": -26.1581,
-      "delta_alpha_slope_au_per_nm": -11.1957,
+      "wl_nm": 236.9982,
+      "alpha_au": -26.16,
+      "delta_alpha_slope_au_per_nm": -11.2248,
       "nearby_resonance_nm": 237.427,
       "nearby_resonance_label": "9p1/2",
       "robustness": "robust"
     },
     {
-      "wl_nm": 238.8635,
-      "alpha_au": -26.7019,
-      "delta_alpha_slope_au_per_nm": -6.9161,
+      "wl_nm": 238.8646,
+      "alpha_au": -26.7039,
+      "delta_alpha_slope_au_per_nm": -6.9331,
       "nearby_resonance_nm": 239.512,
       "nearby_resonance_label": "8p1/2",
       "robustness": "robust"
@@ -64,9 +64,9 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 241.6885,
-      "alpha_au": -27.5442,
-      "delta_alpha_slope_au_per_nm": -4.9268,
+      "wl_nm": 241.6897,
+      "alpha_au": -27.5464,
+      "delta_alpha_slope_au_per_nm": -4.9374,
       "nearby_resonance_nm": 242.616,
       "nearby_resonance_label": "7p1/2",
       "robustness": "robust"
@@ -80,17 +80,17 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 246.2297,
-      "alpha_au": -28.9486,
-      "delta_alpha_slope_au_per_nm": -3.6162,
+      "wl_nm": 246.2311,
+      "alpha_au": -28.951,
+      "delta_alpha_slope_au_per_nm": -3.6228,
       "nearby_resonance_nm": 247.581,
       "nearby_resonance_label": "6p1/2",
       "robustness": "robust"
     },
     {
-      "wl_nm": 254.312,
-      "alpha_au": -31.6134,
-      "delta_alpha_slope_au_per_nm": -2.8222,
+      "wl_nm": 254.3136,
+      "alpha_au": -31.6162,
+      "delta_alpha_slope_au_per_nm": -2.8264,
       "nearby_resonance_nm": 256.308,
       "nearby_resonance_label": "5p1/2",
       "robustness": "robust"
@@ -104,17 +104,17 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 271.4938,
-      "alpha_au": -38.1038,
-      "delta_alpha_slope_au_per_nm": -2.8047,
+      "wl_nm": 271.4954,
+      "alpha_au": -38.1077,
+      "delta_alpha_slope_au_per_nm": -2.8081,
       "nearby_resonance_nm": 274.201,
       "nearby_resonance_label": "4p1/2",
       "robustness": "robust"
     },
     {
-      "wl_nm": 321.6084,
-      "alpha_au": -68.6624,
-      "delta_alpha_slope_au_per_nm": -11.9772,
+      "wl_nm": 321.6098,
+      "alpha_au": -68.6785,
+      "delta_alpha_slope_au_per_nm": -11.9951,
       "nearby_resonance_nm": 323.359,
       "nearby_resonance_label": "3p1/2",
       "robustness": "robust"
@@ -136,9 +136,9 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 361.8703,
-      "alpha_au": -64.2279,
-      "delta_alpha_slope_au_per_nm": 167.1141,
+      "wl_nm": 361.8649,
+      "alpha_au": -64.2242,
+      "delta_alpha_slope_au_per_nm": 167.3578,
       "nearby_resonance_nm": 362.232,
       "nearby_resonance_label": "11s",
       "robustness": "sensitive"
@@ -152,97 +152,97 @@
       "robustness": "very sensitive"
     },
     {
-      "wl_nm": 368.3915,
-      "alpha_au": -67.8611,
-      "delta_alpha_slope_au_per_nm": 83.1857,
+      "wl_nm": 368.3913,
+      "alpha_au": -67.8603,
+      "delta_alpha_slope_au_per_nm": 83.1933,
       "nearby_resonance_nm": 369.008,
       "nearby_resonance_label": "9s",
       "robustness": "sensitive"
     },
     {
-      "wl_nm": 373.9471,
-      "alpha_au": -71.0587,
-      "delta_alpha_slope_au_per_nm": 57.6753,
+      "wl_nm": 373.947,
+      "alpha_au": -71.058,
+      "delta_alpha_slope_au_per_nm": 57.6744,
       "nearby_resonance_nm": 374.765,
       "nearby_resonance_label": "8s",
       "robustness": "sensitive"
     },
     {
       "wl_nm": 375.1093,
-      "alpha_au": -71.7411,
-      "delta_alpha_slope_au_per_nm": 101.0526,
+      "alpha_au": -71.7404,
+      "delta_alpha_slope_au_per_nm": 101.0749,
       "nearby_resonance_nm": 374.765,
       "nearby_resonance_label": "8s",
       "robustness": "sensitive"
     },
     {
       "wl_nm": 382.5618,
-      "alpha_au": -76.2396,
-      "delta_alpha_slope_au_per_nm": 39.8042,
+      "alpha_au": -76.239,
+      "delta_alpha_slope_au_per_nm": 39.8038,
       "nearby_resonance_nm": 383.668,
       "nearby_resonance_label": "7s",
       "robustness": "robust"
     },
     {
       "wl_nm": 384.3534,
-      "alpha_au": -77.3548,
-      "delta_alpha_slope_au_per_nm": 49.8647,
+      "alpha_au": -77.3541,
+      "delta_alpha_slope_au_per_nm": 49.8636,
       "nearby_resonance_nm": 383.668,
       "nearby_resonance_label": "7s",
       "robustness": "robust"
     },
     {
-      "wl_nm": 397.1473,
-      "alpha_au": -85.7429,
-      "delta_alpha_slope_au_per_nm": 29.353,
+      "wl_nm": 397.1474,
+      "alpha_au": -85.7424,
+      "delta_alpha_slope_au_per_nm": 29.3541,
       "nearby_resonance_nm": 398.661,
       "nearby_resonance_label": "6s",
       "robustness": "robust"
     },
     {
-      "wl_nm": 400.3356,
-      "alpha_au": -87.9592,
-      "delta_alpha_slope_au_per_nm": 21.8078,
+      "wl_nm": 400.3357,
+      "alpha_au": -87.9587,
+      "delta_alpha_slope_au_per_nm": 21.8062,
       "nearby_resonance_nm": 398.661,
       "nearby_resonance_label": "6s",
       "robustness": "robust"
     },
     {
-      "wl_nm": 425.3782,
-      "alpha_au": -107.4503,
-      "delta_alpha_slope_au_per_nm": 27.8143,
+      "wl_nm": 425.3783,
+      "alpha_au": -107.4498,
+      "delta_alpha_slope_au_per_nm": 27.8161,
       "nearby_resonance_nm": 427.426,
       "nearby_resonance_label": "5s",
       "robustness": "robust"
     },
     {
-      "wl_nm": 433.2901,
-      "alpha_au": -114.5011,
-      "delta_alpha_slope_au_per_nm": 8.6927,
+      "wl_nm": 433.2904,
+      "alpha_au": -114.5008,
+      "delta_alpha_slope_au_per_nm": 8.6925,
       "nearby_resonance_nm": 427.426,
       "nearby_resonance_label": "5s",
       "robustness": "robust"
     },
     {
       "wl_nm": 494.5587,
-      "alpha_au": -191.5177,
-      "delta_alpha_slope_au_per_nm": 53.519,
+      "alpha_au": -191.5173,
+      "delta_alpha_slope_au_per_nm": 53.5206,
       "nearby_resonance_nm": 497.305,
       "nearby_resonance_label": "4s",
       "robustness": "sensitive"
     },
     {
-      "wl_nm": 547.633,
-      "alpha_au": -322.138,
-      "delta_alpha_slope_au_per_nm": 4.9113,
+      "wl_nm": 547.6334,
+      "alpha_au": -322.1389,
+      "delta_alpha_slope_au_per_nm": 4.9114,
       "nearby_resonance_nm": 497.305,
       "nearby_resonance_label": "4s",
       "robustness": "robust"
     },
     {
-      "wl_nm": 870.1328,
-      "alpha_au": 400.4894,
-      "delta_alpha_slope_au_per_nm": 3.0823,
+      "wl_nm": 870.1333,
+      "alpha_au": 400.4892,
+      "delta_alpha_slope_au_per_nm": 3.0822,
       "nearby_resonance_nm": 812.845,
       "nearby_resonance_label": "3s",
       "robustness": "robust"
@@ -451,7 +451,7 @@
     },
     {
       "delta_E_au": 0.19557335109249133,
-      "fosc": 6.180364109442405e-05,
+      "fosc": 6.183562167136809e-05,
       "sign": 1,
       "other_label": "14p1/2",
       "source": "Numerov",
@@ -459,7 +459,7 @@
     },
     {
       "delta_E_au": 0.19557335109249133,
-      "fosc": 0.00012360728218884802,
+      "fosc": 0.0001236712433427361,
       "sign": 1,
       "other_label": "14p3/2",
       "source": "Numerov",
@@ -467,7 +467,7 @@
     },
     {
       "delta_E_au": 0.19590196353138603,
-      "fosc": 5.0115081548568066e-05,
+      "fosc": 5.026441820385384e-05,
       "sign": 1,
       "other_label": "15p1/2",
       "source": "Numerov",
@@ -475,7 +475,7 @@
     },
     {
       "delta_E_au": 0.19590196353138603,
-      "fosc": 0.00010023016309713608,
+      "fosc": 0.00010052883640770763,
       "sign": 1,
       "other_label": "15p3/2",
       "source": "Numerov",
@@ -483,7 +483,7 @@
     },
     {
       "delta_E_au": 0.19617457000328503,
-      "fosc": 4.1345854031774985e-05,
+      "fosc": 4.1407113166989985e-05,
       "sign": 1,
       "other_label": "16p1/2",
       "source": "Numerov",
@@ -491,7 +491,7 @@
     },
     {
       "delta_E_au": 0.19617457000328503,
-      "fosc": 8.269170806354992e-05,
+      "fosc": 8.281422633397992e-05,
       "sign": 1,
       "other_label": "16p3/2",
       "source": "Numerov",
@@ -499,7 +499,7 @@
     },
     {
       "delta_E_au": 0.19640274654467368,
-      "fosc": 3.465214252239896e-05,
+      "fosc": 3.451309421363538e-05,
       "sign": 1,
       "other_label": "17p1/2",
       "source": "Numerov",
@@ -507,7 +507,7 @@
     },
     {
       "delta_E_au": 0.19640274654467368,
-      "fosc": 6.930428504479788e-05,
+      "fosc": 6.902618842727072e-05,
       "sign": 1,
       "other_label": "17p3/2",
       "source": "Numerov",
@@ -515,7 +515,7 @@
     },
     {
       "delta_E_au": 0.19659200555387832,
-      "fosc": 2.956006464742716e-05,
+      "fosc": 2.906752611426176e-05,
       "sign": 1,
       "other_label": "18p1/2",
       "source": "Numerov",
@@ -523,7 +523,7 @@
     },
     {
       "delta_E_au": 0.19659200555387832,
-      "fosc": 5.9120129294854286e-05,
+      "fosc": 5.8135052228523486e-05,
       "sign": 1,
       "other_label": "18p3/2",
       "source": "Numerov",
@@ -531,7 +531,7 @@
     },
     {
       "delta_E_au": 0.19675094637228802,
-      "fosc": 2.466316865338282e-05,
+      "fosc": 2.4709342861050918e-05,
       "sign": 1,
       "other_label": "19p1/2",
       "source": "Numerov",
@@ -539,7 +539,7 @@
     },
     {
       "delta_E_au": 0.19675094637228802,
-      "fosc": 4.932633730676561e-05,
+      "fosc": 4.941868572210181e-05,
       "sign": 1,
       "other_label": "19p3/2",
       "source": "Numerov",
@@ -547,7 +547,7 @@
     },
     {
       "delta_E_au": 0.1968855958887396,
-      "fosc": 2.117030356744284e-05,
+      "fosc": 2.1180259433196667e-05,
       "sign": 1,
       "other_label": "20p1/2",
       "source": "Numerov",
@@ -555,7 +555,7 @@
     },
     {
       "delta_E_au": 0.1968855958887396,
-      "fosc": 4.234060713488565e-05,
+      "fosc": 4.2360518866393306e-05,
       "sign": 1,
       "other_label": "20p3/2",
       "source": "Numerov",
@@ -563,7 +563,7 @@
     },
     {
       "delta_E_au": 0.19700300997309084,
-      "fosc": 1.8339941395868714e-05,
+      "fosc": 1.8292213563459144e-05,
       "sign": 1,
       "other_label": "21p1/2",
       "source": "Numerov",
@@ -571,7 +571,7 @@
     },
     {
       "delta_E_au": 0.19700300997309084,
-      "fosc": 3.667988279173741e-05,
+      "fosc": 3.658442712691827e-05,
       "sign": 1,
       "other_label": "21p3/2",
       "source": "Numerov",
@@ -579,7 +579,7 @@
     },
     {
       "delta_E_au": 0.19710315187601948,
-      "fosc": 1.6039263287735726e-05,
+      "fosc": 1.5906074194271898e-05,
       "sign": 1,
       "other_label": "22p1/2",
       "source": "Numerov",
@@ -587,7 +587,7 @@
     },
     {
       "delta_E_au": 0.19710315187601948,
-      "fosc": 3.207852657547143e-05,
+      "fosc": 3.1812148388543775e-05,
       "sign": 1,
       "other_label": "22p3/2",
       "source": "Numerov",
@@ -595,7 +595,7 @@
     },
     {
       "delta_E_au": 0.19719344496060506,
-      "fosc": 1.417020775919995e-05,
+      "fosc": 1.3917415935123865e-05,
       "sign": 1,
       "other_label": "23p1/2",
       "source": "Numerov",
@@ -603,7 +603,7 @@
     },
     {
       "delta_E_au": 0.19719344496060506,
-      "fosc": 2.8340415518399883e-05,
+      "fosc": 2.7834831870247713e-05,
       "sign": 1,
       "other_label": "23p3/2",
       "source": "Numerov",
@@ -611,7 +611,7 @@
     },
     {
       "delta_E_au": 0.19727124327565093,
-      "fosc": 1.2659556833615311e-05,
+      "fosc": 1.22468284292932e-05,
       "sign": 1,
       "other_label": "24p1/2",
       "source": "Numerov",
@@ -619,7 +619,7 @@
     },
     {
       "delta_E_au": 0.19727124327565093,
-      "fosc": 2.531911366723061e-05,
+      "fosc": 2.4493656858586387e-05,
       "sign": 1,
       "other_label": "24p3/2",
       "source": "Numerov",
@@ -627,7 +627,7 @@
     },
     {
       "delta_E_au": 0.1973414712303286,
-      "fosc": 1.1452846575119639e-05,
+      "fosc": 1.0833197633251421e-05,
       "sign": 1,
       "other_label": "25p1/2",
       "source": "Numerov",
@@ -635,7 +635,7 @@
     },
     {
       "delta_E_au": 0.1973414712303286,
-      "fosc": 2.2905693150239265e-05,
+      "fosc": 2.166639526650283e-05,
       "sign": 1,
       "other_label": "25p3/2",
       "source": "Numerov",
@@ -643,7 +643,7 @@
     },
     {
       "delta_E_au": 0.19740236485717366,
-      "fosc": 9.611180471771767e-06,
+      "fosc": 9.62897211904796e-06,
       "sign": 1,
       "other_label": "26p1/2",
       "source": "Numerov",
@@ -651,7 +651,7 @@
     },
     {
       "delta_E_au": 0.19740236485717366,
-      "fosc": 1.922236094354352e-05,
+      "fosc": 1.9257944238095907e-05,
       "sign": 1,
       "other_label": "26p3/2",
       "source": "Numerov",
@@ -659,7 +659,7 @@
     },
     {
       "delta_E_au": 0.19745517363314008,
-      "fosc": 8.57866276880949e-06,
+      "fosc": 8.596778475566957e-06,
       "sign": 1,
       "other_label": "27p1/2",
       "source": "Numerov",
@@ -667,7 +667,7 @@
     },
     {
       "delta_E_au": 0.19745517363314008,
-      "fosc": 1.7157325537618968e-05,
+      "fosc": 1.7193556951133903e-05,
       "sign": 1,
       "other_label": "27p3/2",
       "source": "Numerov",
@@ -675,7 +675,7 @@
     },
     {
       "delta_E_au": 0.19750066929399354,
-      "fosc": 7.687111674320154e-06,
+      "fosc": 7.706968338333113e-06,
       "sign": 1,
       "other_label": "28p1/2",
       "source": "Numerov",
@@ -683,7 +683,7 @@
     },
     {
       "delta_E_au": 0.19750066929399354,
-      "fosc": 1.5374223348640298e-05,
+      "fosc": 1.5413936676666216e-05,
       "sign": 1,
       "other_label": "28p3/2",
       "source": "Numerov",
@@ -691,7 +691,7 @@
     },
     {
       "delta_E_au": 0.19753951332753322,
-      "fosc": 6.912753893623345e-06,
+      "fosc": 6.935818288892271e-06,
       "sign": 1,
       "other_label": "29p1/2",
       "source": "Numerov",
@@ -699,7 +699,7 @@
     },
     {
       "delta_E_au": 0.19753951332753322,
-      "fosc": 1.3825507787246681e-05,
+      "fosc": 1.3871636577784534e-05,
       "sign": 1,
       "other_label": "29p3/2",
       "source": "Numerov",
@@ -707,7 +707,7 @@
     },
     {
       "delta_E_au": 0.19757960683802686,
-      "fosc": 6.235753561344634e-06,
+      "fosc": 6.264193503877454e-06,
       "sign": 1,
       "other_label": "30p1/2",
       "source": "Numerov",
@@ -715,7 +715,7 @@
     },
     {
       "delta_E_au": 0.19757960683802686,
-      "fosc": 1.2471507122689261e-05,
+      "fosc": 1.2528387007754901e-05,
       "sign": 1,
       "other_label": "30p3/2",
       "source": "Numerov",
@@ -723,7 +723,7 @@
     },
     {
       "delta_E_au": 0.19761764238647866,
-      "fosc": 5.640113539422771e-06,
+      "fosc": 5.676545003113532e-06,
       "sign": 1,
       "other_label": "31p1/2",
       "source": "Numerov",
@@ -731,7 +731,7 @@
     },
     {
       "delta_E_au": 0.19761764238647866,
-      "fosc": 1.1280227078845535e-05,
+      "fosc": 1.1353090006227057e-05,
       "sign": 1,
       "other_label": "31p3/2",
       "source": "Numerov",
@@ -739,7 +739,7 @@
     },
     {
       "delta_E_au": 0.1976461231111648,
-      "fosc": 5.112526957260899e-06,
+      "fosc": 5.160149662833977e-06,
       "sign": 1,
       "other_label": "32p1/2",
       "source": "Numerov",
@@ -747,7 +747,7 @@
     },
     {
       "delta_E_au": 0.1976461231111648,
-      "fosc": 1.0225053914521791e-05,
+      "fosc": 1.0320299325667947e-05,
       "sign": 1,
       "other_label": "32p3/2",
       "source": "Numerov",
@@ -755,7 +755,7 @@
     },
     {
       "delta_E_au": 0.19767607380873795,
-      "fosc": 4.6419397020271785e-06,
+      "fosc": 4.70452884750346e-06,
       "sign": 1,
       "other_label": "33p1/2",
       "source": "Numerov",
@@ -763,7 +763,7 @@
     },
     {
       "delta_E_au": 0.19767607380873795,
-      "fosc": 9.283879404054352e-06,
+      "fosc": 9.409057695006915e-06,
       "sign": 1,
       "other_label": "33p3/2",
       "source": "Numerov",
@@ -771,7 +771,7 @@
     },
     {
       "delta_E_au": 0.19770069585459565,
-      "fosc": 4.21903447024483e-06,
+      "fosc": 4.300999793667176e-06,
       "sign": 1,
       "other_label": "34p1/2",
       "source": "Numerov",
@@ -779,7 +779,7 @@
     },
     {
       "delta_E_au": 0.19770069585459565,
-      "fosc": 8.438068940489655e-06,
+      "fosc": 8.601999587334347e-06,
       "sign": 1,
       "other_label": "34p3/2",
       "source": "Numerov",
@@ -787,7 +787,7 @@
     },
     {
       "delta_E_au": 0.1977238479275663,
-      "fosc": 3.835995048997924e-06,
+      "fosc": 3.942326593919159e-06,
       "sign": 1,
       "other_label": "35p1/2",
       "source": "Numerov",
@@ -795,7 +795,7 @@
     },
     {
       "delta_E_au": 0.1977238479275663,
-      "fosc": 7.671990097995843e-06,
+      "fosc": 7.884653187838313e-06,
       "sign": 1,
       "other_label": "35p3/2",
       "source": "Numerov",
@@ -803,7 +803,7 @@
     },
     {
       "delta_E_au": 0.19774736749375874,
-      "fosc": 3.486482063981036e-06,
+      "fosc": 3.6224465863209967e-06,
       "sign": 1,
       "other_label": "36p1/2",
       "source": "Numerov",
@@ -811,7 +811,7 @@
     },
     {
       "delta_E_au": 0.19774736749375874,
-      "fosc": 6.972964127962068e-06,
+      "fosc": 7.244893172641989e-06,
       "sign": 1,
       "other_label": "36p3/2",
       "source": "Numerov",
@@ -819,7 +819,7 @@
     },
     {
       "delta_E_au": 0.19776647714129006,
-      "fosc": 3.1649772409724156e-06,
+      "fosc": 3.3362543098236873e-06,
       "sign": 1,
       "other_label": "37p1/2",
       "source": "Numerov",
@@ -827,7 +827,7 @@
     },
     {
       "delta_E_au": 0.19776647714129006,
-      "fosc": 6.329954481944828e-06,
+      "fosc": 6.672508619647371e-06,
       "sign": 1,
       "other_label": "37p3/2",
       "source": "Numerov",
@@ -835,7 +835,7 @@
     },
     {
       "delta_E_au": 0.19778411681593439,
-      "fosc": 2.86714899923142e-06,
+      "fosc": 3.0794297483956013e-06,
       "sign": 1,
       "other_label": "38p1/2",
       "source": "Numerov",
@@ -843,7 +843,7 @@
     },
     {
       "delta_E_au": 0.19778411681593439,
-      "fosc": 5.734297998462837e-06,
+      "fosc": 6.158859496791199e-06,
       "sign": 1,
       "other_label": "38p3/2",
       "source": "Numerov",
@@ -851,7 +851,7 @@
     },
     {
       "delta_E_au": 0.19780138899735694,
-      "fosc": 2.589721071172881e-06,
+      "fosc": 2.8483009092200504e-06,
       "sign": 1,
       "other_label": "39p1/2",
       "source": "Numerov",
@@ -859,7 +859,7 @@
     },
     {
       "delta_E_au": 0.19780138899735694,
-      "fosc": 5.1794421423457585e-06,
+      "fosc": 5.696601818440097e-06,
       "sign": 1,
       "other_label": "39p3/2",
       "source": "Numerov",
@@ -867,7 +867,7 @@
     },
     {
       "delta_E_au": 0.1978219686177753,
-      "fosc": 2.330180359396386e-06,
+      "fosc": 2.6397357177495998e-06,
       "sign": 1,
       "other_label": "40p1/2",
       "source": "Numerov",
@@ -875,7 +875,7 @@
     },
     {
       "delta_E_au": 0.1978219686177753,
-      "fosc": 4.66036071879277e-06,
+      "fosc": 5.279471435499196e-06,
       "sign": 1,
       "other_label": "40p3/2",
       "source": "Numerov",
@@ -883,7 +883,7 @@
     },
     {
       "delta_E_au": 0.19784034327886313,
-      "fosc": 2.087028984535797e-06,
+      "fosc": 2.4510421126460763e-06,
       "sign": 1,
       "other_label": "41p1/2",
       "source": "Numerov",
@@ -891,7 +891,7 @@
     },
     {
       "delta_E_au": 0.19784034327886313,
-      "fosc": 4.174057969071591e-06,
+      "fosc": 4.902084225292149e-06,
       "sign": 1,
       "other_label": "41p3/2",
       "source": "Numerov",
@@ -899,7 +899,7 @@
     },
     {
       "delta_E_au": 0.19785577799417692,
-      "fosc": 1.8595875704862085e-06,
+      "fosc": 2.2799111478860175e-06,
       "sign": 1,
       "other_label": "42p1/2",
       "source": "Numerov",
@@ -907,7 +907,7 @@
     },
     {
       "delta_E_au": 0.19785577799417692,
-      "fosc": 3.719175140972415e-06,
+      "fosc": 4.5598222957720325e-06,
       "sign": 1,
       "other_label": "42p3/2",
       "source": "Numerov",
@@ -915,7 +915,7 @@
     },
     {
       "delta_E_au": 0.19787066146965804,
-      "fosc": 4.944235964945228e-06,
+      "fosc": 6.373038972267411e-06,
       "sign": 1,
       "other_label": "43p",
       "source": "Numerov",
@@ -923,7 +923,7 @@
     },
     {
       "delta_E_au": 0.19788286224462037,
-      "fosc": 4.359881367882009e-06,
+      "fosc": 5.947852183684056e-06,
       "sign": 1,
       "other_label": "44p",
       "source": "Numerov",
@@ -931,7 +931,7 @@
     },
     {
       "delta_E_au": 0.19789425453449483,
-      "fosc": 3.8299326986356e-06,
+      "fosc": 5.559659546106888e-06,
       "sign": 1,
       "other_label": "45p",
       "source": "Numerov",
@@ -939,7 +939,7 @@
     },
     {
       "delta_E_au": 0.19790491183792575,
-      "fosc": 3.359914468919859e-06,
+      "fosc": 5.204523863699695e-06,
       "sign": 1,
       "other_label": "46p",
       "source": "Numerov",
@@ -947,7 +947,7 @@
     },
     {
       "delta_E_au": 0.19791490765355754,
-      "fosc": 2.9555913643893867e-06,
+      "fosc": 4.879000222519486e-06,
       "sign": 1,
       "other_label": "47p",
       "source": "Numerov",
@@ -955,7 +955,7 @@
     },
     {
       "delta_E_au": 0.19792427873071233,
-      "fosc": 2.62318381152237e-06,
+      "fosc": 4.58006565282554e-06,
       "sign": 1,
       "other_label": "48p",
       "source": "Numerov",
@@ -963,7 +963,7 @@
     },
     {
       "delta_E_au": 0.19793309856803448,
-      "fosc": 2.3692026275068556e-06,
+      "fosc": 4.305060054297084e-06,
       "sign": 1,
       "other_label": "49p",
       "source": "Numerov",
@@ -971,7 +971,7 @@
     },
     {
       "delta_E_au": 0.19794136716552402,
-      "fosc": 2.2010138216228985e-06,
+      "fosc": 4.051636374597824e-06,
       "sign": 1,
       "other_label": "50p",
       "source": "Numerov",
@@ -1109,7 +1109,7 @@
     },
     {
       "delta_E_au": 0.12481841128181302,
-      "fosc": 0.0003248671018843768,
+      "fosc": 0.0003248965402343398,
       "sign": 1,
       "other_label": "10s",
       "source": "Numerov",
@@ -1117,7 +1117,7 @@
     },
     {
       "delta_E_au": 0.12523367862239793,
-      "fosc": 0.003920078761164141,
+      "fosc": 0.003930407817688329,
       "sign": 1,
       "other_label": "10d3/2",
       "source": "Numerov",
@@ -1125,7 +1125,7 @@
     },
     {
       "delta_E_au": 0.12578491845503276,
-      "fosc": 0.0002369913223149586,
+      "fosc": 0.00023707380072447042,
       "sign": 1,
       "other_label": "11s",
       "source": "Numerov",
@@ -1133,7 +1133,7 @@
     },
     {
       "delta_E_au": 0.12609361276130826,
-      "fosc": 0.00293108358368632,
+      "fosc": 0.002890699092099187,
       "sign": 1,
       "other_label": "11d3/2",
       "source": "Numerov",
@@ -1141,7 +1141,7 @@
     },
     {
       "delta_E_au": 0.1265177366885375,
-      "fosc": 0.00017836922498587688,
+      "fosc": 0.00017849431516741584,
       "sign": 1,
       "other_label": "12s",
       "source": "Numerov",
@@ -1149,7 +1149,7 @@
     },
     {
       "delta_E_au": 0.12676245042490517,
-      "fosc": 0.002155856407686795,
+      "fosc": 0.002190902351426578,
       "sign": 1,
       "other_label": "12d3/2",
       "source": "Numerov",
@@ -1157,7 +1157,7 @@
     },
     {
       "delta_E_au": 0.12708463173241913,
-      "fosc": 0.00013769976829662635,
+      "fosc": 0.00013785739579284917,
       "sign": 1,
       "other_label": "13s",
       "source": "Numerov",
@@ -1165,7 +1165,7 @@
     },
     {
       "delta_E_au": 0.12727657344214258,
-      "fosc": 0.0017521556805033117,
+      "fosc": 0.0017017403335816866,
       "sign": 1,
       "other_label": "13d",
       "source": "Numerov",
@@ -1173,7 +1173,7 @@
     },
     {
       "delta_E_au": 0.12753113599685334,
-      "fosc": 0.00010856390427428956,
+      "fosc": 0.00010874948125591015,
       "sign": 1,
       "other_label": "14s",
       "source": "Numerov",
@@ -1181,7 +1181,7 @@
     },
     {
       "delta_E_au": 0.12768423367303713,
-      "fosc": 0.0013402589132059505,
+      "fosc": 0.0013490538701015715,
       "sign": 1,
       "other_label": "14d",
       "source": "Numerov",
@@ -1189,7 +1189,7 @@
     },
     {
       "delta_E_au": 0.12788903764552206,
-      "fosc": 8.7155661056951e-05,
+      "fosc": 8.733507032068348e-05,
       "sign": 1,
       "other_label": "15s",
       "source": "Numerov",
@@ -1197,7 +1197,7 @@
     },
     {
       "delta_E_au": 0.12801314010650924,
-      "fosc": 0.0011295388636296216,
+      "fosc": 0.001088027343183298,
       "sign": 1,
       "other_label": "15d",
       "source": "Numerov",
@@ -1205,7 +1205,7 @@
     },
     {
       "delta_E_au": 0.12818031277308628,
-      "fosc": 7.098507844544836e-05,
+      "fosc": 7.121995288608052e-05,
       "sign": 1,
       "other_label": "16s",
       "source": "Numerov",
@@ -1213,7 +1213,7 @@
     },
     {
       "delta_E_au": 0.12828232889144592,
-      "fosc": 0.0009224853173804777,
+      "fosc": 0.000890675789148849,
       "sign": 1,
       "other_label": "16d",
       "source": "Numerov",
@@ -1221,7 +1221,7 @@
     },
     {
       "delta_E_au": 0.12842054309214854,
-      "fosc": 5.8593466457492904e-05,
+      "fosc": 5.885456460768659e-05,
       "sign": 1,
       "other_label": "17s",
       "source": "Numerov",
@@ -1229,7 +1229,7 @@
     },
     {
       "delta_E_au": 0.12850539727705212,
-      "fosc": 0.0007729819576961312,
+      "fosc": 0.0007385612493260243,
       "sign": 1,
       "other_label": "17d",
       "source": "Numerov",
@@ -1237,7 +1237,7 @@
     },
     {
       "delta_E_au": 0.12862101064461676,
-      "fosc": 4.898190001206485e-05,
+      "fosc": 4.9204762274134546e-05,
       "sign": 1,
       "other_label": "18s",
       "source": "Numerov",
@@ -1245,7 +1245,7 @@
     },
     {
       "delta_E_au": 0.1286923410789597,
-      "fosc": 0.0006033787399070999,
+      "fosc": 0.0006193713939505265,
       "sign": 1,
       "other_label": "18d",
       "source": "Numerov",
@@ -1253,7 +1253,7 @@
     },
     {
       "delta_E_au": 0.1287900207773026,
-      "fosc": 4.1263362109344735e-05,
+      "fosc": 4.15616578420561e-05,
       "sign": 1,
       "other_label": "19s",
       "source": "Numerov",
@@ -1261,7 +1261,7 @@
     },
     {
       "delta_E_au": 0.1288505469109259,
-      "fosc": 0.0005321060627776645,
+      "fosc": 0.0005246217300632033,
       "sign": 1,
       "other_label": "19d",
       "source": "Numerov",
@@ -1269,7 +1269,7 @@
     },
     {
       "delta_E_au": 0.12893378412565376,
-      "fosc": 3.511179046156213e-05,
+      "fosc": 3.5427987623774264e-05,
       "sign": 1,
       "other_label": "20s",
       "source": "Numerov",
@@ -1277,7 +1277,7 @@
     },
     {
       "delta_E_au": 0.1289856374192436,
-      "fosc": 0.00041959510608210494,
+      "fosc": 0.00044833143367874174,
       "sign": 1,
       "other_label": "20d",
       "source": "Numerov",
@@ -1285,7 +1285,7 @@
     },
     {
       "delta_E_au": 0.12905715160019743,
-      "fosc": 3.0096761778623713e-05,
+      "fosc": 3.044775831159995e-05,
       "sign": 1,
       "other_label": "21s",
       "source": "Numerov",
@@ -1293,7 +1293,7 @@
     },
     {
       "delta_E_au": 0.12910187552528518,
-      "fosc": 0.000391035759337886,
+      "fosc": 0.0003861993838192502,
       "sign": 1,
       "other_label": "21d",
       "source": "Numerov",
@@ -1301,7 +1301,7 @@
     },
     {
       "delta_E_au": 0.12916379813315118,
-      "fosc": 2.5974527460554193e-05,
+      "fosc": 2.6361383601510437e-05,
       "sign": 1,
       "other_label": "22s",
       "source": "Numerov",
@@ -1309,7 +1309,7 @@
     },
     {
       "delta_E_au": 0.12920260541736867,
-      "fosc": 0.00031579554061442926,
+      "fosc": 0.00033506647900639506,
       "sign": 1,
       "other_label": "22d",
       "source": "Numerov",
@@ -1317,7 +1317,7 @@
     },
     {
       "delta_E_au": 0.1292565901716447,
-      "fosc": 2.257726607019329e-05,
+      "fosc": 2.29765149306447e-05,
       "sign": 1,
       "other_label": "23s",
       "source": "Numerov",
@@ -1325,7 +1325,7 @@
     },
     {
       "delta_E_au": 0.12929050979601284,
-      "fosc": 0.00030646575366077177,
+      "fosc": 0.00029261381970238317,
       "sign": 1,
       "other_label": "23d",
       "source": "Numerov",
@@ -1333,7 +1333,7 @@
     },
     {
       "delta_E_au": 0.1293378061736529,
-      "fosc": 1.977500419026863e-05,
+      "fosc": 2.0148513837716467e-05,
       "sign": 1,
       "other_label": "24s",
       "source": "Numerov",
@@ -1341,7 +1341,7 @@
     },
     {
       "delta_E_au": 0.12936764662325953,
-      "fosc": 0.0002565889993999756,
+      "fosc": 0.000257061329508252,
       "sign": 1,
       "other_label": "24d",
       "source": "Numerov",
@@ -1349,7 +1349,7 @@
     },
     {
       "delta_E_au": 0.1294093571039289,
-      "fosc": 1.7466922117087154e-05,
+      "fosc": 1.7767187274448798e-05,
       "sign": 1,
       "other_label": "25s",
       "source": "Numerov",
@@ -1357,7 +1357,7 @@
     },
     {
       "delta_E_au": 0.12943570636792884,
-      "fosc": 0.00021210920899288082,
+      "fosc": 0.0002270584475732385,
       "sign": 1,
       "other_label": "25d",
       "source": "Numerov",
@@ -1365,7 +1365,7 @@
     },
     {
       "delta_E_au": 0.12947267618603756,
-      "fosc": 1.557302883298796e-05,
+      "fosc": 1.5747543582745863e-05,
       "sign": 1,
       "other_label": "26s",
       "source": "Numerov",
@@ -1373,7 +1373,7 @@
     },
     {
       "delta_E_au": 0.12949608550426345,
-      "fosc": 0.00021692994635861564,
+      "fosc": 0.00020156056474366697,
       "sign": 1,
       "other_label": "26d",
       "source": "Numerov",
@@ -1381,7 +1381,7 @@
     },
     {
       "delta_E_au": 0.12952897614761066,
-      "fosc": 1.358624937300503e-05,
+      "fosc": 1.4023319562344578e-05,
       "sign": 1,
       "other_label": "27s",
       "source": "Numerov",
@@ -1389,7 +1389,7 @@
     },
     {
       "delta_E_au": 0.12954984976260642,
-      "fosc": 0.00018799947432588917,
+      "fosc": 0.00017975094630502225,
       "sign": 1,
       "other_label": "27d",
       "source": "Numerov",
@@ -1397,7 +1397,7 @@
     },
     {
       "delta_E_au": 0.12957928596966914,
-      "fosc": 1.2087980626932687e-05,
+      "fosc": 1.2542323951386547e-05,
       "sign": 1,
       "other_label": "28s",
       "source": "Numerov",
@@ -1405,7 +1405,7 @@
     },
     {
       "delta_E_au": 0.12959799137465652,
-      "fosc": 0.00016208917561913024,
+      "fosc": 0.00016098466521302543,
       "sign": 1,
       "other_label": "28d",
       "source": "Numerov",
@@ -1413,7 +1413,7 @@
     },
     {
       "delta_E_au": 0.12962437738797866,
-      "fosc": 1.0782635407863369e-05,
+      "fosc": 1.1263073547382125e-05,
       "sign": 1,
       "other_label": "29s",
       "source": "Numerov",
@@ -1421,7 +1421,7 @@
     },
     {
       "delta_E_au": 0.1296412085775351,
-      "fosc": 0.0001386518074043267,
+      "fosc": 0.00014474516792822362,
       "sign": 1,
       "other_label": "29d",
       "source": "Numerov",
@@ -1429,7 +1429,7 @@
     },
     {
       "delta_E_au": 0.12966502213830494,
-      "fosc": 9.636178823803056e-06,
+      "fosc": 1.015230047567551e-05,
       "sign": 1,
       "other_label": "30s",
       "source": "Numerov",
@@ -1437,7 +1437,7 @@
     },
     {
       "delta_E_au": 0.12968019960836347,
-      "fosc": 0.00011730080994586884,
+      "fosc": 0.0001306251023421841,
       "sign": 1,
       "other_label": "30d",
       "source": "Numerov",
@@ -1445,7 +1445,7 @@
     },
     {
       "delta_E_au": 0.12970169796183623,
-      "fosc": 8.623845404907641e-06,
+      "fosc": 9.183119380905453e-06,
       "sign": 1,
       "other_label": "31s",
       "source": "Numerov",
@@ -1453,7 +1453,7 @@
     },
     {
       "delta_E_au": 0.1297154789576521,
-      "fosc": 9.778644005362633e-05,
+      "fosc": 0.00011828684672928464,
       "sign": 1,
       "other_label": "31d",
       "source": "Numerov",
@@ -1461,7 +1461,7 @@
     },
     {
       "delta_E_au": 0.12973499284772738,
-      "fosc": 7.725703680501504e-06,
+      "fosc": 8.333638798692453e-06,
       "sign": 1,
       "other_label": "32s",
       "source": "Numerov",
@@ -1469,7 +1469,7 @@
     },
     {
       "delta_E_au": 0.1297474876172671,
-      "fosc": 0.0001157398671383347,
+      "fosc": 0.00010745750208282101,
       "sign": 1,
       "other_label": "32d",
       "source": "Numerov",
@@ -1477,7 +1477,7 @@
     },
     {
       "delta_E_au": 0.12976523753987795,
-      "fosc": 6.925088335137019e-06,
+      "fosc": 7.5859144333601625e-06,
       "sign": 1,
       "other_label": "33s",
       "source": "Numerov",
@@ -1485,7 +1485,7 @@
     },
     {
       "delta_E_au": 0.12977662982975238,
-      "fosc": 0.00010373609515508247,
+      "fosc": 9.791290693158847e-05,
       "sign": 1,
       "other_label": "33d",
       "source": "Numerov",
@@ -1493,7 +1493,7 @@
     },
     {
       "delta_E_au": 0.12979283628083185,
-      "fosc": 6.208533661508737e-06,
+      "fosc": 6.9251364478316785e-06,
       "sign": 1,
       "other_label": "34s",
       "source": "Numerov",
@@ -1501,7 +1501,7 @@
     },
     {
       "delta_E_au": 0.12980323633900756,
-      "fosc": 9.290140096932412e-05,
+      "fosc": 8.946776253727198e-05,
       "sign": 1,
       "other_label": "34d",
       "source": "Numerov",
@@ -1509,7 +1509,7 @@
     },
     {
       "delta_E_au": 0.12981808306516654,
-      "fosc": 5.564656881548245e-06,
+      "fosc": 6.339011777236557e-06,
       "sign": 1,
       "other_label": "35s",
       "source": "Numerov",
@@ -1517,7 +1517,7 @@
     },
     {
       "delta_E_au": 0.12982760113961003,
-      "fosc": 8.30534580692973e-05,
+      "fosc": 8.196798314807197e-05,
       "sign": 1,
       "other_label": "35d",
       "source": "Numerov",
@@ -1525,7 +1525,7 @@
     },
     {
       "delta_E_au": 0.12984119838881503,
-      "fosc": 4.984236061030434e-06,
+      "fosc": 5.817276981881068e-06,
       "sign": 1,
       "other_label": "36s",
       "source": "Numerov",
@@ -1533,7 +1533,7 @@
     },
     {
       "delta_E_au": 0.129849981476815,
-      "fosc": 7.404275185718844e-05,
+      "fosc": 7.52838329777909e-05,
       "sign": 1,
       "other_label": "36d",
       "source": "Numerov",
@@ -1541,7 +1541,7 @@
     },
     {
       "delta_E_au": 0.12986247624635472,
-      "fosc": 4.4595918073509555e-06,
+      "fosc": 5.351319731898069e-06,
       "sign": 1,
       "other_label": "37s",
       "source": "Numerov",
@@ -1549,7 +1549,7 @@
     },
     {
       "delta_E_au": 0.12987056109723336,
-      "fosc": 6.574843337267211e-05,
+      "fosc": 6.930889611053816e-05,
       "sign": 1,
       "other_label": "37d",
       "source": "Numerov",
@@ -1557,7 +1557,7 @@
     },
     {
       "delta_E_au": 0.12988206363507435,
-      "fosc": 3.984570071746976e-06,
+      "fosc": 4.93387351262971e-06,
       "sign": 1,
       "other_label": "38s",
       "source": "Numerov",
@@ -1565,7 +1565,7 @@
     },
     {
       "delta_E_au": 0.129889523747476,
-      "fosc": 5.807432092978762e-05,
+      "fosc": 6.395065798235599e-05,
       "sign": 1,
       "other_label": "38d",
       "source": "Numerov",
@@ -1573,7 +1573,7 @@
     },
     {
       "delta_E_au": 0.12990018105090695,
-      "fosc": 3.554139799106835e-06,
+      "fosc": 4.558779939917451e-06,
       "sign": 1,
       "other_label": "39s",
       "source": "Numerov",
@@ -1581,7 +1581,7 @@
     },
     {
       "delta_E_au": 0.1299070531741538,
-      "fosc": 5.094662913124011e-05,
+      "fosc": 5.913146920328297e-05,
       "sign": 1,
       "other_label": "39d",
       "source": "Numerov",
@@ -1589,7 +1589,7 @@
     },
     {
       "delta_E_au": 0.12991690199249686,
-      "fosc": 3.1644576862444312e-06,
+      "fosc": 4.220797414082812e-06,
       "sign": 1,
       "other_label": "40s",
       "source": "Numerov",
@@ -1597,7 +1597,7 @@
     },
     {
       "delta_E_au": 0.12992329637455544,
-      "fosc": 4.431163748311431e-05,
+      "fosc": 5.478513642515862e-05,
       "sign": 1,
       "other_label": "40d",
       "source": "Numerov",
@@ -1605,7 +1605,7 @@
     },
     {
       "delta_E_au": 0.129932410206455,
-      "fosc": 2.812685485522172e-06,
+      "fosc": 3.915443437741639e-06,
       "sign": 1,
       "other_label": "41s",
       "source": "Numerov",
@@ -1613,7 +1613,7 @@
     },
     {
       "delta_E_au": 0.12993836359664745,
-      "fosc": 3.813248506580727e-05,
+      "fosc": 5.085499589175089e-05,
       "sign": 1,
       "other_label": "41d",
       "source": "Numerov",
@@ -1621,7 +1621,7 @@
     },
     {
       "delta_E_au": 0.12994685269007003,
-      "fosc": 2.4967808290639258e-06,
+      "fosc": 3.6388706843661007e-06,
       "sign": 1,
       "other_label": "42s",
       "source": "Numerov",
@@ -1629,7 +1629,7 @@
     },
     {
       "delta_E_au": 0.1299523283390742,
-      "fosc": 3.238909450526793e-05,
+      "fosc": 4.729234890673769e-05,
       "sign": 1,
       "other_label": "42d",
       "source": "Numerov",
@@ -1637,7 +1637,7 @@
     },
     {
       "delta_E_au": 0.12996026619266415,
-      "fosc": 2.2153740035130883e-06,
+      "fosc": 3.3877637685394523e-06,
       "sign": 1,
       "other_label": "43s",
       "source": "Numerov",
@@ -1645,7 +1645,7 @@
     },
     {
       "delta_E_au": 0.12996537434844657,
-      "fosc": 2.7074070186314407e-05,
+      "fosc": 4.405481888779207e-05,
       "sign": 1,
       "other_label": "43d",
       "source": "Numerov",
@@ -1653,7 +1653,7 @@
     },
     {
       "delta_E_au": 0.12997276096220386,
-      "fosc": 1.967900472888857e-06,
+      "fosc": 3.1592562717278366e-06,
       "sign": 1,
       "other_label": "44s",
       "source": "Numerov",
@@ -1661,7 +1661,7 @@
     },
     {
       "delta_E_au": 0.1299775383740867,
-      "fosc": 2.2191612902494448e-05,
+      "fosc": 4.110680462108079e-05,
       "sign": 1,
       "other_label": "44d",
       "source": "Numerov",
@@ -1669,7 +1669,7 @@
     },
     {
       "delta_E_au": 0.12998441049733356,
-      "fosc": 1.7542115526884513e-06,
+      "fosc": 2.9508599765694493e-06,
       "sign": 1,
       "other_label": "45s",
       "source": "Numerov",
@@ -1677,7 +1677,7 @@
     },
     {
       "delta_E_au": 0.12998889391463897,
-      "fosc": 3.7472722257752334e-05,
+      "fosc": 3.8416298667981405e-05,
       "sign": 1,
       "other_label": "45d",
       "source": "Numerov",
@@ -1685,7 +1685,7 @@
     },
     {
       "delta_E_au": 0.1299953250460197,
-      "fosc": 1.574662668026443e-06,
+      "fosc": 2.760408731169449e-06,
       "sign": 1,
       "other_label": "46s",
       "source": "Numerov",
@@ -1693,7 +1693,7 @@
     },
     {
       "delta_E_au": 0.12999951446874775,
-      "fosc": 3.4755000810128496e-05,
+      "fosc": 3.5955763139239685e-05,
       "sign": 1,
       "other_label": "46d",
       "source": "Numerov",
@@ -1701,7 +1701,7 @@
     },
     {
       "delta_E_au": 0.13000554135758455,
-      "fosc": 1.4301634424414073e-06,
+      "fosc": 2.58601044953552e-06,
       "sign": 1,
       "other_label": "47s",
       "source": "Numerov",
@@ -1709,7 +1709,7 @@
     },
     {
       "delta_E_au": 0.13000943678573518,
-      "fosc": 3.233712805188497e-05,
+      "fosc": 3.3701122661706735e-05,
       "sign": 1,
       "other_label": "47d",
       "source": "Numerov",
@@ -1717,7 +1717,7 @@
     },
     {
       "delta_E_au": 0.1300150961813502,
-      "fosc": 1.3221776157484184e-06,
+      "fosc": 2.4260080819524205e-06,
       "sign": 1,
       "other_label": "48s",
       "source": "Numerov",
@@ -1725,7 +1725,7 @@
     },
     {
       "delta_E_au": 0.1300187711135678,
-      "fosc": 3.020438573479639e-05,
+      "fosc": 3.1631266532505304e-05,
       "sign": 1,
       "other_label": "48d",
       "source": "Numerov",
@@ -1733,7 +1733,7 @@
     },
     {
       "delta_E_au": 0.13002409976528326,
-      "fosc": 1.2531135375445695e-06,
+      "fosc": 2.27894535140905e-06,
       "sign": 1,
       "other_label": "49s",
       "source": "Numerov",
@@ -1741,7 +1741,7 @@
     },
     {
       "delta_E_au": 0.13002755420156778,
-      "fosc": 2.834590354837755e-05,
+      "fosc": 2.972763106341139e-05,
       "sign": 1,
       "other_label": "49d",
       "source": "Numerov",
@@ -1749,7 +1749,7 @@
     },
     {
       "delta_E_au": 0.13003255210938366,
-      "fosc": 1.226800720437275e-06,
+      "fosc": 2.1435394787663024e-06,
       "sign": 1,
       "other_label": "50s",
       "source": "Numerov",
@@ -1757,7 +1757,7 @@
     },
     {
       "delta_E_au": 0.13003578604973512,
-      "fosc": 2.6754772280098464e-05,
+      "fosc": 2.797367603229315e-05,
       "sign": 1,
       "other_label": "50d",
       "source": "Numerov",

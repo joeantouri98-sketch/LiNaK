@@ -681,7 +681,8 @@ for t in transitions:
             try:
                 f_num = numerov_fosc_radial(
                     nu, lu, nl, ll_int, delta_u, delta_l,
-                    scale=numerov_scale_for(_numerov_cal, ll_char, lu_char),
+                    scale=numerov_scale_for(_numerov_cal, ll_char, lu_char,
+                                             gap=abs(n_eff_u - n_eff_l), n_star_upper=n_eff_u),
                     z_core=_z_core)
             except Exception:
                 f_num = 0.0
@@ -755,24 +756,40 @@ for t in transitions:
     })
 
 # ---------------------------------------------------------------------------
-# NIST EXTRAPOLATION (fix B)
-# Lower levels below the Numerov gate (Na 3s, 3p) have NIST f only up to some
-# n_max. Beyond it the pipeline used to drop the channel, although for high n
-# these are the DOMINANT decay channels of np/nd states. QDT scaling gives
-#       f * n*^3  =  a + b / n*^2          (smooth in n*)
-# which is fitted per J-resolved series on the last K NIST points and used only
-# when (i) >= K points exist, (ii) the in-sample rms is < 5 %, (iii) y > 0.
-# Hold-out tests on Na (fit n<=N, predict N+1..N+4) give 0.4-3 % rms.
+# NIST EXTRAPOLATION (fix B, generalised)
+# Oscillator strengths of a Rydberg series satisfy (Seaton) f n*^3 = 2 Ry df/dE, a
+# smooth function of energy, so for a series of NIST points
+#       y(n*) = f n*^3  =  a + b / n*^2                  (first two terms of an
+#       expansion in 1/n*^2 = -E/Ry)
+# is fitted per J-resolved series (lower level, upper l, upper J) on the last K NIST
+# points. It is used ONLY for channels that have no NIST/literature/ORCA f:
+#   (1) channels that used to be dropped (lower level below the Numerov gate, e.g. 3s/3p),
+#   (2) channels that would otherwise be filled by the Numerov/Coulomb model, when their
+#       upper n lies beyond the last NIST point of a series with an accepted fit.
+# A fit is accepted when >= K points exist, the in-sample rms < 5 % and y > 0.
+# Uncertainty: NIST accuracy (+) in-sample rms (+) half the spread of the same fit made
+# on windows ending 0/2/4 points earlier, i.e. how much the answer depends on which
+# NIST points are used. When a model value exists it is stored as `fosc_model`.
 # ---------------------------------------------------------------------------
 _EXTRAP_K = 6
 _EXTRAP_MAX_RMS = 0.05
+_EXTRAP_BACKOFF = (0, 2, 4)
 _extrap_info = {}
-n_extrapolated = 0
+n_extrapolated = 0       # recovered (previously dropped) channels
+n_extrap_replaced = 0    # channels where the extrapolation replaced a Numerov/Coulomb model value
+_extrap_vs_model = defaultdict(list)
 
 
 def _split_J_tag(label, n):
     m = re.match(rf'^{n}[spdfg](\d+/\d+)$', label or '')
     return m.group(1) if m else ''
+
+
+def _fit_y(ns_, ys_, xs_):
+    M = _np.vstack([_np.ones_like(xs_), 1.0 / xs_**2]).T
+    c = _np.linalg.lstsq(M, ys_, rcond=None)[0]
+    rms = float(_np.sqrt(_np.mean((M @ c / ys_ - 1.0)**2)))
+    return c, rms
 
 
 def _build_extrap_fits(lowers):
@@ -788,93 +805,244 @@ def _build_extrap_fits(lowers):
         series[(tt['lower_label'], lc, Jt)][tt['upper_n']] = (tt['fosc'], tt.get('fosc_delta') or 0.25)
     fits = {}
     for key, d in series.items():
-        ns_ = sorted(d)
-        if len(ns_) < _EXTRAP_K:
+        ns_all = sorted(d)
+        if len(ns_all) < _EXTRAP_K:
             continue
-        ns_ = ns_[-_EXTRAP_K:]
-        x = _np.array([n - qd[key[1]] for n in ns_])
-        y = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in ns_])
-        M = _np.vstack([_np.ones_like(x), 1.0 / x**2]).T
-        c = _np.linalg.lstsq(M, y, rcond=None)[0]
-        rms = float(_np.sqrt(_np.mean((M @ c / y - 1.0)**2)))
-        if rms < _EXTRAP_MAX_RMS:
-            fits[key] = dict(c=c, n_max=max(ns_), rms=rms, delta=d[ns_[-1]][1],
-                             n_pts=len(ns_))
+        sel = ns_all[-_EXTRAP_K:]
+        x = _np.array([n - qd[key[1]] for n in sel])
+        y = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in sel])
+        c, rms = _fit_y(sel, y, x)
+        if rms >= _EXTRAP_MAX_RMS:
+            continue
+        alts = []
+        for back in _EXTRAP_BACKOFF[1:]:
+            if len(ns_all) >= _EXTRAP_K + back:
+                s2 = ns_all[len(ns_all) - _EXTRAP_K - back: len(ns_all) - back]
+                x2 = _np.array([n - qd[key[1]] for n in s2])
+                y2 = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in s2])
+                c2, r2 = _fit_y(s2, y2, x2)
+                alts.append(c2)
+        fits[key] = dict(c=c, n_max=max(sel), rms=rms, delta=d[sel[-1]][1],
+                         n_pts=len(sel), alts=alts)
     return fits
 
 
+def _extrap_channel(tt, fits):
+    """Extrapolated (f_eff, A, g_up, g_lo, uncertainty) for channel `tt`, or None."""
+    ul_, ll_, n_, lc_ = tt['upper_label'], tt['lower_label'], tt['upper_n'], tt['upper_l']
+    wl_ = tt['wavelength_nm']
+    lu_ = L_CHAR.get(lc_, -1)
+    if lu_ < 0 or lc_ not in qd or n_ is None:
+        return None
+    Jtag = _split_J_tag(ul_, n_) if lc_ != 's' else ''
+    if lc_ == 's':
+        comps = [('', 2)]
+    elif Jtag:
+        comps = [(Jtag, J_degeneracy(Jtag))]
+    else:
+        comps = [(f'{j}/2', j + 1) for j in allowed_J2(lu_)]
+    _J_lo_ = tt.get('lower_J') or parse_J_label(ll_) or default_lower_J(tt['lower_l'])
+    g_l_ = J_degeneracy(_J_lo_) or (2 * L_CHAR.get(tt['lower_l'], 0) + 1)
+    try:
+        _Jlo_val = eval(_J_lo_) if isinstance(_J_lo_, str) else float(_J_lo_)
+    except Exception:
+        _Jlo_val = None
+    ns_u = n_ - qd[lc_]
+    A_sum, used, spread = 0.0, [], 0.0
+    for Jc, gu_c in comps:
+        # a dipole-allowed component without an accepted fit => do not extrapolate this channel
+        allowed = True
+        if Jc and _Jlo_val is not None:
+            allowed = abs(eval(Jc) - _Jlo_val) <= 1.0 + 1e-9
+        fit = fits.get((ll_, lc_, Jc))
+        if fit is None:
+            if allowed and Jc:
+                return None
+            continue
+        if n_ <= fit['n_max']:
+            return None
+        y = fit['c'][0] + fit['c'][1] / ns_u**2
+        if y <= 0:
+            return None
+        f_c = y / ns_u**3
+        A_c = EINSTEIN_PREFACTOR / wl_**2 * (g_l_ / gu_c) * f_c
+        w_c = gu_c if not Jtag and lc_ != 's' else 1.0
+        A_sum += A_c * w_c
+        used.append((Jc, fit))
+        ys = [y] + [c2[0] + c2[1] / ns_u**2 for c2 in fit['alts']]
+        if min(ys) > 0:
+            spread = max(spread, (max(ys) / min(ys) - 1.0))
+    if not used:
+        return None
+    if not Jtag and lc_ != 's':
+        g_up = 2 * (2 * lu_ + 1)
+        A_ch = A_sum / g_up
+    else:
+        g_up = comps[0][1]
+        A_ch = A_sum
+    f_eff = A_ch * wl_**2 / EINSTEIN_PREFACTOR * g_up / g_l_
+    rms = max(fit['rms'] for _, fit in used)
+    dnist = max(fit['delta'] for _, fit in used)
+    d_ex = (dnist**2 + rms**2 + (0.5 * spread)**2)**0.5
+    return dict(f=f_eff, A=A_ch, g_up=g_up, g_lo=g_l_, delta=d_ex, rms=rms, spread=spread,
+                n_fit_max=max(fit['n_max'] for _, fit in used))
+
+
 _gate_drops = [(tt, r) for tt, r in dropped_log if r.startswith('below_numerov_gate')]
-if _gate_drops and not _is_metal:
-    _lowers = {tt['lower_label'] for tt, _ in _gate_drops}
+_model_rows = [tt for tt in transition_table if tt['fosc_source'] in ('Numerov', 'Coulomb')]
+if (_gate_drops or _model_rows) and not _is_metal:
+    _lowers = ({tt['lower_label'] for tt, _ in _gate_drops}
+               | {tt['lower_label'] for tt in _model_rows})
     _fits = _build_extrap_fits(_lowers)
-    _still = []
     _recovered = set()
     for idx, (tt, r) in enumerate(dropped_log):
         if not r.startswith('below_numerov_gate'):
             continue
-        ul_, ll_, n_, lc_ = tt['upper_label'], tt['lower_label'], tt['upper_n'], tt['upper_l']
-        wl_ = tt['wavelength_nm']
-        lu_ = L_CHAR.get(lc_, -1)
-        if lu_ < 0 or lc_ not in qd:
+        res = _extrap_channel(tt, _fits)
+        if res is None:
             continue
-        Jtag = _split_J_tag(ul_, n_) if lc_ != 's' else ''
-        if lc_ == 's':
-            comps = [('', 2)]
-        elif Jtag:
-            comps = [(Jtag, J_degeneracy(Jtag))]
-        else:
-            comps = [(f'{j}/2', j + 1) for j in allowed_J2(lu_)]
-        _J_lo_ = tt.get('lower_J') or parse_J_label(ll_) or default_lower_J(tt['lower_l'])
-        g_l_ = J_degeneracy(_J_lo_) or (2 * L_CHAR.get(tt['lower_l'], 0) + 1)
-        ns_u = n_ - qd[lc_]
-        A_sum, g_sum, used = 0.0, 0.0, []
-        for Jc, gu_c in comps:
-            key = (ll_, lc_, Jc)
-            fit = _fits.get(key)
-            if fit is None or n_ <= fit['n_max']:
-                continue
-            y = fit['c'][0] + fit['c'][1] / ns_u**2
-            if y <= 0:
-                continue
-            f_c = y / ns_u**3
-            A_c = EINSTEIN_PREFACTOR / wl_**2 * (g_l_ / gu_c) * f_c
-            w_c = gu_c if not Jtag and lc_ != 's' else 1.0
-            A_sum += A_c * w_c
-            used.append((Jc, fit))
-        if not used:
-            continue
-        if not Jtag and lc_ != 's':
-            g_up = 2 * (2 * lu_ + 1)
-            A_ch = A_sum / g_up
-        else:
-            g_up = comps[0][1]
-            A_ch = A_sum
-        f_eff = A_ch * wl_**2 / EINSTEIN_PREFACTOR * g_up / g_l_
-        rms = max(fit['rms'] for _, fit in used)
-        dnist = max(fit['delta'] for _, fit in used)
-        d_ex = (dnist**2 + rms**2)**0.5
         transition_table.append({
-            'upper_label':   ul_, 'lower_label': ll_,
-            'upper_n':       n_,  'lower_n': tt['lower_n'],
-            'upper_l':       lc_, 'lower_l': tt['lower_l'],
-            'wavelength_nm': wl_, 'delta_E_eV': tt['delta_E_eV'],
+            'upper_label':   tt['upper_label'], 'lower_label': tt['lower_label'],
+            'upper_n':       tt['upper_n'],  'lower_n': tt['lower_n'],
+            'upper_l':       tt['upper_l'],  'lower_l': tt['lower_l'],
+            'wavelength_nm': tt['wavelength_nm'], 'delta_E_eV': tt['delta_E_eV'],
             'region':        tt['region'],
-            'fosc':          f_eff,
+            'fosc':          res['f'],
             'fosc_source':   'NIST-extrap',
-            'fosc_acc':      f"extrap(n>{max(f['n_max'] for _, f in used)}, rms {100*rms:.1f}%)",
-            'fosc_delta':    d_ex,
-            'g_upper':       g_up, 'g_lower': g_l_,
-            'A_s':           A_ch,
-            'sigma_A_s':     A_ch * d_ex,
+            'fosc_acc':      f"extrap(n>{res['n_fit_max']}, rms {100*res['rms']:.1f}%, window spread {100*res['spread']:.0f}%)",
+            'fosc_delta':    res['delta'],
+            'g_upper':       res['g_up'], 'g_lower': res['g_lo'],
+            'A_s':           res['A'],
+            'sigma_A_s':     res['A'] * res['delta'],
         })
         n_extrapolated += 1
         _recovered.add(idx)
     dropped_log = [e for i, e in enumerate(dropped_log) if i not in _recovered]
+    # (2) channels that would be filled by the Numerov/Coulomb model: use the NIST extrapolation instead
+    for tt in _model_rows:
+        res = _extrap_channel(tt, _fits)
+        if res is None:
+            continue
+        f_model = tt['fosc']
+        _extrap_vs_model[(tt['lower_label'], tt['upper_l'])].append(res['f'] / f_model if f_model else float('nan'))
+        d_mod = abs(res['f'] / f_model - 1.0) / 2.0 if f_model else 0.0
+        d_tot = (res['delta']**2 + d_mod**2)**0.5
+        tt['fosc_model'] = f_model
+        tt['fosc_model_source'] = tt['fosc_source']
+        tt['fosc'] = res['f']
+        tt['fosc_source'] = 'NIST-extrap'
+        tt['fosc_acc'] = f"extrap(n>{res['n_fit_max']}, rms {100*res['rms']:.1f}%, window spread {100*res['spread']:.0f}%)"
+        tt['fosc_delta'] = d_tot
+        tt['g_upper'], tt['g_lower'] = res['g_up'], res['g_lo']
+        tt['A_s'] = res['A']
+        tt['sigma_A_s'] = res['A'] * d_tot
+        n_extrap_replaced += 1
     for (lo_, lc_, Jc), fit in _fits.items():
         _extrap_info[f"{lo_}->{lc_}{Jc}"] = dict(n_fit_max=int(fit['n_max']), n_points=fit['n_pts'],
                                                 a=float(fit['c'][0]), b=float(fit['c'][1]),
                                                 rms=fit['rms'])
-    print(f"  NIST-extrapolated channels (3s/3p-type lowers beyond NIST n_max): {n_extrapolated}")
+    print(f"  NIST-extrapolated channels: {n_extrapolated} recovered (were dropped), "
+          f"{n_extrap_replaced} replacing Numerov/Coulomb model values")
+    for (lo_, lc_), vals in sorted(_extrap_vs_model.items()):
+        vv = _np.array([v for v in vals if _np.isfinite(v)])
+        if vv.size:
+            print(f"      {lo_:>6}->n{lc_}: {vv.size:>3} channels, extrap/model f median {_np.median(vv):.2f} "
+                  f"(min {vv.min():.2f}, max {vv.max():.2f})")
+
+# ---------------------------------------------------------------------------
+# NIST vs MODEL consistency flags (FLAG ONLY: NIST f-values are never replaced).
+# For every NIST multiplet pair inside the Numerov domain (n* > 2.5) the NIST f is
+# compared with the NIST-calibrated Numerov value. A ratio outside [1/R, R] is
+# flagged on every NIST transition row of that pair (`nist_model_ratio`) and the
+# row's fractional uncertainty is widened by half the discrepancy (the usual
+# half-difference of two independent estimates). Example (Na): the np -> 10s
+# column, where 9p->10s (grade A) is 0.68x and 4p->10s 1.9x the model.
+# ---------------------------------------------------------------------------
+NIST_FLAG_RATIO = 1.5
+NIST_FLAG_WIDEN_MAX = 3.0   # widen the NIST uncertainty only if the ratio is within [1/3, 3]
+_nist_flag_pairs = {}
+if _numerov_cal is not None and not _is_metal:
+    from qdt_radial import _parse_nl_token, n_star as _n_star, L_INT as _L_INT
+    for _key, _fn in nist_cal_fosc.items():
+        if not isinstance(_key, tuple) or len(_key) != 2 or not _fn or _fn <= 0:
+            continue
+        _a, _b = _parse_nl_token(_key[0]), _parse_nl_token(_key[1])
+        if _a is None or _b is None or abs(_a[1] - _b[1]) != 1:
+            continue
+        _da, _db = float(qd.get(_L_INT.get(_a[1], 's'), 0.0)), float(qd.get(_L_INT.get(_b[1], 'p'), 0.0))
+        _nsa, _nsb = _n_star(_a[0], _da), _n_star(_b[0], _db)
+        _lo, _up, _dl, _du = (_a, _b, _da, _db) if _nsb > _nsa else (_b, _a, _db, _da)
+        if min(_nsa, _nsb) <= 2.5:
+            continue
+        try:
+            _fm = numerov_fosc_radial(
+                _up[0], _up[1], _lo[0], _lo[1], _du, _dl,
+                scale=numerov_scale_for(_numerov_cal, _L_INT[_lo[1]], _L_INT[_up[1]],
+                                        gap=abs(_nsb - _nsa), n_star_upper=max(_nsa, _nsb)),
+                z_core=_z_core)
+        except Exception:
+            continue
+        if not _fm or _fm <= 0:
+            continue
+        _r = _fn / _fm
+        if _r > NIST_FLAG_RATIO or _r < 1.0 / NIST_FLAG_RATIO:
+            _nist_flag_pairs[frozenset(((_lo[0], _L_INT[_lo[1]]), (_up[0], _L_INT[_up[1]])))] = _r
+    _n_flagged_rows = 0
+    for _tt in transition_table:
+        if _tt['fosc_source'] != 'NIST':
+            continue
+        _k = frozenset(((_tt['lower_n'], _tt['lower_l']), (_tt['upper_n'], _tt['upper_l'])))
+        _r = _nist_flag_pairs.get(_k)
+        if _r is None:
+            continue
+        _tt['nist_model_ratio'] = _r
+        _n_flagged_rows += 1
+        if 1.0 / NIST_FLAG_WIDEN_MAX <= _r <= NIST_FLAG_WIDEN_MAX:
+            _d = (_tt['fosc_delta'] ** 2 + (0.5 * abs(_r - 1.0)) ** 2) ** 0.5
+            _tt['fosc_delta'] = _d
+            _tt['sigma_A_s'] = _tt['A_s'] * _d
+        else:
+            # beyond this the MODEL is the unreliable estimate (flag is on the model, not on NIST) (radial-integral cancellation,
+            # e.g. Na 3d->np), so the NIST uncertainty is left alone
+            _tt['model_unreliable'] = True
+    if _nist_flag_pairs:
+        print(f"  NIST vs model differ by > x{NIST_FLAG_RATIO:g} (flag only, NIST kept, neither overridden): "
+              f"{len(_nist_flag_pairs)} pairs, {_n_flagged_rows} transition rows")
+        _by_up = defaultdict(list)
+        for _k, _r in _nist_flag_pairs.items():
+            _x = sorted(_k, key=lambda t: t[0])
+            _by_up[_x[-1][0]].append(f"{_x[0][0]}{_x[0][1]}->{_x[-1][0]}{_x[-1][1]} x{_r:.2f}")
+        for _n_up in sorted(_by_up):
+            print(f"      n={_n_up}: " + ", ".join(sorted(_by_up[_n_up])))
+
+# NIST series caveats (uncertainty only; NIST values are never changed). A curated entry in
+# f_values/<El>_literature.json["nist_series_caveats"] states that a NIST series is known to deviate
+# from the smooth physical curve beyond some n; the quoted uncertainty of those NIST rows is raised
+# to at least rel_unc and the row is tagged.
+_series_caveats_applied = []
+_cav_path = os.path.join('f_values', f"{element}_literature.json")
+if os.path.exists(_cav_path):
+    try:
+        with open(_cav_path, encoding='utf-8') as _fh:
+            _caveats = json.load(_fh).get('nist_series_caveats', [])
+    except (OSError, ValueError):
+        _caveats = []
+    for _cv in _caveats:
+        _n_hit = 0
+        for _tt in transition_table:
+            if (_tt['fosc_source'] == 'NIST' and _tt['lower_label'] == _cv['lower']
+                    and _tt['upper_l'] == _cv['upper_l'] and _tt['upper_n'] >= _cv['n_min']):
+                _d = max(_tt['fosc_delta'], float(_cv['rel_unc']))
+                _tt['fosc_delta'] = _d
+                _tt['sigma_A_s'] = _tt['A_s'] * _d
+                _tt['nist_series_caveat'] = _cv['ref']
+                _n_hit += 1
+        if _n_hit:
+            _series_caveats_applied.append({'lower': _cv['lower'], 'upper_l': _cv['upper_l'],
+                                            'n_min': _cv['n_min'], 'rel_unc': _cv['rel_unc'],
+                                            'n_rows': _n_hit, 'ref': _cv['ref']})
+            print(f"  NIST series caveat {_cv['lower']}->n{_cv['upper_l']} n>={_cv['n_min']}: "
+                  f"{_n_hit} rows, uncertainty >= {float(_cv['rel_unc']):.0%} (values unchanged)")
 
 # Dropped-transition log (fix C)
 _drop_counts = defaultdict(int)
@@ -1143,7 +1311,18 @@ output = {
         'pooled': _numerov_cal['global'],
         'by_type': {f"{k[0]}->{k[1]}": v for k, v in _numerov_cal['types'].items()},
     }),
-    'nist_extrapolation': {'n_channels': n_extrapolated, 'series': _extrap_info},
+    'nist_series_caveats': _series_caveats_applied,
+    'nist_model_comparison': {
+        'ratio_threshold': NIST_FLAG_RATIO,
+        'pairs': sorted(
+            [{'lower': f"{sorted(k)[0][0]}{sorted(k)[0][1]}", 'upper': f"{sorted(k)[-1][0]}{sorted(k)[-1][1]}",
+              'nist_over_model': float(r)} for k, r in _nist_flag_pairs.items()],
+            key=lambda d: (d['upper'], d['lower']))},
+    'nist_extrapolation': {'n_channels': n_extrapolated, 'n_replacing_model': n_extrap_replaced,
+                           'series': _extrap_info,
+                           'vs_model': {f"{k[0]}->n{k[1]}": {'n': len(v),
+                                        'median_ratio': float(_np.nanmedian(v)) if v else None}
+                                        for k, v in _extrap_vs_model.items()}},
     'dropped_transitions': {
         'n_total': sum(_drop_counts.values()),
         'by_reason': dict(_drop_counts),
