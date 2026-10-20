@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 polarizability.py
 -----------------
@@ -50,141 +49,72 @@ Data sources:
 
 Outputs:
   data_json/<element>_polarizability.json
-    resources/plots/<element>/_polarizability.html α(ω) + magic λ + AC Stark upgrade
+    .linak/plots/<element>/<element>_polarizability.html α(ω) + magic λ + AC Stark upgrade
                                                 (dual μK axis, intensity slider,
                                                  point calculator with trap freq)
-    resources/plots/<element>/_magic_wavelengths.html Grotrian-style magic λ atlas
-    resources/plots/C6_matrix.html                cross-element C₆ heatmap
-    resources/plots/alpha_validation.html         α(0) computed vs experiment
+    .linak/plots/<element>/<element>_magic_wavelengths.html Grotrian-style magic λ atlas
+    .linak/plots/C6_matrix.html                cross-element C₆ heatmap
+    .linak/plots/alpha_validation.html         α(0) computed vs experiment
 
 Usage:
-  python polarizability.py Na
-  python polarizability.py Na --excited 3p3/2
-  python polarizability.py Na --wl-min 400 --wl-max 1500
-  python polarizability.py Na --wl 1064 --intensity 10   (AC Stark point calc, kW/cm^2)
-  python polarizability.py Na --waist 1.0                (beam waist, micron)
-  python polarizability.py --all
-  python polarizability.py --all --heteronuclear
+  linak --pipeline polarizability Na
+  linak --pipeline polarizability Na --excited 3p3/2
+  linak --pipeline polarizability Na --wl-min 400 --wl-max 1500
+  linak --pipeline polarizability Na --wl 1064 --intensity 10   (AC Stark point calc, kW/cm^2)
+  linak --pipeline polarizability Na --waist 1.0                (beam waist, micron)
+  linak --pipeline polarizability --all
+  linak --pipeline polarizability --all --heteronuclear
 """
 
-__version__ = '2.1'   # Shared α(ω) core extracted to alpha_core.py; CLI only under __main__.
+__version__ = '2.1'   # Shared α(ω) core in physics/polarizability_core.py; CLI only under __main__.
 
 
 import argparse
-import csv
-import io
 import json
 import math
 import os
-import re
-import sys
-from collections import defaultdict
-
-if hasattr(sys.stdout, 'reconfigure'):
-    try:
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    except Exception:
-        pass
 
 import numpy as np
-from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR
-
-try:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    import plotly.colors as pc
-except ImportError:
-    print("Plotly not installed. Run: pip install plotly")
-    sys.exit(1)
-
-try:
-    from scipy.integrate import quad
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    print("  scipy not found - C6 will use trapezoidal integration (less accurate)")
+from linak.core.fileio import write_json
+from linak.core.errors import MissingDataError
+from linak.core.workspace import Workspace
+from linak.core.spectroscopy import Transition
+from linak.report_templates import (
+    ELEMENT_COLORS,
+    fullscreen_css,
+    inject_body,
+    inject_head,
+    js_constant,
+    load as load_template,
+    render as render_template,
+    write_offline_report,
+)
 
 from linak.physics.polarizability_core import (
-    L_CHAR,
+    U_joules,
+    U_to_kHz_h,
+    U_to_uK,
     alpha0_static,
     alpha_imag_freq,
     alpha_sigma,
     c6_sigma,
     alpha_real,
+    alpha_to_uK_factor,
     build_transitions_for_state,
-    eV_to_au,
     get_available_elements,
+    kWcm2_to_Wm2,
     load_element,
     nm_from_omega_au,
     omega_au_from_nm,
+    trap_frequencies_Hz,
 )
 from linak.core.constants import (
     ALPHA0_EXPT,
     C6_EXPT,
-    EV_TO_HARTREE,
-    HARTREE_TO_EV,
-    NM_TO_AU_OMEGA,
-    AU_TO_ANGSTROM3,
-    AU_TO_SI_ALPHA,
-    AU_TO_SI_C6,
-    HC_EV_NM,
-    EPS0_SI,
-    C_SI,
-    A0_SI,
-    H_SI,
-    KB_SI,
-    AMU_KG,
     ATOMIC_MASS_AMU,
     ISOTOPE_MASS_AMU,
     default_isotope_A,
 )
-
-
-# AC STARK / TRAP (derived)
-
-# U = -(2*pi*a0^3/c) * alpha_au * I   [J], I in W/m^2
-# (Grimm et al., Adv. At. Mol. Opt. Phys. 42, 95 (2000))
-
-NM_TO_HARTREE = NM_TO_AU_OMEGA  # alias used in older plot code
-U_PREFACTOR = 2.0 * math.pi * A0_SI**3 / C_SI
-
-
-def U_joules(alpha_au, I_Wm2):
-    """AC Stark shift / trap depth in Joules. Positive alpha -> negative U
-    (attractive trap, red-detuned); negative alpha -> positive U (repulsive,
-    blue-detuned)."""
-    return -U_PREFACTOR * alpha_au * I_Wm2
-
-def U_to_uK(U_J):
-    return U_J / KB_SI * 1e6
-
-def U_to_kHz_h(U_J):
-    """U/h in kHz — the shift expressed as a frequency."""
-    return U_J / H_SI / 1e3
-
-def alpha_to_uK_factor(I_kWcm2):
-    """uK per unit alpha_au, at the given intensity. U_uK = alpha_au * this."""
-    I_Wm2 = I_kWcm2 * 1e3 / 1e-4
-    return -U_PREFACTOR * I_Wm2 / KB_SI * 1e6
-
-def kWcm2_to_Wm2(I_kWcm2):
-    return I_kWcm2 * 1e3 / 1e-4
-
-def trap_frequencies_Hz(U0_J, waist_um, wl_nm, mass_amu):
-    """
-    Radial and axial trap frequencies for a single-beam Gaussian tweezer,
-    harmonic approximation near the focus. U0_J must be the (possibly signed)
-    trap depth; only its magnitude is used.
-    """
-    w0 = waist_um * 1e-6           # m
-    wl = wl_nm * 1e-9              # m
-    m  = mass_amu * AMU_KG
-    zR = math.pi * w0**2 / wl      # Rayleigh range, m
-    U0 = abs(U0_J)
-    omega_r = math.sqrt(4.0 * U0 / (m * w0**2))
-    omega_z = math.sqrt(2.0 * U0 / (m * zR**2))
-    return omega_r / (2 * math.pi), omega_z / (2 * math.pi), zR
-
 
 def compute_alpha_spectrum(transitions_list, wl_min_nm, wl_max_nm, n_grid):
     """
@@ -233,7 +163,11 @@ def compute_C6(transitions_list, n_xi=2000):
     if not transitions_list:
         return 0.0
 
-    dE_min = min(abs(tr['delta_E_au']) for tr in transitions_list if tr['delta_E_au'] != 0)
+    dE_values = [abs(tr['delta_E_au']) for tr in transitions_list
+                 if tr['delta_E_au'] != 0]
+    if not dE_values:
+        return 0.0
+    dE_min = min(dE_values)
     xi0    = dE_min * 0.1   # scale parameter
 
     def integrand_mapped(x):
@@ -244,16 +178,20 @@ def compute_C6(transitions_list, n_xi=2000):
         return a**2 * dxi
 
     # x_max: ξ_max = 10 × IE (well beyond where integrand is negligible)
-    if transitions_list:
-        dE_max = max(abs(tr['delta_E_au']) for tr in transitions_list)
-    else:
-        dE_max = 1.0
+    dE_max = max(abs(tr['delta_E_au']) for tr in transitions_list)
     x_max = math.log(1.0 + 10.0 * dE_max / xi0)
 
-    if SCIPY_AVAILABLE:
+    try:
+        from scipy.integrate import quad
+    except ImportError:
+        quad = None
+
+    if quad is not None:
         val, err = quad(integrand_mapped, 0, x_max, limit=200, epsrel=1e-6)
     else:
         # Trapezoidal fallback
+        print("  scipy not found - C6 will use trapezoidal integration "
+              "(less accurate)")
         x_arr = np.linspace(0, x_max, n_xi)
         y_arr = np.array([integrand_mapped(x) for x in x_arr])
         val   = np.trapezoid(y_arr, x_arr)
@@ -391,11 +329,13 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
-                data_dir=DATA_JSON_DIR, isotope_A=None):
+                data_dir=None, isotope_A=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
     """
+    if data_dir is None:
+        data_dir = str(Workspace.current().data_json_dir)
     print(f"\n{'='*65}")
     print(f"  {element}")
     print(f"{'='*65}")
@@ -429,8 +369,8 @@ def run_element(element, excited_label=None,
     else:
         print(f"  α(0) = {alpha0:.2f} au   (no experimental reference)")
 
-    #  C₆ coefficient 
-    print(f"  Computing C₆ (Casimir-Polder integral)...")
+    # ── C₆ coefficient ──────────────────────────────────────────────────────
+    print("  Computing C₆ (Casimir-Polder integral)...")
     C6 = compute_C6(trans_gs)
     alpha0_sigma = alpha_sigma(0.0, trans_gs)
     C6_sigma = c6_sigma(trans_gs) if trans_gs else 0.0
@@ -455,7 +395,6 @@ def run_element(element, excited_label=None,
     # Determine which excited state to use
     if excited_label is None:
         # Find the lowest excited state with l = gs_l ± 1 (first dipole-allowed)
-        gs_l_int = L_CHAR.get(data['gs_l'], 0)
         candidates = []
         for t in all_transitions:
             if t['lower_label'] == gs_label:
@@ -471,6 +410,10 @@ def run_element(element, excited_label=None,
     if excited_label:
         excited_used = excited_label
         trans_ex = build_transitions_for_state(excited_label, data, all_transitions)
+        if not trans_ex:
+            raise MissingDataError(
+                f"excited state {excited_label!r} has no dipole transitions in the "
+                f"{element} data (check the label against {element}_rydberg.json)")
         n_ex_nist    = sum(1 for t in trans_ex if t['source'] == 'NIST')
         n_ex_coulomb = sum(1 for t in trans_ex if t['source'] == 'Coulomb')
         print(f"\n  Excited state {excited_label}: {len(trans_ex)} transitions")
@@ -511,8 +454,8 @@ def run_element(element, excited_label=None,
         print(f"  ⚠  Mass for {element} unknown — trap frequencies will be skipped")
 
     if trans_ex and magic_results:
-        print(f"  AC Stark cross-check at each magic wavelength "
-              f"(U_ground should equal U_excited, independent of intensity):")
+        print("  AC Stark cross-check at each magic wavelength "
+              "(U_ground should equal U_excited, independent of intensity):")
         for m in magic_results:
             wl_m = m['wl_nm']
             om   = omega_au_from_nm(wl_m)
@@ -588,10 +531,6 @@ def run_element(element, excited_label=None,
 # PLOTTING — INDIVIDUAL ELEMENT
 
 
-ELEM_COLORS = {
-    'Li':'#4df0b0', 'Na':'#f0c54d', 'K':'#4d9ff0',
-    'Rb':'#f05a4d', 'Cs':'#c54df0', 'Fr':'#f04d9f',
-}
 
 def plot_polarizability(result, out_dir):
     """
@@ -602,6 +541,9 @@ def plot_polarizability(result, out_dir):
     two near-duplicate plots — merged into one, since U(omega) is just
     alpha(omega) rescaled by a constant at fixed intensity.
     """
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
     el       = result['element']
     gs_lbl   = result['gs_label']
     ex_lbl   = result['excited_label']
@@ -620,7 +562,7 @@ def plot_polarizability(result, out_dir):
     I_ref    = result['I_ref_kWcm2']
     mass_amu = result.get('mass_amu')
 
-    col = ELEM_COLORS.get(el, '#7777ff')
+    col = ELEMENT_COLORS.get(el, '#7777ff')
     has_excited = alpha_ex is not None and ex_lbl is not None
 
     fig = make_subplots(
@@ -770,7 +712,8 @@ def plot_polarizability(result, out_dir):
         err0 = (alpha0 - alpha0_expt) / alpha0_expt * 100
         a0_str += f" (expt: {alpha0_expt:.1f}, {err0:+.1f}%)"
     _iso = result.get('isotope_A')
-    mass_str = (f'm = {mass_amu:.3f} amu ({"%s-%d" % (result["element"], _iso) if _iso else "IUPAC avg"}) &nbsp;·&nbsp; '
+    _mass_of = f"{result['element']}-{_iso}" if _iso else "IUPAC avg"
+    mass_str = (f'm = {mass_amu:.3f} amu ({_mass_of}) &nbsp;·&nbsp; '
                 if mass_amu else '')
 
     fig.update_layout(
@@ -848,186 +791,59 @@ def plot_polarizability(result, out_dir):
     fig.layout.yaxis3.update(domain=fig.layout.yaxis.domain)
 
     out_file = os.path.join(out_dir, f"{el}_polarizability.html")
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    _fs_css = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'
-               'overflow:hidden;background:#0a0d14;}'
-               '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-               '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
-    raw_html = _inject_control_panel(raw_html, result, factor0)
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_head(raw_html, fullscreen_css())
+    raw_html = _inject_control_panel(raw_html, result)
+    write_offline_report(out_file, raw_html)
     print(f"  ✓ {out_file}")
     return out_file
 
 
-def _inject_control_panel(raw_html, result, factor0):
+def _inject_control_panel(raw_html, result):
     """
     Intensity slider (rescales only the yaxis3 uK-axis range/title — the
     alpha(omega) traces underneath never change) + point calculator with
     trap frequencies.
     """
-    el       = result['element']
     I_base   = result['I_ref_kWcm2']
     wl_gs    = result['wl_gs'].tolist()
     alpha_gs = result['alpha_gs'].tolist()
     wl_ex    = result['wl_ex'].tolist()
-    alpha_ex = result['alpha_ex'].tolist()
+    alpha_ex = result['alpha_ex']
+    alpha_ex = alpha_ex.tolist() if alpha_ex is not None else None
     mass_amu = result['mass_amu']
     waist0   = result['waist_um']
 
     css = """
-<style>
-#as-ctrl {
-  position:fixed; top:12px; right:12px; width:290px;
-  max-height:calc(100vh - 24px); overflow-y:auto;
-  background:rgba(10,10,22,0.94); border:1px solid #2a2a4a; border-radius:10px;
-  padding:12px 14px; font-family:'Helvetica Neue',Arial,sans-serif; font-size:12px;
-  color:#ccc; box-shadow:0 4px 20px rgba(0,0,0,0.65); z-index:9999;
-  backdrop-filter:blur(6px);
-}
-#as-ctrl.collapsed { width:auto; padding:8px 12px; max-height:none; }
-#as-ctrl.collapsed>*:not(h3) { display:none; }
-#as-ctrl h3 { margin:0; font-size:13px; color:#e0e8ff;
-  border-bottom:1px solid #2a2a5a; padding-bottom:5px;
-  display:flex; align-items:center; gap:8px; cursor:pointer; }
-#as-ctrl.collapsed h3 { border-bottom:none; padding-bottom:0; margin:0; }
-#as-ctrl .tog { margin-left:auto; font-size:11px; color:#667; user-select:none; }
-#as-ctrl .sec { margin-top:9px; margin-bottom:10px; }
-#as-ctrl .st { font-weight:bold; color:#7a9eff; font-size:10px;
-  text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
-#as-ctrl input[type=range] { width:100%; accent-color:#4a7ec7; }
-#as-ctrl input[type=number] { width:70px; background:#111830; border:1px solid #2a3060;
-  border-radius:4px; color:#ccc; font-size:11px; padding:3px 6px; }
-#as-ctrl button { padding:5px 10px; font-size:11px; border:1px solid #2a3060;
-  border-radius:5px; background:#111830; color:#aac; cursor:pointer; margin-top:6px; }
-#as-ctrl button:hover { background:#1a2850; color:#e0e8ff; }
-#as-out { background:#0d0d20; border:1px solid #2a2a4a; border-radius:6px;
-  padding:8px 10px; font-size:11px; color:#9ab; line-height:1.7; margin-top:6px; }
-#as-out b { color:#e0e8ff; }
-</style>"""
 
     html = f"""
-<div id="as-ctrl" class="collapsed">
-  <h3 onclick="asToggle()">☀ AC Stark <span class="tog" id="as-tog">▼</span></h3>
-  <div class="sec">
-    <div class="st">Trap intensity &nbsp;<span id="as-ival">{I_base:.2f}</span> kW/cm²</div>
-    <input type="range" id="as-Islider" min="-2" max="3" value="{math.log10(I_base):.4f}" step="0.02"
-           oninput="asOnIntensity(this.value)">
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:#556">
-      <span>0.01</span><span>1000 kW/cm²</span>
-    </div>
-    <div style="font-size:10px;color:#667;margin-top:4px;">
-      Right-hand μK axis rescales live — the α(ω) curves themselves never change.
-    </div>
-  </div>
-  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:8px;">
-    <div class="st">Point calculator</div>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
-      <span style="width:60px;color:#89a">λ (nm)</span>
-      <input type="number" id="as-wl" value="{(wl_gs[0]+wl_gs[-1])/2:.1f}" step="1">
-    </div>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
-      <span style="width:60px;color:#89a">waist (μm)</span>
-      <input type="number" id="as-waist" value="{waist0}" step="0.1">
-    </div>
-    <button onclick="asCalc()">▶ Calculate</button>
-    <div id="as-out">Enter a wavelength and click Calculate.</div>
-  </div>
-</div>"""
+    css = load_template('polarizability_control.css')
 
-    js = f"""
-<script>
-(function(){{
-  const WL_GS = {json.dumps(wl_gs)};
-  const A_GS  = {json.dumps(alpha_gs)};
-  const WL_EX = {json.dumps(wl_ex)};
-  const A_EX  = {json.dumps(alpha_ex)};
-  const MASS_AMU = {mass_amu if mass_amu else 'null'};
-  const A0 = 5.29177210903e-11, C_SI = 2.99792458e8, KB_SI = 1.380649e-23,
-        H_SI = 6.62607015e-34, AMU_KG = 1.66053906660e-27;
-  const U_PREF = 2*Math.PI*A0**3/C_SI;
+    html = render_template(
+        'polarizability_control.html',
+        I_base_val=f'{I_base:.2f}',
+        I_slider_log=f'{math.log10(I_base):.4f}',
+        wl_default=f'{(wl_gs[0] + wl_gs[-1]) / 2:.1f}',
+        waist0=waist0,
+    )
 
-  function gd(){{ return document.querySelector('.plotly-graph-div'); }}
 
-  window.asToggle = function(){{
-    const el  = document.getElementById('as-ctrl');
-    const tog = document.getElementById('as-tog');
-    el.classList.toggle('collapsed');
-    tog.textContent = el.classList.contains('collapsed') ? '▼' : '▲';
-  }};
+    js = render_template(
+        'polarizability_control.js',
+        WL_GS=json.dumps(wl_gs),
+        A_GS=json.dumps(alpha_gs),
+        WL_EX=json.dumps(wl_ex),
+        A_EX='null' if alpha_ex is None else json.dumps(alpha_ex),
+        MASS_AMU='null' if not mass_amu else f'{mass_amu}',
+        A0=js_constant('A0_SI'),
+        C_SI=js_constant('C_SI'),
+        KB_SI=js_constant('KB_SI'),
+        H_SI=js_constant('H_SI'),
+        AMU_KG=js_constant('AMU_KG'),
+    )
 
-  function alphaToUKFactor(I_kWcm2){{
-    const I_Wm2 = I_kWcm2*1e3/1e-4;
-    return -U_PREF*I_Wm2/KB_SI*1e6;
-  }}
-
-  window.asOnIntensity = function(logI){{
-    const I = Math.pow(10, parseFloat(logI));
-    document.getElementById('as-ival').textContent = I.toFixed(2);
-    const titleI = document.getElementById('title-I');
-    if (titleI) titleI.textContent = I.toFixed(2);
-    const g = gd(); if(!g||!g.layout) return;
-    const yr = g.layout.yaxis.range;   // alpha axis range never changes
-    const factor = alphaToUKFactor(I);
-    Plotly.relayout(g, {{'yaxis3.range': [yr[1]*factor, yr[0]*factor]}});
-  }};
-
-  function asInterp(xs, ys, x){{
-    if (x <= xs[0]) return ys[0];
-    if (x >= xs[xs.length-1]) return ys[ys.length-1];
-    let lo=0, hi=xs.length-1;
-    while (hi-lo>1){{ const mid=(lo+hi)>>1; if (xs[mid] <= x) lo=mid; else hi=mid; }}
-    const t = (x-xs[lo])/(xs[hi]-xs[lo]);
-    return ys[lo]*(1-t) + ys[hi]*t;
-  }}
-
-  window.asCalc = function(){{
-    const wl = parseFloat(document.getElementById('as-wl').value);
-    const waist_um = parseFloat(document.getElementById('as-waist').value);
-    const logI = parseFloat(document.getElementById('as-Islider').value);
-    const I_kWcm2 = Math.pow(10, logI);
-    const out = document.getElementById('as-out');
-    if (!isFinite(wl)) {{ out.innerHTML = 'Enter a valid wavelength.'; return; }}
-
-    const a_gs = asInterp(WL_GS, A_GS, wl);
-    const a_ex = asInterp(WL_EX, A_EX, wl);
-    const factor = alphaToUKFactor(I_kWcm2);
-    const U_gs = a_gs * factor, U_ex = a_ex * factor;
-
-    let html = `<b>λ = ${{wl.toFixed(2)}} nm</b>, I = ${{I_kWcm2.toFixed(2)}} kW/cm²<br>`
-      + `α_gs = ${{a_gs.toFixed(2)}} au &nbsp; U_gs = <b>${{U_gs.toFixed(3)}} μK</b><br>`
-      + `α_ex = ${{a_ex.toFixed(2)}} au &nbsp; U_ex = <b>${{U_ex.toFixed(3)}} μK</b>`;
-
-    if (MASS_AMU) {{
-      const w0 = waist_um*1e-6, wl_m = wl*1e-9, m = MASS_AMU*AMU_KG;
-      const zR = Math.PI*w0*w0/wl_m;
-      function trapFreq(U_uK){{
-        const U0_J = Math.abs(U_uK)*1e-6*KB_SI;
-        const wr = Math.sqrt(4*U0_J/(m*w0*w0));
-        const wz = Math.sqrt(2*U0_J/(m*zR*zR));
-        return [wr/(2*Math.PI), wz/(2*Math.PI)];
-      }}
-      if (U_gs < 0) {{
-        const [fr,fz] = trapFreq(U_gs);
-        html += `<br>Ground trap (w0=${{waist_um}}μm): ω_r/2π=${{(fr/1e3).toFixed(2)}} kHz, `
-              + `ω_z/2π=${{(fz/1e3).toFixed(3)}} kHz`;
-      }}
-      if (U_ex < 0) {{
-        const [fr,fz] = trapFreq(U_ex);
-        html += `<br>Excited trap (w0=${{waist_um}}μm): ω_r/2π=${{(fr/1e3).toFixed(2)}} kHz, `
-              + `ω_z/2π=${{(fz/1e3).toFixed(3)}} kHz`;
-      }}
-    }} else {{
-      html += `<br><span style="color:#667">mass unknown — no trap freq.</span>`;
-    }}
-    out.innerHTML = html;
-  }};
-}})();
-</script>"""
-
-    raw_html = raw_html.replace('</head>', css + '</head>', 1)
-    raw_html = raw_html.replace('</body>', html + js + '</body>', 1)
+    raw_html = inject_head(raw_html, css)
+    raw_html = inject_body(raw_html, html + js)
     return raw_html
 
 
@@ -1041,6 +857,9 @@ def plot_magic_wavelengths(result, out_dir):
     x = wavelength (nm), y = polarizability.
     Shows where magic wavelengths fall relative to atomic resonances.
     """
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
     el    = result['element']
     magic = result['magic_wavelengths']
     if not magic:
@@ -1048,7 +867,7 @@ def plot_magic_wavelengths(result, out_dir):
 
     gs_lbl = result['gs_label']
     ex_lbl = result['excited_label'] or '?'
-    col    = ELEM_COLORS.get(el, '#7777ff')
+    col    = ELEMENT_COLORS.get(el, '#7777ff')
 
     fig = make_subplots(
         rows=2, cols=1,
@@ -1164,25 +983,22 @@ def plot_magic_wavelengths(result, out_dir):
     fig.update_yaxes(title_text='|dΔα/dλ| (au/nm)', row=2, col=1)
 
     out_file = os.path.join(out_dir, f"{el}_magic_wavelengths.html")
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    _fs_css = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'
-               'overflow:hidden;background:#0a0d14;}'
-               '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-               '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_head(raw_html, fullscreen_css())
+    write_offline_report(out_file, raw_html)
     print(f"  ✓ {out_file}")
     return out_file
 
-
-# PLOTTING ; CROSS-ELEMENT (saved to resources/plots)
-
+# ============================================================================
+# PLOTTING — CROSS-ELEMENT (saved to the workspace plots dir directly)
+# ============================================================================
 
 def plot_alpha_validation(results, out_dir):
     """
     Bar chart: computed α(0) vs experimental for all elements processed.
     """
+    import plotly.graph_objects as go
+
     els      = [r['element'] for r in results]
     computed = [r['alpha0_au'] for r in results]
     expt     = [r.get('alpha0_expt_au') for r in results]
@@ -1199,7 +1015,7 @@ def plot_alpha_validation(results, out_dir):
     fig.add_trace(go.Bar(
         x=els, y=computed,
         name='Computed (this pipeline)',
-        marker_color=[ELEM_COLORS.get(el, '#7777ff') for el in els],
+        marker_color=[ELEMENT_COLORS.get(el, '#7777ff') for el in els],
         marker_line_color='rgba(255,255,255,0.3)',
         marker_line_width=1,
         hovertemplate='<b>%{x}</b><br>Computed α(0) = %{y:.2f} au<extra></extra>',
@@ -1249,14 +1065,9 @@ def plot_alpha_validation(results, out_dir):
     )
 
     out_file = os.path.join(out_dir, 'alpha_validation.html')
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    _fs_css = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'
-               'overflow:hidden;background:#0a0d14;}'
-               '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-               '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_head(raw_html, fullscreen_css())
+    write_offline_report(out_file, raw_html)
     print(f"\n  ✓ {out_file}")
     return out_file
 
@@ -1267,6 +1078,8 @@ def plot_C6_matrix(results, out_dir, heteronuclear=False):
     Diagonal: homonuclear (computed directly).
     Off-diagonal: heteronuclear via combining rule (if --heteronuclear).
     """
+    import plotly.graph_objects as go
+
     els      = [r['element'] for r in results]
     alpha0s  = {r['element']: r['alpha0_au'] for r in results}
     C6s      = {r['element']: r['C6_au'] for r in results}
@@ -1344,14 +1157,9 @@ def plot_C6_matrix(results, out_dir, heteronuclear=False):
     )
 
     out_file = os.path.join(out_dir, 'C6_matrix.html')
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    _fs_css = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'
-               'overflow:hidden;background:#0a0d14;}'
-               '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-               '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_head(raw_html, fullscreen_css())
+    write_offline_report(out_file, raw_html)
     print(f"  ✓ {out_file}")
     return out_file
 
@@ -1361,19 +1169,45 @@ def _trim_transitions(trans_list):
     """
     Keep only the fields needed to recompute alpha(omega) / alpha(i*xi) at any
     frequency: delta_E_au, fosc, sign, other_label, source, wl_nm. These are
-    exactly the fields alpha_real()/alpha_imag_freq() read, plus sigma_f (the f-value 1σ used for error bars).
+    exactly the fields alpha_real()/alpha_imag_freq() read, plus sigma_f (the f-value 1σ
+    used for error bars).
+
+    Each record is rebuilt through the typed ``Transition`` record
+    (core.spectroscopy) at this engine→JSON boundary:
+    constructing it asserts the complete field set of the record (a missing
+    key fails loudly instead of dropping silently), and the emitted dict
+    keeps the legacy JSON keys and order byte-identical
+    (``other_label`` ↔ ``upper_label``, ``sigma_f`` ↔ ``sigma``; unknown σ
+    stays None).
     """
-    return [
-        dict(delta_E_au=t['delta_E_au'], fosc=t['fosc'], sign=t['sign'],
-             other_label=t['other_label'], source=t['source'], wl_nm=t['wl_nm'],
-             sigma_f=t.get('sigma_f'))
-        for t in trans_list
-    ]
+    trimmed = []
+    for t in trans_list:
+        tr = Transition(
+            delta_E_au=t['delta_E_au'],
+            fosc=t['fosc'],
+            sign=t['sign'],
+            upper_label=t['other_label'],
+            source=t['source'],
+            wl_nm=t['wl_nm'],
+            sigma=t.get('sigma_f'),
+        )
+        trimmed.append(dict(
+            delta_E_au=tr.delta_E_au,
+            fosc=tr.fosc,
+            sign=tr.sign,
+            other_label=tr.upper_label,
+            source=tr.source,
+            wl_nm=tr.wl_nm,
+            sigma_f=tr.sigma,
+        ))
+    return trimmed
 
 # MAIN
 
-def save_json(result, data_dir=DATA_JSON_DIR):
-    """Save polarizability results to data_json/<element>_polarizability.json."""
+def save_json(result, data_dir=None):
+    """Save polarizability results to <data dir>/<element>_polarizability.json."""
+    if data_dir is None:
+        data_dir = str(Workspace.current().data_json_dir)
     el = result['element']
     out = dict(
         element=el,
@@ -1395,13 +1229,13 @@ def save_json(result, data_dir=DATA_JSON_DIR):
         transitions_ex=_trim_transitions(result['transitions_ex']),
     )
     path = os.path.join(data_dir, f"{el}_polarizability.json")
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=2)
+    write_json(path, out)
     print(f"  ✓ {path}")
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
+        prog="linak --pipeline polarizability",
         description='Dynamic polarizability, C₆, magic wavelengths, and AC Stark / trap depth')
     parser.add_argument('element', nargs='?', default=None)
     parser.add_argument('--excited', default=None)
@@ -1409,7 +1243,7 @@ def main():
     parser.add_argument('--wl-max', type=float, default=2000.0)
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--heteronuclear', action='store_true')
-    parser.add_argument('--data-dir', default=DATA_JSON_DIR)
+    parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir))
     parser.add_argument('--n-grid', type=int, default=2000)
     parser.add_argument('--isotope', type=int, default=None,
                         help='Mass number A used for the trap-frequency mass (default: most abundant natural isotope)')
@@ -1418,63 +1252,76 @@ def main():
     parser.add_argument('--wl', type=float, default=None)
     parser.add_argument('--state', default=None,
                         help='Print alpha(0) for one label and exit (e.g. 20s)')
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv=None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
 
     data_dir = args.data_dir
-    os.makedirs(PLOTS_DIR, exist_ok=True)
-    print(f"polarizability.py v{__version__}")
+    plots_dir = Workspace.current().plots_dir
+    os.makedirs(plots_dir, exist_ok=True)
+    print(f"linak --pipeline polarizability (v{__version__})")
 
     from linak.physics.polarizability_core import require_alpha_species
 
     if args.state:
         if args.element is None:
-            print("Provide an element with --state, e.g. python polarizability.py Na --state 20s")
-            sys.exit(1)
+            parser.error("--state requires an element, e.g. `polarizability Na --state 20s`")
         el = require_alpha_species(args.element, "polarizability.py")["species_id"]
         data = load_element(el, data_dir)
         if data is None:
-            sys.exit(1)
+            raise MissingDataError(f"No polarizability data for {el} in {data_dir}")
         lab = args.state.strip()
         if lab not in data['state_energy_au']:
-            print(f"  State '{lab}' not in {el} rydberg set")
-            sys.exit(1)
+            parser.error(f"state {lab!r} not in {el} rydberg set")
         trans = build_transitions_for_state(lab, data, data['transitions'])
         a0 = alpha0_static(trans)
         valence = [t for t in trans if t.get('other_label') != 'core']
         print(f"  {el} {lab}: alpha(0) = {a0:.6g} au  "
               f"({len(valence)} valence + core partners)")
-        sys.exit(0)
+        return 0
 
     if args.all:
         elements = get_available_elements(data_dir)
         if not elements:
-            print(f"No elements found in {data_dir}. Run rydberg.py + transitions.py first.")
-            sys.exit(1)
+            raise MissingDataError(
+                f"No elements found in {data_dir}. Run rydberg + transitions first.")
         print("Running all elements:", ", ".join(elements))
     else:
         if args.element is None:
             available = get_available_elements(data_dir)
-            print("Available elements:", ", ".join(available) if available else "none")
-            args.element = input("Enter element symbol: ").strip()
+            parser.error(
+                "missing element argument. Available elements: "
+                + (", ".join(available) if available else "none"))
         elements = [require_alpha_species(args.element, "polarizability.py")["species_id"]]
 
     all_results = []
+    failed = []
     for el in elements:
-        el_out_dir = os.path.join(PLOTS_DIR, el)
+        el_out_dir = os.path.join(plots_dir, el)
         os.makedirs(el_out_dir, exist_ok=True)
-        result = run_element(
-            el,
-            excited_label=args.excited,
-            wl_min=args.wl_min,
-            wl_max=args.wl_max,
-            n_grid=args.n_grid,
-            I_ref_kWcm2=args.intensity,
-            waist_um=args.waist,
-            wl_point=args.wl,
-            data_dir=data_dir,
-            isotope_A=args.isotope,
-        )
+        try:
+            result = run_element(
+                el,
+                excited_label=args.excited,
+                wl_min=args.wl_min,
+                wl_max=args.wl_max,
+                n_grid=args.n_grid,
+                I_ref_kWcm2=args.intensity,
+                waist_um=args.waist,
+                wl_point=args.wl,
+                data_dir=data_dir,
+                isotope_A=args.isotope,
+            )
+        except MissingDataError as exc:
+            if not args.all:
+                raise
+            print(f"  ⚠  {el}: {exc}")
+            result = None
         if result is None:
+            failed.append(el)
             continue
         save_json(result, data_dir)
         plot_polarizability(result, el_out_dir)
@@ -1484,22 +1331,25 @@ def main():
 
     if len(all_results) > 1:
         print("\n" + "=" * 65)
-        print(f"  Generating cross-element plots → {PLOTS_DIR}/")
+        print(f"  Generating cross-element plots → {plots_dir}/")
         print("=" * 65)
-        plot_alpha_validation(all_results, PLOTS_DIR)
-        plot_C6_matrix(all_results, PLOTS_DIR, heteronuclear=args.heteronuclear)
+        plot_alpha_validation(all_results, plots_dir)
+        plot_C6_matrix(all_results, plots_dir, heteronuclear=args.heteronuclear)
     elif len(all_results) == 1:
-        plot_alpha_validation(all_results, PLOTS_DIR)
+        plot_alpha_validation(all_results, plots_dir)
 
     print("\n" + "=" * 65)
     print("  Summary")
     print("=" * 65)
     for r in all_results:
         el = r["element"]
-        print(f"    {PLOTS_DIR}/{el}/{el}_polarizability.html")
-        print(f"    data_json/{el}_polarizability.json")
+        print(f"    {plots_dir}/{el}/{el}_polarizability.html")
+        print(f"    {data_dir}/{el}_polarizability.json")
+    if failed:
+        print(f"  Failed: {', '.join(failed)}")
     print("\n" + "=" * 65 + "\n")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

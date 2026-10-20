@@ -1,0 +1,51 @@
+
+<div id="ctrl">
+  <h3>⚗ Spectrum Controls</h3>
+  <div class="sec">
+    <div class="st">Region</div>
+    <button class="rb on" data-lo="200"  data-hi="900"  onclick="rgn(this)">All</button>
+    <button class="rb"    data-lo="10"   data-hi="400"  onclick="rgn(this)">UV</button>
+    <button class="rb"    data-lo="380"  data-hi="750"  onclick="rgn(this)">Visible</button>
+    <button class="rb"    data-lo="750"  data-hi="2500" onclick="rgn(this)">Near-IR</button>
+  </div>
+  <div class="sec">
+    <div class="st">Wavelength (nm)</div>
+    <div style="display:flex;gap:5px;align-items:center;">
+      <input type="number" id="lo" value="$!wl_lo0" style="width:68px">
+      <span style="color:#aaa">–</span>
+      <input type="number" id="hi" value="$!wl_hi0" style="width:68px">
+      <button class="pr" onclick="go()">▶</button>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="st">Source</div>
+    <div id="srcs"></div>
+  </div>
+  <div class="sec">
+    <div class="st">Min fosc</div>
+    <input type="number" id="fmin" value="0" min="0" max="1" step="0.0001" style="width:85px">
+  </div>
+  <div class="sec">
+    <div class="st">Label search</div>
+    <input type="text" id="lsrch" placeholder="e.g. 3p, 5s …"
+      style="width:100%;box-sizing:border-box;">
+  </div>
+  <div id="mc"></div>
+  <div style="display:flex;flex-wrap:wrap;margin-bottom:8px;">
+    <button class="pr" onclick="go()">▶ Apply</button>
+    <button onclick="rst()">↺ Reset</button>
+  </div>
+  <div class="sec">
+    <div class="st">Lines <span id="cnt" class="badge">–</span></div>
+    <table id="lt">
+      <thead><tr><th>Transition</th><th>λ nm</th><th>fosc</th><th>Src</th></tr></thead>
+      <tbody id="lb"></tbody>
+    </table>
+  </div>
+  <div class="sec" style="border-top:1px solid #eee;padding-top:7px;margin-top:4px;">
+    <div class="st">Keyboard</div>
+    <div style="font-size:10px;color:#888;line-height:1.9;">
+      <b>←/→</b> pan &nbsp; <b>+/–</b> zoom &nbsp; <b>R</b> reset
+    </div>
+  </div>
+</div>

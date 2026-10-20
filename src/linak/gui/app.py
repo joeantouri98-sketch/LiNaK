@@ -4,50 +4,42 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 
-def _configure_frozen_qt_webengine() -> None:
-    """Point QtWebEngine at its helper inside a frozen app bundle."""
-    if not getattr(sys, "frozen", False) or os.environ.get("QTWEBENGINEPROCESS_PATH"):
+def webengine_log_path() -> Path:
+    """Return the OS-specific path of QtWebEngine's Chromium debug.log.
+
+    ``%TEMP%\\LiNaK\\debug.log`` on Windows, ``/tmp/LiNaK/debug.log`` on
+    macOS and Linux, so the log never lands in the working directory.
+    """
+    if sys.platform == "win32":
+        base = Path(tempfile.gettempdir())
+    else:
+        base = Path("/tmp")
+    return base / "LiNaK" / "debug.log"
+
+
+def _configure_webengine_logging() -> None:
+    """Send Chromium's debug.log to the OS temp dir instead of the CWD.
+
+    QtWebEngine defaults to writing ``debug.log`` next to the executable /
+    working directory; point ``--log-file`` at the temp dir before any
+    WebEngine context exists. An existing ``QTWEBENGINE_CHROMIUM_FLAGS``
+    value is preserved and only extended if it does not set a log file.
+    """
+    existing = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "")
+    if "--log-file" in existing:
         return
-
-    executable = Path(sys.executable).resolve()
-    candidates = [
-        executable.parents[1]
-        / "Frameworks/QtWebEngineCore.framework/Versions/A/Helpers"
-        / "QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess",
-        executable.parent / "PySide6/Qt/lib/QtWebEngineCore.framework/Helpers"
-        / "QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            os.environ["QTWEBENGINEPROCESS_PATH"] = str(candidate)
-            return
-
-
-def _configure_frozen_qt_webengine_resources() -> None:
-    if not getattr(sys, "frozen", False) or os.environ.get("QTWEBENGINE_RESOURCES_PATH"):
-        return
-
-    executable = Path(sys.executable).resolve()
-    candidates = [
-        executable.parents[1]
-        / "Frameworks/QtWebEngineCore.framework/Versions/A/Resources",
-        executable.parent / "PySide6/Qt/lib/QtWebEngineCore.framework/Resources",
-    ]
-    for candidate in candidates:
-        if (candidate / "icudtl.dat").exists():
-            os.environ["QTWEBENGINE_RESOURCES_PATH"] = str(candidate)
-            locales = candidate / "qtwebengine_locales"
-            if locales.is_dir():
-                os.environ["QTWEBENGINE_LOCALES_PATH"] = str(locales)
-            return
+    log_dir = webengine_log_path().parent
+    log_dir.mkdir(parents=True, exist_ok=True)
+    flag = f"--log-file={log_dir / 'debug.log'}"
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = f"{existing} {flag}".strip()
 
 
 def main() -> int:
-    _configure_frozen_qt_webengine()
-    _configure_frozen_qt_webengine_resources()
+    _configure_webengine_logging()
     from .main_window import main as run_window
 
     return run_window()

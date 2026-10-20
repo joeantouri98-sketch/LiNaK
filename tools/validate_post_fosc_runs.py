@@ -8,7 +8,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PLOTS_DIR = ROOT / "resources" / "plots"
+if str(ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(ROOT / "src"))
+
 PI = math.pi
 
 # Accepted experimental D2 anchors (Steck Na/Rb/Cs; Sansonetti K; NIST Li; Simsarian Fr)
@@ -45,7 +47,13 @@ def _find(obj, key):
 
 
 def main() -> int:
-    comp_path = PLOTS_DIR / "comparison_table.json"
+    from linak.core.workspace import Workspace
+
+    ws = Workspace.current()
+    data_dir = ws.data_json_dir
+    plots_dir = ws.plots_dir
+
+    comp_path = data_dir / "comparison_table.json"  # compare_elements writes it here
     comp = json.loads(comp_path.read_text(encoding="utf-8"))
     check(comp["T_K"] == 300.0, "compare T_K=300")
     rows = {r["element"]: r for r in comp["elements"]}
@@ -54,8 +62,8 @@ def main() -> int:
     print("=== compare_elements vs lifetimes / rydberg / literature ===")
     for el, row in rows.items():
         check(row["source"] == "pipeline", f"{el}: source=pipeline (not literature fallback)")
-        lt = json.loads((ROOT / "data_json" / f"{el}_lifetimes.json").read_text(encoding="utf-8"))
-        ry = json.loads((ROOT / "data_json" / f"{el}_rydberg.json").read_text(encoding="utf-8"))
+        lt = json.loads((data_dir / f"{el}_lifetimes.json").read_text(encoding="utf-8"))
+        ry = json.loads((data_dir / f"{el}_rydberg.json").read_text(encoding="utf-8"))
         by = {x["state"]: x for x in lt["lifetimes"]}
 
         for line in ("D1", "D2"):
@@ -116,8 +124,8 @@ def main() -> int:
 
     print("=== tweezer ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
-        tw = json.loads((ROOT / "data_json" / f"{el}_tweezer.json").read_text(encoding="utf-8"))
-        html = PLOTS_DIR / el / f"{el}_tweezer.html"
+        tw = json.loads((data_dir / f"{el}_tweezer.json").read_text(encoding="utf-8"))
+        html = plots_dir / el / f"{el}_tweezer.html"
         check(
             html.exists() and html.stat().st_size > 1000,
             f"{el} tweezer.html size={html.stat().st_size if html.exists() else 0}",
@@ -133,11 +141,11 @@ def main() -> int:
     print("=== feshbach C6 ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
         pol = json.loads(
-            (ROOT / "data_json" / f"{el}_polarizability.json").read_text(encoding="utf-8")
+            (data_dir / f"{el}_polarizability.json").read_text(encoding="utf-8")
         )
-        fout = ROOT / "data_json" / f"{el}_feshbach_out.json"
-        fin = ROOT / "data_json" / f"{el}_feshbach.json"
-        html = PLOTS_DIR / el / f"{el}_feshbach.html"
+        fout = data_dir / f"{el}_feshbach_out.json"
+        fin = data_dir / f"{el}_feshbach.json"
+        html = plots_dir / el / f"{el}_feshbach.html"
         if not fout.exists():
             check(
                 False,
@@ -158,7 +166,7 @@ def main() -> int:
 
     print("=== spectra ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
-        p = PLOTS_DIR / el / f"{el}_spectra.html"
+        p = plots_dir / el / f"{el}_spectra.html"
         check(
             p.exists() and p.stat().st_size > 1000,
             f"{el} spectra.html size={p.stat().st_size if p.exists() else 0}",

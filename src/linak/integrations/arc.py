@@ -1,31 +1,32 @@
-#!/usr/bin/env python3
 """
-arc_bridge.py
--------------
+linak.integrations.arc
+----------------------
 Standalone ARC (Alkali Rydberg Calculator) levels export.
 
-Writes data_json/arc/<El>_rydberg.json in the same schema as the NIST
-pipeline rydberg JSON. Never overwrites data_json/<El>_rydberg.json.
+Writes .linak/data/arc/<El>_rydberg.json in the same schema as the NIST
+pipeline rydberg JSON. Never overwrites .linak/data/<El>_rydberg.json.
 
 Usage:
-  python arc_bridge.py Na --n-max 50
-  python arc_bridge.py Sr --n-max 40
-  python arc_bridge.py Rb --isotope 87 --n-max 50
+  uv run python -m linak.integrations.arc Na --n-max 50
+  uv run python -m linak.integrations.arc Sr --n-max 40
+  uv run python -m linak.integrations.arc Rb --isotope 87 --n-max 50
 
 To feed the pipeline (manual):
-  copy data_json/arc/Na_rydberg.json -> data_json/Na_rydberg.json
-  then run transitions.py / lifetimes.py as usual; restore NIST file after.
+  copy .linak/data/arc/Na_rydberg.json -> .linak/data/Na_rydberg.json
+  then run the transitions / lifetimes stages as usual; restore NIST file after.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
+import math
 import os
 from fractions import Fraction
 
 import numpy as np
-from linak.core.paths import DATA_JSON_DIR, project_root
+from pathlib import Path
+
+from linak.core.fileio import write_json
 
 try:
     import arc  # type: ignore[import-not-found]
@@ -45,7 +46,12 @@ except ImportError as exc:
     arc = None
     ARC_IMPORT_ERROR = exc
 
-DATA_ARC = str(project_root() / DATA_JSON_DIR / "arc")
+def data_arc_dir() -> Path:
+    """``arc/`` inside the data dir of the workspace in effect at call time."""
+    from linak.core.workspace import Workspace
+
+    return Workspace.current().data_json_dir / "arc"
+
 
 # Match rydberg.py wavelength conversion (eV -> nm from ground)
 HC_EV_NM = 1239.84
@@ -62,7 +68,7 @@ def _require_arc():
 
 
 def _ensure_dirs():
-    os.makedirs(DATA_ARC, exist_ok=True)
+    os.makedirs(data_arc_dir(), exist_ok=True)
 
 
 def _j_to_str(j: float) -> str:
@@ -201,10 +207,10 @@ def build_levels(atom, element: str, el_class: str, n_max: int,
                             and (s is None or abs(float(s) - gs_s) < 1e-9)):
                         continue
                     E = _get_energy(atom, n, l, j, s=s)
-                    if E is None or E >= 0:
+                    if E is None or not math.isfinite(E) or E >= 0:
                         continue
                     delta_E = E - E_ground
-                    if delta_E <= 0:
+                    if not math.isfinite(delta_E) or delta_E <= 0:
                         continue
                     state_num += 1
                     label = _state_label(
@@ -260,7 +266,7 @@ def build_levels(atom, element: str, el_class: str, n_max: int,
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description=(
-            "Export ARC Rydberg levels to data_json/arc/<El>_rydberg.json "
+            "Export ARC Rydberg levels to <output folder>/data/arc/<El>_rydberg.json "
             "(pipeline schema; does not overwrite NIST files)."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -277,9 +283,8 @@ def main(argv=None):
     atom, element, el_class = make_atom(args.element, args.isotope)
     data = build_levels(atom, element, el_class, n_max=args.n_max,
                         n_start=args.n_start)
-    out = os.path.join(DATA_ARC, f"{element}_rydberg.json")
-    with open(out, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    out = data_arc_dir() / f"{element}_rydberg.json"
+    write_json(out, data)
     print(f"Wrote {out}")
     print(f"  {element}: {data['num_states']} states  "
           f"IE={data['ionization_energy_eV']:.6f} eV  "
@@ -287,7 +292,8 @@ def main(argv=None):
     for ex in data["excitations"][:4]:
         print(f"  {ex['label']}: E={ex['energy_eV']:.4f} eV  "
               f"wl={ex['wavelength_nm']:.3f} nm")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

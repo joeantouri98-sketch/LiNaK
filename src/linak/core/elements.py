@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 ELEMENTS = {
     1:  ("H",  0, 2),
     2:  ("He", 0, 1),
@@ -118,3 +120,75 @@ ELEMENTS = {
     117: ("Ts", 0, 2),
     118: ("Og", 0, 1),
 }
+
+
+def atomic_number(symbol: str) -> int | None:
+    """Return the atomic number for an element symbol, case-insensitively.
+
+    Returns ``None`` when *symbol* is not a known element.
+    """
+    target = symbol.lower()
+    for z, record in ELEMENTS.items():
+        if record[0].lower() == target:
+            return z
+    return None
+
+
+# Element families accepted wherever a list of elements is typed (the GUI"s
+# compare stage): family name or alias -> symbols.
+_ALKALI = ("Li", "Na", "K", "Rb", "Cs", "Fr")
+_ALKALINE_EARTH = ("Be", "Mg", "Ca", "Sr", "Ba", "Ra")
+_HALOGEN = ("F", "Cl", "Br", "I", "At", "Ts")
+_NOBLE_GASES = ("He", "Ne", "Ar", "Kr", "Xe", "Rn", "Og")
+_CHALCOGENS = ("O", "S", "Se", "Te", "Po", "Lv")
+_PNICTOGENS = ("N", "P", "As", "Sb", "Bi", "Mc")
+_CARBON_GROUP = ("C", "Si", "Ge", "Sn", "Pb", "Fl")
+_BORON_GROUP = ("B", "Al", "Ga", "In", "Tl", "Nh")
+_TRANSITION = (
+    "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Y", "Zr", "Nb", "Mo",
+    "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au",
+    "Hg",
+)
+_LANTHANIDES = (
+    "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb",
+    "Lu",
+)
+_ACTINIDES = (
+    "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No",
+    "Lr",
+)
+ELEMENT_FAMILIES = {
+    "alkali": _ALKALI,
+    "alkalis": _ALKALI,
+    "alkaline_earth": _ALKALINE_EARTH,
+    "alkaline-earth": _ALKALINE_EARTH,
+    "halogen": _HALOGEN,
+    "halogens": _HALOGEN,
+    "noble_gases": _NOBLE_GASES,
+    "noblegases": _NOBLE_GASES,
+    "chalcogens": _CHALCOGENS,
+    "pnictogens": _PNICTOGENS,
+    "carbon_group": _CARBON_GROUP,
+    "boron_group": _BORON_GROUP,
+    "transition": _TRANSITION,
+    "transition_metals": _TRANSITION,
+    "lanthanides": _LANTHANIDES,
+    "actinides": _ACTINIDES,
+}
+
+
+def expand_element_families(raw: str) -> list[str]:
+    """Expand a comma-separated list of symbols and family names, in order.
+
+    ``"alkali, Mg"`` -> ``["Li", "Na", "K", "Rb", "Cs", "Fr", "Mg"]``;
+    duplicates are dropped, unknown tokens are passed through unchanged.
+    """
+    values: list[str] = []
+    for token in str(raw or "").split(","):
+        token = token.strip()
+        if not token:
+            continue
+        for value in ELEMENT_FAMILIES.get(token.lower().replace(" ", "_"), (token,)):
+            if value not in values:
+                values.append(value)
+    return values

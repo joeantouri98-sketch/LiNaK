@@ -15,7 +15,6 @@ This release hardens the codebase against common security issues:
 - **Safe subprocess execution** for ORCA: all ORCA invocation now uses argument lists with `shell=False`
 - **GUI path validation**: dataset saves are guarded against accidental writes outside the project root
 - **Atomic writes**: JSON/CSV edits are written via temporary files to avoid corruption on interruption
-- **Security smoke check**: a lightweight source-level check prevents unsafe subprocess patterns from being reintroduced
 
 ## Reporting a vulnerability
 
@@ -38,12 +37,19 @@ This project enforces the following practices:
 - Always use `subprocess.run([...], shell=False, ...)`
 - Never use `shell=True`, `os.system(...)`, or string interpolation for shell commands
 - Resolve executables from environment variables or `PATH`, never hardcode local paths
+- ORCA and basis-set-exchange invocations follow this rule today
 
 ### File operations
-- Validate file paths before writing to ensure they remain within the project
-- Use atomic writes (temporary file + `os.replace(...)`) for user-edited data
+- Write files through `linak.core.fileio` (`atomic_write_text`, `write_json` with
+  `allow_nan=False`); every pipeline JSON output and the GUI dataset editor do.
+  Plot HTML goes through `linak.report_templates.write_offline_report`.
+- Validate user-chosen save targets with `linak.gui.project_io.ensure_project_safe_path`
+- Build file names from user input (run tags, `--outname`, `--run`) only after
+  `linak.core.fileio.is_safe_name` accepts them: one path component of
+  `[A-Za-z0-9._+-]`, so no separators, `..`, drive letters or NTFS streams
+- Keep generated outputs in the workspace (`linak.core.workspace`): the chosen
+  output folder, else the per-user data folder; never the launch directory
 - Avoid silent writes to external directories; surface warnings instead
-- Keep generated outputs under `resources/data_json/`, `resources/orca_outputs/`, or `resources/plots/` by default
 
 ### Code patterns
 The following patterns are **prohibited** in project code:
@@ -56,7 +62,9 @@ Any exception requires explicit justification and review.
 
 ### Local development
 - Do not commit credentials, tokens, or secrets to the repository
-- Use `ORCA_EXE` environment variable instead of hardcoding ORCA paths
+- Use `ORCA_EXE` environment variable instead of hardcoding ORCA paths. An `orca`
+  found on `PATH` is only accepted when ORCA's own modules (`orca_scf`) sit beside
+  it, so an unrelated program of the same name (the GNOME screen reader) is never run.
 - Keep `.env` and local configuration files in `.gitignore`
 
 ## Security review expectations
@@ -77,6 +85,9 @@ must be reviewed for:
 
 This policy describes the current protections and minimum required practices. It is not a formal security certification and does not guarantee invulnerability against all classes of attack.
 
+There is currently **no automated source-level check** that scans the codebase for unsafe
+subprocess or file patterns; enforcement relies on the review expectations above.
+
 The project is protected against the most common code-level issues in scientific computing and desktop tools, but ongoing review is necessary as the codebase evolves.
 
 ## Summary of v1.3.0 baseline
@@ -84,5 +95,4 @@ The project is protected against the most common code-level issues in scientific
 :white_check_mark: ORCA execution is subprocess-safe  
 :white_check_mark: GUI dataset writes are path-validated  
 :white_check_mark: Atomic writes reduce data corruption risk  
-:white_check_mark: Source-level regression checks for unsafe patterns  
 :white_check_mark: Clear contributor security expectations

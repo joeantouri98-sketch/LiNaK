@@ -1,0 +1,41 @@
+
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a0a14;}
+.plotly-graph-div{width:100vw!important;height:100vh!important;}
+#fp4{
+  position:fixed;top:12px;right:12px;width:268px;
+  max-height:calc(100vh - 24px);overflow-y:auto;
+  background:rgba(10,10,22,0.94);border:1px solid #2a2a4a;border-radius:10px;
+  padding:12px 14px;font-family:'Helvetica Neue',Arial,sans-serif;
+  font-size:12px;color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.65);
+  z-index:9999;backdrop-filter:blur(6px);
+}
+#fp4 h3{margin:0 0 9px;font-size:13px;color:#e0e8ff;
+  border-bottom:1px solid #2a2a5a;padding-bottom:5px;
+  display:flex;align-items:center;gap:7px;}
+#fp4 .tog{margin-left:auto;cursor:pointer;font-size:11px;color:#556;user-select:none;}
+#fp4.collapsed>*:not(h3){display:none;}
+#fp4 .sec{margin-bottom:10px;}
+#fp4 .st{font-weight:bold;color:#7a9eff;font-size:10px;
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+#fp4 label{display:flex;align-items:center;gap:6px;margin:3px 0;cursor:pointer;color:#bbb;}
+#fp4 input[type=checkbox]{accent-color:#4a7ec7;cursor:pointer;}
+#fp4 input[type=number],#fp4 input[type=text]{
+  background:#111830;border:1px solid #2a3060;border-radius:4px;
+  color:#ccc;font-size:11px;padding:3px 6px;}
+#fp4 button{padding:4px 9px;font-size:11px;border:1px solid #2a3060;
+  border-radius:5px;background:#111830;color:#aac;cursor:pointer;margin:2px;}
+#fp4 button:hover{background:#1a2850;color:#e0e8ff;}
+#fp4 button.pr{background:#1a3a80;color:#cce;border-color:#2a4aaa;}
+#fp4 button.pr:hover{background:#2a4ab0;}
+.dot4{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.bdg4{margin-left:auto;background:#1a2040;border-radius:8px;
+  padding:0 6px;font-size:10px;color:#6a8adf;}
+#lt4{width:100%;border-collapse:collapse;font-size:10px;
+  max-height:155px;display:block;overflow-y:auto;margin-top:4px;}
+#lt4 th{position:sticky;top:0;background:#111830;padding:2px 4px;
+  text-align:left;border-bottom:1px solid #2a2a4a;color:#7a9eff;}
+#lt4 td{padding:2px 4px;border-bottom:1px solid #1a1a2a;}
+#lt4 tr:hover td{background:#141428;}
+#mc4{font-size:11px;color:#8a9ad0;text-align:center;margin-bottom:4px;}
+</style>

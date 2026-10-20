@@ -2,10 +2,11 @@
 
 **LiNaK**: an alkali-atom AMO pipeline (Li–Fr): NIST / QDT levels → transitions → lifetimes → polarizability → BBR → optical tweezers → hyperfine → Feshbach → interactive plots. Optional ORCA TD-DFT / SOC overlays and an optional ARC levels bridge.
 
-Physics derivations and full CLI: [`resources/HTMLs/Pipeline Overview.html`](resources/HTMLs/Pipeline%20Overview.html) (§16 Na walkthrough, §17 flags).
+Physics derivations and full CLI: [`src/linak/resources/HTMLs/Pipeline Overview.html`](src/linak/resources/HTMLs/Pipeline%20Overview.html) (§16 Na walkthrough, §17 flags).
 Bibliography: [`REFERENCES.md`](REFERENCES.md) · BibTeX: [`REFERENCES.bib`](REFERENCES.bib).
+Working on the code? Start with [`ARCHITECTURE.md`](ARCHITECTURE.md), then [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-> **Naming:** this toolkit is **LiNaK**. **ORCA** in the docs always means the Neese quantum-chemistry package (`runorca.py`), not this pipeline.
+> **Naming:** this toolkit is **LiNaK**. **ORCA** in the docs always means the Neese quantum-chemistry package (`runorca` pipeline), not this pipeline.
 
 ---
 
@@ -15,7 +16,7 @@ Bibliography: [`REFERENCES.md`](REFERENCES.md) · BibTeX: [`REFERENCES.bib`](REF
 |-------|--------|
 | Neutral alkalis Li–Fr | Full AMO chain (**tested**) |
 | Ions (e.g. `Na_c1`) / 3d metals (Fe, Cr) | Limited: NIST plotting + ORCA SOC (**tested** for Fe, Cr) |
-| ARC (`arc_bridge.py`) | Optional **levels only** → `data_json/arc/` (never overwrites NIST) |
+| ARC (`linak.integrations.arc`) | Optional **levels only** → `data/arc/` (never overwrites NIST) |
 
 The pipeline has been exercised end-to-end for the alkalis and for Fe and Cr. **Shipped outputs** in this tree are mainly **Na** and **Na⁺ (`Na_c1`)** (plus curated Feshbach / hf tables). Fe, Cr, and other alkali run products are not bundled; if you need them, feel free to [contact](#contact).
 
@@ -24,7 +25,7 @@ The pipeline has been exercised end-to-end for the alkalis and for Fe and Cr. **
 ## Requirements
 
 - Python 3.9+ recommended  
-- Run commands through the packaged entry points; generated data goes to `.linak/` and reference data lives under `resources/`.
+- Run commands through the packaged entry points; generated data goes to the output folder (see [Where outputs go](#where-outputs-go)) and the read-only reference data ships as `linak` package data under `src/linak/resources/`.
 - ORCA (optional; only for the ORCA pipeline stages)
 
 ```bash
@@ -68,7 +69,8 @@ uv run python -m linak  # module form
 
 The GUI is deployed with the Qt-supported `pyside6-deploy` tool. It
 uses Nuitka and the checked-in `pysidedeploy.spec` to include the Python/Qt
-runtime and the read-only `resources/` tree:
+runtime and the read-only reference data tree (`src/linak/resources`, declared as
+`linak` package data in `pyproject.toml`):
 
 ```bash
 uv sync --dev
@@ -87,18 +89,16 @@ Package versions are derived from Git tags. Push a tag such as `v1.4.2` to
 run `.github/workflows/build-release.yml`; GitHub Actions builds downloadable
 Windows and macOS archives from that tagged source.
 
-The checked-in spec packages the application shell and Python/Qt runtime plus
-the read-only reference datasets and local Plotly JavaScript. The GUI can
-operate on an external LiNaK project directory; set
-`LINAK_PROJECT_ROOT` when launching the bundle from another directory. ORCA
-remains an external installation and must be available on `PATH`.
-
-Generated application data remains project-owned. Set `LINAK_PROJECT_ROOT`
-when the GUI should operate on a particular checkout:
-
-```bash
-LINAK_PROJECT_ROOT=/path/to/LiNaK uv run linak-gui
-```
+The checked-in spec packages the application shell, Python/Qt runtime, and
+the read-only reference datasets (as `linak` package data) plus the vendored
+Plotly JavaScript under `src/linak/resources/vendor/`. Plotly reports are fully offline: every HTML references
+a sibling `plotly.min.js` copied next to it, and the frozen build ships the
+`plotly` Python package as bytecode with only the data files it actually
+reads at runtime (see `tests/test_offline_plotly.py`). The bundled data sits
+at `linak/resources` and `linak/report_templates` inside the bundle, exactly
+where the installed package keeps it, so one lookup rule serves every build.
+ORCA remains an external installation: `orca` on `PATH`, or the `ORCA_EXE`
+environment variable.
 
 This creates (or updates) the project-local `.venv` and installs the locked
 runtime dependencies. Run Python and project commands through `uv run` so they
@@ -181,25 +181,34 @@ For checkout development, the equivalent uv command is:
 uv run linak-gui
 ```
 
-The project root should contain:
+### Where outputs go
 
-```text
-pyproject.toml
-resources/                 # read-only reference data
-.linak/                    # generated data, plots, and ORCA outputs
+The GUI and the CLI share one rule. Outputs (`data/`, `plots/`,
+`orca_outputs/`) go to the **output folder**:
+
+1. the folder chosen with **File > Open output folder...** (remembered across
+   sessions; **File > Use default output folder** forgets it), or the folder
+   named by the `LINAK_PROJECT_ROOT` environment variable;
+2. otherwise LiNaK's per-user data folder: `%LOCALAPPDATA%\LiNaK` on Windows,
+   `~/Library/Application Support/LiNaK` on macOS, `~/.local/share/LiNaK`
+   (or `$XDG_DATA_HOME/LiNaK`) on Linux.
+
+The launch directory never matters. If the chosen folder is a LiNaK source
+checkout, outputs go to its git-ignored `.linak/` subfolder so they never
+touch the source tree:
+
+```bash
+LINAK_PROJECT_ROOT=. uv run linak --pipeline rydberg Na   # -> ./.linak/data/
 ```
 
-If the GUI is started from another directory, use:
-
-```text
-File > Open LiNaK project folder...
-```
-
-and select the folder containing `constants.py` and `rydberg.py`.
+The bundled reference data is copied into the output folder (existing files
+are never overwritten): pipeline inputs on every run, and in the GUI also the
+example `plots/` and `orca_outputs/` for Li, Na and Na⁺, so a fresh folder
+opens with populated species.
 
 ### GUI workflow
 
-1. Launch `linak_gui.py`.
+1. Launch the GUI with `linak-gui`.
 2. Select or enter a species, such as `Na`, `K`, or `Na_c1`.
 3. Select a pipeline stage.
 4. Configure the stage options.
@@ -208,7 +217,7 @@ and select the folder containing `constants.py` and `rydberg.py`.
 7. Review calculated results in the **Overview** tab.
 8. Use the HTML and JSON tabs for detailed output files.
 
-The Overview tab reads existing files from `data_json/`. It does not
+The Overview tab reads existing files from the output folder's `data/`. It does not
 recalculate the physics independently. Run the relevant pipeline stages
 first if a section reports that data is unavailable.
 
@@ -229,13 +238,13 @@ uv run python -c "from PySide6.QtWebEngineWidgets import QWebEngineView; print('
 
 | Path | Purpose |
 |------|---------|
-| `NIST Levels/<El>.txt` or `.csv` | ASD levels for `rydberg.py` |
-| `f_values/<El>_lines.txt` or `.csv` | ASD lines / \(f\) for `lifetimes.py` |
-| `data_json/<El>_feshbach.json` | Literature FR tables (Li, Na, K, Rb, Cs; **not Fr**) |
-| `data_json/*_hf_constants.json` | Hyperfine constants (or rebuild nuclear data) |
-| `Moments/*.csv` | Optional IAEA CSVs for `hyperfine.py --build-nuclear-data` |
+| `src/linak/resources/NIST Levels/<El>.txt` or `.csv` | ASD levels for `rydberg` |
+| `src/linak/resources/f_values/<El>_lines.txt` or `.csv` | ASD lines / \(f\) for `lifetimes` |
+| `src/linak/resources/data_json/<El>_feshbach.json` | Literature FR tables (Li, Na, K, Rb, Cs; **not Fr**) |
+| `src/linak/resources/data_json/*_hf_constants.json` | Hyperfine constants (or rebuild nuclear data) |
+| `src/linak/resources/Moments/*.csv` | Optional IAEA CSVs for `hyperfine --build-nuclear-data` |
 
-Pre-built JSON under `data_json/` lets you plot without re-running the whole chain. Prefer regenerating physics outputs with the scripts rather than hand-editing them.
+Pre-built JSON under `src/linak/resources/data_json/` (copied into the output folder's `data/` on first run) lets you plot without re-running the whole chain. Prefer regenerating physics outputs with the scripts rather than hand-editing them.
 
 ---
 
@@ -259,19 +268,24 @@ uv run linak --pipeline compare_elements
 uv run linak --pipeline scattering_rate --element Na --line D2
 ```
 
-`rydberg.py` prompts for `n-max` if you omit `--n-max` (default prompt 30).  
-`plotinteractive.py` may still prompt for energy-zero / continuum choices even when flags are passed.
+`linak --pipeline rydberg` no longer fits quantum defects through a stdin prompt, so all values come through argparse.  
+`linak --pipeline plotinteractive` is fully flag-driven: the energy reference
+(`--energy-shift 1|2|3` with `--absolute-ground` / `--custom-shift`), the
+level/transition filters (`--filter-ie`, `--transition-display`,
+`--orca-display` with `--*-wl-min/max`, `--plot3-choice`) and the optional
+sub-launches (`--also-orbital3d` with `--orbital3d-n-max`/`--orbital3d-grid`,
+`--also-spectra` with `--spectra-wl-min/max`) are plain options with defaults.
 
 ---
 
 ## Full alkali operating sequence
 
-Recommended order for a fresh neutral alkali (example Na). Scripts that support `--all` are noted; **`lifetimes.py` is one element per call**.
+Recommended order for a fresh neutral alkali (example Na). Stages that support `--all` are noted; **`lifetimes` is one element per call**.
 
 ```bash
 # Optional structure overlays (separate ORCA jobs - never one mixed job)
-uv run linak --pipeline runorca Na                         # TD-DFT → data_json/Na.json
-uv run linak --pipeline runorca Na --mode soc              # SOC → data_json/Na_soc*.json
+uv run linak --pipeline runorca Na                         # TD-DFT → data/Na.json
+uv run linak --pipeline runorca Na --mode soc              # SOC → data/Na_soc*.json
 # or reuse outs: uv run linak --pipeline orca_to_json Na [--run TAG] [--outname SUFFIX]
 
 # Levels → network → rates
@@ -316,22 +330,24 @@ uv run linak --pipeline compare_elements
 
 ## Outputs
 
+Paths are relative to the [output folder](#where-outputs-go).
+
 | Output | Location |
 |--------|----------|
-| Levels, transitions, lifetimes, α, BBR, tweezer, hf, FR | `data_json/<El>_*.json` |
-| ORCA parsed JSON | `data_json/<El>.json`, `data_json/<El>_soc*.json`, or `--outname` |
+| Levels, transitions, lifetimes, α, BBR, tweezer, hf, FR | `data/<El>_*.json` |
+| ORCA parsed JSON | `data/<El>.json`, `data/<El>_soc*.json`, or `--outname` |
 | ORCA run folders | `orca_outputs/<El>/<run_tag>/` |
-| Element plots | `resources/plots/<El>/` (Grotrian, spectrum, tweezer, BBR, Feshbach, …). Shipped samples: `resources/plots/Na/`, `resources/plots/Na_c1/` |
-| CompTable | regenerate: `python compare_elements.py` → `resources/plots/comparison_table.html` + `data_json/comparison_table.json` |
-| ARC levels (optional) | `data_json/arc/<El>_rydberg.json` only |
+| Element plots | `plots/<El>/` (Grotrian, spectrum, tweezer, BBR, Feshbach, …) |
+| CompTable | regenerate: `uv run linak --pipeline compare_elements` → `plots/comparison_table.html` + `data/comparison_table.json` |
+| ARC levels (optional) | `data/arc/<El>_rydberg.json` only |
 
-Energy convention in pipeline rydberg JSON: **ionization-relative** (continuum = 0, ground = −IE). NIST ASD files on disk are ground-relative; `rydberg.py` converts.
+Energy convention in pipeline rydberg JSON: **ionization-relative** (continuum = 0, ground = −IE). NIST ASD files on disk are ground-relative; `rydberg` converts.
 
 ---
 
 ## Optional: ORCA
 
-TD-DFT and SOC are **separate** `runorca.py` invocations (`--mode` is exclusive).
+TD-DFT and SOC are **separate** `runorca` invocations (`--mode` is exclusive).
 
 ```bash
 uv run linak --pipeline runorca Na
@@ -349,13 +365,13 @@ Useful flags: `--outname SUFFIX`, `--nroots`, `--functional-gs` / `--functional-
 
 ```bash
 uv sync --extra arc
-uv run python arc_bridge.py Na --n-max 50
-# → data_json/arc/Na_rydberg.json
+uv run python -m linak.integrations.arc Na --n-max 50
+# → data/arc/Na_rydberg.json
 ```
 
 - Exports **energies only** (no Stark / pair / blockade / \(f\)).  
-- Never overwrites `data_json/<El>_rydberg.json`.  
-- To try ARC levels: copy manually over the NIST rydberg JSON, run `transitions.py` / `lifetimes.py`, then restore NIST. Lifetimes still need NIST or ORCA \(f\).  
+- Never overwrites `data/<El>_rydberg.json`.  
+- To try ARC levels: copy manually over the NIST rydberg JSON, run `transitions` / `lifetimes`, then restore NIST. Lifetimes still need NIST or ORCA \(f\).  
 - Elements: Li, Na, K, Rb, Cs, Sr, Ca (Fr not in ARC). Sr/Ca are not a full alkali AMO path here.  
 - Cite ARC CPC papers in `REFERENCES.md` if used.
 
@@ -366,7 +382,7 @@ uv run python arc_bridge.py Na --n-max 50
 Not the full AMO chain (no QDT polarizability / BBR / tweezers / Feshbach).  
 Fe and Cr (and the alkalis) have been tested on this limited / full path as appropriate. **In-tree ion outputs:** `Na_c1` only. Fe/Cr JSON and ORCA folders are not shipped; ask under [Contact](#contact) if you need them.
 
-**Ion example** (`Na_c1` = Na⁺; ids from `species.py`; outputs shipped):
+**Ion example** (`Na_c1` = Na⁺; ids from `linak.core.species`; outputs shipped):
 
 ```bash
 uv run linak --pipeline runorca Na_c1 --mode soc
@@ -397,13 +413,14 @@ uv run linak --pipeline scattering_rate --element Na --line D2
 # CompTable temperature / subset
 uv run linak --pipeline compare_elements --T 500 --elements Li Na K
 
-# Rebuild nuclear moments table for hyperfine
-uv run linak --pipeline hyperfine --build-nuclear-data \
-  --magn-csv Moments/magn_mom_recomm.csv \
-  --elec-csv Moments/elec_mom_recomm.csv
+# Rebuild nuclear moments table for hyperfine (bundled IAEA CSVs by default;
+# pass --magn-csv / --elec-csv for your own files)
+uv run linak --pipeline hyperfine --build-nuclear-data
 
-# Tests
-pytest tests/
+# Lint, tests, and the output check (see CONTRIBUTING.md)
+uv run ruff check .
+uv run pytest
+uv run python tools/compare_outputs.py
 ```
 
 Convention notes used by CompTable / lifetimes:
@@ -416,22 +433,22 @@ Convention notes used by CompTable / lifetimes:
 ## Pipeline map
 
 ```text
-NIST Levels/ + f_values/
+src/linak/resources/NIST Levels/ + src/linak/resources/f_values/
         │
         ▼
-   rydberg.py ──► transitions.py ──► lifetimes.py
-        │                                  │
-        │                                  ├─► polarizability.py ──► blackbody.py
-        │                                  │            │
-        │                                  │            └─► tweezer.py
-        │                                  ├─► hyperfine.py
-        │                                  └─► feshbach.py   (not Fr)
+   rydberg ──► transitions ──► lifetimes
+        │                          │
+        │                          ├─► polarizability ──► blackbody
+        │                          │          │
+        │                          │          └─► tweezer
+        │                          ├─► hyperfine
+        │                          └─► feshbach   (not Fr)
         │
         └─► plotinteractive / spectra / orbital3d / compare_elements / scattering_rate
 
 Optional side inputs:
-  runorca / orca_to_json  →  data_json/<El>.json (+ _soc* / --outname)
-  arc_bridge              →  data_json/arc/<El>_rydberg.json  (manual swap only)
+  runorca / orca_to_json  →  data/<El>.json (+ _soc* / --outname)
+  linak.integrations.arc  →  data/arc/<El>_rydberg.json  (manual swap only)
 ```
 
 ---
@@ -440,15 +457,12 @@ Optional side inputs:
 
 | Path | Role |
 |------|------|
-| `*.py` | Pipeline scripts and shared libraries (`constants.py`, `species.py`, `alpha_core.py`, …) |
-| `.linak/data/` | Generated and project-local JSON |
-| `.linak/data/arc/` | Optional ARC level exports |
-| `resources/NIST Levels/` | ASD level references |
-| `resources/f_values/` | ASD line / \(f\) references |
-| `resources/Moments/` | Nuclear-moment CSVs for hyperfine rebuild |
-| `.linak/orca_outputs/` | ORCA run directories (when ORCA is used) |
-| `.linak/plots/` | Generated interactive HTML outputs |
-| `HTMLs/Pipeline Overview.html` | Physics + CLI reference |
+| `src/linak/` | Python package: `core/` (constants, elements, species, paths), `physics/` (models), `pipelines/` (CLI + IO + plots), `integrations/` (ORCA / ARC / BSE), `gui/` (PySide6 app) |
+| `.linak/` | Outputs when the checkout itself is the output folder (git-ignored) |
+| `src/linak/resources/NIST Levels/` | ASD level references (package data) |
+| `src/linak/resources/f_values/` | ASD line / \(f\) references |
+| `src/linak/resources/Moments/` | Nuclear-moment CSVs for hyperfine rebuild |
+| `src/linak/resources/HTMLs/Pipeline Overview.html` | Physics + CLI reference |
 | `tools/` | Maintainer helpers (regen / audit); not required for daily runs |
 | `tests/` | Pytest checks |
 | `REFERENCES.md` / `REFERENCES.bib` | Citations |
@@ -458,7 +472,7 @@ Optional side inputs:
 ## Data provenance
 
 - **Levels / lines:** NIST ASD (and Steck / literature overlays where noted).  
-- **Feshbach \(B_0,\Delta,a_{\rm bg}\):** curated in `data_json/<El>_feshbach.json` with per-resonance refs (Chin RMP; Zürn, Knoop, D'Errico, Marte, Berninger, …). Default K table is **³⁹K**.  
+- **Feshbach \(B_0,\Delta,a_{\rm bg}\):** curated in `src/linak/resources/data_json/<El>_feshbach.json` with per-resonance refs (Chin RMP; Zürn, Knoop, D'Errico, Marte, Berninger, …). Default K table is **³⁹K**.  
 - **Hyperfine:** Steck (Na/Rb/Cs), Allegrini22, Gehm (Li-6), Tiecke + Falke (K), Sansonetti (Fr) as listed in `*_hf_constants.json`; Stone/IAEA for `nuclear_data.json`.  
 - **ORCA:** user-run; methods tagged in JSON metadata.  
 - **ARC:** optional dependency; cite the ARC CPC papers in `REFERENCES.md` if used.
@@ -490,7 +504,7 @@ If you use this pipeline in a paper or thesis, please cite:
    - **Stone / IAEA** for nuclear moments  
    - Element-specific Feshbach papers + **Chin et al.** RMP (2010)  
    - **Grimm / Itano / Beterov / …** for trap and BBR methods as used  
-3. ARC CPC papers if you used `arc_bridge.py`.  
+3. ARC CPC papers if you used the ARC bridge (`linak.integrations.arc`).  
 4. ORCA if you report ORCA results.
 
 BibTeX: [`REFERENCES.bib`](REFERENCES.bib).
@@ -504,7 +518,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for bug reports, pull requests, and how
 - Prefer regenerating JSON via scripts over hand-editing physics outputs.  
 - Do not invent NIST tables; drop ASD exports into `NIST Levels/` / `f_values/`.  
 - Ions and 3d metals are **limited support** (Overview §17).  
-- CompTable: `python compare_elements.py` → `resources/plots/comparison_table.html`.
+- CompTable: `uv run linak --pipeline compare_elements` → `plots/comparison_table.html`.
 - Keep Overview and README CLI examples in sync when flags change.
 
 ---

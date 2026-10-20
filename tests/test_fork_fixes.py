@@ -2,37 +2,37 @@
 """Regression tests for the fork-review fixes (P18, P28, P33, P39-P45)."""
 from __future__ import annotations
 
+import inspect
 import json
 import math
-import os
-import shutil
 
 import numpy as np
 import pytest
 
-import linak.physics.hyperfine as hf
-
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import linak.physics.hyperfine_core as hf
+import linak.pipelines.hyperfine as hf_pipeline
+from linak.core.paths import reference_path
 
 
 # ── P41: nuclear-data parsing ────────────────────────────────────────────────
 @pytest.mark.parametrize('txt,val', [('22.5 ms', 0.0225), ('4.9 m', 294.0), ('3.18 m', 190.8),
                                      ('146 ns', 1.46e-7), ('2 h', 7200.0), ('', 0.0)])
 def test_halflife_units(txt, val):
-    assert hf.halflife_s(txt) == pytest.approx(val)
+    assert hf_pipeline._halflife_s(txt) == pytest.approx(val)
 
 
 def test_halflife_stable():
-    assert math.isinf(hf.halflife_s('stable'))
+    assert math.isinf(hf_pipeline._halflife_s('stable'))
 
 
 @pytest.mark.parametrize('txt,val', [('3/2(-)', 1.5), ('1(-)', 1.0), ('(3+)', 3.0), ('9/2-', 4.5), ('5+', 5.0)])
 def test_spin_parsing(txt, val):
-    assert hf.parse_spin(txt) == val
+    assert hf_pipeline._parse_spin(txt) == val
 
 
-def test_bundled_nuclear_data_fr():
-    d = json.load(open(os.path.join(ROOT, 'data_json', 'nuclear_data.json')))
+def test_bundled_nuclear_data_fr(data_dir):
+    with (data_dir / 'nuclear_data.json').open(encoding='utf-8') as f:
+        d = json.load(f)
     fr = {i['A']: i for i in d['isotopes'] if i['Z'] == 87}
     assert fr[219]['halflife_s'] == pytest.approx(0.0225)     # was 1350 s (ms read as minutes)
     assert fr[223]['I'] == 1.5 and fr[224]['I'] == 1.0        # spins written "3/2(-)", "1(-)"
@@ -48,28 +48,25 @@ def test_breit_rabi_labels_degenerate_levels():
 
 def test_mF_color_never_invalid():
     for m, F in [(4, 1), (-4, 1), (0, 0), (1, 2)]:
-        rgb = hf.mF_color(m, F)
+        rgb = hf_pipeline.mF_color(m, F)
         vals = [int(x) for x in rgb[4:-1].split(',')] if rgb.startswith('rgb') else [0]
         assert all(0 <= v <= 255 for v in vals)
 
 
 # ── P40: clock transition comes from the lowest state, whatever the order ─────
-def test_clock_state_independent_of_state_order(tmp_path, monkeypatch):
-    shutil.copytree(os.path.join(ROOT, 'data_json'), tmp_path / 'data_json')
-    monkeypatch.chdir(tmp_path)
-    res = []
-    for order in (['3s1/2', '3p3/2'], ['3p3/2', '3s1/2']):
-        r = hf.run_element('Na', state_labels=order)
-        res.append(r['special']['microwave_clock'])
-    assert res[0]['state'] == res[1]['state'] == '3s1/2'
-    assert res[0]['frequency_MHz'] == pytest.approx(res[1]['frequency_MHz'])
-    assert res[0]['frequency_MHz'] == pytest.approx(1771.6, abs=1.0)
+def test_clock_state_independent_of_state_order(data_dir):
+    nuclear = hf_pipeline.load_nuclear_index(data_dir / 'nuclear_data.json')
+    clocks = [hf_pipeline.run_element('Na', nuclear, state_labels=order, data_dir=str(data_dir)).clock
+              for order in (['3s1/2', '3p3/2'], ['3p3/2', '3s1/2'])]
+    assert clocks[0].state == clocks[1].state == '3s1/2'
+    assert clocks[0].frequency_MHz == pytest.approx(clocks[1].frequency_MHz)
+    assert clocks[0].frequency_MHz == pytest.approx(1771.6, abs=1.0)
 
 
 def test_clock_wavelength_uses_exact_c():
-    sp = hf.identify_special_transitions([], [1.0, 2.0], 1.5, 0.5, 885.8, 0.0, 0.0)
-    mc = sp['microwave_clock']
-    assert mc['wavelength_m'] == pytest.approx(299792458.0 / mc['frequency_Hz'], rel=1e-12)
+    nucleus = hf.Nucleus(A=23, I=1.5, mu_I=2.2176, Q_barn=0.104, gI=1.4784)
+    mc = hf.compute(nucleus, {'3s1/2': hf.HfConstants(A_MHz=885.8)}, ['3s1/2'], {}).clock
+    assert mc.wavelength_m == pytest.approx(299792458.0 / mc.frequency_Hz, rel=1e-12)
 
 
 # ── P43: GAMESS L (SP) shells ────────────────────────────────────────────────
@@ -84,23 +81,23 @@ def test_gamess_L_shell_becomes_S_and_P():
 
 # ── P18: one D-line table ────────────────────────────────────────────────────
 def test_dline_tables_share_one_source():
-    from linak.core.dline_literature import LITERATURE, dline_transitions
-    for el, rec in LITERATURE.items():
-        tr = {t['label'].split('\u2192')[0]: t for t in dline_transitions(el)}
+    from linak.core import spectroscopy
+    from linak.pipelines import compare_elements, spectra
+    for el, rec in spectroscopy.LITERATURE.items():
+        tr = {t['label'].split('→')[0]: t for t in spectroscopy.dline_transitions(el)}
         assert tr[rec['np'] + '3/2']['fosc'] == rec['fosc_D2']
         assert tr[rec['np'] + '1/2']['fosc'] == rec['fosc_D1']
-    for fname in ('spectra.py', 'compare_elements.py'):
-        src = open(os.path.join(ROOT, fname), encoding='utf-8').read()
-        assert 'dline_literature' in src
-    assert '"fosc": 0.' not in open(os.path.join(ROOT, 'spectra.py'), encoding='utf-8').read().split('SRC_COLORS')[0]
+    assert spectra.DLINES_FALLBACK is spectroscopy.DLINES_FALLBACK
+    assert compare_elements.LITERATURE is spectroscopy.LITERATURE
+    assert '"fosc": 0.' not in inspect.getsource(spectra)
 
 
 # ── P28: non-LS downward channel carries g_lower/g_upper ─────────────────────
-def test_non_ls_downward_channel_has_g_ratio():
-    import linak.physics.polarizability as p
-    d = p.load_element('Na', os.path.join(ROOT, 'data_json'))
+def test_non_ls_downward_channel_has_g_ratio(data_dir):
+    import linak.physics.polarizability_core as ac
+    d = ac.load_element('Na', str(data_dir))
     d['ls_mode'] = False
-    tr = p.build_transitions_for_state('3p3/2', d, d['transitions'])
+    tr = ac.build_transitions_for_state('3p3/2', d, d['transitions'])
     down = [t for t in tr if t['other_label'] == '3s' and t['sign'] == -1]
     assert down and down[0]['fosc'] == pytest.approx(0.6408 * 2 / 4, rel=5e-3)
 
@@ -108,52 +105,67 @@ def test_non_ls_downward_channel_has_g_ratio():
 # ── P39 / P44: species without a QDT scheme ──────────────────────────────────
 def test_transition_metal_rejected_for_alpha():
     import linak.physics.polarizability_core as ac
-    with pytest.raises(SystemExit):
+    from linak.core.errors import InvalidSpeciesError
+    with pytest.raises(InvalidSpeciesError):
         ac.require_alpha_species('Fe', 'test')
     assert ac.require_alpha_species('Na', 'test')['species_id'] == 'Na'
 
 
-def test_nist_only_rydberg_json_selects_line_list_path(tmp_path, monkeypatch):
+def test_nist_only_rydberg_json_selects_line_list_path(tmp_path):
     import linak.physics.polarizability_core as ac
-    (tmp_path / 'data_json').mkdir()
-    monkeypatch.chdir(tmp_path)
-    assert not ac.is_transition_metal_species('Na')
-    (tmp_path / 'data_json' / 'Na_rydberg.json').write_text(json.dumps({'method': 'NIST ASD levels (no QDT)'}))
-    assert ac.is_transition_metal_species('Na')
-    assert 'Fe' not in ac.get_available_elements(str(tmp_path / 'data_json'))
+    from linak.core.workspace import Workspace, set_active
+    ws = Workspace(root=tmp_path)
+    ws.data_json_dir.mkdir(parents=True)
+    set_active(ws)
+    try:
+        assert not ac.is_transition_metal_species('Na')
+        (ws.data_json_dir / 'Na_rydberg.json').write_text(
+            json.dumps({'method': 'NIST ASD levels (no QDT)'}), encoding='utf-8')
+        assert ac.is_transition_metal_species('Na')
+        assert 'Fe' not in ac.get_available_elements(str(ws.data_json_dir))
+    finally:
+        set_active(None)
 
 
 # ── P42: GUI roots field is blank by default ─────────────────────────────────
 def test_gui_nroots_default_blank():
-    src = open(os.path.join(ROOT, 'linak_gui.py'), encoding='utf-8').read()
-    i = src.index('name="--nroots"')
-    assert 'default=""' in src[i:i + 120]
+    from linak.gui.stages import STAGE_BY_ID
+    flag = next(f for f in STAGE_BY_ID['runorca']['flags'] if f['name'] == '--nroots')
+    assert flag['default'] == ''
 
 
-# ── P19/P20/P34/P35/P36/P37/P38: plotting-script fixes (source-level; the script runs at import) ──
-def _src(name):
-    return open(os.path.join(ROOT, name), encoding='utf-8').read()
-
-
+# ── P19/P20/P34/P35/P36/P37/P38: plotting fixes ──────────────────────────────
 def test_plotinteractive_fixes_present():
-    s = _src('plotinteractive.py')
-    assert 'np.sqrt(KB_EV * T_K / _mc2_sp)' in s                 # P34: sigma, not FWHM
-    assert 'Math.sqrt(kB * T_K / mc2)' in s or 'Math.sqrt(kB*T_K/mc2)' in s and '{KB_EV!r}' in s  # P34/P35: JS sigma with injected kB
-    assert '_natural_gamma_nm(r.get' in s                         # P20
-    assert 'def ionization_energy_eV' in s                    # P37
-    assert '_REGION_COLORS4 = REGION_COLORS' in s             # P19
-    assert "_ee_nxt" in s and "'NIST-extrap': 'dash'" in s   # P38 (plot 3)
+    from linak.core.constants import HC_EV_NM, KB_EV
+    from linak.physics import spectrum_core
+    from linak.pipelines.plotinteractive import common, ee_grotrian, grotrian3d
+    from linak.report_templates import load as load_template
+    # P34: the Doppler width is a standard deviation, not the FWHM
+    mc2 = 23 * 931.494e6
+    sigma_E = (HC_EV_NM / 589.0) * math.sqrt(KB_EV * 300.0 / mc2)
+    assert spectrum_core.doppler_sigma_nm(589.0, mc2, 300.0) == pytest.approx(589.0**2 / HC_EV_NM * sigma_E)
+    js = load_template('plotinteractive_spectrum_panel.js')
+    assert 'Math.sqrt(kB * T_K / mc2)' in js and '$!kb_eV' in js        # P34 / P20: JS sigma, injected kB
+    # P35: the panel's natural width is hbar/tau of the upper state
+    lifetimes = {'3p': {'lifetime_s': 16e-9}}
+    r = {'ul': '3p', 'wl': 589.0, 'A': 1.0}
+    assert spectrum_core.line_gamma_nm(r, lifetimes) == spectrum_core.natural_gamma_nm('3p', 589.0, lifetimes)
+    assert common.ionization_energy_eV({}) == 0.0                         # P37
+    assert common.ionization_energy_eV({'ionization_energy_eV': 5.1}) == 5.1
+    assert grotrian3d._REGION_COLORS4 is common.REGION_COLORS             # P19
+    src = inspect.getsource(ee_grotrian)
+    assert "_ee_nxt" in src and "'NIST-extrap': 'dash'" in src            # P38 (plot 3)
 
 
 def test_spectra_coulomb_approx_colour_distinct():
-    from importlib import util  # noqa: F401
-    s = _src('spectra.py')
-    assert '"Coulomb(approx)": "#52be80"' in s               # P36
+    from linak.pipelines.spectra import SRC_COLORS
+    assert SRC_COLORS["Coulomb(approx)"] == "#52be80"                     # P36
 
 
 # ── P22: peak cross-section = Lorentzian peak (lambda^2/2pi)(g_u/g_l)(A_dom/A_tot) ───────────
-def test_peak_cross_section_lorentzian_convention():
-    d = json.load(open(os.path.join(ROOT, 'data_json', 'Na_lifetimes.json')))['lifetimes']
+def test_peak_cross_section_lorentzian_convention(data_dir):
+    with (data_dir / 'Na_lifetimes.json').open(encoding='utf-8') as f:
+        d = json.load(f)['lifetimes']
     for e in d[:20]:
         lam = e['dominant_wl_nm'] * 1e-9
         ratio = e['dominant_A_s'] / e['A_total_s']
@@ -183,10 +195,11 @@ def test_coulomb_fosc_hydrogen_limit_high_n(args, exact):
     assert ac.coulomb_fosc(*args, 0.0, 0.0) == pytest.approx(exact, rel=0.02)   # Numerov, log-space start
 
 
-def test_coulomb_fosc_alkali_close_to_nist():
+def test_coulomb_fosc_alkali_close_to_nist(data_dir):
     import linak.physics.polarizability_core as ac
-    nist = ac.load_nist_fvalues('Na', os.path.join(ROOT, 'f_values'), verbose=False)['fosc']
-    q = json.load(open(os.path.join(ROOT, 'data_json', 'Na_rydberg.json')))['quantum_defects']
+    nist = ac.load_nist_fvalues('Na', str(reference_path('f_values')), verbose=False)['fosc']
+    with (data_dir / 'Na_rydberg.json').open(encoding='utf-8') as f:
+        q = json.load(f)['quantum_defects']
     r = []
     for (lo, up), f in nist.items():
         if (lo[-1], up[-1]) != ('p', 'd') or int(lo[:-1]) > 12 or int(up[:-1]) > 12:
@@ -195,11 +208,10 @@ def test_coulomb_fosc_alkali_close_to_nist():
     assert len(r) > 10 and 0.8 < float(np.median(r)) < 1.1        # the old formula gave 0.66 (p->d), 15 (s->p)
 
 
-def test_tail_partner_interpolation_matches_exact():
-    import linak.physics.blackbody as bb
+def test_tail_partner_interpolation_matches_exact(data_dir):
+    import linak.physics.blackbody_core as bb
     import linak.physics.polarizability_core as ac
-    import linak.physics.polarizability as p
-    data = p.load_element('Na', os.path.join(ROOT, 'data_json'))
+    data = ac.load_element('Na', str(data_dir))
     tail = bb.discrete_tail_partners('40d', data, 51, 200)
     assert tail
     for x in tail[::53]:

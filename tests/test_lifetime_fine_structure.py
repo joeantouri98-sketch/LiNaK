@@ -5,7 +5,6 @@ the Tier-1 lifetimes fixes (python lifetimes.py Na)."""
 from __future__ import annotations
 
 import json
-import math
 
 import pytest
 

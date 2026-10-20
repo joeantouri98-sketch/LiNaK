@@ -1,42 +1,15 @@
 """
-find_fr_basis.py — finds which basis sets work for Fr in your ORCA build
-Run from your Orca working directory: python find_fr_basis.py
+basis_probe.py — finds which basis sets work for Fr in your ORCA build
+Run from your ORCA working directory: python tools/basis_probe.py
 
 SECURITY: Uses argument lists and resolves ORCA from
           ORCA_EXE env var or system PATH.
 """
 import os
-import shutil
 import subprocess
 import tempfile
 
-
-def resolve_orca_executable():
-    """
-    Resolve ORCA executable from environment variable or system PATH.
-    
-    Checks:
-    1. ORCA_EXE environment variable (if set and file exists)
-    2. shutil.which("orca") — searches system PATH
-    
-    Raises RuntimeError if not found.
-    """
-    env_value = os.environ.get("ORCA_EXE")
-    if env_value:
-        candidate = os.path.expanduser(env_value)
-        if os.path.isfile(candidate):
-            return candidate
-        raise RuntimeError(
-            f"ORCA_EXE environment variable points to a missing file: {candidate}")
-    
-    resolved = shutil.which("orca")
-    if resolved:
-        return resolved
-    
-    raise RuntimeError(
-        "ORCA executable not found on system PATH. "
-        "Either add orca to PATH or set ORCA_EXE environment variable.")
-
+from linak.integrations.orca_runner import resolve_orca_executable
 
 CANDIDATES = [
     "def2-TZVP",
@@ -89,7 +62,7 @@ Fr 0.0 0.0 0.0
                 check=False,
             )
         
-        with open(outname, errors='ignore') as f:
+        with open(outname, encoding='utf-8', errors='ignore') as f:
             out = f.read()
         
         if 'Basis not recognized' in out or 'not available for this element' in out:

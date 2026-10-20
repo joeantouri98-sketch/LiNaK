@@ -1,0 +1,28 @@
+
+<div id="as-ctrl" class="collapsed">
+  <h3 onclick="asToggle()">☀ AC Stark <span class="tog" id="as-tog">▼</span></h3>
+  <div class="sec">
+    <div class="st">Trap intensity &nbsp;<span id="as-ival">$!I_base_val</span> kW/cm²</div>
+    <input type="range" id="as-Islider" min="-2" max="3" value="$!I_slider_log" step="0.02"
+           oninput="asOnIntensity(this.value)">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#556">
+      <span>0.01</span><span>1000 kW/cm²</span>
+    </div>
+    <div style="font-size:10px;color:#667;margin-top:4px;">
+      Right-hand μK axis rescales live — the α(ω) curves themselves never change.
+    </div>
+  </div>
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:8px;">
+    <div class="st">Point calculator</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+      <span style="width:60px;color:#89a">λ (nm)</span>
+      <input type="number" id="as-wl" value="$!wl_default" step="1">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+      <span style="width:60px;color:#89a">waist (μm)</span>
+      <input type="number" id="as-waist" value="$!waist0" step="0.1">
+    </div>
+    <button onclick="asCalc()">▶ Calculate</button>
+    <div id="as-out">Enter a wavelength and click Calculate.</div>
+  </div>
+</div>

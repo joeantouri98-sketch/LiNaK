@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -59,14 +60,15 @@ class HelpDialog(QDialog):
         parts = [
             "<h2>CLI flags, by pipeline stage</h2>",
             "<p>Every field in a stage's options form maps to one command-line "
-            "flag of that script. Leaving a field blank simply omits the flag, "
-            "so the script's own default applies.</p>",
+            "flag of that pipeline. Leaving a field blank simply omits the flag, "
+            "so the pipeline's own default applies.</p>",
         ]
         for stage in self.pipeline:
             parts.append(
-                f"<h3>{stage['label']} &nbsp; <code>{stage['script']}</code></h3>"
+                f"<h3>{escape(stage['label'])} &nbsp; "
+                f"<code>linak --pipeline {escape(stage['pipeline'])}</code></h3>"
             )
-            parts.append(f"<p>{stage['desc']}</p>")
+            parts.append(f"<p>{escape(stage['desc'])}</p>")
             flags = stage.get("flags", [])
             if not flags:
                 parts.append("<p><i>No configurable options for this stage.</i></p>")
@@ -80,21 +82,23 @@ class HelpDialog(QDialog):
             for spec in flags:
                 kind = spec["kind"]
                 default = spec.get("default", "")
+                if callable(default):
+                    default = default(self.root)
                 if kind == "flag":
                     default_display = "off"
                 elif kind == "choice":
-                    default_display = default
+                    default_display = escape(str(default))
                     for choice in spec["choices"]:
                         if isinstance(choice, tuple) and choice[0] == default:
-                            default_display = choice[1]
+                            default_display = escape(choice[1])
                             break
                 else:
-                    default_display = default if default else "<i>(blank)</i>"
+                    default_display = escape(str(default)) if default else "<i>(blank)</i>"
                 help_text = spec.get("help") or spec["label"]
                 parts.append(
-                    f"<tr><td><code>{spec['name']}</code></td>"
-                    f"<td>{spec['label']}</td><td>{default_display}</td>"
-                    f"<td>{help_text}</td></tr>"
+                    f"<tr><td><code>{escape(spec['name'])}</code></td>"
+                    f"<td>{escape(spec['label'])}</td><td>{default_display}</td>"
+                    f"<td>{escape(help_text)}</td></tr>"
                 )
             parts.append("</table>")
         return "".join(parts)
@@ -107,8 +111,8 @@ class HelpDialog(QDialog):
         ]
         for stage in self.pipeline:
             parts.append(
-                f"<h3>{stage['label']}</h3>"
-                f"<p>{self.stage_physics.get(stage['id'], '')}</p>"
+                f"<h3>{escape(stage['label'])}</h3>"
+                f"<p>{escape(self.stage_physics.get(stage['id'], ''))}</p>"
             )
         return "".join(parts)
 
@@ -116,20 +120,28 @@ class HelpDialog(QDialog):
     def _about_html():
         return """
         <h2>About this panel</h2>
-        <p>This is a thin control panel over your existing LiNaK scripts. It
-        runs them as subprocesses and displays the JSON, CSV, and HTML files
-        they produce. It does not reimplement the physics.</p>
+        <p>This is a thin control panel over the LiNaK pipelines. It runs
+        each stage as a <code>linak --pipeline</code> subprocess and displays
+        the JSON, CSV, and HTML files it produces. It does not reimplement
+        the physics.</p>
+        <h3>Output folder</h3>
+        <p>Results go to LiNaK's per-user data folder unless another folder is
+        chosen with <i>File &gt; Open output folder...</i> (<i>Use default
+        output folder</i> goes back). The bundled data and example results
+        are copied into the folder in use; existing files are never
+        overwritten. A LiNaK source checkout keeps its outputs under
+        <code>.linak/</code>.</p>
         <h3>Species IDs</h3>
         <p>Bare element symbols such as <code>Na</code> and <code>Cs</code>
         represent neutral atoms. Ion IDs such as <code>Na_c1</code>,
         <code>Mg_c1</code>, and <code>Na_a1</code> are accepted when registered.</p>
         <h3>Offline plot rendering</h3>
-        <p>Plots can be rendered using the bundled local
-        <code>vendor/plotly.min.js</code> file. The GUI does not modify original
-        files under <code>resources/plots/</code>.</p>
+        <p>Plots render offline with the bundled plotly.js. The GUI never
+        modifies the report files in the output folder.</p>
         <h3>ORCA stages</h3>
         <p>The ORCA stages require ORCA to be installed and callable as
-        <code>orca</code> on the system PATH. SOC and NEVPT2 calculations can
+        <code>orca</code> on the system PATH, or named by the
+        <code>ORCA_EXE</code> environment variable. SOC and NEVPT2 calculations can
         take a long time. Use Stop if a running subprocess must be cancelled.</p>
         <h3>Grotrian diagram prerequisite</h3>
         <p>The Grotrian diagram requires ORCA data to already exist for the

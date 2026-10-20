@@ -626,7 +626,7 @@ p {
     the pipeline is regenerated; see &ldquo;Regeneration order&rdquo; in Section 17.
   </p>
   <div class="pipeline-chips">
-    <div class="chip">runorca.py<span class="arrow">→</span>TD-DFT / SOC (separate runs)</div>
+    <div class="chip">orca_runner.py<span class="arrow">→</span>TD-DFT / SOC (separate runs)</div>
     <div class="chip">rydberg.py<span class="arrow">→</span>QDT + NIST levels</div>
     <div class="chip">transitions.py<span class="arrow">→</span>E1 selection rules</div>
     <div class="chip">lifetimes.py<span class="arrow">→</span>Einstein A, τ, Γ</div>
@@ -2034,7 +2034,7 @@ p {
 
     <h4>Atomic units versus SI and spectroscopic units</h4>
     <p>
-      ORCA, <span class="file-badge">alpha_core.py</span>, and
+      ORCA, <span class="file-badge">polarizability_core.py</span>, and
       <span class="file-badge">polarizability.py</span> work primarily in Hartree
       atomic units. Laser-cooling quantities in
       <span class="file-badge">lifetimes.py</span>,
@@ -2064,7 +2064,7 @@ p {
       and $C_6^{\rm expt}$ from <span class="file-badge">constants.py</span>. Element-specific
       tables that are not universal constants (<code>CORE_CONFIG</code>,
       <code>PRECISION_FOSC_J</code>, <code>L_CHAR</code>, …) remain in
-      <span class="file-badge">alpha_core.py</span>.
+      <span class="file-badge">polarizability_core.py</span>.
     </p>
     <table class="def-table">
       <tr><th>Constant</th><th>Value</th><th>File / use</th></tr>
@@ -2497,7 +2497,7 @@ p {
     </p>
     <p style="font-size:13.5px;color:var(--text2)">
       Optional alternate <b>level energies only</b>:
-      <span class="file-badge">arc_bridge.py</span> exports ARC (Alkali Rydberg
+      <span class="file-badge">arc.py</span> exports ARC (Alkali Rydberg
       Calculator) energies into the same JSON schema under
       <code>data_json/arc/&lt;el&gt;_rydberg.json</code>. It never overwrites the NIST
       file, and it does <b>not</b> export oscillator strengths, Stark maps, pair
@@ -2538,11 +2538,11 @@ p {
       A $p$ level with $l=1$ produces <em>three</em> TD-DFT states
       ($m_l = -1, 0, +1$) at nearly identical energies, degenerate within the
       numerical noise of the SCF. The <code>deduplicate</code> function in
-      <span class="file-badge">runorca.py</span> collapses these into a single
+      <span class="file-badge">orca_runner.py</span> collapses these into a single
       physical level using gap-based grouping:
     </p>
     <div class="math-block amber">
-      <div class="math-label">Gap-based degeneracy grouping (runorca.py)</div>
+      <div class="math-label">Gap-based degeneracy grouping (orca_runner.py)</div>
       $$\text{Group states } i, i+1 \text{ together if } E_{i+1} - E_i \leq \epsilon_{\rm tol} = 5\,{\rm meV}$$
     </div>
     <p>
@@ -2561,7 +2561,7 @@ p {
 
 <section class="section reveal" id="sec4">
   <div class="section-header">
-    <div class="section-eyebrow">Section 04: runorca.py, parse_orca.py</div>
+    <div class="section-eyebrow">Section 04: orca_runner.py, orca_parser.py</div>
     <h2>Time-Dependent DFT in ORCA</h2>
     <p class="section-intro">
       For transition energies and oscillator strengths of low-lying excited states,
@@ -2571,7 +2571,7 @@ p {
       <br> Fine structure is a <b>separate</b> job: <code>--mode soc</code> (CASSCF/NEVPT2+DoSOC),
       writing <code>*_soc*.json</code> rather than the TD-DFT <code>&lt;El&gt;.json</code>
       (see <a href="#sec17">CLI</a>).
-      <br> TD-DFT and SOC are <b>separate</b> <span class="file-badge">runorca.py</span> invocations
+      <br> TD-DFT and SOC are <b>separate</b> <span class="file-badge">orca_runner.py</span> invocations
     (different JSON; overlay with <code>plotinteractive --soc-only</code> / <code>--extra</code>).
     </p>
   </div>
@@ -2579,7 +2579,7 @@ p {
   <div class="annotation amber">
     <span class="icon">!</span>
     <p>
-      <b>Two ORCA tracks.</b> One <span class="file-badge">runorca.py</span> invocation
+      <b>Two ORCA tracks.</b> One <span class="file-badge">orca_runner.py</span> invocation
       is either TD-DFT (<code>auto</code>/<code>tddft</code>/<code>alkali</code>) <em>or</em>
       SOC (<code>soc</code> / alias <code>alkali-soc</code>), never both at once. <br>
       <code>--mode casscf</code> is CASSCF/NEVPT2 <em>without</em> DoSOC.
@@ -2642,11 +2642,11 @@ p {
     <p>
       ORCA outputs the oscillator strengths in a separate "ABSORPTION SPECTRUM" table
       (not in the STATE blocks where the orbital coefficients appear). The parser
-      <span class="file-badge">parse_orca.py</span> joins these two sections on the
+      <span class="file-badge">orca_parser.py</span> joins these two sections on the
       state index:
     </p>
     <div class="code-block">
-<span class="comment"># parse_orca.py: Step 1: parse absorption spectrum table</span>
+<span class="comment"># orca_parser.py: Step 1: parse absorption spectrum table</span>
 <span class="comment"># Format: 0-2A -> 1-2A    1.571640   12676.1   788.9   0.328219167</span>
 <span class="comment">#          ground->state  energy_eV  cm-1      nm      fosc</span>
 <span class="fn">fosc_by_state</span>[<span class="fn">state_n</span>] = {<span class="str">'energy_eV'</span>: e_ev, <span class="str">'oscillator_strength'</span>: fosc}
@@ -3185,7 +3185,7 @@ p {
       QD Numerov radial integral for the same $n^*$ inputs; the closed-form Coulomb
       estimate below is used only when Numerov fails. Implementation:
       <code>coulomb_fosc</code> in <span class="file-badge">lifetimes.py</span> /
-      <span class="file-badge">alpha_core.py</span>.
+      <span class="file-badge">polarizability_core.py</span>.
     </p>
     <div class="math-block amber">
       <div class="math-label">Coulomb approximation radial matrix element</div>
@@ -3267,7 +3267,7 @@ p {
 <!-- ═══════════════════════════════════════════════════════════ -->
 <section class="section reveal" id="sec10">
   <div class="section-header">
-    <div class="section-eyebrow">Section 10: polarizability.py, alpha_core.py</div>
+    <div class="section-eyebrow">Section 10: polarizability.py, polarizability_core.py</div>
     <h2>Dynamic Polarizability, $C_6$, and Optical Dipole Traps</h2>
     <p class="section-intro">
       Section 01 derived $\mathrm{Re}[\alpha(\omega)]$ from time-dependent
@@ -3285,7 +3285,7 @@ p {
       units), <code>alpha_real()</code> implements
     </p>
     <div class="math-block purple">
-      <div class="math-label">Atomic-unit form: exactly alpha_real() in alpha_core.py</div>
+      <div class="math-label">Atomic-unit form: exactly alpha_real() in polarizability_core.py</div>
       $$\alpha(\omega)=\sum_k \mathrm{sign}_k\,\frac{f_k}{\omega_k^2-\omega^2}$$
     </div>
     <p>
@@ -3327,7 +3327,7 @@ p {
       $\sim6\%$ (Fr):
     </p>
     <div class="math-block">
-      <div class="math-label">Core one-pole (ALPHA_CORE_AU in alpha_core.py)</div>
+      <div class="math-label">Core one-pole (ALPHA_CORE_AU in polarizability_core.py)</div>
       $$\omega_c=\sqrt{\frac{N_{\rm core}}{\alpha_c}},\qquad
       \alpha_{\rm core}(\omega)=\frac{N_{\rm core}}{\omega_c^2-\omega^2}$$
     </div>
@@ -3447,7 +3447,7 @@ p {
       $s$-states show a growing ratio (Na $10s\sim3.5\%$, $25s\sim25\%$ at
       300&nbsp;K). Continuum photoionization is handled separately (next
       subsection).
-      CLI: <code>python blackbody.py Na --T 300</code>,
+      CLI: <code>linak --pipeline blackbody Na --T 300</code>,
       <code>--n-min 10</code>, <code>--no-rates</code>.
     </p>
   </div>
@@ -3537,7 +3537,7 @@ p {
       <code>--state 20s,25s</code>, <code>--no-rydberg-shifts</code>,
       <code>--no-rydberg-dyn</code>, <code>--no-rydberg-cont</code>,
       <code>--n-tail-max</code>;
-      debug: <code>python polarizability.py Na --state 20s</code>.
+      debug: <code>linak --pipeline polarizability Na --state 20s</code>.
     </p>
   </div>
 </section>
@@ -3783,7 +3783,7 @@ p {
     <h3>plotinteractive.py: Grotrian, spectrum, 3D</h3>
     <p>
       Usage:
-      <code>python plotinteractive.py Na [--soc-only] [--extra FILE …] [--plots N]</code>.
+      <code>linak --pipeline plotinteractive Na [--soc-only] [--extra FILE …] [--plots N]</code>.
       Reads ORCA JSON + Rydberg + transitions + lifetimes. Interactive prompts
       choose energy zero (Excitation / Absolute / custom), continuum filtering,
       and optional wavelength windows. Writes under <code>plots/&lt;el&gt;/</code>:
@@ -3813,9 +3813,9 @@ p {
       Spectrum / ee Grotrian / 3D are unchanged by <code>--extra</code> in this version.
     </p>
     <div class="code-block">
-python plotinteractive.py Rb -e v13 --plots 1
-python plotinteractive.py Na --extra Na_BLY3P.json
-python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
+linak --pipeline plotinteractive Rb -e v13 --plots 1
+linak --pipeline plotinteractive Na --extra Na_BLY3P.json
+linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     </div>
     <p>
       Optional follow-on prompts can launch <span class="file-badge">orbital3d.py</span>
@@ -3938,10 +3938,10 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
         </div>
       </div>
       <div class="card">
-        <h4>element_data.py</h4>
+        <h4>elements.py</h4>
         <p style="font-size:13px">Provides charge and ground-state multiplicity for the ORCA calculation.</p>
         <div class="code-block" style="font-size:11px;">
-<span class="comment"># element_data.py</span>
+<span class="comment"># elements.py</span>
 <span class="var">ELEMENTS</span> = {
   <span class="num">11</span>: (<span class="str">"Na"</span>, <span class="num">0</span>, <span class="num">2</span>),
   <span class="comment">#  Z    sym  charge  mult</span>
@@ -3955,13 +3955,13 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
 
   <!-- ── STEP 1: RUNORCA ────────────────────────────────────────── -->
   <div class="subsection">
-    <h3>Step 1: runorca.py: ORCA ground-state &amp; TD-DFT calculations</h3>
+    <h3>Step 1: orca_runner.py: ORCA ground-state &amp; TD-DFT calculations</h3>
     <p>
       Two ORCA calculations are run (GS + EX). <code>orca_templates.py</code>
       <code>get_recipe_tddft('Na')</code>: Z=11 → <strong>aug-cc-pVTZ, no ECP, no
       relativistic correction</strong>. Default functional for both jobs is
       <strong>CAM-B3LYP</strong> with <strong>VeryTightSCF</strong>
-      (<code>python runorca.py Na</code>). Energies below are illustrative of the
+      (<code>linak --pipeline runorca Na</code>). Energies below are illustrative of the
       parse path, not a frozen benchmark.
     </p>
 
@@ -3993,7 +3993,7 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
 <span class="var">*</span>
     </div>
 
-    <h4>parse_orca.py: what it reads from Na_ex.out</h4>
+    <h4>orca_parser.py: what it reads from Na_ex.out</h4>
     <p>The parser runs in three passes:</p>
 
     <div class="annotation amber">
@@ -4016,7 +4016,7 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
       dominant_coeff=0.968, multiplicity=2, s2=0.750</code>.</p>
     </div>
 
-    <h4>deduplicate() in runorca.py</h4>
+    <h4>deduplicate() in orca_runner.py</h4>
     <p>TD-DFT without SOC produces three near-degenerate $3p$ states ($m_l = -1, 0, +1$):</p>
     <div class="math-block amber">
       <div class="math-label">Gap-based grouping (tolerance = 5 meV)</div>
@@ -4044,7 +4044,7 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
   <!-- ── STEP 2: RYDBERG ───────────────────────────────────────── -->
   <div class="subsection">
     <h3>Step 2: rydberg.py: quantum defects from NIST + Rydberg series</h3>
-    <p>Input: <code>NIST Levels/Na.txt</code>. Script: <code>python rydberg.py Na --n-max 50</code>
+    <p>Input: <code>NIST Levels/Na.txt</code>. Script: <code>linak --pipeline rydberg Na --n-max 50</code>
       (interactive default prompt is also 50).</p>
 
     <h4>parse_nist_file(): reading the level structure</h4>
@@ -4325,8 +4325,8 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
       <tr><td>Quantum defect s</td><td>$\bar\delta_s$</td><td>1.3505 (Ritz $\delta_0$ 1.3478)</td><td>NIST levels</td><td>rydberg.py</td></tr>
       <tr><td>Quantum defect p</td><td>$\bar\delta_p$</td><td>0.8650 (Ritz $\delta_0$ 0.8547)</td><td>NIST levels</td><td>rydberg.py</td></tr>
       <tr><td>Quantum defect d</td><td>$\bar\delta_d$</td><td>0.0127 (Ritz $\delta_0$ 0.0149)</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>TD-DFT 3p energy</td><td>$\Omega_{\rm TD}$</td><td>2.107 eV</td><td>ORCA CAM-B3LYP/aug-cc-pVTZ</td><td>runorca.py</td></tr>
-      <tr><td>TD-DFT error</td><td>$\Delta E$</td><td>2.6 meV (0.1%)</td><td>vs NIST 2.1044 eV</td><td>runorca.py</td></tr>
+      <tr><td>TD-DFT 3p energy</td><td>$\Omega_{\rm TD}$</td><td>2.107 eV</td><td>ORCA CAM-B3LYP/aug-cc-pVTZ</td><td>orca_runner.py</td></tr>
+      <tr><td>TD-DFT error</td><td>$\Delta E$</td><td>2.6 meV (0.1%)</td><td>vs NIST 2.1044 eV</td><td>orca_runner.py</td></tr>
       <tr><td>D1 wavelength</td><td>$\lambda_{\rm D1}$</td><td>589.755 nm</td><td>NIST</td><td>transitions.py</td></tr>
       <tr><td>D2 wavelength</td><td>$\lambda_{\rm D2}$</td><td>589.158 nm</td><td>NIST</td><td>transitions.py</td></tr>
       <tr><td>SOC splitting</td><td>$\Delta E_{\rm SOC}$</td><td>2.13 meV</td><td>NIST $E(3p_{3/2})-E(3p_{1/2})$</td><td>compare_elements.py</td></tr>
@@ -4369,11 +4369,11 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
     </p>
     <div class="code-block">
 <span class="comment"># α(ω), C₆, magic wavelengths, AC Stark panel</span>
-python polarizability.py Na --wl 1064 --intensity 50 --waist 1
+linak --pipeline polarizability Na --wl 1064 --intensity 50 --waist 1
 <span class="comment"># BBR at 300 K (default excited = first fine-structure partner)</span>
-python blackbody.py Na --T 300
+linak --pipeline blackbody Na --T 300
 <span class="comment"># Far-detuned scattering &amp; heating spectrum</span>
-python tweezer.py Na --wl 1064 --intensity 50 --waist 1
+linak --pipeline tweezer Na --wl 1064 --intensity 50 --waist 1
     </div>
 
     <h4>Polarizability checkpoints</h4>
@@ -4418,8 +4418,8 @@ python tweezer.py Na --wl 1064 --intensity 50 --waist 1
   <div class="subsection">
     <h3>Step 8: Hyperfine structure &amp; Zeeman (${}^{23}$Na)</h3>
     <div class="code-block">
-python hyperfine.py Na
-<span class="comment"># optional: python hyperfine.py Na --isotope 23 --B-max 500 --states 3s1/2 3p1/2 3p3/2</span>
+linak --pipeline hyperfine Na
+<span class="comment"># optional: linak --pipeline hyperfine Na --isotope 23 --B-max 500 --states 3s1/2 3p1/2 3p3/2</span>
     </div>
     <p>
       Nuclear spin $I=3/2$, $\mu_I=2.2175\,\mu_N$, $g_I=1.478$. Ground-state
@@ -4443,7 +4443,7 @@ python hyperfine.py Na
   <div class="subsection">
     <h3>Step 9: Magnetic Feshbach resonances</h3>
     <div class="code-block">
-python feshbach.py Na --kT-uK 1
+linak --pipeline feshbach Na --kT-uK 1
     </div>
     <p>
       Literature parameters in <code>data_json/Na_feshbach.json</code>
@@ -4473,14 +4473,14 @@ python feshbach.py Na --kT-uK 1
   <div class="subsection">
     <h3>Step 10: Visualization suite</h3>
     <div class="code-block">
-python spectra.py Na
-python orbital3d.py Na                       <span class="comment"># GPU volume view (default)</span>
-python orbital3d.py Na --render isosurface   <span class="comment"># Plotly isosurfaces instead (no WebGL2 needed)</span>
-python plotinteractive.py Na
-<span class="comment"># optional: python plotinteractive.py Na -e v13 --plots 1</span>
+linak --pipeline spectra Na
+linak --pipeline orbital3d Na                       <span class="comment"># GPU volume view (default)</span>
+linak --pipeline orbital3d Na --render isosurface   <span class="comment"># Plotly isosurfaces instead (no WebGL2 needed)</span>
+linak --pipeline plotinteractive Na
+<span class="comment"># optional: linak --pipeline plotinteractive Na -e v13 --plots 1</span>
 <span class="comment"># plotinteractive prompts: energy mode (1=Excitation), filter continuum (y), …</span>
-python compare_elements.py --elements Na
-python scattering_rate.py --element Na --line D2
+linak --pipeline compare_elements --elements Na
+linak --pipeline scattering_rate --element Na --line D2
     </div>
     <p>Key HTML products under <code>plots/Na/</code>:</p>
     <table class="def-table">
@@ -4573,26 +4573,26 @@ python scattering_rate.py --element Na --line D2
       the maintainer listed in the README.
     </p>
     <div class="code-block">
-python runorca.py Na                    <span class="comment"># TD-DFT screening JSON</span>
-python runorca.py Na --mode soc         <span class="comment"># optional separate SOC JSON</span>
-python rydberg.py Na --n-max 30           <span class="comment"># or omit flags to prompt</span>
-python transitions.py Na
-python lifetimes.py Na                  <span class="comment"># one element per call (no --all)</span>
-python polarizability.py Na
-python blackbody.py Na
-python tweezer.py Na
-python spectra.py Na
-python hyperfine.py Na
-python feshbach.py Na                   <span class="comment"># skip Fr</span>
-python orbital3d.py Na
-python plotinteractive.py Na            <span class="comment"># prompts; -e SUFFIX overlays; --plots 1 = grotrian only</span>
-python compare_elements.py --elements Na
-python scattering_rate.py --element Na --line D2
+linak --pipeline runorca Na                    <span class="comment"># TD-DFT screening JSON</span>
+linak --pipeline runorca Na --mode soc         <span class="comment"># optional separate SOC JSON</span>
+linak --pipeline rydberg Na --n-max 30           <span class="comment"># or omit flags to prompt</span>
+linak --pipeline transitions Na
+linak --pipeline lifetimes Na                  <span class="comment"># one element per call (no --all)</span>
+linak --pipeline polarizability Na
+linak --pipeline blackbody Na
+linak --pipeline tweezer Na
+linak --pipeline spectra Na
+linak --pipeline hyperfine Na
+linak --pipeline feshbach Na                   <span class="comment"># skip Fr</span>
+linak --pipeline orbital3d Na
+linak --pipeline plotinteractive Na            <span class="comment"># prompts; -e SUFFIX overlays; --plots 1 = grotrian only</span>
+linak --pipeline compare_elements --elements Na
+linak --pipeline scattering_rate --element Na --line D2
     </div>
     <div class="code-block">
 <span class="comment"># Method comparison example (keep default JSON; write a tagged variant)</span>
-python runorca.py Rb --mode alkali --functional-gs B3LYP --functional-ex CAM-B3LYP --nroots 30 --scf-tightness tight --outname v13
-python plotinteractive.py Rb -e v13 --plots 1
+linak --pipeline runorca Rb --mode alkali --functional-gs B3LYP --functional-ex CAM-B3LYP --nroots 30 --scf-tightness tight --outname v13
+linak --pipeline plotinteractive Rb -e v13 --plots 1
     </div>
   </div>
 
@@ -4681,19 +4681,19 @@ python plotinteractive.py Rb -e v13 --plots 1
       widen <code>--wl-min</code> / <code>--wl-max</code> (or omit them) to see those.
     </p>
     <div class="code-block">
-python runorca.py Na_c1 --mode soc
-python runorca.py Na_c1 --mode tddft          <span class="comment"># optional overlay</span>
-python rydberg.py Na_c1 --n-max 30
-python transitions.py Na_c1
-python lifetimes.py Na_c1
-python plotinteractive.py Na_c1               <span class="comment"># Absolute; ground = -IE</span>
-python spectra.py Na_c1 --wl-min 25 --wl-max 50   <span class="comment"># gs→X EUV only; widen for ee / IR</span>
-python orbital3d.py Na_c1
+linak --pipeline runorca Na_c1 --mode soc
+linak --pipeline runorca Na_c1 --mode tddft          <span class="comment"># optional overlay</span>
+linak --pipeline rydberg Na_c1 --n-max 30
+linak --pipeline transitions Na_c1
+linak --pipeline lifetimes Na_c1
+linak --pipeline plotinteractive Na_c1               <span class="comment"># Absolute; ground = -IE</span>
+linak --pipeline spectra Na_c1 --wl-min 25 --wl-max 50   <span class="comment"># gs→X EUV only; widen for ee / IR</span>
+linak --pipeline orbital3d Na_c1
 <span class="comment"># polarizability / blackbody / tweezer / hyperfine / feshbach: unsupported for ions</span>
     </div>
     <div class="code-block">
-python runorca.py Mg_c1
-python plotinteractive.py Mg_c1 --plots 1
+linak --pipeline runorca Mg_c1
+linak --pipeline plotinteractive Mg_c1 --plots 1
     </div>
   </div>
 
@@ -4748,22 +4748,22 @@ python plotinteractive.py Mg_c1 --plots 1
       </tr>
     </table>
     <div class="code-block">
-python rydberg.py Fe
-python transitions.py Fe
-python lifetimes.py Fe --nist-only
-python runorca.py Fe --mode soc --soc-recipe nevpt2
-python plotinteractive.py Fe --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -7.9024 eV</span>
+linak --pipeline rydberg Fe
+linak --pipeline transitions Fe
+linak --pipeline lifetimes Fe --nist-only
+linak --pipeline runorca Fe --mode soc --soc-recipe nevpt2
+linak --pipeline plotinteractive Fe --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -7.9024 eV</span>
 
-python rydberg.py Cr
-python transitions.py Cr
-python lifetimes.py Cr --nist-only
-python runorca.py Cr --mode soc --soc-recipe nevpt2
-python plotinteractive.py Cr --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -6.7665 eV</span>
+linak --pipeline rydberg Cr
+linak --pipeline transitions Cr
+linak --pipeline lifetimes Cr --nist-only
+linak --pipeline runorca Cr --mode soc --soc-recipe nevpt2
+linak --pipeline plotinteractive Cr --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -6.7665 eV</span>
     </div>
   </div>
 
   <div class="subsection">
-    <h3>runorca.py</h3>
+    <h3>orca_runner.py</h3>
     <p>
       Generate ORCA inputs, run jobs, write flat JSON under
       <code>data_json/</code>. ORCA files always go in a run-tagged subfolder:
@@ -4795,17 +4795,17 @@ python plotinteractive.py Cr --soc-only --plots 1   <span class="comment"># Abso
       <tr><td><code>--outname</code></td><td>n/a</td><td>JSON suffix <code>data_json/&lt;El&gt;_&lt;SUFFIX&gt;.json</code> <em>and</em> trailing piece of the ORCA run-tag folder. Example: <code>--outname v13</code> → <code>Rb_v13.json</code> + <code>orca_outputs/Rb/…_v13/</code>. Without it, TD-DFT overwrites <code>data_json/&lt;El&gt;.json</code>. Overrides default SOC auto filenames too. Trailing <code>.json</code> stripped if given</td></tr>
     </table>
     <div class="code-block">
-python runorca.py Na
-python runorca.py Rb --mode alkali --functional-gs B3LYP --functional-ex CAM-B3LYP --scf-tightness tight --outname v13
-python runorca.py Li --basis-file "Basis sets/Li/Li-cc-pCVTZ.txt" --outname ccvtz
-python runorca.py Cs --mode soc --soc-recipe casscf --nroots 6
-python runorca.py Cs --mode soc --soc-recipe nevpt2 --nroots 6
-python runorca.py Fr --mode soc --soc-recipe nevpt2 --nroots 6 --basis-tightness vtz
-python runorca.py Fe --mode soc --soc-recipe casscf --nroots 5
-python runorca.py Fe --mode soc --soc-recipe nevpt2 --nroots 5
-python runorca.py Cr --mode soc --soc-recipe nevpt2
-python plotinteractive.py Fe --soc-only --plots 1
-python plotinteractive.py Cr --soc-only --plots 1
+linak --pipeline runorca Na
+linak --pipeline runorca Rb --mode alkali --functional-gs B3LYP --functional-ex CAM-B3LYP --scf-tightness tight --outname v13
+linak --pipeline runorca Li --basis-file "Basis sets/Li/Li-cc-pCVTZ.txt" --outname ccvtz
+linak --pipeline runorca Cs --mode soc --soc-recipe casscf --nroots 6
+linak --pipeline runorca Cs --mode soc --soc-recipe nevpt2 --nroots 6
+linak --pipeline runorca Fr --mode soc --soc-recipe nevpt2 --nroots 6 --basis-tightness vtz
+linak --pipeline runorca Fe --mode soc --soc-recipe casscf --nroots 5
+linak --pipeline runorca Fe --mode soc --soc-recipe nevpt2 --nroots 5
+linak --pipeline runorca Cr --mode soc --soc-recipe nevpt2
+linak --pipeline plotinteractive Fe --soc-only --plots 1
+linak --pipeline plotinteractive Cr --soc-only --plots 1
     </div>
     <p style="font-size:13px;color:var(--text2);margin-top:8px">
       Alkali SOC CAS size grows with <code>--soc-recipe</code> (e.g. Fr
@@ -4832,12 +4832,12 @@ python plotinteractive.py Cr --soc-only --plots 1
       <tr><td><code>--outname</code></td><td>n/a</td><td>Write <code>data_json/&lt;El&gt;_&lt;SUFFIX&gt;.json</code> instead of <code>&lt;El&gt;.json</code></td></tr>
     </table>
     <div class="code-block">
-python orca_to_json.py Na
-python orca_to_json.py Rb --run B3LYP_CAM-B3LYP_def2-TZVPD_v13 --outname v13
+linak --pipeline orca_to_json Na
+linak --pipeline orca_to_json Rb --run B3LYP_CAM-B3LYP_def2-TZVPD_v13 --outname v13
     </div>
-    <h4>Custom ORCA inputs (bypass runorca.py)</h4>
+    <h4>Custom ORCA inputs (bypass orca_runner.py)</h4>
     <p>
-      You do not have to use <span class="file-badge">runorca.py</span>. Hand-written
+      You do not have to use <span class="file-badge">orca_runner.py</span>. Hand-written
       or edited <code>.inp</code> files are fine: put them under a tagged folder
       inside <code>orca_outputs/&lt;El&gt;/</code>, run ORCA there, then point
       <code>orca_to_json.py</code> at that folder with <code>--run</code>.
@@ -4855,7 +4855,7 @@ orca Na_gs.inp
 orca Na_ex.inp
 <span class="comment"># ORCA writes Na_gs.out / Na_ex.out beside the inputs</span>
 cd ../../..
-python orca_to_json.py Na --run my_custom_run --outname custom
+linak --pipeline orca_to_json Na --run my_custom_run --outname custom
 <span class="comment"># → data_json/Na_custom.json  (plot with: plotinteractive.py Na -e custom --plots 1)</span>
     </div>
     <p style="font-size:13px;color:var(--text2)">
@@ -4873,11 +4873,11 @@ python orca_to_json.py Na --run my_custom_run --outname custom
       <tr><td><code>--nist-dir</code></td><td><code>NIST Levels/</code> next to script</td><td>Override NIST levels directory</td></tr>
       <tr><td><code>--nist-only</code></td><td>off (auto for 3d metals)</td><td>Term/config NIST levels only - no QDT Rydberg series. Auto-on for Sc–Zn; use for term-aware ion/metal tables</td></tr>
     </table>
-    <p style="font-size:13px;color:var(--text2)">Writes <code>data_json/&lt;el&gt;_rydberg.json</code>. Batch example: <code>python rydberg.py Li --n-max 50</code>.</p>
+    <p style="font-size:13px;color:var(--text2)">Writes <code>data_json/&lt;el&gt;_rydberg.json</code>. Batch example: <code>linak --pipeline rydberg Li --n-max 50</code>.</p>
   </div>
 
   <div class="subsection">
-    <h3>arc_bridge.py (optional, levels only)</h3>
+    <h3>arc.py (optional, levels only)</h3>
     <p style="font-size:13.5px;color:var(--text2)">
       Standalone <b>level-energy</b> export from the external
       <b>ARC</b> library (cite the CPC papers in <a href="#sec20">Section 20</a>).
@@ -4895,8 +4895,8 @@ python orca_to_json.py Na --run my_custom_run --outname custom
       <tr><td><code>--isotope</code></td><td>default isotope</td><td>e.g. <code>6</code>/<code>7</code> (Li), <code>85</code>/<code>87</code> (Rb)</td></tr>
     </table>
     <div class="code-block">
-python arc_bridge.py Na --n-max 50
-python arc_bridge.py Sr --n-max 40
+python -m linak.integrations.arc Na --n-max 50
+python -m linak.integrations.arc Sr --n-max 40
 <span class="comment"># → data_json/arc/Na_rydberg.json</span>
 <span class="comment"># Manual swap to try ARC energies: copy over data_json/Na_rydberg.json,</span>
 <span class="comment"># then run transitions.py / lifetimes.py; restore NIST afterward.</span>
@@ -5053,11 +5053,11 @@ python arc_bridge.py Sr --n-max 40
       <tr><th>Module</th><th>Role</th></tr>
       <tr><td><span class="file-badge">constants.py</span></td><td>CODATA / SI, masses, <code>ALPHA0_EXPT</code>, <code>C6_EXPT</code>, nuclide labels</td></tr>
       <tr><td><span class="file-badge">species.py</span></td><td>Resolves neutral symbols and registered ion ids (<code>Na_c1</code>, …)</td></tr>
-      <tr><td><span class="file-badge">alpha_core.py</span></td><td>Shared $\alpha(\omega)$, core Padé, NIST $f$ loading helpers</td></tr>
+      <tr><td><span class="file-badge">polarizability_core.py</span></td><td>Shared $\alpha(\omega)$, core Padé, NIST $f$ loading helpers</td></tr>
       <tr><td><span class="file-badge">qdt_radial.py</span></td><td>QDT / Numerov radial wavefunctions and matrix elements (used by lifetimes / $f$ fallback); takes <code>z_core</code> for ions, see Section 02</td></tr>
-      <tr><td><span class="file-badge">parse_orca.py</span></td><td>ORCA outfile parsing + excitation dedup</td></tr>
-      <tr><td><span class="file-badge">orca_templates.py</span></td><td>Input-file recipes for <code>runorca.py</code> (<code>get_recipe_tddft</code> / <code>get_recipe_soc</code>)</td></tr>
-      <tr><td><span class="file-badge">element_data.py</span></td><td>$Z$, charge, multiplicity tables (neutrals)</td></tr>
+      <tr><td><span class="file-badge">orca_parser.py</span></td><td>ORCA outfile parsing + excitation dedup</td></tr>
+      <tr><td><span class="file-badge">orca_templates.py</span></td><td>Input-file recipes for <code>orca_runner.py</code> (<code>get_recipe_tddft</code> / <code>get_recipe_soc</code>)</td></tr>
+      <tr><td><span class="file-badge">elements.py</span></td><td>$Z$, charge, multiplicity tables (neutrals)</td></tr>
     </table>
   </div>
 
@@ -5071,15 +5071,15 @@ python arc_bridge.py Sr --n-max 40
     </p>
     <table class="def-table">
       <tr><th>#</th><th>Command</th><th>Why</th></tr>
-      <tr><td>1</td><td><code>python lifetimes.py Na</code></td><td>Rewrites $f$, $A$, lifetimes (source of everything below)</td></tr>
-      <tr><td>2</td><td><code>python polarizability.py Na</code></td><td>$\alpha(\omega)$ and $C_6$ read the updated transition network</td></tr>
-      <tr><td>3</td><td><code>python blackbody.py Na --field 100</code> and <code>python tweezer.py Na</code></td><td>BBR rates / mixing and tweezer scattering use lifetimes and $\alpha$. <code>--field 100</code> is required to reproduce the SFI/mixing regression anchors</td></tr>
-      <tr><td>4</td><td><code>python feshbach.py Na</code></td><td>Reads $C_6$ from step 2</td></tr>
-      <tr><td>5</td><td><code>python plotinteractive.py Na</code>, <code>python spectra.py Na</code>, <code>python compare_elements.py --elements Na</code></td><td>Plots and the comparison table read the files above</td></tr>
+      <tr><td>1</td><td><code>linak --pipeline lifetimes Na</code></td><td>Rewrites $f$, $A$, lifetimes (source of everything below)</td></tr>
+      <tr><td>2</td><td><code>linak --pipeline polarizability Na</code></td><td>$\alpha(\omega)$ and $C_6$ read the updated transition network</td></tr>
+      <tr><td>3</td><td><code>linak --pipeline blackbody Na --field 100</code> and <code>linak --pipeline tweezer Na</code></td><td>BBR rates / mixing and tweezer scattering use lifetimes and $\alpha$. <code>--field 100</code> is required to reproduce the SFI/mixing regression anchors</td></tr>
+      <tr><td>4</td><td><code>linak --pipeline feshbach Na</code></td><td>Reads $C_6$ from step 2</td></tr>
+      <tr><td>5</td><td><code>linak --pipeline plotinteractive Na</code>, <code>linak --pipeline spectra Na</code>, <code>linak --pipeline compare_elements --elements Na</code></td><td>Plots and the comparison table read the files above</td></tr>
     </table>
     <p style="font-size:13px;color:var(--text2)">
       Ions (e.g. <code>Na_c1</code>) only have lifetimes and the plots that read them, so
-      for them steps 2-4 do not apply: <code>python lifetimes.py Na_c1</code>, then the plot
+      for them steps 2-4 do not apply: <code>linak --pipeline lifetimes Na_c1</code>, then the plot
       scripts. <code>orbital3d.py</code> reads the Rydberg JSON (and lifetimes only for the
       lifetime labels), so it picks up changes on its next run.
     </p>
@@ -5117,8 +5117,8 @@ python arc_bridge.py Sr --n-max 40
       alkalis at $T=300$&nbsp;K:
     </p>
     <div class="code-block">
-python compare_elements.py
-python compare_elements.py --T 500 --elements Li Na K Rb Cs Fr
+linak --pipeline compare_elements
+linak --pipeline compare_elements --T 500 --elements Li Na K Rb Cs Fr
     </div>
     <p>
       Writes <code>plots/comparison_table.html</code> and
@@ -5127,12 +5127,12 @@ python compare_elements.py --T 500 --elements Li Na K Rb Cs Fr
       stay in sync:
     </p>
     <div class="code-block">
-python lifetimes.py Na          <span class="comment"># repeat per element: Li K Rb Cs Fr</span>
-python compare_elements.py      <span class="comment"># rebuild CompTable</span>
+linak --pipeline lifetimes Na          <span class="comment"># repeat per element: Li K Rb Cs Fr</span>
+linak --pipeline compare_elements      <span class="comment"># rebuild CompTable</span>
     </div>
     <p>
       The near-resonant MOT widget for one line is separate:
-      <code>python scattering_rate.py --element Na --line D2</code>
+      <code>linak --pipeline scattering_rate --element Na --line D2</code>
       (see <a href="#sec8">Laser Cooling</a>).
     </p>
   </div>
@@ -5330,7 +5330,7 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
       <li>Doppler columns ignore pressure / transit-time / laser linewidth; they are the pure thermal Gaussian piece.</li>
       <li>Highlight / sort / CSV use the current display order (including live Doppler values at the selected $T$).</li>
       <li>This section is the CompTable legend. After lifetimes or NIST updates, re-run
-          <code>python compare_elements.py</code> so the HTML, JSON, and trend snapshot stay aligned.</li>
+          <code>linak --pipeline compare_elements</code> so the HTML, JSON, and trend snapshot stay aligned.</li>
     </ul>
   </div>
 </section>
@@ -5341,7 +5341,7 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
 <!-- ═══════════════════════════════════════════════════════════ -->
 <section class="section reveal" id="sec19">
   <div class="section-header">
-    <div class="section-eyebrow">Section 19: tests/, linak_gui.py</div>
+    <div class="section-eyebrow">Section 19: tests/, linak-gui</div>
     <h2>Testing, GUI &amp; Environment</h2>
     <p class="section-intro">
       How the numbers in this document are guarded against silent drift, how the desktop
@@ -5372,7 +5372,7 @@ python -m pytest            <span class="comment"># run from the project root</s
     <div class="annotation amber">
       <span class="icon">!</span>
       <p><b>Anchor conditions.</b> The continuum anchors assume
-      <code>python blackbody.py Na --field 100</code> at $T=300$&nbsp;K with multi-step mixing on
+      <code>linak --pipeline blackbody Na --field 100</code> at $T=300$&nbsp;K with multi-step mixing on
       (relative tolerance $10^{-5}$). Regenerating without <code>--field 100</code> removes the
       SFI and mixing metadata and the tests fail. When a physics fix legitimately moves a value
       (as the QDT radial fix did for the 20s/25s mixing rates), regenerate, check the change is
@@ -5381,7 +5381,7 @@ python -m pytest            <span class="comment"># run from the project root</s
   </div>
 
   <div class="subsection">
-    <h3>Desktop control panel (<span class="file-badge">linak_gui.py</span>)</h3>
+    <h3>Desktop control panel (<span class="file-badge">linak-gui</span>)</h3>
     <p>
       A PySide6 (Qt) GUI runs the same scripts as subprocesses with the same flags and shows the
       resulting plots and JSON; it implements no physics of its own. Stages, in pipeline order:
@@ -5410,7 +5410,7 @@ python -m pytest            <span class="comment"># run from the project root</s
       <tr><td>Core</td><td><code>numpy&ge;1.22</code>, <code>scipy&ge;1.9</code>, <code>plotly&ge;5.0</code></td></tr>
       <tr><td>GUI</td><td><code>PySide6&ge;6.5</code> (optional: <code>PySide6-Addons</code> for in-window plots)</td></tr>
       <tr><td>Tests</td><td><code>pytest&ge;7.0</code></td></tr>
-      <tr><td>ORCA</td><td>Only for <code>runorca.py</code> / <code>orca_to_json.py</code>; <code>basis-set-exchange</code> for Z&ge;87 bases</td></tr>
+      <tr><td>ORCA</td><td>Only for <code>orca_runner.py</code> / <code>orca_to_json.py</code>; <code>basis-set-exchange</code> for Z&ge;87 bases</td></tr>
       <tr><td>Orbital viewer</td><td>A browser with WebGL2 for the default volume mode; <code>--render isosurface</code> needs Plotly (CDN) instead</td></tr>
     </table>
     <p style="font-size:13px;color:var(--text2)">
@@ -5446,7 +5446,7 @@ python -m pytest            <span class="comment"># run from the project root</s
       <tr><td>Feshbach $a(B)$ numbers</td><td><b>Chin et al.</b> RMP (2010) + element papers below</td></tr>
       <tr><td>ODT / tweezer formulas</td><td><b>Grimm et al.</b> (2000)</td></tr>
       <tr><td>BBR shifts / PI</td><td><b>Itano</b>; <b>Farley &amp; Wing</b>; <b>Beterov</b>; <b>Beloy</b> as used</td></tr>
-      <tr><td><code>arc_bridge.py</code></td><td><b>Šibalić et al.</b> (2017); <b>Robertson et al.</b> (2021)</td></tr>
+      <tr><td><code>arc.py</code></td><td><b>Šibalić et al.</b> (2017); <b>Robertson et al.</b> (2021)</td></tr>
       <tr><td>ORCA results</td><td><b>ORCA</b> (Neese et al.)</td></tr>
     </table>
   </div>
@@ -5509,7 +5509,7 @@ python -m pytest            <span class="comment"># run from the project root</s
       <li><b>Robertson et al.</b>, <i>Comput. Phys. Commun.</i> <b>261</b>, 107814 (2021) - ARC 3.0.</li>
     </ul>
     <p style="font-size:13px;color:var(--text2)">
-      Optional <b>level-energy</b> export via <span class="file-badge">arc_bridge.py</span>
+      Optional <b>level-energy</b> export via <span class="file-badge">arc.py</span>
       to <code>data_json/arc/</code> (no Stark / pair / blockade / $f$ export).
     </p>
   </div>
@@ -5519,7 +5519,7 @@ python -m pytest            <span class="comment"># run from the project root</s
 <!-- footer -->
 <div style="padding:48px 72px;border-top:1px solid var(--border);color:var(--text3);font-size:12px;font-family:var(--mono);">
   <p>LiNaK: alkali-atom AMO pipeline: physics reference document</p>
-  <p style="margin-top:6px">Files: constants.py · species.py · element_data.py · qdt_radial.py · rydberg.py · arc_bridge.py · transitions.py · lifetimes.py · alpha_core.py · polarizability.py · blackbody.py · tweezer.py · hyperfine.py · feshbach.py · parse_orca.py · runorca.py · orca_to_json.py · orca_templates.py · compare_elements.py · scattering_rate.py · spectra.py · plotinteractive.py · orbital3d.py</p>
+  <p style="margin-top:6px">Files: constants.py · species.py · elements.py · qdt_radial.py · rydberg.py · arc.py · transitions.py · lifetimes.py · polarizability_core.py · polarizability.py · blackbody.py · tweezer.py · hyperfine.py · feshbach.py · orca_parser.py · orca_runner.py · orca_to_json.py · orca_templates.py · compare_elements.py · scattering_rate.py · spectra.py · plotinteractive.py · orbital3d.py</p>
   <p style="margin-top:6px">Bibliography: REFERENCES.md · REFERENCES.bib · Overview §19</p>
 </div>
 

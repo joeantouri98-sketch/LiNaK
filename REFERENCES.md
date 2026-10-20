@@ -93,6 +93,6 @@ License: BSD-3-Clause. Install separately with `uv sync --extra arc`.
 
 ## Software / tools (non-paper)
 
-- **ORCA** quantum chemistry package (Neese *et al.*) - TD-DFT / CASSCF–NEVPT2+SOC jobs via `runorca.py`
+- **ORCA** quantum chemistry package (Neese *et al.*) - TD-DFT / CASSCF–NEVPT2+SOC jobs via the `runorca` pipeline
 - **NIST ASD** exports under `NIST Levels/` and `f_values/`
 - **Plotly** - interactive HTML plots

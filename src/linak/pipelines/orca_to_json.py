@@ -1,50 +1,61 @@
 """
-orca_to_json.py  -  standalone ORCA output -> data_json/<species_id>.json
------------------------------------------------------------------------
+The ``orca_to_json`` pipeline: ORCA output -> data/<species_id>.json
+--------------------------------------------------------------------
 Re-parses existing orca_outputs/<species_id>/[run_tag]/ files (no ORCA run)
-using the shared parse_orca module and writes data_json/<species_id>.json in the
-same format as runorca.py.
+with ``linak.integrations.orca_parser`` and writes data/<species_id>.json in
+the same format as the ``runorca`` pipeline.
 
 Layout (new):
     orca_outputs/<species_id>/<func>_<basis>[...]/<species_id>_ex.out
 Legacy (still supported for neutrals):
     orca_outputs/<El>/<El>_ex.out
 
-Usage:
-    python orca_to_json.py Na
-    python orca_to_json.py Mg_c1
-    python orca_to_json.py Li Na K Rb Cs Fe Fr
-    python orca_to_json.py Na --run CAM-B3LYP_aug-cc-pVTZ
-    python orca_to_json.py Na --outname UKS
+Usage (``linak --pipeline orca_to_json ...``):
+    orca_to_json Na
+    orca_to_json Mg_c1
+    orca_to_json Li Na K Rb Cs Fe Fr
+    orca_to_json Na --run CAM-B3LYP_aug-cc-pVTZ
+    orca_to_json Na --outname UKS
 """
 
 import argparse
-import json
 import os
-from linak.core.paths import DATA_JSON_DIR, ORCA_OUTPUTS_DIR
+from pathlib import Path
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from linak.core.elements import ELEMENTS
+from linak.core.fileio import is_safe_name, write_json
+from linak.core.paths import reference_path
 from linak.core.species import resolve_species
+from linak.core.workspace import Workspace
 from linak.integrations.orca_parser import (
     parse_ground_energy, parse_excitations, deduplicate_excitations,
 )
+from linak.integrations.orca_templates import is_alkali_neutral
 
-OUT = DATA_JSON_DIR
-SYMBOL_TO_Z = {sym: z for z, (sym, _c, _m) in ELEMENTS.items()}
+
+def _out_dir() -> str:
+    """Writable JSON data dir of the workspace in effect now."""
+    return str(Workspace.current().data_json_dir)
+
+
+def _safe_name(value, flag):
+    """Reject a CLI value that could escape its directory (separators, '..', 'C:')."""
+    name = value.strip()
+    if not is_safe_name(name):
+        raise ValueError(f"{flag} must be a single path component, got {value!r}")
+    return name
 
 
 def _read(path):
-    with open(path, "r", errors="ignore") as f:
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
         return f.read()
 
 
 def _parse_xyz_header(text, symbol):
     """Return (charge, mult) from '* xyz q m' in an inp, else None."""
     m = re.search(
-        rf"^\*\s*xyz\s+(-?\d+)\s+(\d+)\s*$",
+        r"^\*\s*xyz\s+(-?\d+)\s+(\d+)\s*$",
         text, flags=re.MULTILINE | re.IGNORECASE,
     )
     if not m:
@@ -92,10 +103,30 @@ def _infer_nroots(inp_text):
     return int(m.group(1)) if m else None
 
 
+def _species_runs_dir(species_id):
+    """``orca_outputs/<id>`` in the output folder, else the bundled example runs.
+
+    The bundled runs are read in place (never copied), so a fresh CLI output
+    folder can still re-parse the shipped Li/Na/Na_c1 calculations.
+    """
+    for root in (Workspace.current().orca_outputs_dir, reference_path("orca_outputs")):
+        candidate = os.path.join(root, species_id)
+        if os.path.isdir(candidate):
+            return candidate
+    return None
+
+
+def _as_recorded(path):
+    """*path* as stored in the JSON: relative, e.g. ``orca_outputs/Na/Na_ex.out``."""
+    parts = Path(path).parts
+    start = max(i for i, part in enumerate(parts) if part == "orca_outputs")
+    return "/".join(parts[start:])
+
+
 def _list_run_dirs(species_id):
     """Return (legacy_flat_dir_or_None, [(tag, path), ...]) under orca_outputs/<id>."""
-    base = os.path.join(ORCA_OUTPUTS_DIR, species_id)
-    if not os.path.isdir(base):
+    base = _species_runs_dir(species_id)
+    if base is None:
         return None, []
     legacy = None
     if os.path.isfile(os.path.join(base, f"{species_id}_ex.out")):
@@ -118,7 +149,7 @@ def find_orca_run_dir(species_id, run_tag=None):
     """
     legacy, runs = _list_run_dirs(species_id)
     if run_tag:
-        path = os.path.join(ORCA_OUTPUTS_DIR, species_id, run_tag)
+        path = os.path.join(_species_runs_dir(species_id) or "", run_tag)
         if os.path.isfile(os.path.join(path, f"{species_id}_ex.out")):
             return path, run_tag
         available = [t for t, _ in runs]
@@ -146,6 +177,10 @@ def find_orca_run_dir(species_id, run_tag=None):
 def rebuild_one(raw_target, run_tag=None, outname=None):
     try:
         sp = resolve_species(raw_target)
+        if run_tag is not None:
+            run_tag = _safe_name(run_tag, "--run")
+        if outname is not None:
+            outname = _safe_name(outname, "--outname")
     except ValueError as exc:
         print(f"  [FAIL] {exc}")
         return False
@@ -201,10 +236,7 @@ def rebuild_one(raw_target, run_tag=None, outname=None):
     elif "X2C" in (kw_ex + kw_gs + inp_text):
         rel = "x2c"
 
-    alkali = (
-        symbol in {"Li", "Na", "K", "Rb", "Cs", "Fr"}
-        and charge == 0 and mult == 2
-    )
+    alkali = is_alkali_neutral(symbol, charge, mult)
     quality = "benchmark" if alkali else ("screening_only" if mult > 2 else "benchmark")
 
     data = {
@@ -228,22 +260,21 @@ def rebuild_one(raw_target, run_tag=None, outname=None):
         "nroots": nroots,
         "orca_quality": quality,
         "orca_run_tag": resolved_tag,
-        "orca_outputs_dir": base.replace("\\", "/"),
-        "reparsed_from": ex_out.replace("\\", "/"),
-        "reparsed_gs": gs_out.replace("\\", "/") if os.path.isfile(gs_out) else None,
+        "orca_outputs_dir": _as_recorded(base),
+        "reparsed_from": _as_recorded(ex_out),
+        "reparsed_gs": _as_recorded(gs_out) if os.path.isfile(gs_out) else None,
     }
     if sp.get("soc_class"):
         data["soc_class"] = sp["soc_class"]
 
-    os.makedirs(OUT, exist_ok=True)
+    os.makedirs(_out_dir(), exist_ok=True)
     if outname:
         suffix = outname[:-5] if outname.lower().endswith(".json") else outname
         suffix = suffix.strip().strip("_")
-        out_file = os.path.join(OUT, f"{species_id}_{suffix}.json")
+        out_file = os.path.join(_out_dir(), f"{species_id}_{suffix}.json")
     else:
-        out_file = os.path.join(OUT, f"{species_id}.json")
-    with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        out_file = os.path.join(_out_dir(), f"{species_id}.json")
+    write_json(out_file, data)
 
     bright = [e for e in unique if e["oscillator_strength"] > 0.001]
     print(
@@ -262,27 +293,36 @@ def rebuild_one(raw_target, run_tag=None, outname=None):
     return True
 
 
-def main(argv):
+# ============================================================================
+# ARGPARSE
+# ============================================================================
+
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Re-parse ORCA outs into data_json/<species_id>.json")
+        prog="linak --pipeline orca_to_json",
+        description="Re-parse ORCA outputs into data/<species_id>.json")
     p.add_argument("elements", nargs="+",
                    help="Species id(s): symbol (Na) or ion stem (Mg_c1)")
     p.add_argument("--run", default=None, metavar="TAG",
                    help="orca_outputs/<species>/<TAG>/ folder "
                         "(required if several runs exist)")
     p.add_argument("--outname", default=None, metavar="SUFFIX",
-                   help="Write data_json/<species>_<SUFFIX>.json "
+                   help="Write data/<species>_<SUFFIX>.json "
                         "instead of <species>.json")
-    ns = p.parse_args(argv[1:])
+    return p
+
+
+def main(argv=None):
+    """Run the re-parse pipeline; ``argv`` are user args after the program name."""
+    ns = build_parser().parse_args(argv)
     ok = 0
     for el in ns.elements:
         print(f"\n=== {el} ===")
         if rebuild_one(el, run_tag=ns.run, outname=ns.outname):
             ok += 1
     print(f"\nDone: {ok}/{len(ns.elements)} written")
-    if ok != len(ns.elements):
-        sys.exit(1)
+    return 1 if ok != len(ns.elements) else 0
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    raise SystemExit(main(sys.argv[1:]))

@@ -1,119 +1,136 @@
-#!/usr/bin/env python3
-"""
-transitions.py
---------------
-Applies electric dipole selection rules to the J-resolved pool of NIST levels
-and Rydberg states for a given element.
+"""Electric-dipole transitions between the levels of a rydberg JSON: the pure computation.
 
-Selection rules applied:
-    Δl  = ±1          (orbital angular momentum — E1)
-    ΔJ  = 0, ±1       (total angular momentum)
-    J=0 → J=0 strictly forbidden
+Alkali / ion (QDT) path: every pair of levels with
 
-For QDT model levels (high n, no J data): only Δl = ±1 applied (J unknown).
-Transitions between two QDT levels or between a NIST level and a QDT level
-use the Δl rule only (ΔJ not enforced when J is unavailable).
+    Δl = ±1,   ΔJ = 0, ±1,   not J = 0 → 0
 
-Reads:
-    data_json/<element>_rydberg.json
+where ΔJ is enforced only when both levels carry a J (QDT model levels have none).
 
-Writes:
-    data_json/<element>_transitions.json
+Metal path (no QDT): the NIST ASD line list itself, each endpoint matched to a known
+level by label, else by a unique (LS term, J), else by the closest excitation energy
+(within 0.05 eV) among levels sharing that (term, J).
 
-Energy convention: relative to ionization threshold (negative = bound).
+Energies are relative to the ionization threshold (negative = bound).
 
-Usage:
-    python transitions.py <ELEMENT_SYMBOL> [options]
+Known issues (PHYSICS_BUGS.md): wavelengths use hc = 1239.84 eV nm (P33); the metal
+path drops every line of a no-QDT alkali after ``rydberg --nist-only`` (P44). Kept as is
+so results stay comparable until they are fixed deliberately.
 
-Options:
-    --wl-min  <nm>   Only keep transitions above this wavelength  (default: 0)
-    --wl-max  <nm>   Only keep transitions below this wavelength  (default: inf)
-    --n-max   <n>    Only include states with n <= this value     (default: all)
-    --visible        Shorthand for --wl-min 380 --wl-max 750
-    --uv             Shorthand for --wl-min 10  --wl-max 400
-    --ir             Shorthand for --wl-min 750 --wl-max 1e6
+No files or prints here: the ``transitions`` pipeline reads the rydberg JSON and the
+NIST lines and passes them in.
 """
 
-import json
-import os
-import re
-import sys
-import argparse
-from linak.core.paths import DATA_JSON_DIR
-import numpy as np
-from collections import defaultdict
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+
+from linak.core.spectroscopy import spectral_region
+from linak.physics.polarizability_core import L_CHAR
+from linak.physics.rydberg import (
+    label_to_pretty,
+    normalize_term,
+    parse_j,
+    split_asd_term,
+    unicode_digits_to_plain,
+)
+
+HC_EV_NM_ROUNDED = 1239.84   # P33: rounded hc, kept so wavelengths stay comparable
 
 
-# ARGUMENT PARSING
+# ============================================================================
+# RECORDS
+# ============================================================================
+
+@dataclass(frozen=True)
+class Level:
+    """One level of the alkali / ion (QDT) path."""
+
+    n: int
+    l: str
+    l_int: int            # -1 when l is not a known orbital letter
+    J: str | None         # None for QDT model levels
+    J_float: float | None
+    term: str | None
+    label: str
+    energy: float         # eV, relative to the ionization threshold
+    source: str
 
 
-parser = argparse.ArgumentParser(description='Generate allowed E1 transitions.')
-parser.add_argument('element',
-                    help='Species id: symbol (Na) or ion stem (Mg_c1) with rydberg JSON')
-parser.add_argument('--wl-min', type=float, default=0,
-                    help='Minimum wavelength in nm (default: 0)')
-parser.add_argument('--wl-max', type=float, default=float('inf'),
-                    help='Maximum wavelength in nm (default: inf)')
-parser.add_argument('--n-max', type=int, default=None,
-                    help='Maximum principal quantum number to include')
-parser.add_argument('--visible', action='store_true',
-                    help='Filter to visible range 380-750 nm')
-parser.add_argument('--uv', action='store_true',
-                    help='Filter to UV range 10-400 nm')
-parser.add_argument('--ir', action='store_true',
-                    help='Filter to IR range 750 nm - 1 mm')
+@dataclass(frozen=True)
+class Transition:
+    """One allowed E1 transition (a row of ``<El>_transitions.json``)."""
 
-args = parser.parse_args()
-from linak.core.species import resolve_species
-try:
-    _sp = resolve_species(args.element.strip())
-except ValueError as _exc:
-    raise SystemExit(str(_exc))
-element = _sp["species_id"]
-
-if args.visible:
-    args.wl_min, args.wl_max = 380, 750
-elif args.uv:
-    args.wl_min, args.wl_max = 10, 400
-elif args.ir:
-    args.wl_min, args.wl_max = 750, 1e6
-
-wl_min = args.wl_min
-wl_max = args.wl_max
-n_max  = args.n_max
+    upper_label: str
+    lower_label: str
+    upper_n: int
+    lower_n: int
+    upper_l: str
+    lower_l: str
+    upper_J: str | None
+    lower_J: str | None
+    delta_n: int
+    upper_energy_eV: float
+    lower_energy_eV: float
+    delta_E_eV: float
+    wavelength_nm: float
+    region: str
+    upper_source: str
+    lower_source: str
 
 
-# HELPERS
+@dataclass(frozen=True)
+class MetalLevel:
+    label: str
+    label_pretty: str
+    energy: float         # eV, relative to the ionization threshold
+    n: int | None
+    l: str | None
+    J: str | None
+    term: str
+    source: str
 
-l_char_to_int = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
 
-def parse_j(j_str):
-    """
-    Parse a J string to float. Handles:
-      - Simple fractions: '1/2', '3/2'
-      - Integers: '0', '1', '2'
-      - Multiple J on one row: '1/2, 3/2'  -> takes first value
-      - Non-J content (Term symbols etc.): returns None
-    """
-    if j_str is None:
-        return None
-    s = str(j_str).strip().strip('"')
-    if not s:
-        return None
-    s = s.split(',')[0].strip()
-    m = re.match(r'^(\d+)/(\d+)$', s)
-    if m:
-        try:
-            return int(m.group(1)) / int(m.group(2))
-        except ZeroDivisionError:
-            return None
-    try:
-        v = float(s)
-        if 0 <= v <= 20:
-            return v
-        return None
-    except ValueError:
-        return None
+@dataclass(frozen=True)
+class MetalTransition:
+    """One NIST ASD line between two known levels (metal path)."""
+
+    upper_label: str
+    lower_label: str
+    upper_label_pretty: str
+    lower_label_pretty: str
+    upper_n: int | None
+    lower_n: int | None
+    upper_l: str | None
+    lower_l: str | None
+    upper_J: str | None
+    lower_J: str | None
+    delta_n: int | None
+    upper_energy_eV: float
+    lower_energy_eV: float
+    delta_E_eV: float
+    wavelength_nm: float
+    region: str
+    upper_source: str
+    lower_source: str
+    fik: float | None
+    gA: float | None
+    fosc: float | None
+    Acc: str | None
+
+
+@dataclass(frozen=True)
+class MetalLines:
+    transitions: list[MetalTransition]
+    n_missing_lower: int      # lines whose lower level is unknown
+    n_missing_upper: int
+    n_outside_window: int     # outside [wl_min, wl_max]
+    n_resolved: int           # endpoints matched by term + J instead of label
+
+
+# ============================================================================
+# ALKALI / ION (QDT) PATH
+# ============================================================================
 
 def j_selection_rule(j_upper, j_lower):
     """
@@ -130,152 +147,212 @@ def j_selection_rule(j_upper, j_lower):
     return True
 
 
-# LOAD DATA
+def ground_level(rydberg_data: Mapping, IE: float) -> tuple[Level, bool]:
+    """(ground level, True when it was inferred from an old n_start-only JSON).
+
+    The 'ground_state' block written by rydberg.py describes any element; old
+    alkali JSONs only have 'n_start' (or nothing): assume l='s', J='1/2'.
+    """
+    gs_meta = rydberg_data.get('ground_state')
+    if gs_meta:
+        gs_n     = gs_meta['n']
+        gs_l     = gs_meta['l']
+        gs_j     = gs_meta.get('J') or ''
+        gs_label = gs_meta.get('label') or f"{gs_n}{gs_l}"
+    else:
+        gs_n = rydberg_data.get('n_start', None)
+        if gs_n is None:
+            _s = [(ex['n'], ex['energy_eV']) for ex in rydberg_data.get('excitations', [])
+                  if ex.get('l') == 's' and ex.get('n') and ex.get('energy_eV') is not None]
+            gs_n = min(_s, key=lambda x: x[1])[0] if _s else 2
+        gs_l     = 's'
+        gs_j     = '1/2'
+        gs_label = f"{gs_n}s"
+    gs_term = (gs_meta or {}).get('term') or ''
+    level = Level(
+        n=gs_n,
+        l=gs_l,
+        l_int=L_CHAR.get(gs_l, 0),
+        J=gs_j or None,
+        J_float=parse_j(gs_j) if gs_j else None,
+        term=gs_term or None,
+        label=gs_label,
+        energy=-IE,
+        source='NIST',
+    )
+    return level, not gs_meta
 
 
-rydberg_file = f"{DATA_JSON_DIR}/{element}_rydberg.json"
+def qdt_levels(ground: Level, excitations: Iterable[Mapping], n_max=None) -> list[Level]:
+    """The ground level, then every distinct (n, l, J, term) of *excitations* up to n_max."""
+    levels = [ground]
+    seen = {(ground.n, ground.l, ground.J or '', ground.term or ground.label)}
+    for ex in excitations:
+        n      = ex.get('n')
+        l_char = ex.get('l')
+        j_str  = ex.get('J')          # may be None for QDT model levels
+        label  = ex.get('label', '')
+        E_abs  = ex.get('energy_eV')
 
-if not os.path.exists(rydberg_file):
-    print(f"Error: {rydberg_file} not found. Run rydberg.py first.")
-    sys.exit(1)
+        if n is None or l_char is None or E_abs is None:
+            continue
+        if n_max and n > n_max:
+            continue
 
-with open(rydberg_file) as f:
-    nist_data = json.load(f)
+        # Normalise J key: use empty string when absent so distinct from '1/2' etc.
+        # Include term (or label) so 3P and 1P with the same J are not dropped.
+        j_key = str(j_str).strip() if j_str is not None else ''
+        term  = ex.get('term') or ''
+        key   = (n, l_char, j_key, term or label)
+        if key in seen:
+            continue
+        seen.add(key)
 
-IE = nist_data.get('ionization_energy_eV')
-if IE is None:
-    print(f"Error: ionization_energy_eV not found in {rydberg_file}.")
-    sys.exit(1)
-
-print(f"\n{'='*60}")
-print(f"Element          : {element}")
-print(f"Ionization energy: {IE:.5f} eV")
-print(f"{'='*60}")
-
-excitations_list = nist_data.get('excitations', [])
-_method = (nist_data.get('method') or '')
-from linak.physics.polarizability_core import is_transition_metal_species, load_nist_fvalues
-_is_metal = (
-    is_transition_metal_species(element)
-    or 'no QDT' in _method
-)
+        levels.append(Level(
+            n=n,
+            l=l_char,
+            l_int=L_CHAR.get(l_char, -1),
+            J=j_str,
+            J_float=parse_j(j_str),
+            term=term or None,
+            label=label,
+            energy=E_abs,
+            source=ex.get('source', 'Rydberg'),
+        ))
+    return levels
 
 
-def _spectral_region(wavelength):
-    if wavelength < 10:
-        return 'X-ray'
-    if wavelength < 200:
-        return 'Vacuum UV'
-    if wavelength < 380:
-        return 'UV'
-    if wavelength < 750:
-        return 'Visible'
-    if wavelength < 2500:
-        return 'Near-IR'
-    if wavelength < 1e5:
-        return 'Mid/Far-IR'
-    return 'Microwave'
+def e1_transitions(levels: Sequence[Level], wl_min=0.0, wl_max=float('inf')) -> list[Transition]:
+    """Every allowed E1 pair (Δl = ±1, ΔJ rule) with wl_min <= λ <= wl_max."""
+    by_energy = sorted(levels, key=lambda s: s.energy)
+    transitions = []
+    for i in range(len(by_energy)):
+        for j in range(i + 1, len(by_energy)):
+            s_lower = by_energy[i]
+            s_upper = by_energy[j]
+
+            # Δl = ±1
+            if abs(s_upper.l_int - s_lower.l_int) != 1:
+                continue
+
+            # ΔJ rule
+            if not j_selection_rule(s_upper.J_float, s_lower.J_float):
+                continue
+
+            delta_E = s_upper.energy - s_lower.energy
+            if delta_E <= 0:
+                continue
+
+            wavelength = HC_EV_NM_ROUNDED / delta_E
+
+            if wavelength < wl_min or wavelength > wl_max:
+                continue
+
+            transitions.append(Transition(
+                upper_label=s_upper.label,
+                lower_label=s_lower.label,
+                upper_n=s_upper.n,
+                lower_n=s_lower.n,
+                upper_l=s_upper.l,
+                lower_l=s_lower.l,
+                upper_J=s_upper.J,
+                lower_J=s_lower.J,
+                delta_n=s_upper.n - s_lower.n,
+                upper_energy_eV=round(s_upper.energy, 6),
+                lower_energy_eV=round(s_lower.energy, 6),
+                delta_E_eV=round(delta_E, 6),
+                wavelength_nm=round(wavelength, 4),
+                region=spectral_region(wavelength),
+                upper_source=s_upper.source,
+                lower_source=s_lower.source,
+            ))
+    return transitions
 
 
 
 # METAL PATH: transitions = ASD line list (no Δl invention)
+# ============================================================================
 
-if _is_metal:
-    _gs_meta = nist_data.get('ground_state') or {}
-    gs_label = _gs_meta.get('label')
-    if not gs_label:
-        print("Error: metal rydberg JSON missing ground_state.label")
-        sys.exit(1)
-
-    # label -> ionization-relative energy (eV)
-    from linak.physics.rydberg import (
-        label_to_pretty as _label_to_pretty,
-        unicode_digits_to_plain as _digits_plain,
-        normalize_term as _normalize_term,
-        split_asd_term as _split_asd_term,
-    )
-    state_by_label = {
-        gs_label: {
-            'label': gs_label,
-            'label_pretty': _digits_plain(
-                _gs_meta.get('label_pretty')
-                or _label_to_pretty(gs_label)
-            ),
-            'energy': -IE,
-            'n': _gs_meta.get('n'),
-            'l': _gs_meta.get('l'),
-            'J': _gs_meta.get('J'),
-            'term': _gs_meta.get('term') or '',
-            'source': 'NIST',
-        }
+def metal_levels(gs_meta: Mapping, excitations: Iterable[Mapping], IE: float) -> dict[str, MetalLevel]:
+    """label -> level: the ground state, then the first level of every label."""
+    gs_label = gs_meta['label']
+    levels = {
+        gs_label: MetalLevel(
+            label=gs_label,
+            label_pretty=unicode_digits_to_plain(
+                gs_meta.get('label_pretty') or label_to_pretty(gs_label)),
+            energy=-IE,
+            n=gs_meta.get('n'),
+            l=gs_meta.get('l'),
+            J=gs_meta.get('J'),
+            term=gs_meta.get('term') or '',
+            source='NIST',
+        )
     }
-    for ex in excitations_list:
+    for ex in excitations:
         lab = ex.get('label')
         E = ex.get('energy_eV')
         if not lab or E is None:
             continue
-        if lab not in state_by_label:
-            state_by_label[lab] = {
-                'label': lab,
-                'label_pretty': _digits_plain(
-                    ex.get('label_pretty') or _label_to_pretty(lab)
-                ),
-                'energy': E,
-                'n': ex.get('n'),
-                'l': ex.get('l'),
-                'J': ex.get('J'),
-                'term': ex.get('term') or '',
-                'source': ex.get('source', 'NIST'),
-            }
+        if lab not in levels:
+            levels[lab] = MetalLevel(
+                label=lab,
+                label_pretty=unicode_digits_to_plain(
+                    ex.get('label_pretty') or label_to_pretty(lab)),
+                energy=E,
+                n=ex.get('n'),
+                l=ex.get('l'),
+                J=ex.get('J'),
+                term=ex.get('term') or '',
+                source=ex.get('source', 'NIST'),
+            )
+    return levels
 
+
+def _term_j_key(term, j_str):
+    _pref, _ls = split_asd_term(term or '')
+    return normalize_term(_ls) or normalize_term(term or ''), str(j_str or '').strip()
+
+
+def metal_transitions(lines: Iterable[Mapping], levels: Mapping[str, MetalLevel], IE: float,
+                      wl_min=0.0, wl_max=float('inf')) -> MetalLines:
+    """The ASD lines whose two endpoints are known levels, one per (upper, lower) pair."""
     # (normalized LS-term, J) -> [labels] for blank-config ASD lines
-    by_term_j = {}
-    for lab, st in state_by_label.items():
-        _pref, _ls = _split_asd_term(st.get('term') or '')
-        _tkey = _normalize_term(_ls) or _normalize_term(st.get('term') or '')
-        _jkey = str(st.get('J') or '').strip()
+    by_term_j: dict[tuple[str, str], list[str]] = {}
+    for lab, st in levels.items():
+        _tkey, _jkey = _term_j_key(st.term, st.J)
         if _tkey and _jkey:
             by_term_j.setdefault((_tkey, _jkey), []).append(lab)
 
-    def _resolve_metal_endpoint(lab, term, j_str, e_from_gs):
+    def resolve(lab, term, j_str, e_from_gs):
         """Map line endpoint to a known level (label match or unique term+J)."""
-        if lab and lab in state_by_label:
-            return lab, state_by_label[lab]
-        _pref, _ls = _split_asd_term(term or '')
-        _tkey = _normalize_term(_ls) or _normalize_term(term or '')
-        _jkey = str(j_str or '').strip()
+        if lab and lab in levels:
+            return lab, levels[lab]
+        _tkey, _jkey = _term_j_key(term, j_str)
         cands = by_term_j.get((_tkey, _jkey), []) if _tkey and _jkey else []
         if len(cands) == 1:
             lab2 = cands[0]
-            return lab2, state_by_label[lab2]
+            return lab2, levels[lab2]
         if len(cands) > 1 and e_from_gs is not None:
             # Pick closest excitation energy among term+J candidates
             best, best_d = None, 1e9
             for lab2 in cands:
-                st = state_by_label[lab2]
-                exc = st['energy'] + IE
+                exc = levels[lab2].energy + IE
                 d = abs(exc - float(e_from_gs))
                 if d < best_d:
                     best_d, best = d, lab2
             if best is not None and best_d < 0.05:
-                return best, state_by_label[best]
+                return best, levels[best]
         return None, None
 
-    _nist = load_nist_fvalues(element, verbose=True)
-    _lines = _nist.get('lines') or []
-    print(f"\nMetal NIST line path: {len(_lines)} ASD rows, "
-          f"{len(state_by_label)} known levels")
-
     transitions = []
-    n_keep = n_miss_lo = n_miss_up = n_wl = n_resolved = 0
+    n_miss_lo = n_miss_up = n_wl = n_resolved = 0
     seen_pair = set()
-    for ln in _lines:
+    for ln in lines:
         lo0 = ln.get('lower_label')
         up0 = ln.get('upper_label')
-        lo, s_lo = _resolve_metal_endpoint(
-            lo0, ln.get('lower_term'), ln.get('lower_J'), ln.get('Ei_eV'))
-        up, s_up = _resolve_metal_endpoint(
-            up0, ln.get('upper_term'), ln.get('upper_J'), ln.get('Ek_eV'))
+        lo, s_lo = resolve(lo0, ln.get('lower_term'), ln.get('lower_J'), ln.get('Ei_eV'))
+        up, s_up = resolve(up0, ln.get('upper_term'), ln.get('upper_J'), ln.get('Ek_eV'))
         if lo0 != lo or up0 != up:
             if lo and up:
                 n_resolved += 1
@@ -286,12 +363,12 @@ if _is_metal:
             n_miss_up += 1
             continue
         # Prefer spectroscopic energies from levels JSON
-        E_lo = s_lo['energy']
-        E_up = s_up['energy']
+        E_lo = s_lo.energy
+        E_up = s_up.energy
         delta_E = E_up - E_lo
         if delta_E <= 0:
             continue
-        wavelength = 1239.84 / delta_E
+        wavelength = HC_EV_NM_ROUNDED / delta_E
         if ln.get('wavelength_nm'):
             # keep ASD wavelength when close; else levels-derived
             wl_asd = float(ln['wavelength_nm'])
@@ -304,309 +381,31 @@ if _is_metal:
         if pair in seen_pair:
             continue
         seen_pair.add(pair)
-        nu, nl_ = s_up.get('n'), s_lo.get('n')
-        transitions.append({
-            'upper_label': up,
-            'lower_label': lo,
-            'upper_label_pretty': s_up.get('label_pretty') or _label_to_pretty(up),
-            'lower_label_pretty': s_lo.get('label_pretty') or _label_to_pretty(lo),
-            'upper_n': nu,
-            'lower_n': nl_,
-            'upper_l': s_up.get('l'),
-            'lower_l': s_lo.get('l'),
-            'upper_J': ln.get('upper_J') or s_up.get('J'),
-            'lower_J': ln.get('lower_J') or s_lo.get('J'),
-            'delta_n': (nu - nl_) if (nu is not None and nl_ is not None) else None,
-            'upper_energy_eV': round(E_up, 6),
-            'lower_energy_eV': round(E_lo, 6),
-            'delta_E_eV': round(delta_E, 6),
-            'wavelength_nm': round(wavelength, 4),
-            'region': _spectral_region(wavelength),
-            'upper_source': 'NIST',
-            'lower_source': 'NIST',
-            'fik': ln.get('fik'),
-            'gA': ln.get('gA'),
-            'fosc': ln.get('fosc'),
-            'Acc': ln.get('Acc'),
-        })
-        n_keep += 1
-
-    n_null_n = sum(
-        1 for t in transitions
-        if t.get('upper_n') is None or t.get('lower_n') is None
-    )
-    print(f"Kept {n_keep} transitions "
-          f"(miss lower={n_miss_lo}, miss upper={n_miss_up}, "
-          f"wl filter={n_wl}, term+J resolved={n_resolved}, "
-          f"null n={n_null_n})")
-
-    region_counts = defaultdict(int)
-    for t in transitions:
-        region_counts[t['region']] += 1
-    print(f"\nBreakdown by spectral region:")
-    for region in ['X-ray', 'Vacuum UV', 'UV', 'Visible', 'Near-IR',
-                   'Mid/Far-IR', 'Microwave']:
-        count = region_counts.get(region, 0)
-        if count > 0:
-            print(f"  {region:15s}: {count:5d} transitions")
-
-    print(f"\nSample transitions (sorted by wavelength):")
-    shown_regions = set()
-    shown_per_region = defaultdict(int)
-    for t in sorted(transitions, key=lambda x: x['wavelength_nm']):
-        r = t['region']
-        if shown_per_region[r] >= 3:
-            continue
-        if r not in shown_regions:
-            shown_regions.add(r)
-            print(f"\n  [{r}]")
-        shown_per_region[r] += 1
-        print(f"    {t['upper_label']:>8} -> {t['lower_label']:<8}  "
-              f"{t['wavelength_nm']:>10.3f} nm  "
-              f"({t['delta_E_eV']:.4f} eV)  "
-              f"[J={t['upper_J']} -> J={t['lower_J']}]  [NIST]")
-
-    os.makedirs(DATA_JSON_DIR, exist_ok=True)
-    out_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
-    output = {
-        'species_id': element,
-        'element': _sp["symbol"],
-        'label': _sp["label"],
-        'kind': _sp["kind"],
-        'charge': _sp["charge"],
-        'ionization_energy_eV': IE,
-        'method': 'NIST ASD lines (no QDT)',
-        'total_states': len(state_by_label),
-        'total_transitions': len(transitions),
-        'wavelength_filter_nm': [wl_min, wl_max if wl_max != float('inf') else None],
-        'n_max_filter': n_max,
-        'region_counts': dict(region_counts),
-        'transitions': transitions,
-    }
-    with open(out_file, 'w') as f:
-        json.dump(output, f, indent=2)
-    print(f"\nSaved {len(transitions)} transitions to: {out_file}")
-    print(f"{'='*60}\n")
-    sys.exit(0)
-
-
-# BUILD STATE LIST (alkali / ion QDT path)
-
-
-states = []
-seen   = {}   # (n, l_char, J_str, term_or_label) -> True
-
-# Ground state injection 
-# Read from the 'ground_state' block written by rydberg.py (present for any
-# element).  Fall back gracefully for old JSONs that only have 'n_start'
-# (alkali-only format): assume l='s', J='1/2' so existing data keeps working.
-_gs_meta = nist_data.get('ground_state')
-
-if _gs_meta:
-    # New format: ground state fully described regardless of element type.
-    gs_n     = _gs_meta['n']
-    gs_l     = _gs_meta['l']
-    gs_j     = _gs_meta.get('J') or ''
-    gs_label = _gs_meta.get('label') or f"{gs_n}{gs_l}"
-else:
-    # Legacy fallback for old alkali JSONs that only stored n_start.
-    gs_n = nist_data.get('n_start', None)
-    if gs_n is None:
-        _s = [(ex['n'], ex['energy_eV']) for ex in excitations_list
-              if ex.get('l') == 's' and ex.get('n') and ex.get('energy_eV') is not None]
-        gs_n = min(_s, key=lambda x: x[1])[0] if _s else 2
-    gs_l     = 's'
-    gs_j     = '1/2'
-    gs_label = f"{gs_n}s"
-
-# Parse J to float for the selection rule checker.
-gs_j_float = parse_j(gs_j) if gs_j else None
-
-gs_term = (_gs_meta or {}).get('term') or ''
-gs_key = (gs_n, gs_l, gs_j, gs_term or gs_label)
-states.append({
-    'n':       gs_n,
-    'l':       gs_l,
-    'l_int':   l_char_to_int.get(gs_l, 0),
-    'J':       gs_j or None,
-    'J_float': gs_j_float,
-    'term':    gs_term or None,
-    'label':   gs_label,
-    'energy':  -IE,
-    'source':  'NIST',
-})
-seen[gs_key] = True
-print(f"Ground state injected: {gs_label}  "
-      f"(n={gs_n}, l={gs_l}, J={gs_j or '?'})  at {-IE:.5f} eV"
-      + ("  [legacy fallback]" if not _gs_meta else ""))
-
-for ex in excitations_list:
-    n      = ex.get('n')
-    l_char = ex.get('l')
-    j_str  = ex.get('J')          # may be None for QDT model levels
-    label  = ex.get('label', '')
-    E_abs  = ex.get('energy_eV')
-
-    if n is None or l_char is None or E_abs is None:
-        continue
-    if n_max and n > n_max:
-        continue
-
-    # Normalise J key: use empty string when absent so distinct from '1/2' etc.
-    # Include term (or label) so 3P and 1P with the same J are not dropped.
-    j_key = str(j_str).strip() if j_str is not None else ''
-    term  = ex.get('term') or ''
-    key   = (n, l_char, j_key, term or label)
-    if key in seen:
-        continue
-    seen[key] = True
-
-    states.append({
-        'n':       n,
-        'l':       l_char,
-        'l_int':   l_char_to_int.get(l_char, -1),
-        'J':       j_str,
-        'J_float': parse_j(j_str),
-        'term':    term or None,
-        'label':   label,
-        'energy':  E_abs,
-        'source':  ex.get('source', 'Rydberg')
-    })
-
-n_max_json = nist_data.get('n_max', '?')
-print(f"States loaded        : {len(states)} unique (n,l,J) from {rydberg_file}")
-print(f"  n_max in JSON      : {n_max_json}  (rerun rydberg.py with larger n_max for IR/Rydberg transitions)")
-print(f"  Highest n in states: {max(s['n'] for s in states)}")
-# Count by source
-from collections import Counter
-src_counts = Counter(s['source'] for s in states)
-for src, cnt in src_counts.items():
-    print(f"  {src:12s}: {cnt} states")
-
-states.sort(key=lambda s: s['energy'])
-
-# APPLY SELECTION RULES
-# Δl = ±1  AND  ΔJ = 0,±1 (J=0→J=0 forbidden)
-# ΔJ enforced only when both states have a known J.
-
-
-print("\nApplying E1 selection rules (dl=+/-1, dJ=0,+/-1, no J=0->0)...")
-
-transitions = []
-
-for i in range(len(states)):
-    for j in range(i + 1, len(states)):
-        s_lower = states[i]
-        s_upper = states[j]
-
-        # Δl = ±1
-        if abs(s_upper['l_int'] - s_lower['l_int']) != 1:
-            continue
-
-        # ΔJ rule
-        if not j_selection_rule(s_upper['J_float'], s_lower['J_float']):
-            continue
-
-        delta_E = s_upper['energy'] - s_lower['energy']
-        if delta_E <= 0:
-            continue
-
-        wavelength = 1239.84 / delta_E
-
-        if wavelength < wl_min or wavelength > wl_max:
-            continue
-
-        # Spectral region
-        if wavelength < 10:
-            region = 'X-ray'
-        elif wavelength < 200:
-            region = 'Vacuum UV'
-        elif wavelength < 380:
-            region = 'UV'
-        elif wavelength < 750:
-            region = 'Visible'
-        elif wavelength < 2500:
-            region = 'Near-IR'
-        elif wavelength < 1e5:
-            region = 'Mid/Far-IR'
-        else:
-            region = 'Microwave'
-
-        transitions.append({
-            'upper_label'     : s_upper['label'],
-            'lower_label'     : s_lower['label'],
-            'upper_n'         : s_upper['n'],
-            'lower_n'         : s_lower['n'],
-            'upper_l'         : s_upper['l'],
-            'lower_l'         : s_lower['l'],
-            'upper_J'         : s_upper['J'],
-            'lower_J'         : s_lower['J'],
-            'delta_n'         : s_upper['n'] - s_lower['n'],
-            'upper_energy_eV' : round(s_upper['energy'], 6),
-            'lower_energy_eV' : round(s_lower['energy'], 6),
-            'delta_E_eV'      : round(delta_E, 6),
-            'wavelength_nm'   : round(wavelength, 4),
-            'region'          : region,
-            'upper_source'    : s_upper['source'],
-            'lower_source'    : s_lower['source'],
-        })
-
-print(f"Allowed transitions found: {len(transitions)}")
-
-# SUMMARY
-
-region_counts = defaultdict(int)
-for t in transitions:
-    region_counts[t['region']] += 1
-
-print(f"\nBreakdown by spectral region:")
-for region in ['X-ray', 'Vacuum UV', 'UV', 'Visible', 'Near-IR', 'Mid/Far-IR', 'Microwave']:
-    count = region_counts.get(region, 0)
-    if count > 0:
-        print(f"  {region:15s}: {count:5d} transitions")
-
-print(f"\nSample transitions (sorted by wavelength):")
-shown_regions = set()
-shown_per_region = defaultdict(int)
-for t in sorted(transitions, key=lambda x: x['wavelength_nm']):
-    r = t['region']
-    if shown_per_region[r] >= 3:
-        continue
-    if r not in shown_regions:
-        shown_regions.add(r)
-        print(f"\n  [{r}]")
-    shown_per_region[r] += 1
-    j_up  = f"J={t['upper_J']}" if t['upper_J'] else 'QDT'
-    j_lo  = f"J={t['lower_J']}" if t['lower_J'] else 'QDT'
-    print(f"    {t['upper_label']:>8} -> {t['lower_label']:<8}  "
-          f"{t['wavelength_nm']:>10.3f} nm  "
-          f"({t['delta_E_eV']:.4f} eV)  "
-          f"[{j_up} -> {j_lo}]  "
-          f"[{t['upper_source']}/{t['lower_source']}]")
-
-
-# SAVE
-
-os.makedirs(DATA_JSON_DIR, exist_ok=True)
-out_file = f"{DATA_JSON_DIR}/{element}_transitions.json"
-
-output = {
-    'species_id'           : element,
-    'element'              : _sp["symbol"],
-    'label'                : _sp["label"],
-    'kind'                 : _sp["kind"],
-    'charge'               : _sp["charge"],
-    'ionization_energy_eV' : IE,
-    'total_states'         : len(states),
-    'total_transitions'    : len(transitions),
-    'wavelength_filter_nm' : [wl_min, wl_max if wl_max != float('inf') else None],
-    'n_max_filter'         : n_max,
-    'region_counts'        : dict(region_counts),
-    'transitions'          : transitions
-}
-
-with open(out_file, 'w') as f:
-    json.dump(output, f, indent=2)
-
-print(f"\nSaved {len(transitions)} transitions to: {out_file}")
-print(f"{'='*60}\n")
+        nu, nl_ = s_up.n, s_lo.n
+        transitions.append(MetalTransition(
+            upper_label=up,
+            lower_label=lo,
+            upper_label_pretty=s_up.label_pretty or label_to_pretty(up),
+            lower_label_pretty=s_lo.label_pretty or label_to_pretty(lo),
+            upper_n=nu,
+            lower_n=nl_,
+            upper_l=s_up.l,
+            lower_l=s_lo.l,
+            upper_J=ln.get('upper_J') or s_up.J,
+            lower_J=ln.get('lower_J') or s_lo.J,
+            delta_n=(nu - nl_) if (nu is not None and nl_ is not None) else None,
+            upper_energy_eV=round(E_up, 6),
+            lower_energy_eV=round(E_lo, 6),
+            delta_E_eV=round(delta_E, 6),
+            wavelength_nm=round(wavelength, 4),
+            region=spectral_region(wavelength),
+            upper_source='NIST',
+            lower_source='NIST',
+            fik=ln.get('fik'),
+            gA=ln.get('gA'),
+            fosc=ln.get('fosc'),
+            Acc=ln.get('Acc'),
+        ))
+    return MetalLines(transitions=transitions, n_missing_lower=n_miss_lo,
+                      n_missing_upper=n_miss_up, n_outside_window=n_wl,
+                      n_resolved=n_resolved)

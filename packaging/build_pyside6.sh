@@ -21,15 +21,19 @@ elif [[ "${1:-}" != "" ]]; then
     exit 2
 fi
 
-uv sync --dev
+# Nuitka's early DLL scan derives "<output-dir>/<input>.build" and needs that
+# tree to exist before its own source-directory creation step. Recreate it.
+# pyside6-deploy also copies the final artifact into "exec_directory" without
+# creating the path, so the destination folder must exist too.
+mkdir -p src/linak/deployment dist/pyside6
+
+uv sync --dev --locked
 uv run pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
     output="dist/pyside6/LiNaK.app"
-elif [[ "$(uname -s)" == "Linux" ]]; then
-    output="dist/pyside6/LiNaK.bin"
 else
-    output="dist/pyside6/LiNaK"
+    output="dist/pyside6/LiNaK.bin"
 fi
 
 if [[ ! -e "$output" ]]; then

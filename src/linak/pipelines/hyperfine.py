@@ -1,33 +1,30 @@
-#!/usr/bin/env python3
 """
 hyperfine.py  —  Hyperfine structure, Zeeman & Breit-Rabi for any atom
 -----------------------------------------------------------------------
-Computes for each atomic state (n, l, J, isotope):
-  - Hyperfine F-level energies (magnetic dipole + electric quadrupole)
-  - Weak-field Zeeman splitting (linear regime, all m_F sublevels)
-  - Full Breit-Rabi diagram (exact diagonalisation, valid at any B field)
-  - g_F factors, allowed transitions, clock/cycling transition identification
+For each atomic state (n, l, J) of one isotope:
+  - Hyperfine F-level energies (magnetic dipole + electric quadrupole + octupole)
+  - g_F factors and the m_F sublevels (weak-field Zeeman)
+  - Breit-Rabi levels from 0 to --B-max Gauss
+  - the ground-state microwave clock interval
 
-Physics:
-  H_hf = A_hf·(I·J) + B_hf·[3(I·J)²+3(I·J)/2−I²J²] / [2I(2I−1)·2J(2J−1)]
-         + C_hf · octupole operator  (optional, kHz level)
-  E(F) = (A/2)·K + B·[3K(K+1)/4−I(I+1)J(J+1)] / [2I(2I−1)·2J(2J−1)]
-         + C_kHz·1e-3 · [5K³+...] / denom_oct
-         K = F(F+1)−I(I+1)−J(J+1)
-  Breit-Rabi: exact diagonalisation of H_hf + g_J·μ_B·B·J_z − g_I·μ_N·B·I_z
-  g_J: Landé formula (default) or experimental override via gJ_exp field
+The physics is ``physics/hyperfine_core.py``; this module loads the inputs,
+prints a summary and writes <El>_hyperfine.json, <El>_hyperfine.html and
+<El>_zeeman.html.
 
 Data sources (no hardcoding):
   Nuclear data:  data_json/nuclear_data.json        (built from IAEA CSVs)
-  HF constants:  data_json/<element>_hf_constants.json  (user provides / auto-fetch)
+  HF constants:  data_json/<element>_hf_constants.json  (user provides; a template
+                 is written when it is missing)
 
 Usage:
-  python hyperfine.py Na
-  python hyperfine.py Na --isotope 23 --states 3s1/2 3p1/2 3p3/2
-  python hyperfine.py Na --build-nuclear-data  (rebuild nuclear_data.json from CSVs)
-  python hyperfine.py Na --B-max 1000          (Breit-Rabi up to 1000 Gauss)
-  python hyperfine.py --all                    (run all elements with hf_constants)
+  linak --pipeline hyperfine Na
+  linak --pipeline hyperfine Na --isotope 23 --states 3s1/2 3p1/2 3p3/2
+  linak --pipeline hyperfine Na --build-nuclear-data  (rebuild nuclear_data.json from CSVs)
+  linak --pipeline hyperfine Na --B-max 1000          (Breit-Rabi up to 1000 Gauss)
+  linak --pipeline hyperfine --all                    (run all elements with hf_constants)
 """
+
+from __future__ import annotations
 
 __version__ = '1.1'   # + octupole C term in hyperfine_energy (C_kHz field)
                       # + experimental gJ override (gJ_exp field in hf_constants)
@@ -38,109 +35,122 @@ import json
 import math
 import os
 import re
-import sys
 from collections import defaultdict
+from dataclasses import asdict, replace
 
-import numpy as np
-from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, reference_path
-
-try:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-except ImportError:
-    print("Plotly not installed. Run: pip install plotly")
-    sys.exit(1)
-
-from linak.core.constants import (
-    MU_B_MHz_G,
-    MU_N_MHz_G,
-    MU_B_HZ_T,
-    HC_EV_NM,
-    C_SI,
-    HBAR_EV_S,
-    nuclide_label,
-    nuclide_plain,
-    default_isotope_A,
+from linak.core.constants import default_isotope_A, nuclide_label, nuclide_plain
+from linak.core.errors import MissingDataError
+from linak.core.fileio import write_json
+from linak.core.paths import reference_path
+from linak.core.workspace import Workspace
+from linak.physics.hyperfine_core import (
+    HfConstants,
+    HyperfineResult,
+    HyperfineState,
+    MicrowaveClock,
+    Nucleus,
+    compute,
+)
+from linak.report_templates import (
+    fullscreen_css_with,
+    inject_body,
+    inject_head,
+    inject_title,
+    load as load_template,
+    render as render_template,
+    style_wrap,
+    write_offline_report,
 )
 
+# ============================================================================
 # ARGUMENT PARSING
+# ============================================================================
 
-parser = argparse.ArgumentParser(description='Hyperfine structure and Zeeman diagram')
-parser.add_argument('element', nargs='?', default=None)
-parser.add_argument('--isotope',   type=int,   default=None,
-                    help='Mass number A (default: the most abundant natural isotope; Fr: 210)')
-parser.add_argument('--states',    nargs='+',  default=None,
-                    help='States to include e.g. 3s1/2 3p1/2 3p3/2')
-parser.add_argument('--B-max',     type=float, default=500.0,
-                    help='Max B field for Breit-Rabi diagram in Gauss (default: 500)')
-parser.add_argument('--B-points',  type=int,   default=500,
-                    help='Number of B-field points (default: 500)')
-parser.add_argument('--data-dir',  default=DATA_JSON_DIR)
-parser.add_argument('--output-dir',default=None,
-                    help='Output directory (default: resources/plots/<element>)')
-parser.add_argument('--all',       action='store_true',
-                    help='Run all elements with available hf_constants')
-parser.add_argument('--build-nuclear-data', action='store_true',
-                    help='Rebuild nuclear_data.json from IAEA CSV files')
-parser.add_argument('--magn-csv',  default=str(reference_path('Moments', 'magn_mom_recomm.csv')))
-parser.add_argument('--elec-csv',  default=str(reference_path('Moments', 'elec_mom_recomm.csv')))
-# Parse the command line only when run as a script, so the module can be imported (tests, GUI).
-args = parser.parse_args() if __name__ == '__main__' else parser.parse_args([])
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="linak --pipeline hyperfine",
+        description='Hyperfine structure and Zeeman diagram')
+    parser.add_argument('element', nargs='?', default=None)
+    parser.add_argument('--isotope',   type=int,   default=None,
+                        help='Mass number A (default: the most abundant natural isotope; Fr: 210)')
+    parser.add_argument('--states',    nargs='+',  default=None,
+                        help='States to include e.g. 3s1/2 3p1/2 3p3/2')
+    parser.add_argument('--B-max',     type=float, default=500.0,
+                        help='Max B field for Breit-Rabi diagram in Gauss (default: 500)')
+    parser.add_argument('--B-points',  type=int,   default=500,
+                        help='Number of B-field points (default: 500)')
+    parser.add_argument('--data-dir',  default=str(Workspace.current().data_json_dir))
+    parser.add_argument('--output-dir',default=None,
+                        help='Output directory (default: .linak/plots/<element>)')
+    parser.add_argument('--all',       action='store_true',
+                        help='Run all elements with available hf_constants')
+    parser.add_argument('--build-nuclear-data', action='store_true',
+                        help='Rebuild nuclear_data.json from IAEA CSV files')
+    parser.add_argument('--magn-csv',  default=str(reference_path('Moments', 'magn_mom_recomm.csv')))
+    parser.add_argument('--elec-csv',  default=str(reference_path('Moments', 'elec_mom_recomm.csv')))
+    return parser
 
-DATA_DIR = args.data_dir
-os.makedirs(DATA_DIR, exist_ok=True)
+# ============================================================================
+# STEP 1 — BUILD nuclear_data.json FROM IAEA CSVs  (if requested or missing)
+# ============================================================================
+
+# Half-life field of the IAEA tables: "22.5 ms", "3.8 m", "7x105 y",
+# "2.3 x 105 y", "1.4x10*17 y", "5.0 1010y" (the exponent's superscript is
+# flattened, so "105" means 10^5), with optional ">", "(", "est" decorations.
+# Longest units first: "ms" must not match as minutes.
+_HALFLIFE_RE = re.compile(
+    r'([\d.]+)\s*(?:x\s*)?(?:10[\^*]?(\d+))?\s*(ms|us|ns|ps|fs|s|m|h|d|y)\b')
+_HALFLIFE_UNIT_S = {'fs': 1e-15, 'ps': 1e-12, 'ns': 1e-9, 'us': 1e-6, 'ms': 1e-3,
+                    's': 1, 'm': 60, 'h': 3600, 'd': 86400, 'y': 3.156e7}
 
 
-# STEP 1 : BUILD nuclear_data.json FROM IAEA CSVs  (if requested or missing)
+def _parse_spin(s):
+    """Nuclear spin I from an IAEA spin/parity field (``3/2-``, ``(3/2)+``, ``1(-)``).
 
-_HL_UNITS = {'fs': 1e-15, 'ps': 1e-12, 'ns': 1e-9, 'us': 1e-6, 'ms': 1e-3,
-             's': 1.0, 'm': 60.0, 'h': 3600.0, 'd': 86400.0, 'y': 3.156e7}
+    ``None`` for ambiguous ("4 or 5") or unparsable assignments.
+    """
+    text = s.strip()
+    if ' or ' in text:
+        return None
+    m = re.fullmatch(r'(\d+)(?:/(\d+))?', re.sub(r'[()+\-\s]', '', text))
+    if not m:
+        return None
+    return int(m.group(1)) / int(m.group(2) or 1)
 
 
-def parse_spin(s):
-    """Nuclear spin from IAEA strings such as '3/2', '(3+)', '3/2(-)', '1(-)' (parity dropped)."""
-    s = re.sub(r'[()+\-\s]', '', str(s))
-    if '/' in s:
-        try:
-            n, d = s.split('/')
-            return int(n) / int(d)
-        except (ValueError, ZeroDivisionError):
-            return None
+def _parse_float(s):
+    """A moment value without its sign decoration and uncertainty: ``+0.579(1)``."""
+    s = str(s).strip()
+    s = re.sub(r'^\([\+\-]\)', '', s)
+    s = re.sub(r'\(\d+\)', '', s)
+    s = re.sub(r'\s', '', s)
     try:
-        v = float(s)
-        return v if v >= 0 else None
+        return float(s)
     except ValueError:
         return None
 
 
-def halflife_s(s):
-    """Half-life in seconds from '22.5 ms', '4.9 m', '1.2e3 y' ...; inf = stable, 0.0 = unknown.
-    Longest unit first: 'ms' must not be read as 'm' (minutes) -- that made Fr-219 22.5 ms = 1350 s."""
-    s = str(s).strip().lower()
+def _halflife_s(s):
+    """Half-life in seconds; ``inf`` for stable, 0.0 if blank or unparsable (unknown)."""
+    s = s.strip().lower()
     if s == 'stable':
         return float('inf')
-    m = re.match(r'([\d.]+(?:\s*x\s*10\^?\d+)?)\s*(fs|ps|ns|us|ms|s|m|h|d|y)\b', s)
+    m = _HALFLIFE_RE.search(s)
     if not m:
         return 0.0
+    mantissa, exponent, unit = m.groups()
     try:
-        return float(re.sub(r'\s*x\s*10\^?', 'e', m.group(1))) * _HL_UNITS[m.group(2)]
+        value = float(mantissa)
     except ValueError:
         return 0.0
+    if exponent is not None:
+        value *= 10.0 ** int(exponent)
+    return value * _HALFLIFE_UNIT_S[unit]
 
 
 def build_nuclear_data(magn_csv, elec_csv, out_path):
     """Parse IAEA magnetic + quadrupole CSV files into nuclear_data.json."""
     import csv
-
-    def parse_float(s):
-        s = str(s).strip()
-        s = re.sub(r'^\([\+\-]\)', '', s)
-        s = re.sub(r'\(\d+\)', '', s)
-        s = re.sub(r'\s', '', s)
-        try:
-            return float(s)
-        except:
-            return None
 
     magn = {}
     with open(magn_csv, encoding='utf-8', errors='ignore') as f:
@@ -150,9 +160,9 @@ def build_nuclear_data(magn_csv, elec_csv, out_path):
                 A  = int(r['n.n+n.z'].strip())
                 if float(r['energy [keV]'].strip() or '0') != 0:
                     continue
-                I  = parse_spin(r['spin'])
-                mu = parse_float(r['magnetic dipole [nm]'])
-                hl = halflife_s(r['halflife'])
+                I  = _parse_spin(r['spin'])
+                mu = _parse_float(r['magnetic dipole [nm]'])
+                hl = _halflife_s(r['halflife'])
                 if I is None or I == 0:
                     continue
                 key = (z, A)
@@ -165,8 +175,8 @@ def build_nuclear_data(magn_csv, elec_csv, out_path):
                         'halflife_str': r['halflife'].strip(),
                         'stable': r['halflife'].strip().lower() == 'stable',
                     }
-            except:
-                pass
+            except (KeyError, ValueError):
+                continue  # malformed row (blank Z/A/energy)
 
     quad = {}
     with open(elec_csv, encoding='utf-8', errors='ignore') as f:
@@ -176,11 +186,11 @@ def build_nuclear_data(magn_csv, elec_csv, out_path):
                 A = int(r['n.n+n.z'].strip())
                 if float(r['energy [keV]'].strip() or '0') != 0:
                     continue
-                Q = parse_float(r['electric quadrupole [b]'])
+                Q = _parse_float(r['electric quadrupole [b]'])
                 if Q is not None:
                     quad[(z, A)] = Q
-            except:
-                pass
+            except (KeyError, ValueError):
+                continue  # malformed row (blank Z/A/energy)
 
     isotopes = []
     for (z, A), d in sorted(magn.items()):
@@ -196,77 +206,30 @@ def build_nuclear_data(magn_csv, elec_csv, out_path):
         'n_isotopes': len(isotopes),
         'isotopes': isotopes,
     }
-    with open(out_path, 'w') as f:
-        json.dump(out, f, indent=2)
+    write_json(out_path, out)
     print(f"✓ Built {out_path}: {len(isotopes)} isotopes ({sum(d['stable'] for d in isotopes)} stable)")
     return out
 
 
-NUCLEAR_DATA_PATH = os.path.join(DATA_DIR, 'nuclear_data.json')
+def load_nuclear_index(path):
+    """Load nuclear_data.json into a symbol -> [isotope, ...] lookup (sorted by A)."""
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
 
-if args.build_nuclear_data:
-    build_nuclear_data(args.magn_csv, args.elec_csv, NUCLEAR_DATA_PATH)
-    if args.element is None:
-        sys.exit(0)
+    nuclear = defaultdict(list)
+    for iso in data['isotopes']:
+        nuclear[iso['symbol']].append(iso)
+    for sym in nuclear:
+        nuclear[sym].sort(key=lambda x: x['A'])
+    return nuclear
 
-if not os.path.exists(NUCLEAR_DATA_PATH):
-    print(f"nuclear_data.json not found at {NUCLEAR_DATA_PATH}.")
-    print(f"Run: python hyperfine.py --build-nuclear-data "
-          f"--magn-csv {args.magn_csv} --elec-csv {args.elec_csv}")
-    sys.exit(1)
+# ============================================================================
+# STEP 2 — LOAD  <element>_hf_constants.json (or write a template)
+# ============================================================================
 
-with open(NUCLEAR_DATA_PATH) as f:
-    _nd = json.load(f)
-
-# Build lookup: symbol -> list of isotope dicts, sorted by A
-NUCLEAR = defaultdict(list)
-for iso in _nd['isotopes']:
-    NUCLEAR[iso['symbol']].append(iso)
-for sym in NUCLEAR:
-    NUCLEAR[sym].sort(key=lambda x: x['A'])
-
-
-# STEP 2 : LOAD / FETCH  <element>_hf_constants.json
-
-def fetch_hf_constants_nist(element, out_path):
-    """
-    Attempt to scrape A_hf and B_hf from NIST ASD energy levels page.
-    Falls back gracefully if network is unavailable.
-    Saves whatever it finds to out_path as a starting template.
-    """
-    print(f"  Attempting NIST ASD fetch for {element}...")
-    try:
-        import urllib.request, html
-        url = (
-            f"https://physics.nist.gov/cgi-bin/ASD/energy1.pl?"
-            f"spectrum={element}+I&units=1&format=2&output=0&"
-            f"page_size=15&multiplet_ordered=0&conf_out=on&term_out=on&"
-            f"level_out=on&unc_out=1&j_out=on&lande_out=on&perc_out=on&"
-            f"biblio=on&hf_out=on&submit=Retrieve+Data"
-        )
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            content = resp.read().decode('utf-8', errors='ignore')
-
-        # Parse tab-separated lines for hf splitting
-        hf = {}
-        for line in content.split('\n'):
-            if '\t' not in line:
-                continue
-            cols = [c.strip().strip('"') for c in line.split('\t')]
-            if len(cols) < 5:
-                continue
-            # Look for lines with config + J + level energy
-            # NIST ASD tab format varies
-            pass
-
-        print(f"  NIST ASD fetched but hf parsing requires manual verification.")
-        print(f"  Creating template file at {out_path}")
-
-    except Exception as e:
-        print(f"  NIST fetch failed ({e}). Creating blank template.")
-
-    # Write a template the user fills in
+def write_hf_constants_template(out_path):
+    """Write a ``<element>_hf_constants.json`` template for the user to fill in."""
+    print(f"  Creating template file at {out_path}")
     template = {
         "_source": "Fill from Steck alkali data sheets (steck.us/alkalidata) or NIST ASD",
         "_format": {"A_MHz": "hyperfine A constant (MHz)", "B_MHz": "hyperfine B constant (MHz, 0 for J=1/2)"},
@@ -276,26 +239,14 @@ def fetch_hf_constants_nist(element, out_path):
             "3p3/2": {"A_MHz":  18.534,    "B_MHz": 2.724}
         }
     }
-    with open(out_path, 'w') as f:
-        json.dump(template, f, indent=2)
+    write_json(out_path, template)
     print(f"  Template saved to {out_path}. Please fill in A_MHz and B_MHz values.")
-    return None
 
 
-def _parse_hf_block(block):
-    hf = {}
-    for key, val in block.items():
-        if key.startswith('_'):
-            continue
-        if isinstance(val, dict) and 'A_MHz' in val:
-            hf[key] = {
-                'A_MHz':  float(val['A_MHz']),
-                'B_MHz':  float(val.get('B_MHz',  0.0)),
-                'C_kHz':  float(val.get('C_kHz',  0.0)),   # magnetic octupole
-                'gJ_exp': float(val['gJ_exp']) if 'gJ_exp' in val else None,
-                'S_exp':  float(val['S_exp'])  if 'S_exp'  in val else None,
-            }
-    return hf
+def _parse_hf_block(block) -> dict[str, HfConstants]:
+    """state_label -> HfConstants of one block (keys starting with '_' are metadata)."""
+    return {key: HfConstants.from_json(val) for key, val in block.items()
+            if not key.startswith('_') and isinstance(val, dict) and 'A_MHz' in val}
 
 
 def _block_isotope_A(block, element):
@@ -304,74 +255,67 @@ def _block_isotope_A(block, element):
     return int(m.group(1)) if m else None
 
 
-def load_hf_constants(element, data_dir, isotope_A=None):
+def load_hf_constants(element, data_dir, isotope_A=None, nuclear=None):
     """
-    Load hyperfine constants from data_json/<element>_hf_constants.json for ONE isotope.
-    Returns dict: state_label -> {A_MHz, B_MHz, C_kHz, ...} or None if file missing.
+    Hyperfine constants of ONE isotope from data_json/<element>_hf_constants.json, as
+    (state_label -> HfConstants in file order, provenance text); the constants are None if the
+    file is missing (a template is written) or has no states.
 
     Isotope handling (A = isotope_A; None = whatever the main block is):
       1. main block's '_isotope' is element-A          -> use it
       2. an alt block ('_Rb87_D_line', ...) is element-A -> use that block
-      3. otherwise rescale the main block from its reference isotope:
-            A_hf ∝ g_I   and   B_hf ∝ Q     (hyperfine anomaly neglected, ~0.1-1 %)
+      3. otherwise rescale the main block from its reference isotope (nuclear moments from
+         *nuclear*):  A_hf ∝ g_I  and  B_hf ∝ Q   (hyperfine anomaly neglected, ~0.1-1 %)
          with a printed warning; C (octupole) is dropped (no scaling law).
-    Provenance of the last call is left in load_hf_constants.last_source (a string).
     """
     path = os.path.join(data_dir, f"{element}_hf_constants.json")
     if not os.path.exists(path):
         print(f"\n  No hf_constants file found for {element}.")
-        fetch_hf_constants_nist(element, path)
-        return None
+        write_hf_constants_template(path)
+        return None, ''
 
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         raw = json.load(f)
 
     main_A = _block_isotope_A(raw, element)
-    load_hf_constants.last_source = f"main block ({raw.get('_isotope', 'isotope not stated')})"
     if isotope_A is None or main_A is None or isotope_A == main_A:
-        hf = _parse_hf_block(raw)
-        return hf if hf else None
+        return _parse_hf_block(raw) or None, f"main block ({raw.get('_isotope', 'isotope not stated')})"
 
     for key, val in raw.items():
         if key.startswith('_') and isinstance(val, dict) and _block_isotope_A(val, element) == isotope_A:
-            hf = _parse_hf_block(val)
-            load_hf_constants.last_source = f"alt block {key} ({val.get('_isotope')})"
-            return hf if hf else None
+            return _parse_hf_block(val) or None, f"alt block {key} ({val.get('_isotope')})"
 
-    # no block for this isotope: rescale from the reference isotope 
-    ref = get_isotope(element, main_A)
-    tgt = get_isotope(element, isotope_A)
+    # no block for this isotope: rescale from the reference isotope
+    ref = get_isotope(nuclear or {}, element, main_A)
+    tgt = get_isotope(nuclear or {}, element, isotope_A)
     base = _parse_hf_block(raw)
     if not base or ref is None or tgt is None or not ref.get('g_I'):
         print(f"  ERROR: no {element}-{isotope_A} hyperfine constants and cannot rescale "
               f"from {element}-{main_A}; add a block to {path}")
-        return None
+        return None, f"main block ({raw.get('_isotope', 'isotope not stated')})"
     fA = tgt['g_I'] / ref['g_I']
     fB = (tgt['Q_barn'] / ref['Q_barn']) if ref.get('Q_barn') else 0.0
-    hf = {}
-    for lbl, c in base.items():
-        hf[lbl] = dict(c, A_MHz=c['A_MHz'] * fA, B_MHz=c['B_MHz'] * fB, C_kHz=0.0)
-    load_hf_constants.last_source = (f"RESCALED from {element}-{main_A}: A x {fA:.5f} (g_I ratio), "
-                                     f"B x {fB:.5f} (Q ratio)")
+    hf = {lbl: replace(c, A_MHz=c.A_MHz * fA, B_MHz=c.B_MHz * fB, C_kHz=0.0)
+          for lbl, c in base.items()}
     print(f"  WARNING: no measured {element}-{isotope_A} hyperfine constants in {os.path.basename(path)}.\n"
           f"           Rescaled from {element}-{main_A}: A x {fA:.5f} (g_I), B x {fB:.5f} (Q); "
           f"hyperfine anomaly neglected (~0.1-1 %), octupole dropped.")
-    return hf
+    return hf, (f"RESCALED from {element}-{main_A}: A x {fA:.5f} (g_I ratio), "
+                f"B x {fB:.5f} (Q ratio)")
 
+# ============================================================================
+# STEP 3 — NUCLEAR DATA HELPERS
+# ============================================================================
 
-load_hf_constants.last_source = ''
-
-# STEP 3 : NUCLEAR DATA HELPERS
-
-def get_isotope(element, A=None):
+def get_isotope(nuclear, element, A=None):
     """
-    Return the isotope dict for (element, A).
+    Return the isotope dict for (element, A) from the `nuclear` lookup.
     If A is None the default is the most abundant NATURAL isotope
     (constants.default_isotope_A: Li-7, Na-23, K-39, Rb-85, Cs-133; Fr-210, the isotope the
     shipped constants file covers). An explicit A always overrides the default.
     Elements outside that table fall back to the highest-A stable isotope, else the longest-lived.
     """
-    isos = NUCLEAR.get(element, [])
+    isos = nuclear.get(element, [])
     if not isos:
         return None
 
@@ -388,506 +332,119 @@ def get_isotope(element, A=None):
     stable = [i for i in isos if i['stable']]
     if stable:
         return stable[-1]
+
+    # No stable: return longest-lived
     return max(isos, key=lambda i: i['halflife_s'])
 
 
-def parse_state_label(label):
-    """
-    Parse a state label like '3s1/2', '3p3/2', '4d5/2', '3s' into (n, l, J).
-    Returns (n, l_char, J_float) or None.
-    """
-    m = re.match(r'^(\d+)([spdfgh])([\d/]+)?$', label.strip())
-    if not m:
-        return None
-    n      = int(m.group(1))
-    l_char = m.group(2)
-    j_str  = m.group(3)
-    if j_str:
-        if '/' in j_str:
-            jn, jd = j_str.split('/')
-            J = int(jn) / int(jd)
-        else:
-            J = float(j_str)
-    else:
-        # Infer J from l and ground-state convention
-        l_int = {'s':0,'p':1,'d':2,'f':3,'g':4}[l_char]
-        J = l_int + 0.5   # default to J = l + 1/2 for doublet
-    return n, l_char, J
+# ============================================================================
+# STEP 4 — RUN ONE ELEMENT
+# ============================================================================
 
-
-# STEP 4 :  HYPERFINE PHYSICS
-
-def F_levels(I, J):
-    """Return list of allowed F quantum numbers: |I-J|, ..., I+J."""
-    F_min = abs(I - J)
-    F_max = I + J
-    Fs = []
-    F = F_min
-    while F <= F_max + 1e-9:
-        Fs.append(round(F * 2) / 2)   # keep half-integer precision
-        F += 1
-    return Fs
-
-
-def _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, ident):
-    """
-    Hyperfine interaction as a polynomial in K = F(F+1) − I(I+1) − J(J+1) = 2 I·J.
-
-    K may be a float (energy of one |F⟩ level) or a square matrix (the operator 2 I·J in the
-    |m_I, m_J⟩ basis; `ident` is then the identity matrix). The SAME expression serves both, so the
-    Breit–Rabi Hamiltonian at B = 0 reproduces `hyperfine_energy` to machine precision.
-
-      dipole      E_A = A/2 · K
-      quadrupole  E_B = B · [3/2 K(K+1) − 2 I(I+1) J(J+1)] / [(2I−1) 2I (2J−1) 2J]
-      octupole    E_C = C · [5K²(K/4 + 1) + K(I(I+1) + J(J+1) + 3 − 3 I(I+1) J(J+1))
-                             − 5 I(I+1) J(J+1)] / [I(I−1)(2I−1) J(J−1)(2J−1)]
-
-    The octupole expression is Steck's (Rb/Cs D-line data); it equals, up to one constant, the
-    exact rank-3 angular factor (−1)^{I+J+F} {I J F; J I 3} (checked to 1e-16 for several I, J).
-    Quadrupole needs I ≥ 1 and J ≥ 1; octupole needs I ≥ 3/2 and J ≥ 3/2 (otherwise exactly 0).
-    """
-    mat = np.ndim(K) == 2
-    II, JJ = I * (I + 1), J * (J + 1)
-    E = 0.5 * A_MHz * K
-    if B_MHz != 0.0 and I >= 1.0 - 1e-9 and J >= 1.0 - 1e-9:
-        denom = (2*I - 1) * (2*I) * (2*J - 1) * (2*J)
-        if abs(denom) > 1e-12:
-            KK1 = K @ K + K if mat else K * (K + 1)
-            E = E + B_MHz * (1.5 * KK1 - 2 * II * JJ * ident) / denom
-    if C_kHz != 0.0 and I >= 1.5 - 1e-9 and J >= 1.5 - 1e-9:
-        denom = I * (I - 1) * (2*I - 1) * J * (J - 1) * (2*J - 1)
-        if abs(denom) > 1e-12:
-            K2 = K @ K if mat else K * K
-            K3 = K2 @ K if mat else K2 * K
-            poly = (1.25 * K3 + 5.0 * K2 + (II + JJ + 3 - 3 * II * JJ) * K - 5 * II * JJ * ident)
-            E = E + (C_kHz * 1e-3) * poly / denom
-    return E
-
-
-def hyperfine_energy(F, I, J, A_MHz, B_MHz=0.0, C_kHz=0.0):
-    """
-    Hyperfine energy of |I, J, F⟩ in MHz relative to the centroid, with magnetic dipole (A, MHz),
-    electric quadrupole (B, MHz) and magnetic octupole (C, kHz) terms. See `_hf_polynomial` for the
-    formulas (K = F(F+1) − I(I+1) − J(J+1)).
-
-    References: Steck, Alkali D Line Data (hyperfine structure section); Armstrong (1971)
-    Adv. At. Mol. Phys. 7:149.
-    """
-    K = F*(F+1) - I*(I+1) - J*(J+1)
-    return _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, 1.0)
-
-
-def lande_gJ(L, S, J, gJ_exp=None):
-    """
-    Landé g_J factor.
-    g_J = 1 + [J(J+1) + S(S+1) − L(L+1)] / [2J(J+1)]
-
-    For non-alkali atoms or when higher accuracy is needed, pass
-    gJ_exp (experimental value from NIST or literature) to override
-    the Landé formula. This handles:
-      - Heavy atoms where LS coupling breaks down (jj coupling)
-      - Multi-electron atoms (Yb, Sr, Ca, Hg, etc.)
-      - States where QED corrections matter (>0.1% level)
-    For J=0 returns 0 regardless.
-    """
-    if J < 1e-9:
-        return 0.0
-    if gJ_exp is not None:
-        return float(gJ_exp)
-    return 1.0 + (J*(J+1) + S*(S+1) - L*(L+1)) / (2*J*(J+1))
-
-
-def gF_factor(F, I, J, gJ, gI=0.0):
-    """
-    g_F factor in the weak-field Zeeman regime.
-    g_F = g_J·[F(F+1)+J(J+1)−I(I+1)] / [2F(F+1)]
-          − g_I·(μ_N/μ_B)·[F(F+1)+I(I+1)−J(J+1)] / [2F(F+1)]
-    μ_N/μ_B ≈ 1/1836.15 (ratio of nuclear to Bohr magneton)
-    """
-    if F < 1e-9:
-        return 0.0
-    FF = F*(F+1)
-    JJ = J*(J+1)
-    II = I*(I+1)
-    gF  =  gJ * (FF + JJ - II) / (2*FF)
-    gF -= gI * (1/1836.15267) * (FF + II - JJ) / (2*FF)
-    return gF
-
-
-def zeeman_energy_weak(F, mF, E_hf_MHz, gF):
-    """
-    Weak-field Zeeman energy: E = E_hf + g_F·μ_B·B·m_F  [MHz, B in Gauss]
-    """
-    # g_F·μ_B·B·m_F = g_F · 1.399625 MHz/G · B · m_F
-    # Returned as a function of B: caller multiplies by B_gauss
-    return E_hf_MHz, gF * MU_B_MHz_G * mF   # (offset, slope_per_gauss)
-
-
-# STEP 5 : BREIT-RABI EXACT DIAGONALISATION
-
-def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
-                        B_gauss_array, C_kHz=0.0):
-    """
-    Exact Breit-Rabi diagonalisation for arbitrary B field.
-
-    Builds the full (2I+1)(2J+1) × (2I+1)(2J+1) Hamiltonian H = H_hf + H_Z and diagonalises it at
-    every B.
-
-    H_hf is the EXACT hyperfine operator (dipole + quadrupole + octupole, no approximation): the
-    operator K = 2 I·J is built in the |m_I, m_J⟩ basis (I_zJ_z + ½(I_+J_- + I_-J_+)) and the same
-    polynomial in K that gives the analytic F-level energies (`_hf_polynomial`) is applied to the
-    matrix. At B = 0 the eigenvalues therefore equal `hyperfine_energy` exactly, with (2F+1)-fold
-    degeneracy.
-    H_Z = (g_J μ_B m_J − g_I μ_N m_I) B  (diagonal in |m_I, m_J⟩).
-
-    Basis index: idx = (m_I index)·(2J+1) + (m_J index), m = −I..+I, −J..+J.
-
-    Returns:
-      energies[B_idx, level_idx]  — sorted eigenvalues in MHz
-      labels[level_idx]           — approximate (F, m_F) label at B→0
-    """
-    dim_I = round(2*I + 1)
-    dim_J = round(2*J + 1)
-    dim   = dim_I * dim_J
-
-    mI_vals = np.array([-I + i for i in range(dim_I)])
-    mJ_vals = np.array([-J + j for j in range(dim_J)])
-
-    def idx(mi_i, mj_i):
-        return mi_i * dim_J + mj_i
-
-    # K = 2 I·J 
-    # ⟨m_I, m_J|I_zJ_z|m_I, m_J⟩ = m_I m_J
-    # ⟨m_I+1, m_J−1|I_+J_-|m_I, m_J⟩ = sqrt[(I−m_I)(I+m_I+1)] sqrt[(J+m_J)(J−m_J+1)]
-    IJ = np.zeros((dim, dim))
-    for mi_i, mI in enumerate(mI_vals):
-        for mj_i, mJ in enumerate(mJ_vals):
-            r = idx(mi_i, mj_i)
-            IJ[r, r] += mI * mJ
-            if mi_i + 1 < dim_I and mj_i - 1 >= 0:
-                r2 = idx(mi_i + 1, mj_i - 1)
-                me = (math.sqrt((I - mI)*(I + mI + 1)) *
-                      math.sqrt((J + mJ)*(J - mJ + 1)))
-                IJ[r2, r] += 0.5 * me
-                IJ[r, r2] += 0.5 * me
-    K_mat = 2.0 * IJ
-    H_hf = _hf_polynomial(K_mat, I, J, A_MHz, B_MHz_quad, C_kHz, np.eye(dim))
-
-    # H_Z diagonal (per Gauss)
-    H_Z_diag = np.array([
-        gJ * MU_B_MHz_G * mJ_vals[mj_i]
-        - gI * MU_N_MHz_G * mI_vals[mi_i]
-        for mi_i in range(dim_I)
-        for mj_i in range(dim_J)
-    ])
-
-    #(F, m_F) labels at B = 0 
-    # A vanishing probe field along z splits each (2F+1)-fold level by m_F so that the eigenvectors
-    # are m_F eigenstates (H_hf commutes with F_z = m_I + m_J); it is far below any energy scale.
-    mF_diag = np.array([mI_vals[i] + mJ_vals[j] for i in range(dim_I) for j in range(dim_J)])
-    # F² = I(I+1) + J(J+1) + 2 I·J is added as a tiny tie-breaker so that F is a good label even when
-    # the hyperfine levels are degenerate (A = B = C = 0): the labels then come from <F²>, not from
-    # the nearest F energy (which is arbitrary when every F has the same energy).
-    F2_mat = (I*(I+1) + J*(J+1)) * np.eye(dim) + K_mat
-    evals0, evecs0 = np.linalg.eigh(H_hf + np.diag(1e-9 * mF_diag) + 1e-7 * F2_mat)
-    Fs = F_levels(I, J)
-    labels = []
-    for k in range(dim):
-        v      = evecs0[:, k]
-        dom_r  = int(np.argmax(np.abs(v)**2))
-        mI     = mI_vals[dom_r // dim_J]
-        mJ     = mJ_vals[dom_r %  dim_J]
-        mF_approx = round(2*(mI + mJ)) / 2   # m_F = m_I + m_J
-        F2_exp = float(np.real(v.conj() @ F2_mat @ v))
-        best_F = min(Fs, key=lambda F_: abs(F_*(F_+1) - F2_exp))
-        labels.append((best_F, mF_approx))
-
-    # Diagonalise at each B 
-    all_energies = np.zeros((len(B_gauss_array), dim))
-    for bi, B in enumerate(B_gauss_array):
-        H = H_hf.copy()
-        np.fill_diagonal(H, H.diagonal() + H_Z_diag * B)
-        all_energies[bi] = np.linalg.eigvalsh(H)
-
-    return all_energies, labels
-
-
-
-# STEP 6 : TRANSITION SELECTION RULES
-
-def allowed_transitions(Fs_lower, Fs_upper):
-    """
-    E1 selection rules between two sets of F levels:
-      ΔF = 0, ±1  (F=0 → F=0 forbidden)
-    Returns list of (F_lower, F_upper) pairs.
-    """
-    transitions = []
-    for F_l in Fs_lower:
-        for F_u in Fs_upper:
-            dF = abs(F_u - F_l)
-            if dF > 1.001:
-                continue
-            if F_l < 0.001 and F_u < 0.001:
-                continue   # 0→0 forbidden
-            transitions.append((F_l, F_u))
-    return transitions
-
-
-def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_gs,
-                                 B_MHz_gs=0.0, C_kHz_gs=0.0):
-    """
-    Identify:
-      - Cycling transition: F_max → F_max + 1  (closed for laser cooling). Needs the real list of
-        allowed (F_lower, F_upper) pairs of the resonance line (see `allowed_transitions`); with an
-        empty list no cycling transition is reported.
-      - Microwave clock: ground ΔF=1 interval at m_F = 0 (B-insensitive to 1st order), computed
-        with the full A, B and C ground-state constants (B and C vanish for J = 1/2).
-    """
-    F_max_gs = max(Fs_ground)
-    special  = {}
-
-    # Cycling: ground F_max → excited F_max + 1
-    for F_l, F_u in transitions_list:
-        if abs(F_l - F_max_gs) < 0.001 and abs(F_u - (F_max_gs + 1)) < 0.001:
-            special['cycling'] = (F_l, F_u)
-            break
-
-    if len(Fs_ground) >= 2:
-        F1 = Fs_ground[-1]   # F_max
-        F2 = Fs_ground[-2]   # F_max - 1
-        dE = hyperfine_energy(F1, I_gs, J_gs, A_MHz_gs, B_MHz_gs, C_kHz_gs) - \
-             hyperfine_energy(F2, I_gs, J_gs, A_MHz_gs, B_MHz_gs, C_kHz_gs)
-        nu_MHz = abs(dE)
-        special['microwave_clock'] = {
-            'F_upper': F1, 'F_lower': F2,
-            'frequency_MHz': nu_MHz,
-            'frequency_GHz': nu_MHz / 1e3,
-            'frequency_Hz':  nu_MHz * 1e6,
-            'wavelength_m':  C_SI / (nu_MHz * 1e6) if nu_MHz > 0 else None,
-            'wavelength_cm': C_SI * 1e-4 / nu_MHz if nu_MHz > 0 else None,
-            'note': 'Zero-field ground ΔF=1 interval (m_F=0 clock to first order in B)',
-        }
-
-    return special
-
-
-# STEP 7 : MAIN COMPUTATION PER ELEMENT
-
-
-def run_element(element, isotope_A=None, state_labels=None,
-                B_max=500.0, B_points=500, data_dir=DATA_JSON_DIR):
+def run_element(element, nuclear, isotope_A=None, state_labels=None,
+                B_max=500.0, B_points=500, data_dir=None) -> HyperfineResult | None:
+    if data_dir is None:
+        data_dir = str(Workspace.current().data_json_dir)
 
     print(f"\n{'='*65}")
     print(f"  {element}  — Hyperfine Structure")
     print(f"{'='*65}")
 
-    # Nuclear data 
-    iso = get_isotope(element, isotope_A)
+    # ── Nuclear data ─────────────────────────────────────────────────────────
+    iso = get_isotope(nuclear, element, isotope_A)
     if iso is None:
         print(f"  ERROR: No nuclear data found for {element}")
         return None
 
-    I    = iso['I']
-    mu_I = iso['mu_I'] or 0.0
-    Q    = iso['Q_barn']
-    gI   = iso['g_I'] or 0.0
-    A    = iso['A']
-    print(f"  Isotope: {element}-{A}")
-    print(f"  I = {I}  μ_I = {mu_I:.5f} nm  Q = {Q:.5f} b  g_I = {gI:.5f}")
+    nucleus = Nucleus.from_json(iso)
+    print(f"  Isotope: {element}-{nucleus.A}")
+    print(f"  I = {nucleus.I}  μ_I = {nucleus.mu_I:.5f} nm  Q = {nucleus.Q_barn:.5f} b"
+          f"  g_I = {nucleus.gI:.5f}")
 
-    if I == 0:
-        print(f"  I=0: no hyperfine structure. Exiting.")
+    if nucleus.I == 0:
+        print("  I=0: no hyperfine structure. Exiting.")
         return None
 
-    # HF constants 
-    hf_consts = load_hf_constants(element, data_dir, A)
-    print(f"  HF constants: {load_hf_constants.last_source}")
+    # ── HF constants ─────────────────────────────────────────────────────────
+    hf_consts, hf_source = load_hf_constants(element, data_dir, nucleus.A, nuclear)
+    print(f"  HF constants: {hf_source}")
     if hf_consts is None:
         print(f"  No hf_constants available. Fill in {data_dir}/{element}_hf_constants.json")
         return None
 
-    # Rydberg data for state energies 
+    # ── Quantum defects, to scale A to states without constants ─────────────
     ryd_file = os.path.join(data_dir, f"{element}_rydberg.json")
     ryd_data = {}
     if os.path.exists(ryd_file):
-        with open(ryd_file) as f:
+        with open(ryd_file, encoding='utf-8') as f:
             ryd_data = json.load(f)
 
     # If no states specified, use all states in hf_constants
     if state_labels is None:
-        state_labels = [k for k in hf_consts if not k.startswith('_')]
+        state_labels = list(hf_consts)
 
     print(f"  States: {', '.join(state_labels)}")
 
-    # Process each state 
-    B_arr = np.linspace(0, B_max, B_points)
-    state_results = []
-
-    for slabel in state_labels:
-        parsed = parse_state_label(slabel)
-        if parsed is None:
-            print(f"  Warning: could not parse state '{slabel}' — skipping")
-            continue
-
-        n, l_char, J = parsed
-        l_int = {'s':0,'p':1,'d':2,'f':3,'g':4}.get(l_char, 0)
-        S = 0.5   # electron spin; overridden by S_exp for non-alkalis
-        L = l_int
-
-        # HF constants ; read all fields including new ones
-        hfc    = hf_consts.get(slabel, {})
-        A_MHz  = hfc.get('A_MHz', 0.0)
-        B_MHz  = hfc.get('B_MHz', 0.0)
-        C_kHz  = hfc.get('C_kHz', 0.0)    # magnetic octupole (optional)
-        gJ_exp = hfc.get('gJ_exp', None)   # experimental g_J override (optional)
-        S_exp  = hfc.get('S_exp',  None)   # effective S for Landé if not 0.5
-
-        # S override for multi-electron atoms (e.g. triplet states S=1)
-        if S_exp is not None:
-            S = float(S_exp)
-
-        # g_J: use experimental value if provided, else Landé formula
-        gJ = lande_gJ(L, S, J, gJ_exp=gJ_exp)
-
-        # Extrapolate if state not in file but same (l,J) exists
-        a_missing = 'A_MHz' not in hfc     # key presence, not value: a measured A of 0 is data
-        if a_missing:
-            # Find a reference state with same l and J
-            for ref_label, ref_hfc in hf_consts.items():
-                ref = parse_state_label(ref_label)
-                if ref and ref[1] == l_char and abs(ref[2] - J) < 0.01 and ref_hfc.get('A_MHz', 0) != 0:
-                    # Quantum defect scaling: A ∝ n*^{-3}
-                    qd       = ryd_data.get('quantum_defects', {})
-                    delta_l  = qd.get(l_char, 0.0)
-                    n_eff_ref = ref[0] - delta_l
-                    n_eff_cur = n     - delta_l
-                    if n_eff_ref > 0 and n_eff_cur > 0:
-                        scale = (n_eff_ref / n_eff_cur) ** 3
-                        A_MHz = ref_hfc['A_MHz'] * scale
-                        B_MHz = ref_hfc.get('B_MHz', 0.0) * scale
-                        C_kHz = ref_hfc.get('C_kHz', 0.0) * scale
-                        a_missing = False
-                        print(f"    {slabel}: A_hf extrapolated from {ref_label} "
-                              f"× (n*/n*)³ = {A_MHz:.3f} MHz")
-                    break
-
-        if a_missing:
-            print(f"    {slabel}: A_hf = 0 (not in hf_constants) — F levels degenerate")
-
-        # F levels and energies (now including octupole C)
-        Fs   = F_levels(I, J)
-        E_hf = {F: hyperfine_energy(F, I, J, A_MHz, B_MHz, C_kHz) for F in Fs}
-
-        # g_F factors
-        gF  = {F: gF_factor(F, I, J, gJ, gI) for F in Fs}
-
-        # m_F sublevels
-        mF_levels = {}
-        for F in Fs:
-            mF_levels[F] = [round((F-k)*2)/2 for k in range(round(2*F)+1)]
-
-        # Weak-field Zeeman slopes
-        zeeman = {}
-        for F in Fs:
-            zeeman[F] = {mF: gF[F] * MU_B_MHz_G * mF for mF in mF_levels[F]}
-
-        # Breit-Rabi
-        BR_energies, BR_labels = breit_rabi_energies(
-            I, J, A_MHz, B_MHz, gJ, gI, B_arr, C_kHz)
-
-        print(f"\n  State {slabel}:  J={J}  g_J={gJ:.4f}"
-              f"{'  [experimental]' if gJ_exp is not None else '  [Landé]'}"
-              f"  A={A_MHz:.4f} MHz  B={B_MHz:.4f} MHz"
-              f"{f'  C={C_kHz:.3f} kHz' if C_kHz != 0 else ''}")
-        print(f"    F levels: {Fs}")
-        for F in Fs:
-            mFs = mF_levels[F]
-            print(f"    F={F:.0f}:  E={E_hf[F]:+.3f} MHz  g_F={gF[F]:+.5f}  "
-                  f"m_F={[int(2*m) for m in mFs]} (in units of 1/2)")
-
-        state_results.append({
-            'label':      slabel,
-            'n': n, 'l': l_char, 'J': J, 'L': L, 'S': S,
-            'gJ':         gJ,
-            'gJ_source':  'experimental' if gJ_exp is not None else 'Lande',
-            'A_MHz':      A_MHz,
-            'B_MHz':      B_MHz,
-            'C_kHz':      C_kHz,
-            'Fs':         Fs,
-            'E_hf':       E_hf,
-            'gF':         gF,
-            'mF_levels':  mF_levels,
-            'zeeman':     zeeman,
-            'BR_energies': BR_energies,
-            'BR_labels':   BR_labels,
-        })
-
-    if not state_results:
+    result = compute(nucleus, hf_consts, state_labels, ryd_data.get('quantum_defects', {}),
+                     B_max=B_max, B_points=B_points)
+    for label in result.skipped:
+        print(f"  Warning: could not parse state '{label}' — skipping")
+    for st in result.states:
+        _print_state(st)
+    if not result.states:
         print("  No states processed.")
         return None
-
-    # Ground state = lowest n, then lowest l, then lowest J. It must not depend on the order the
-    # states were listed (--states 3p 3s would otherwise take the 3p level as the "clock" state).
-    _L_ORDER = 'spdfghik'
-    gs = min(state_results, key=lambda s: (s['n'], _L_ORDER.find(s['l']) if s['l'] in _L_ORDER else 99, s['J']))
-    Fs_gs     = gs['Fs']
-    A_MHz_gs  = gs['A_MHz']
-
-    # Resonance line for the cycling transition: ground state -> the highest-J np state in the run
-    # (the D2 line for J_gs = 1/2). The real allowed (F, F') list is built from the two F ladders.
-    ex_candidates = [s for s in state_results if s['l'] == 'p']
-    transitions_gs_ex, ex_label = [], None
-    if ex_candidates and gs['l'] == 's':
-        ex = max(ex_candidates, key=lambda s: s['J'])
-        transitions_gs_ex = allowed_transitions(Fs_gs, ex['Fs'])
-        ex_label = ex['label']
-
-    # Microwave / clock transition and cycling transition in the ground state
-    special = identify_special_transitions(transitions_gs_ex, Fs_gs, I, gs['J'], A_MHz_gs,
-                                           gs['B_MHz'], gs['C_kHz'])
-    if 'cycling' in special:
-        special['cycling_line'] = {'lower': gs['label'], 'upper': ex_label,
-                                   'F_lower': special['cycling'][0], 'F_upper': special['cycling'][1]}
-        print(f"\n  Cycling transition: {gs['label']} F={special['cycling'][0]:.0f} -> "
-              f"{ex_label} F'={special['cycling'][1]:.0f}")
-    if 'microwave_clock' in special:
-        special['microwave_clock']['state'] = gs['label']
-
-    if 'microwave_clock' in special:
-        mc = special['microwave_clock']
-        print(f"\n  Ground-state microwave / clock transition ({gs['label']}):")
-        print(f"    F={mc['F_upper']:.0f} ↔ F={mc['F_lower']:.0f}: "
-              f"{mc['frequency_MHz']:.6f} MHz "
-              f"({mc['frequency_GHz']:.9f} GHz)  "
-              f"(λ ≈ {mc['wavelength_cm']:.3f} cm)")
-
-    return {
-        'element':       element,
-        'isotope_A':     A,
-        'I':             I,
-        'mu_I':          mu_I,
-        'Q_barn':        Q,
-        'gI':            gI,
-        'B_arr':         B_arr,
-        'states':        state_results,
-        'special':       special,
-    }
+    if result.cycling is not None:
+        cl = result.cycling
+        print(f"\n  Cycling transition: {cl.lower} F={cl.F_lower:.0f} -> {cl.upper} F'={cl.F_upper:.0f}")
+    if result.clock is not None:
+        _print_clock(result.clock)
+    return result
 
 
-# STEP 8 : PLOTS
+def _print_state(st: HyperfineState) -> None:
+    if st.extrapolated_from:
+        print(f"    {st.label}: A_hf extrapolated from {st.extrapolated_from} "
+              f"× (n*/n*)³ = {st.A_MHz:.3f} MHz")
+    if st.constants_missing:
+        print(f"    {st.label}: A_hf = 0 (not in hf_constants) — F levels degenerate")
+
+    print(f"\n  State {st.label}:  J={st.J}  g_J={st.gJ:.4f}"
+          f"{'  [experimental]' if st.gJ_source == 'experimental' else '  [Landé]'}"
+          f"  A={st.A_MHz:.4f} MHz  B={st.B_MHz:.4f} MHz"
+          f"{f'  C={st.C_kHz:.3f} kHz' if st.C_kHz != 0 else ''}")
+    print(f"    F levels: {[lv.F for lv in st.levels]}")
+    for lv in st.levels:
+        print(f"    F={lv.F:.0f}:  E={lv.E_MHz:+.3f} MHz  g_F={lv.gF:+.5f}  "
+              f"m_F={[int(2*m) for m in lv.mF]} (in units of 1/2)")
 
 
-ELEM_COLORS = {
-    'Li':'#4df0b0','Na':'#f0c54d','K':'#4d9ff0',
-    'Rb':'#f05a4d','Cs':'#c54df0','Fr':'#f04d9f',
-}
+def _wavelength_text(mc: MicrowaveClock) -> str:
+    if mc.wavelength_cm is None:
+        return 'λ: none, the F levels are degenerate'
+    return f'λ ≈ {mc.wavelength_cm:.3f} cm'
+
+
+def _print_clock(mc: MicrowaveClock) -> None:
+    print(f"\n  Ground-state microwave / clock transition ({mc.state}):")
+    print(f"    F={mc.F_upper:.0f} ↔ F={mc.F_lower:.0f}: "
+          f"{mc.frequency_MHz:.6f} MHz "
+          f"({mc.frequency_GHz:.9f} GHz)  "
+          f"({_wavelength_text(mc)})")
+
+
+# ============================================================================
+# STEP 5 — PLOTS
+# ============================================================================
+
 
 # Colour palette for m_F sublevels: centre = white, ± red/blue
 def mF_color(mF, F):
     """Map m_F in [-F, +F] to a colour."""
     if F < 1e-9:
         return '#ffffff'
-    norm = max(-1.0, min(1.0, mF / F))   # -1 to +1 (clamped: never an invalid rgb())
+    # -1 to +1; clamped because degenerate levels (A = 0) get |m_F| > F labels (P45)
+    norm = max(-1.0, min(1.0, mF / F))
     # Diverging: blue (norm=-1) → white (0) → red (norm=+1)
     r = int(255 * max(0, norm))
     b = int(255 * max(0, -norm))
@@ -895,7 +452,7 @@ def mF_color(mF, F):
     return f'rgb({r},{g},{b})'
 
 
-def plot_hyperfine(result, out_dir):
+def plot_hyperfine(element: str, result: HyperfineResult, out_dir) -> str:
     """
     Hyperfine structure plot — NO Breit-Rabi (lives in zeeman.html).
 
@@ -904,7 +461,7 @@ def plot_hyperfine(result, out_dir):
              all states on one x-axis (one column each), F bars, m_F ticks,
              F/g_F labels, intra-state E1 connections. Shared y-axis (MHz)
              across all states. Ground-state microwave clock interval is
-             annotated when special['microwave_clock'] is present.
+             annotated when the result has a clock interval.
       Row 2 (~32%): dropdown-toggled panel using native Plotly updatemenus
              (same pattern as the Breit-Rabi state selector in zeeman.html):
                - "Splittings" — log-scale bar chart of |dE(F,F+-1)| per state
@@ -914,17 +471,17 @@ def plot_hyperfine(result, out_dir):
 
     Scales to any number of states automatically — just add to hf_constants.json.
     """
-    el     = result['element']
-    A_iso  = result['isotope_A']
-    nuc    = nuclide_label(el, A_iso)
-    nuc_p  = nuclide_plain(el, A_iso)
-    I      = result['I']
-    states = result['states']
-    mc     = result.get('special', {}).get('microwave_clock', {}) or {}
-    mc_Fu  = mc.get('F_upper')
-    mc_Fl  = mc.get('F_lower')
-    mc_state = mc.get('state', states[0]['label'] if states else '')
-    mc_nu  = mc.get('frequency_MHz')
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    el     = element
+    nucleus = result.nucleus
+    nuc    = nuclide_label(el, nucleus.A)
+    nuc_p  = nuclide_plain(el, nucleus.A)
+    I      = nucleus.I
+    states = result.states
+    mc     = result.clock
+    mc_state = mc.state if mc else (states[0].label if states else '')
 
     STATE_PALETTE = [
         '#f0c54d', '#4d9ff0', '#4df0b0', '#f05a4d',
@@ -943,31 +500,25 @@ def plot_hyperfine(result, out_dir):
         ],
     )
 
-    # ROW 1: shared-axis level diagram (single x/y for all states) 
+    # ---- ROW 1: shared-axis level diagram (single x/y for all states) ------
     COL_W  = 1.4
     COL_SP = 2.4
     MF_DY  = 0.035
 
-    all_E_vals = []
-    for st in states:
-        all_E_vals.extend(st['E_hf'].values())
+    all_E_vals = [lv.E_MHz for st in states for lv in st.levels]
     global_span = max(max(all_E_vals) - min(all_E_vals), 1.0)
 
     for si, st in enumerate(states):
         x_ctr   = si * COL_SP
-        Fs      = st['Fs']
-        E_hf    = st['E_hf']
-        gF_map  = st['gF']
-        mF_lev  = st['mF_levels']
+        E_hf    = {lv.F: lv.E_MHz for lv in st.levels}
         scol    = state_cols[si]
-        A_MHz   = st['A_MHz']
         E_vals  = list(E_hf.values())
         E_span  = max(E_vals) - min(E_vals) if len(E_vals) > 1 else global_span * 0.1
         mF_drop = max(global_span * MF_DY, E_span * 0.08)
 
         fig.add_annotation(
             x=x_ctr, y=max(E_vals) + global_span * 0.05,
-            text=f'<b>{st["label"]}</b>',
+            text=f'<b>{st.label}</b>',
             showarrow=False, font=dict(size=12, color=scol),
             xref='x', yref='y', xanchor='center', yanchor='bottom',
         )
@@ -982,39 +533,37 @@ def plot_hyperfine(result, out_dir):
             showlegend=False, hoverinfo='skip',
         ), row=1, col=1)
 
-        for F in Fs:
-            E     = E_hf[F]
+        for lv in st.levels:
+            F, E, mFs, gF = lv.F, lv.E_MHz, lv.mF, lv.gF
             x0    = x_ctr - COL_W * 0.42
             x1    = x_ctr + COL_W * 0.42
-            mFs   = mF_lev[F]
-            gF    = gF_map[F]
             F_lbl = int(F) if F == int(F) else F
             n_mF  = len(mFs)
             is_clock_F = (
-                mc_nu is not None
-                and st['label'] == mc_state
-                and (abs(F - mc_Fu) < 1e-6 or abs(F - mc_Fl) < 1e-6)
+                mc is not None
+                and st.label == mc.state
+                and (abs(F - mc.F_upper) < 1e-6 or abs(F - mc.F_lower) < 1e-6)
             )
             line_w = 4.5 if is_clock_F else 3
             line_c = CLOCK_COL if is_clock_F else scol
 
-            hover = (f'<b>{nuc}  {st["label"]}  F={F_lbl}</b><br>'
+            hover = (f'<b>{nuc}  {st.label}  F={F_lbl}</b><br>'
                      f'E = {E:+.4f} MHz<br>'
                      f'g<sub>F</sub> = {gF:+.5f}<br>'
-                     f'A = {A_MHz:.4f} MHz<br>'
+                     f'A = {st.A_MHz:.4f} MHz<br>'
                      f'm<sub>F</sub> = {int(min(mFs))}\u2026{int(max(mFs))}<br>'
                      f'2F+1 = {n_mF} sublevels')
             if is_clock_F:
                 hover += (f'<br><b>Clock manifold</b> '
-                          f'({mc_nu:.6f} MHz gs interval)')
+                          f'({mc.frequency_MHz:.6f} MHz gs interval)')
 
             fig.add_trace(go.Scatter(
                 x=[x0, x1], y=[E, E],
                 mode='lines',
                 line=dict(color=line_c, width=line_w),
-                name=f'{st["label"]} F={F_lbl}',
+                name=f'{st.label} F={F_lbl}',
                 legendgroup=f'st{si}',
-                showlegend=(F == Fs[0]),
+                showlegend=(F == st.levels[0].F),
                 hovertemplate=hover + '<extra></extra>',
             ), row=1, col=1)
 
@@ -1049,13 +598,14 @@ def plot_hyperfine(result, out_dir):
                     )
 
         # Ground-state microwave clock arrow (ΔF=1 interval)
-        if (mc_nu is not None and st['label'] == mc_state
-                and mc_Fu in E_hf and mc_Fl in E_hf):
-            E_hi = E_hf[mc_Fu]
-            E_lo = E_hf[mc_Fl]
+        if (mc is not None and st.label == mc.state
+                and mc.F_upper in E_hf and mc.F_lower in E_hf):
+            mc_nu = mc.frequency_MHz
+            E_hi = E_hf[mc.F_upper]
+            E_lo = E_hf[mc.F_lower]
             x_clk = x_ctr + COL_W * 0.55
-            Fu_i = int(mc_Fu) if mc_Fu == int(mc_Fu) else mc_Fu
-            Fl_i = int(mc_Fl) if mc_Fl == int(mc_Fl) else mc_Fl
+            Fu_i = int(mc.F_upper) if mc.F_upper == int(mc.F_upper) else mc.F_upper
+            Fl_i = int(mc.F_lower) if mc.F_lower == int(mc.F_lower) else mc.F_lower
             fig.add_trace(go.Scatter(
                 x=[x_clk, x_clk], y=[E_lo, E_hi],
                 mode='lines+markers',
@@ -1067,10 +617,10 @@ def plot_hyperfine(result, out_dir):
                 showlegend=True,
                 hovertemplate=(
                     f'<b>Microwave clock</b><br>'
-                    f'{st["label"]}  F={Fu_i} \u2194 F={Fl_i}<br>'
+                    f'{st.label}  F={Fu_i} \u2194 F={Fl_i}<br>'
                     f'\u03bd = {mc_nu:.6f} MHz<br>'
-                    f'= {mc.get("frequency_GHz", mc_nu/1e3):.9f} GHz<br>'
-                    f'\u03bb \u2248 {mc.get("wavelength_cm", 0):.3f} cm'
+                    f'= {mc.frequency_GHz:.9f} GHz<br>'
+                    f'{_wavelength_text(mc)}'
                     f'<extra></extra>'
                 ),
             ), row=1, col=1)
@@ -1078,7 +628,7 @@ def plot_hyperfine(result, out_dir):
                 x=x_clk + 0.12, y=0.5 * (E_lo + E_hi),
                 text=(f'<b>\u03bd<sub>clock</sub></b><br>'
                       f'{mc_nu:.3f} MHz<br>'
-                      f'({mc.get("frequency_GHz", mc_nu/1e3):.6f} GHz)'),
+                      f'({mc.frequency_GHz:.6f} GHz)'),
                 showarrow=False, xanchor='left', yanchor='middle',
                 font=dict(size=10, color=CLOCK_COL),
                 xref='x', yref='y',
@@ -1092,13 +642,13 @@ def plot_hyperfine(result, out_dir):
         st_u = states[si + 1]
         x_l  = si * COL_SP + COL_W * 0.42
         x_u  = (si + 1) * COL_SP - COL_W * 0.42
-        for F_l in st_l['Fs']:
-            for F_u in st_u['Fs']:
+        for lo in st_l.levels:
+            for up in st_u.levels:
+                F_l, E_l = lo.F, lo.E_MHz
+                F_u, E_u = up.F, up.E_MHz
                 dF = abs(F_u - F_l)
                 if dF > 1.001 or (F_l < 0.001 and F_u < 0.001):
                     continue
-                E_l   = st_l['E_hf'][F_l]
-                E_u   = st_u['E_hf'][F_u]
                 dE_hf = E_u - E_l
                 F_l_i = int(F_l) if F_l == int(F_l) else F_l
                 F_u_i = int(F_u) if F_u == int(F_u) else F_u
@@ -1107,18 +657,18 @@ def plot_hyperfine(result, out_dir):
                     line=dict(color='rgba(200,200,200,0.18)', width=1, dash='dot'),
                     showlegend=False,
                     hovertemplate=(
-                        f'<b>E1: {st_l["label"]} F={F_l_i} \u2192 '
-                        f'{st_u["label"]} F={F_u_i}</b><br>'
+                        f'<b>E1: {st_l.label} F={F_l_i} \u2192 '
+                        f'{st_u.label} F={F_u_i}</b><br>'
                         f'\u0394F = {int(F_u - F_l):+d}<br>'
-                        f'E({st_l["label"]} F={F_l_i}) = {E_l:+.4f} MHz<br>'
-                        f'E({st_u["label"]} F={F_u_i}) = {E_u:+.4f} MHz<br>'
+                        f'E({st_l.label} F={F_l_i}) = {E_l:+.4f} MHz<br>'
+                        f'E({st_u.label} F={F_u_i}) = {E_u:+.4f} MHz<br>'
                         f'\u0394E_hf = {dE_hf:+.4f} MHz<extra></extra>'
                     ),
                 ), row=1, col=1)
 
     x_lo = -COL_W * 0.8
     x_hi = (len(states) - 1) * COL_SP + COL_W * 0.8
-    if mc_nu is not None:
+    if mc is not None:
         x_hi += COL_W * 0.55
     fig.update_xaxes(range=[x_lo, x_hi], showticklabels=False,
                      showgrid=False, zeroline=False, row=1, col=1)
@@ -1126,31 +676,29 @@ def plot_hyperfine(result, out_dir):
                      gridcolor='#1a2540', zeroline=True,
                      zerolinecolor='rgba(255,255,255,0.1)', row=1, col=1)
 
-    #  ROW 2 TRACE SET A: Splittings bar chart (log scale)
+    # ---- ROW 2 TRACE SET A: Splittings bar chart (log scale) ---------------
     bar_x, bar_y, bar_col, bar_hover, bar_line_w, bar_line_c = [], [], [], [], [], []
     for si, st in enumerate(states):
-        Fs   = st['Fs']
-        E_hf = st['E_hf']
         scol = state_cols[si]
-        for k in range(len(Fs) - 1):
-            F_lo, F_hi = Fs[k], Fs[k + 1]
-            dE     = abs(E_hf[F_hi] - E_hf[F_lo])
+        for lo, hi in zip(st.levels, st.levels[1:]):
+            F_lo, F_hi = lo.F, hi.F
+            dE     = abs(hi.E_MHz - lo.E_MHz)
             F_lo_i = int(F_lo) if F_lo == int(F_lo) else F_lo
             F_hi_i = int(F_hi) if F_hi == int(F_hi) else F_hi
             lam_cm = 3e4 / dE if dE > 0 else 0
             is_clock_bar = (
-                mc_nu is not None
-                and st['label'] == mc_state
-                and ((abs(F_lo - mc_Fl) < 1e-6 and abs(F_hi - mc_Fu) < 1e-6)
-                     or (abs(F_lo - mc_Fu) < 1e-6 and abs(F_hi - mc_Fl) < 1e-6))
+                mc is not None
+                and st.label == mc.state
+                and ((abs(F_lo - mc.F_lower) < 1e-6 and abs(F_hi - mc.F_upper) < 1e-6)
+                     or (abs(F_lo - mc.F_upper) < 1e-6 and abs(F_hi - mc.F_lower) < 1e-6))
             )
-            bar_x.append(f'{st["label"]}<br>F={F_lo_i}\u2194{F_hi_i}')
+            bar_x.append(f'{st.label}<br>F={F_lo_i}\u2194{F_hi_i}')
             bar_y.append(max(dE, 1e-3))
             bar_col.append(CLOCK_COL if is_clock_bar else scol)
             bar_line_w.append(2 if is_clock_bar else 1)
             bar_line_c.append('#ffffff' if is_clock_bar else 'rgba(255,255,255,0.2)')
             hover = (
-                f'<b>{st["label"]}  F={F_lo_i}\u2194F={F_hi_i}</b><br>'
+                f'<b>{st.label}  F={F_lo_i}\u2194F={F_hi_i}</b><br>'
                 f'\u0394E = {dE:.5f} MHz<br>'
                 f'\u03bb \u2248 {lam_cm:.2f} cm  ({lam_cm*10:.1f} mm)'
             )
@@ -1179,7 +727,7 @@ def plot_hyperfine(result, out_dir):
     fig.update_yaxes(title_text='|\u0394E| (MHz) (log scale)',
                      type='log', gridcolor='#1a2540', row=2, col=1)
 
-    # Constants table data — rendered as an HTML overlay panel below
+    # ---- Constants table data — rendered as an HTML overlay panel below ----
     # (go.Table sharing a row with go.Bar via visible-toggling is unreliable:
     # Plotly's default template draws a residual background for hidden Table
     # traces. An HTML/JS overlay panel is robust and matches the dropdown
@@ -1187,34 +735,34 @@ def plot_hyperfine(result, out_dir):
     tbl_state, tbl_A, tbl_B, tbl_C = [], [], [], []
     tbl_gJ, tbl_gJ_src, tbl_F_gF  = [], [], []
     for st in states:
-        tbl_state.append(st['label'])
-        tbl_A.append(f'{st["A_MHz"]:.5f}')
-        tbl_B.append(f'{st["B_MHz"]:.4f}' if st['B_MHz'] != 0 else '\u2014')
-        tbl_C.append(f'{st.get("C_kHz", 0):.3f}'
-                     if st.get('C_kHz', 0) != 0 else '\u2014')
-        tbl_gJ.append(f'{st["gJ"]:.5f}')
-        tbl_gJ_src.append(st.get('gJ_source', 'Land\u00e9'))
+        tbl_state.append(st.label)
+        tbl_A.append(f'{st.A_MHz:.5f}')
+        tbl_B.append(f'{st.B_MHz:.4f}' if st.B_MHz != 0 else '\u2014')
+        tbl_C.append(f'{st.C_kHz:.3f}'
+                     if st.C_kHz != 0 else '\u2014')
+        tbl_gJ.append(f'{st.gJ:.5f}')
+        tbl_gJ_src.append(st.gJ_source)
         gF_lines = ', '.join(
-            f'F={int(F) if F==int(F) else F}: {st["gF"][F]:+.4f}'
-            for F in st['Fs']
+            f'F={int(lv.F) if lv.F==int(lv.F) else lv.F}: {lv.gF:+.4f}'
+            for lv in st.levels
         )
         tbl_F_gF.append(gF_lines)
 
-    # Overall layout 
+    # ---- Overall layout ------------------------------------------------------
     mc_str = ''
-    if mc_nu is not None:
-        Fu_i = int(mc_Fu) if mc_Fu == int(mc_Fu) else mc_Fu
-        Fl_i = int(mc_Fl) if mc_Fl == int(mc_Fl) else mc_Fl
-        mc_str = (f' \u00b7 Clock {mc_state} F={Fu_i}\u2194F={Fl_i}'
-                  f' @ {mc_nu:.6f} MHz'
-                  f' ({mc.get("frequency_GHz", mc_nu/1e3):.6f} GHz)')
+    if mc is not None:
+        Fu_i = int(mc.F_upper) if mc.F_upper == int(mc.F_upper) else mc.F_upper
+        Fl_i = int(mc.F_lower) if mc.F_lower == int(mc.F_lower) else mc.F_lower
+        mc_str = (f' \u00b7 Clock {mc.state} F={Fu_i}\u2194F={Fl_i}'
+                  f' @ {mc.frequency_MHz:.6f} MHz'
+                  f' ({mc.frequency_GHz:.6f} GHz)')
 
     fig.update_layout(
         title=dict(
             text=(f'<b>{nuc} Hyperfine Structure</b>'
                   f'<br><sup>{nuc_p}  ·  I={I}  '
-                  f'\u03bc_I={result["mu_I"]:.4f} nm  '
-                  f'Q={result["Q_barn"]:.5f} b'
+                  f'\u03bc_I={nucleus.mu_I:.4f} nm  '
+                  f'Q={nucleus.Q_barn:.5f} b'
                   f'{mc_str}</sup>'),
             x=0.5, xanchor='center',
             font=dict(size=18, color='#e8edf5'),
@@ -1243,176 +791,62 @@ def plot_hyperfine(result, out_dir):
             ann.font.size  = 11
 
     out_file = os.path.join(out_dir, f"{el}_hyperfine.html")
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    if '<title>' in raw_html:
-        raw_html = raw_html.replace('<title></title>', f'<title>{nuc_p} Hyperfine</title>', 1)
-        raw_html = raw_html.replace('<title>Plotly</title>', f'<title>{nuc_p} Hyperfine</title>', 1)
-    else:
-        raw_html = raw_html.replace('</head>', f'<title>{nuc_p} Hyperfine</title></head>', 1)
-    _fs_css  = ('<style>'
-                'html,body{margin:0;padding:0;width:100%;height:100%;'
-                'overflow:hidden;background:#0a0d14;}'
-                '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-                '#hf-toggle-wrap{position:fixed;z-index:9999;'
-                'font-family:Arial,sans-serif;font-size:12px;}'
-                '#hf-toggle-select{padding:6px 10px;background:#111830;'
-                'color:#c8d0e0;border:1px solid #2a3060;border-radius:5px;'
-                'cursor:pointer;font-size:12px;}'
-                '#hf-const-overlay,#hf-clock-overlay{position:fixed;left:0;right:0;'
-                'bottom:0;max-height:34vh;overflow-y:auto;background:#0a0d14;'
-                'border-top:2px solid #2a3555;padding:10px 16px;'
-                'font-family:Arial,sans-serif;font-size:12px;color:#c8d0e0;'
-                'display:none;z-index:9998;}'
-                '#hf-const-overlay table{width:100%;border-collapse:collapse;}'
-                '#hf-const-overlay th{background:#1a2540;color:#e8edf5;'
-                'padding:7px 10px;text-align:center;position:sticky;top:0;'
-                'border-bottom:1px solid #2a3555;}'
-                '#hf-const-overlay td{padding:6px 10px;text-align:center;'
-                'border-bottom:1px solid #1e2840;color:#c8d0e0;}'
-                '#hf-const-overlay tr:nth-child(even) td{background:#111a2f;}'
-                '#hf-const-overlay tr:nth-child(odd) td{background:#0f1628;}'
-                '#hf-const-overlay td.state-col{color:#4df0b0;font-weight:bold;}'
-                '.hf-clock-card{display:flex;flex-wrap:wrap;gap:14px;'
-                'align-items:stretch;}'
-                '.hf-clock-box{flex:1 1 180px;background:#111a2f;'
-                'border:1px solid #2a3555;border-radius:8px;padding:12px 14px;}'
-                '.hf-clock-box.accent{border-color:#f0c54d;}'
-                '.hf-clock-k{color:#8a9ac0;font-size:11px;margin-bottom:4px;}'
-                '.hf-clock-v{color:#e8edf5;font-size:18px;font-weight:bold;'
-                'font-variant-numeric:tabular-nums;}'
-                '.hf-clock-v.gold{color:#f0c54d;}'
-                '.hf-clock-note{color:#8a9ac0;font-size:11px;margin-top:8px;'
-                'line-height:1.45;max-width:720px;}'
-                '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_title(raw_html, f'{nuc_p} Hyperfine')
+    raw_html = inject_head(raw_html, fullscreen_css_with(
+        load_template('hyperfine_fs_extra.css')))
 
-    # Inject dropdown toggle + HTML constants / clock panels 
-    import json as _json_hf
-    _tbl_rows_js = _json_hf.dumps([
+    # ---- Inject dropdown toggle + HTML constants / clock panels --------------
+    _tbl_rows_js = json.dumps([
         {'state': s, 'A': a, 'B': b, 'C': c, 'gJ': gj, 'src': src, 'gF': gf}
         for s, a, b, c, gj, src, gf in zip(
             tbl_state, tbl_A, tbl_B, tbl_C, tbl_gJ, tbl_gJ_src, tbl_F_gF)
     ])
-    _clock_js = _json_hf.dumps({
-        'present': bool(mc_nu is not None),
+    _clock_js = json.dumps({
+        'present': mc is not None,
         'state': mc_state,
-        'F_upper': int(mc_Fu) if mc_Fu is not None and mc_Fu == int(mc_Fu) else mc_Fu,
-        'F_lower': int(mc_Fl) if mc_Fl is not None and mc_Fl == int(mc_Fl) else mc_Fl,
-        'frequency_MHz': mc.get('frequency_MHz'),
-        'frequency_GHz': mc.get('frequency_GHz'),
-        'frequency_Hz':  mc.get('frequency_Hz'),
-        'wavelength_cm': mc.get('wavelength_cm'),
-        'wavelength_m':  mc.get('wavelength_m'),
-        'note': mc.get('note', ''),
+        'F_upper': (int(mc.F_upper) if mc.F_upper == int(mc.F_upper) else mc.F_upper) if mc else None,
+        'F_lower': (int(mc.F_lower) if mc.F_lower == int(mc.F_lower) else mc.F_lower) if mc else None,
+        'frequency_MHz': mc.frequency_MHz if mc else None,
+        'frequency_GHz': mc.frequency_GHz if mc else None,
+        'frequency_Hz':  mc.frequency_Hz if mc else None,
+        'wavelength_cm': mc.wavelength_cm if mc else None,
+        'wavelength_m':  mc.wavelength_m if mc else None,
+        'note': mc.note if mc else '',
         'isotope': nuc_p,
         'I': I,
     }, allow_nan=False)
     _clock_opt = (
         '<option value="clock">Clock frequency</option>'
-        if mc_nu is not None else ''
+        if mc is not None else ''
     )
-    _panel_html = (
-        '<div id="hf-toggle-wrap" style="left:14px;top:62px;">'
-        '<select id="hf-toggle-select" onchange="hfOnToggleChange(this.value)">'
-        '<option value="splittings">Splittings</option>'
-        '<option value="constants">Constants</option>'
-        f'{_clock_opt}'
-        '</select></div>'
-        '<div id="hf-const-overlay"></div>'
-        '<div id="hf-clock-overlay"></div>'
-        '<script>'
-        f'const HF_TABLE_DATA = {_tbl_rows_js};'
-        f'const HF_CLOCK = {_clock_js};'
-        '''
-        function hfFmt(n, digits) {
-          if (n === null || n === undefined) return '-';
-          return Number(n).toLocaleString(undefined, {
-            minimumFractionDigits: digits, maximumFractionDigits: digits
-          });
-        }
-        function hfBuildTable() {
-          const panel = document.getElementById('hf-const-overlay');
-          let html = '<table><thead><tr>'
-            + '<th>State</th><th>A (MHz)</th><th>B (MHz)</th><th>C (kHz)</th>'
-            + '<th>g_J</th><th>g_J source</th><th>g_F per F</th>'
-            + '</tr></thead><tbody>';
-          HF_TABLE_DATA.forEach(r => {
-            html += `<tr><td class="state-col">${r.state}</td>`
-              + `<td>${r.A}</td><td>${r.B}</td><td>${r.C}</td>`
-              + `<td>${r.gJ}</td><td>${r.src}</td><td>${r.gF}</td></tr>`;
-          });
-          html += '</tbody></table>';
-          panel.innerHTML = html;
-        }
-        function hfBuildClock() {
-          const panel = document.getElementById('hf-clock-overlay');
-          if (!HF_CLOCK.present) {
-            panel.innerHTML = '<div class="hf-clock-note">No ground-state '
-              + 'microwave clock interval (need I>0 and at least two F levels).</div>';
-            return;
-          }
-          panel.innerHTML = `
-            <div class="hf-clock-card">
-              <div class="hf-clock-box accent">
-                <div class="hf-clock-k">${HF_CLOCK.isotope} · ${HF_CLOCK.state}
-                  · F=${HF_CLOCK.F_upper} ↔ F=${HF_CLOCK.F_lower}</div>
-                <div class="hf-clock-v gold">${hfFmt(HF_CLOCK.frequency_MHz, 6)} MHz</div>
-              </div>
-              <div class="hf-clock-box">
-                <div class="hf-clock-k">Frequency (GHz)</div>
-                <div class="hf-clock-v">${hfFmt(HF_CLOCK.frequency_GHz, 9)} GHz</div>
-              </div>
-              <div class="hf-clock-box">
-                <div class="hf-clock-k">Frequency (Hz)</div>
-                <div class="hf-clock-v">${hfFmt(HF_CLOCK.frequency_Hz, 0)} Hz</div>
-              </div>
-              <div class="hf-clock-box">
-                <div class="hf-clock-k">Wavelength</div>
-                <div class="hf-clock-v">${hfFmt(HF_CLOCK.wavelength_cm, 4)} cm</div>
-              </div>
-            </div>
-            <div class="hf-clock-note">${HF_CLOCK.note}
-              Stored in data_json as special.microwave_clock. The m_F=0
-              component is first-order B-insensitive (clock transition);
-              full Zeeman / Breit-Rabi curves are in the companion zeeman HTML.</div>`;
-        }
-        function hfOnToggleChange(value) {
-          const gd         = document.querySelector('.plotly-graph-div');
-          const constPanel = document.getElementById('hf-const-overlay');
-          const clockPanel = document.getElementById('hf-clock-overlay');
-          const showBar = (value === 'splittings');
-          Plotly.restyle(gd, {visible: showBar}, [BAR_TRACE_IDX]);
-          constPanel.style.display = (value === 'constants') ? 'block' : 'none';
-          clockPanel.style.display = (value === 'clock') ? 'block' : 'none';
-        }
-        hfBuildTable();
-        hfBuildClock();
-        '''
-        .replace('BAR_TRACE_IDX', str(bar_trace_idx))
-        + '</script>'
+    _panel_html = render_template('hyperfine_panel.html', clock_opt=_clock_opt) + render_template(
+        'hyperfine_panel.js',
+        tbl_rows_js=_tbl_rows_js,
+        clock_js=_clock_js,
+        bar_trace_idx=str(bar_trace_idx),
     )
-    raw_html = raw_html.replace('</body>', _panel_html + '</body>', 1)
+    raw_html = inject_body(raw_html, _panel_html)
 
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    write_offline_report(out_file, raw_html)
     print(f"\n  \u2713 {out_file}")
     return out_file
 
 
-
-def plot_zeeman(result, out_dir):
+def plot_zeeman(element: str, result: HyperfineResult, out_dir) -> str:
     """
     Standalone full-page Breit-Rabi / Zeeman diagram with dropdown
     to switch between states.
     """
-    el     = result['element']
-    A      = result['isotope_A']
-    nuc    = nuclide_label(el, A)
-    nuc_p  = nuclide_plain(el, A)
-    I      = result['I']
-    states = result['states']
-    B_arr  = result['B_arr']
-    col    = ELEM_COLORS.get(el, '#7777ff')
+    import plotly.graph_objects as go
+
+    el     = element
+    nucleus = result.nucleus
+    nuc    = nuclide_label(el, nucleus.A)
+    nuc_p  = nuclide_plain(el, nucleus.A)
+    I      = nucleus.I
+    states = result.states
+    B_arr  = result.B_G
 
     fig = go.Figure()
 
@@ -1420,8 +854,8 @@ def plot_zeeman(result, out_dir):
     traces_per_state = []
 
     for si, st in enumerate(states):
-        BR_E   = st['BR_energies']
-        BR_lab = st['BR_labels']
+        BR_E   = st.BR_energies
+        BR_lab = st.BR_labels
         dim    = BR_E.shape[1]
         t_indices = []
 
@@ -1433,7 +867,7 @@ def plot_zeeman(result, out_dir):
                 x=B_arr.tolist(), y=BR_E[:, li].tolist(),
                 mode='lines', line=dict(color=c, width=2),
                 name=ls, visible=(si == 0),
-                hovertemplate=(f'<b>{st["label"]}</b> {ls}<br>'
+                hovertemplate=(f'<b>{st.label}</b> {ls}<br>'
                                f'B=%{{x:.1f}} G  E=%{{y:.3f}} MHz<extra></extra>'),
             ))
             t_indices.append(len(fig.data) - 1)
@@ -1447,20 +881,20 @@ def plot_zeeman(result, out_dir):
         for ti in traces_per_state[si]:
             vis[ti] = True
         buttons.append(dict(
-            label=st['label'],
+            label=st.label,
             method='update',
             args=[{'visible': vis},
-                  {'title.text': (f'<b>{nuc} Breit-Rabi: {st["label"]}</b><br>'
-                                  f'<sup>{nuc_p}  ·  J={st["J"]}  g_J={st["gJ"]:.4f}  '
-                                  f'A={st["A_MHz"]:.3f} MHz</sup>')}],
+                  {'title.text': (f'<b>{nuc} Breit-Rabi: {st.label}</b><br>'
+                                  f'<sup>{nuc_p}  ·  J={st.J}  g_J={st.gJ:.4f}  '
+                                  f'A={st.A_MHz:.3f} MHz</sup>')}],
         ))
 
     fig.update_layout(
         title=dict(
-            text=(f'<b>{nuc} Breit-Rabi Diagram: {states[0]["label"]}</b><br>'
-                  f'<sup>{nuc_p}  ·  J={states[0]["J"]}  g_J={states[0]["gJ"]:.4f}  '
-                  f'A={states[0]["A_MHz"]:.3f} MHz  |  '
-                  f'I={I}  μ_I={result["mu_I"]:.4f} nm</sup>'),
+            text=(f'<b>{nuc} Breit-Rabi Diagram: {states[0].label}</b><br>'
+                  f'<sup>{nuc_p}  ·  J={states[0].J}  g_J={states[0].gJ:.4f}  '
+                  f'A={states[0].A_MHz:.3f} MHz  |  '
+                  f'I={I}  μ_I={nucleus.mu_I:.4f} nm</sup>'),
             x=0.5, xanchor='center', font=dict(size=18, color='#e8edf5'),
         ),
         xaxis=dict(title='B field (Gauss)', gridcolor='#1a2540',
@@ -1491,60 +925,62 @@ def plot_zeeman(result, out_dir):
     )
 
     out_file = os.path.join(out_dir, f"{el}_zeeman.html")
-    raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
-    if '<title>' in raw_html:
-        raw_html = raw_html.replace('<title></title>', f'<title>{nuc_p} Zeeman</title>', 1)
-        raw_html = raw_html.replace('<title>Plotly</title>', f'<title>{nuc_p} Zeeman</title>', 1)
-    else:
-        raw_html = raw_html.replace('</head>', f'<title>{nuc_p} Zeeman</title></head>', 1)
-    _fs_css  = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'
-                'background:#0a0d14;}'
-                '.plotly-graph-div{width:100vw!important;height:100vh!important;}'
-                '</style>')
-    raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
-    with open(out_file, 'w', encoding='utf-8') as fh:
-        fh.write(raw_html)
+    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
+    raw_html = inject_title(raw_html, f'{nuc_p} Zeeman')
+    raw_html = inject_head(raw_html, style_wrap(load_template('hyperfine_zeeman_fs.css')))
+    write_offline_report(out_file, raw_html)
     print(f"  ✓ {out_file}")
     return out_file
 
-# STEP 9 : SAVE JSON
 
-def save_json(result, data_dir):
-    el  = result['element']
-    A   = result['isotope_A']
+# ============================================================================
+# STEP 6 — SAVE JSON
+# ============================================================================
+
+def _special_json(result: HyperfineResult) -> dict:
+    """The cycling (F, F') pair, the ground-state clock and the cycling line."""
+    special = {}
+    if result.cycling is not None:
+        special['cycling'] = [result.cycling.F_lower, result.cycling.F_upper]
+    if result.clock is not None:
+        special['microwave_clock'] = asdict(result.clock)
+    if result.cycling is not None:
+        special['cycling_line'] = asdict(result.cycling)
+    return special
+
+
+def save_json(element: str, result: HyperfineResult, data_dir) -> None:
+    nucleus = result.nucleus
     out = {
-        'element':    el,
-        'isotope_A':  A,
-        'I':          result['I'],
-        'mu_I':       result['mu_I'],
-        'Q_barn':     result['Q_barn'],
-        'gI':         result['gI'],
-        'special':    result['special'],
+        'element':    element,
+        'isotope_A':  nucleus.A,
+        'I':          nucleus.I,
+        'mu_I':       nucleus.mu_I,
+        'Q_barn':     nucleus.Q_barn,
+        'gI':         nucleus.gI,
+        'special':    _special_json(result),
         'states': [
             {
-                'label':      st['label'],
-                'n': st['n'], 'l': st['l'], 'J': st['J'],
-                'gJ':         st['gJ'],
-                'gJ_source':  st.get('gJ_source', 'Lande'),
-                'A_MHz':      st['A_MHz'],
-                'B_MHz':      st['B_MHz'],
-                'C_kHz':      st.get('C_kHz', 0.0),
-                'F_levels': [
-                    {'F': F, 'E_MHz': st['E_hf'][F],
-                     'gF': st['gF'][F],
-                     'mF': st['mF_levels'][F]}
-                    for F in st['Fs']
-                ],
+                'label':      st.label,
+                'n': st.n, 'l': st.l, 'J': st.J,
+                'gJ':         st.gJ,
+                'gJ_source':  st.gJ_source,
+                'A_MHz':      st.A_MHz,
+                'B_MHz':      st.B_MHz,
+                'C_kHz':      st.C_kHz,
+                'F_levels':   [asdict(lv) for lv in st.levels],
             }
-            for st in result['states']
+            for st in result.states
         ],
     }
-    path = os.path.join(data_dir, f"{el}_hyperfine.json")
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=2)
+    path = os.path.join(data_dir, f"{element}_hyperfine.json")
+    write_json(path, out)
     print(f"  ✓ {path}")
 
+
+# ============================================================================
 # MAIN
+# ============================================================================
 
 def get_available_elements(data_dir):
     from linak.core.species import is_ion_id
@@ -1559,38 +995,67 @@ def get_available_elements(data_dir):
     return sorted(avail)
 
 
-if __name__ == '__main__':
+def main(argv: list[str] | None = None) -> int:
     from linak.core.species import require_neutral_species
 
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    data_dir = args.data_dir
+    os.makedirs(data_dir, exist_ok=True)
+    nuclear_path = os.path.join(data_dir, 'nuclear_data.json')
+
+    if args.build_nuclear_data:
+        build_nuclear_data(args.magn_csv, args.elec_csv, nuclear_path)
+        if args.element is None:
+            return 0
+
+    if not os.path.exists(nuclear_path):
+        raise MissingDataError(
+            f"nuclear_data.json not found at {nuclear_path}; run: linak --pipeline "
+            f"hyperfine --build-nuclear-data")
+
+    nuclear = load_nuclear_index(nuclear_path)
+
     if args.all:
-        elements = get_available_elements(DATA_DIR)
+        elements = get_available_elements(data_dir)
         if not elements:
-            print(f"No _hf_constants.json files found in {DATA_DIR}.")
-            sys.exit(1)
+            raise MissingDataError(f"No _hf_constants.json files found in {data_dir}.")
     else:
         if args.element is None:
-            avail = get_available_elements(DATA_DIR)
-            print("Available elements:", ', '.join(avail) if avail else 'none')
-            args.element = input("Enter element symbol: ").strip()
+            avail = get_available_elements(data_dir)
+            parser.error("missing ELEMENT (or pass --all); available: "
+                         + (', '.join(avail) if avail else 'none'))
         elements = [require_neutral_species(args.element, "hyperfine.py")["species_id"]]
 
+    failed = []
     for el in elements:
-        out_dir = args.output_dir or os.path.join(PLOTS_DIR, el)
+        out_dir = args.output_dir or os.path.join(Workspace.current().plots_dir, el)
         os.makedirs(out_dir, exist_ok=True)
 
         result = run_element(
             el,
+            nuclear,
             isotope_A    = args.isotope,
             state_labels = args.states,
             B_max        = args.B_max,
             B_points     = args.B_points,
-            data_dir     = DATA_DIR,
+            data_dir     = data_dir,
         )
         if result is None:
+            failed.append(el)
             continue
 
-        save_json(result, DATA_DIR)
-        plot_hyperfine(result, out_dir)
-        plot_zeeman(result, out_dir)
+        save_json(el, result, data_dir)
+        plot_hyperfine(el, result, out_dir)
+        plot_zeeman(el, result, out_dir)
 
+    if failed:
+        print(f"\n  Failed: {', '.join(failed)}")
+        return 1
     print("\n✓ Done.")
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

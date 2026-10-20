@@ -6,20 +6,22 @@ was dropped by the Coulomb gate.
 """
 import json
 import re
-from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+from linak.core.paths import reference_path
+
+DATA = reference_path("data_json")
+F_VALUES = reference_path("f_values")
 ARC_TAU = {"10s": 7.8728e-07, "20s": 6.4442e-06, "30s": 2.2040e-05, "20d": 3.7878e-06, "30d": 1.2715e-05}
 
 
 @pytest.fixture(scope="module")
 def li():
-    p = ROOT / "data_json" / "Li_lifetimes.json"
+    p = DATA / "Li_lifetimes.json"
     if not p.exists():
         pytest.skip("Li_lifetimes.json not generated")
-    return json.load(open(p, encoding="utf-8"))
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("state", sorted(ARC_TAU))
@@ -29,7 +31,7 @@ def test_li_high_n_lifetime_matches_arc(li, state):
 
 
 def test_li_literature_rows_only_where_nist_has_none():
-    lit = json.load(open(ROOT / "f_values" / "Li_literature.json", encoding="utf-8"))
+    lit = json.loads((F_VALUES / "Li_literature.json").read_text(encoding="utf-8"))
     nist_last = {("2s", "p"): 13, ("2p", "s"): 8, ("2p", "d"): 9}
     for t in lit["transitions"]:
         if not t["ref"].startswith("ARC "):

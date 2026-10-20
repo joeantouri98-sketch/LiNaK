@@ -1,6 +1,6 @@
 r"""
-parse_orca.py  —  ORCA 6.x output parser
------------------------------------------
+orca_parser  —  ORCA 6.x output parser
+--------------------------------------
 Parses TD-DFT excitations and ground-state energy from ORCA output files.
 
 ORCA output structure (critical to understand):
@@ -11,7 +11,7 @@ r"""
 
 import re
 
-from linak.core.constants import HARTREE_TO_EV, HC_EV_NM
+from linak.core.constants import HARTREE_TO_EV
 
 
 def parse_ground_energy(text):
@@ -247,10 +247,9 @@ def parse_soc_excitations(text, ground_mult=2, soc_energy_source="auto"):
     return [by_state[k] for k in sorted(by_state)]
 
 
-# TD-DFT roots closer than this (eV) are numerical duplicates (same printed energy).
-TD_DFT_NUMERIC_TOLERANCE_EV = 0.0001
-# Legacy alias — only used for TD-DFT post-processing, not SOC results.
-TD_DFT_LEVEL_TOLERANCE_EV = TD_DFT_NUMERIC_TOLERANCE_EV
+# TD-DFT roots closer than this (eV) are numerical duplicates (same printed
+# energy). Only used for TD-DFT post-processing, not SOC results.
+TD_DFT_LEVEL_TOLERANCE_EV = 0.0001
 
 
 def deduplicate_excitations(raw_excitations, tolerance=TD_DFT_LEVEL_TOLERANCE_EV):

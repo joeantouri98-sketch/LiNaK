@@ -20,11 +20,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+if str(ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(ROOT / "src"))
 
 RESULTS = ROOT / "tests" / "results"
-DATA = ROOT / "data_json"
 
 
 def _load(path: Path):
@@ -75,7 +74,7 @@ def _n_max_mostly_trusted(by_n: dict) -> int | None:
     for n in sorted(by_n):
         c = by_n[n]
         good = sum(c[s] for s in c if s in (
-            "NIST", "precision", "literature", "ORCA", "EOM-CCSD", "Numerov"
+            "NIST", "precision", "NIST-extrap", "literature", "ORCA", "EOM-CCSD", "Numerov"
         ))
         bad = c.get("Coulomb", 0) + c.get("Coulomb(approx)", 0)
         if good >= bad and good > 0:
@@ -110,8 +109,8 @@ def build_scorecard(element: str, data_dir: Path) -> dict:
     # Runtime Numerov scale from this element's NIST + QD (no hardcoded factors)
     ryd = _load(data_dir / f"{element}_rydberg.json")
     try:
-        from alpha_core import load_nist_fvalues
-        from qdt_radial import fit_numerov_scale_from_nist
+        from linak.physics.polarizability_core import load_nist_fvalues
+        from linak.physics.qdt_radial import fit_numerov_scale_from_nist
         nist = load_nist_fvalues(element, verbose=False)
         qd = (ryd or {}).get("quantum_defects", {})
         card["numerov_calibration"] = fit_numerov_scale_from_nist(qd, nist["fosc"])
@@ -121,9 +120,11 @@ def build_scorecard(element: str, data_dir: Path) -> dict:
 
 
 def main(argv=None):
+    from linak.core.workspace import Workspace
+
     p = argparse.ArgumentParser(description="f-source scorecard")
     p.add_argument("element", nargs="?", default="Na")
-    p.add_argument("--data-dir", default=str(DATA))
+    p.add_argument("--data-dir", default=str(Workspace.current().data_json_dir))
     p.add_argument("--json", default=None,
                    help="Output path (default: tests/results/fosc_audit_<el>.json)")
     args = p.parse_args(argv)
@@ -134,7 +135,7 @@ def main(argv=None):
     out = Path(args.json) if args.json else RESULTS / f"fosc_audit_{args.element}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as f:
-        json.dump(card, f, indent=2)
+        json.dump(card, f, indent=2, allow_nan=False)
         f.write("\n")
 
     lt = card["lifetimes"]

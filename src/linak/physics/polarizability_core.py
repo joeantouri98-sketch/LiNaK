@@ -1,5 +1,5 @@
 """
-alpha_core.py — shared polarizability / oscillator-strength core
+polarizability_core — shared polarizability / oscillator-strength core
 ----------------------------------------------------------------
 Pure functions for building transition networks and evaluating α(ω).
 Imported by polarizability.py, blackbody.py, and future downstream
@@ -17,16 +17,20 @@ import os
 import re
 
 import numpy as np
-from linak.core.paths import DATA_JSON_DIR, reference_path
+
+from linak.core.paths import reference_path
+from linak.physics.rydberg import unwrap_asd_field
 
 from linak.core.constants import (
     EV_TO_HARTREE,
-    HARTREE_TO_EV,
     NIST_PREF,
     CM1_TO_EV,
     NM_TO_AU_OMEGA,
-    ALPHA0_EXPT,
-    C6_EXPT,
+    A0_SI,
+    C_SI,
+    H_SI,
+    KB_SI,
+    AMU_KG,
 )
 
 
@@ -185,19 +189,16 @@ def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
 
 # NIST F-VALUE LOADER  (shared by polarizability, blackbody, lifetimes)
 
+def _default_data_dir() -> str:
+    """Default JSON data directory, resolved at call time.
 
+    The module must not freeze the data directory at import: the active
+    workspace / configured root may differ from the import-time environment
+    (e.g. the GUI passes one explicitly), and pure engines stay lazy.
+    """
+    from linak.core.workspace import Workspace
 
-def unwrap_asd_field(val):
-    """Normalize one NIST ASD cell (Excel '=""…""' wrapping, quotes, brackets)."""
-    if val is None:
-        return ''
-    s = str(val).strip()
-    if s.startswith('='):
-        s = s[1:].strip()
-    s = s.strip('"').strip()
-    if s.startswith('='):
-        s = s[1:].strip().strip('"').strip()
-    return s.strip('"').strip()
+    return str(Workspace.current().data_json_dir)
 
 
 def find_nist_lines_file(element, f_values_dir=None):
@@ -230,9 +231,9 @@ def is_transition_metal_species(element):
     and any species whose data_json/<El>_rydberg.json was built with `rydberg.py --nist-only`
     (method 'NIST ASD levels (no QDT)'), so the later stages see the same level scheme."""
     try:
-        _rf = os.path.join(DATA_JSON_DIR, f"{str(element).strip()}_rydberg.json")
+        _rf = os.path.join(_default_data_dir(), f"{str(element).strip()}_rydberg.json")
         if os.path.exists(_rf):
-            with open(_rf) as _f:
+            with open(_rf, encoding="utf-8") as _f:
                 if 'no QDT' in str(json.load(_f).get('method', '')):
                     return True
     except (OSError, ValueError):
@@ -282,9 +283,9 @@ def load_nist_metal_lines(element, f_values_dir=None, verbose=True,
         return out
 
     if max_ek_eV is None:
-        _ryd_file = os.path.join(DATA_JSON_DIR, f"{element}_rydberg.json")
+        _ryd_file = os.path.join(_default_data_dir(), f"{element}_rydberg.json")
         try:
-            with open(_ryd_file) as _rf:
+            with open(_ryd_file, encoding='utf-8') as _rf:
                 max_ek_eV = float(json.load(_rf)['ionization_energy_eV'])
         except (OSError, KeyError, ValueError):
             max_ek_eV = 20.0
@@ -505,9 +506,9 @@ def load_nist_fvalues(element, f_values_dir=None, verbose=True,
         _is_ion = False
 
     if max_ek_eV is None:
-        _ryd_file = os.path.join(DATA_JSON_DIR, f"{element}_rydberg.json")
+        _ryd_file = os.path.join(_default_data_dir(), f"{element}_rydberg.json")
         try:
-            with open(_ryd_file) as _rf:
+            with open(_ryd_file, encoding='utf-8') as _rf:
                 max_ek_eV = float(json.load(_rf)['ionization_energy_eV'])
         except (OSError, KeyError, ValueError):
             max_ek_eV = 6.0
@@ -930,12 +931,13 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
 
 # ELEMENT DATA LOADER
 
-
-def load_element(element, data_dir=DATA_JSON_DIR, f_values_dir=None, verbose=True):
+def load_element(element, data_dir=None, f_values_dir=None, verbose=True):
     """
     Load rydberg + transitions JSON for one element.
     Returns a dict with everything needed for polarizability calculations.
     """
+    if data_dir is None:
+        data_dir = _default_data_dir()
     ryd_file   = os.path.join(data_dir, f"{element}_rydberg.json")
     trans_file = os.path.join(data_dir, f"{element}_transitions.json")
 
@@ -945,12 +947,12 @@ def load_element(element, data_dir=DATA_JSON_DIR, f_values_dir=None, verbose=Tru
         return None
     if not os.path.exists(trans_file):
         if verbose:
-            print(f"  {element}: {trans_file} not found — run transitions.py first")
+            print(f"  {element}: {trans_file} not found — run linak --pipeline transitions first")
         return None
 
-    with open(ryd_file) as f:
+    with open(ryd_file, encoding='utf-8') as f:
         ryd = json.load(f)
-    with open(trans_file) as f:
+    with open(trans_file, encoding='utf-8') as f:
         trans = json.load(f)
 
     IE = ryd['ionization_energy_eV']
@@ -980,7 +982,10 @@ def load_element(element, data_dir=DATA_JSON_DIR, f_values_dir=None, verbose=Tru
             if n and l:
                 state_nl[lbl] = (n, l)
 
-    nist = load_nist_fvalues(element, f_values_dir=f_values_dir, verbose=verbose)
+    # IE from the rydberg file loaded above (the --data-dir one), not the
+    # workspace's copy.
+    nist = load_nist_fvalues(element, f_values_dir=f_values_dir, verbose=verbose,
+                             max_ek_eV=float(IE))
     lit  = load_literature_fvalues(element, f_values_dir=f_values_dir, verbose=verbose)
 
     from linak.physics.qdt_radial import fit_numerov_scale_from_nist, fit_numerov_scales_by_type
@@ -1024,8 +1029,10 @@ def load_element(element, data_dir=DATA_JSON_DIR, f_values_dir=None, verbose=Tru
     )
 
 
-def get_available_elements(data_dir=DATA_JSON_DIR):
+def get_available_elements(data_dir=None):
     """Find neutrals with rydberg + transitions JSON (ions excluded for Tier C)."""
+    if data_dir is None:
+        data_dir = _default_data_dir()
     from linak.core.species import is_ion_id
     available = []
     if not os.path.isdir(data_dir):
@@ -1046,25 +1053,28 @@ def require_alpha_species(raw, context="this script"):
     built with `rydberg.py --nist-only` (no QDT scheme): the polarizability machinery would invent
     two configuration-based channels for them and ignore their NIST line lists (Fe alpha0 = 23 au
     from two f = 0.64 channels, a meaningless number). Returns the resolved species dict."""
+    from linak.core.errors import InvalidSpeciesError
     from linak.core.species import require_neutral_species
     sp = require_neutral_species(raw, context)
     if is_transition_metal_species(sp["species_id"]):
-        raise SystemExit(
+        raise InvalidSpeciesError(
             f"{context}: {sp['species_id']} has no quantum-defect (alkali-like) level scheme, so a "
             f"sum-over-states polarizability would be meaningless. Not supported.")
     return sp
 
 
-def load_cached_transitions(element, data_dir=DATA_JSON_DIR):
+def load_cached_transitions(element, data_dir=None):
     """
     Load precomputed transitions_gs / transitions_ex from
     data_json/<element>_polarizability.json if present.
     Returns None if the file is missing or has no transition networks.
     """
+    if data_dir is None:
+        data_dir = _default_data_dir()
     path = os.path.join(data_dir, f"{element}_polarizability.json")
     if not os.path.exists(path):
         return None
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         data = json.load(f)
     trans_gs = data.get('transitions_gs')
     if not trans_gs:
@@ -1078,6 +1088,31 @@ def load_cached_transitions(element, data_dir=DATA_JSON_DIR):
     )
 
 
+# Bug-compatible ordering marker (PHYSICS_BUGS P14, deliberately unfixed):
+# a candidate with *no known level energy* is sorted with a key of −999 au,
+# i.e. it lands before every real level and is then picked as the "lowest"
+# excited state. The value must match the historical inline sentinel
+# exactly; changing it (or sorting unknown energies last) is a physics
+# change and must be scoped as one.
+
+UNKNOWN_ENERGY_AU = -999.0
+
+
+def unknown_energy_sort_key(state_energy_au: dict[str, float],
+                            lbl: str) -> float:
+    """Sort key for a state label by its level energy (atomic units).
+
+    ``state_energy_au`` maps state label → level energy in a₀; a label
+    absent from the map carries the historical −999 au key so the candidate
+    ordering — and the state the pipeline then treats as the lowest
+    excited state — is reproduced exactly.
+    """
+    energy = state_energy_au.get(lbl)
+    if energy is None:
+        return UNKNOWN_ENERGY_AU
+    return energy
+
+
 def default_excited_label(data, all_transitions=None):
     """Lowest dipole-allowed excited state from ground — same as polarizability.py."""
     if all_transitions is None:
@@ -1087,7 +1122,8 @@ def default_excited_label(data, all_transitions=None):
                   if t.get('lower_label') == gs_label]
     if not candidates:
         return None
-    candidates.sort(key=lambda lbl: data['state_energy_au'].get(lbl, -999))
+    candidates.sort(
+        key=lambda lbl: unknown_energy_sort_key(data['state_energy_au'], lbl))
     return candidates[0]
 
 
@@ -1578,3 +1614,50 @@ def alpha_real_vectorized(omega_au_arr, transitions_list, guard=1e-4):
     bad = np.abs(denom) < guard * np.abs(dE)[None, :]
     contrib = sgn[None, :] * f[None, :] / np.where(bad, np.inf, denom)
     return contrib.sum(axis=1)
+
+
+# ============================================================================
+# AC STARK / TRAP (derived)
+# ============================================================================
+# U = -(2*pi*a0^3/c) * alpha_au * I   [J], I in W/m^2
+# (Grimm et al., Adv. At. Mol. Opt. Phys. 42, 95 (2000))
+
+NM_TO_HARTREE = NM_TO_AU_OMEGA  # alias used in older plot code
+U_PREFACTOR = 2.0 * math.pi * A0_SI**3 / C_SI
+
+
+def U_joules(alpha_au, I_Wm2):
+    """AC Stark shift / trap depth in Joules. Positive alpha -> negative U
+    (attractive trap, red-detuned); negative alpha -> positive U (repulsive,
+    blue-detuned)."""
+    return -U_PREFACTOR * alpha_au * I_Wm2
+
+def U_to_uK(U_J):
+    return U_J / KB_SI * 1e6
+
+def U_to_kHz_h(U_J):
+    """U/h in kHz — the shift expressed as a frequency."""
+    return U_J / H_SI / 1e3
+
+def alpha_to_uK_factor(I_kWcm2):
+    """uK per unit alpha_au, at the given intensity. U_uK = alpha_au * this."""
+    I_Wm2 = I_kWcm2 * 1e3 / 1e-4
+    return -U_PREFACTOR * I_Wm2 / KB_SI * 1e6
+
+def kWcm2_to_Wm2(I_kWcm2):
+    return I_kWcm2 * 1e3 / 1e-4
+
+def trap_frequencies_Hz(U0_J, waist_um, wl_nm, mass_amu):
+    """
+    Radial and axial trap frequencies for a single-beam Gaussian tweezer,
+    harmonic approximation near the focus. U0_J must be the (possibly signed)
+    trap depth; only its magnitude is used.
+    """
+    w0 = waist_um * 1e-6           # m
+    wl = wl_nm * 1e-9              # m
+    m  = mass_amu * AMU_KG
+    zR = math.pi * w0**2 / wl      # Rayleigh range, m
+    U0 = abs(U0_J)
+    omega_r = math.sqrt(4.0 * U0 / (m * w0**2))
+    omega_z = math.sqrt(2.0 * U0 / (m * zR**2))
+    return omega_r / (2 * math.pi), omega_z / (2 * math.pi), zR

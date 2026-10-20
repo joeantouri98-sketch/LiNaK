@@ -2,7 +2,6 @@
 """f-source audit scorecard + literature / Numerov regression hooks."""
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -14,7 +13,6 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from fosc_audit import build_scorecard  # noqa: E402
 from helpers import write_result_summary
-from linak.physics.qdt_radial import numerov_fosc
 from linak.physics.polarizability_core import load_literature_fvalues, load_nist_fvalues
 
 

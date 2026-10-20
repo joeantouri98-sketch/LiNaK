@@ -1,48 +1,53 @@
 """
-runorca.py  -  run ORCA calculations and save results to data_json/
--------------------------------------------------------------------
-Usage:
-    python runorca.py              -> run ALL neutrals (auto mode)
-    python runorca.py Na           -> run only Sodium
-    python runorca.py Mg_c1        -> registered ion (Mg+); dirs/files use Mg_c1
-    python runorca.py 19           -> run only Z=19 (Potassium)
-    python runorca.py Cs --mode soc --soc-recipe casscf --nroots 6
-    python runorca.py Cs --mode soc --soc-recipe nevpt2 --soc-norb 10
-    python runorca.py Na --mode casscf --nroots 20
-    python runorca.py Fe --mode tddft --nroots 20
-    python runorca.py Fr --scf-tightness tight --basis-tightness vtz
-    python runorca.py Na --pick-basis
-    python runorca.py Li --basis-file "resources/Basis sets/Li/Li-cc-pCVTZ.txt"
-    python runorca.py Fr --functional-gs B3LYP --functional-ex CAM-B3LYP
-    python runorca.py Na --outname UKS          -> data_json/Na_UKS.json
-                                            and orca_outputs/Na/<func>_<basis>_UKS/
+The ``runorca`` pipeline: run ORCA calculations and save results under data/.
+-----------------------------------------------------------------------------
+Usage (``linak --pipeline runorca ...``):
+    runorca                 -> run ALL neutrals (auto mode)
+    runorca Na              -> run only Sodium
+    runorca Mg_c1           -> registered ion (Mg+); dirs/files use Mg_c1
+    runorca 19              -> run only Z=19 (Potassium)
+    runorca Cs --mode soc --soc-recipe casscf --nroots 6
+    runorca Cs --mode soc --soc-recipe nevpt2 --soc-norb 10
+    runorca Na --mode casscf --nroots 20
+    runorca Fe --mode tddft --nroots 20
+    runorca Fr --scf-tightness tight --basis-tightness vtz
+    runorca Na --pick-basis --basis def2-TZVP
+    runorca Li --basis-file Li-cc-pCVTZ     (bare name: bundled "Basis sets")
+    runorca Fr --functional-gs B3LYP --functional-ex CAM-B3LYP
+    runorca Na --outname UKS -> data/Na_UKS.json
+                                and orca_outputs/Na/<func>_<basis>_UKS/
     ORCA files land in orca_outputs/<species_id>/<run_tag>/ (always a subfolder);
     run_tag includes functional, basis, SCF keyword, optional mode/outname.
-    JSON stays flat under data_json/.
+    JSON stays flat under data/. Both live in the workspace in effect
+    (``LINAK_PROJECT_ROOT``, else the per-user data folder).
+
+Exit status: 0 when every requested calculation succeeded, 1 otherwise.
 
 SECURITY NOTE:
-  - ORCA resolution: uses ORCA_EXE environment variable or shutil.which("orca")
+  - ORCA resolution: the ORCA_EXE environment variable, else "orca" on PATH
+    (rejected unless ORCA's own modules sit beside it)
   - Subprocess execution: uses argument lists, not shell=True
 """
 
 import argparse
-import json
 import os
-from linak.core.paths import BASIS_SETS_DIR, DATA_JSON_DIR, ORCA_OUTPUTS_DIR
 import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
+from linak.core.errors import PipelineError
+from linak.core.fileio import is_safe_name, write_json
 from linak.core.elements import ELEMENTS
 from linak.core.species import resolve_species, is_ion_id
+from linak.core.workspace import Workspace
 from linak.integrations.orca_templates import (
     DEFAULT_FUNCTIONAL,
     ground_state,
     excited_states,
     excited_states_alkali,
     excited_states_soc,
-    excited_states_alkali_soc,
     excited_states_atomic_alkali,
     select_calculation_mode,
     calculation_metadata,
@@ -62,7 +67,9 @@ from linak.integrations.orca_parser import (
 )
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
-parser = argparse.ArgumentParser(description="Run ORCA and save data_json output")
+parser = argparse.ArgumentParser(
+    prog="linak --pipeline runorca",
+    description="Run ORCA and save the parsed results under data/")
 parser.add_argument("target", nargs="?", default=None,
                     help="Element symbol, Z, or ion species id "
                          "(e.g. Mg_c1, Na_a1); omit for all neutrals")
@@ -95,18 +102,22 @@ parser.add_argument("--scf-tightness",
 parser.add_argument("--basis-tightness",
                     choices=["vdz", "vtz", "vqz"],
                     default=None,
-                    help="ANO-RCC basis tier for Z>=87 (vdz/vtz/vqz); skips the "
-                         "interactive BSE picker. Ignored for lighter elements.")
+                    help="ANO-RCC basis tier for Z>=87 (vdz/vtz/vqz); takes precedence "
+                         "over the BSE path. Ignored for lighter elements.")
 parser.add_argument("--pick-basis", action="store_true",
-                    help="Interactive basis_set_exchange picker for every element "
-                         "(default: Z>=87 only). Embeds the choice as inline NewGTO.")
+                    help="Use a basis_set_exchange basis for every element (default: "
+                         "Z>=87 only): lists the available ones and embeds --basis NAME, "
+                         "or the recipe default, as inline NewGTO.")
+parser.add_argument("--basis", default=None, metavar="NAME",
+                    help="basis_set_exchange basis name for the BSE path "
+                         "(see --pick-basis); default: the recipe default.")
 parser.add_argument("--basis-file", default=None, metavar="PATH",
                     help="External basis file (GAMESS-US or ORCA format from "
                     "basissetexchange.org). Resolves under resources/Basis sets/ "
                          "when given a bare name/stem. Overrides --pick-basis "
                          "and embeds as inline NewGTO + AutoAux.")
 parser.add_argument("--outname", default=None, metavar="SUFFIX",
-                    help="Suffix for data_json output: data_json/<El>_<SUFFIX>.json "
+                    help="Suffix for the JSON output: data/<El>_<SUFFIX>.json "
                          "(e.g. --outname UKS -> Na_UKS.json). Also appended to the "
                          "orca_outputs/<El>/<run_tag>/ folder name. Overrides default "
                          "JSON names including SOC auto tags. Strip a trailing .json if given.")
@@ -120,23 +131,21 @@ def normalize_outname(raw):
     if suffix.lower().endswith(".json"):
         suffix = suffix[:-5]
     suffix = suffix.strip().strip("_")
-    if not suffix or any(c in suffix for c in ("/", "\\")):
-        raise SystemExit(
-            f"Invalid --outname {raw!r}: use a simple suffix "
-            f"(e.g. UKS), no path separators.")
+    if not is_safe_name(suffix):
+        raise PipelineError(
+            f"Invalid --outname {raw!r}: use a simple suffix of letters, digits, "
+            f"'.', '_', '+' or '-' (e.g. UKS).")
     return suffix
 
 
 def sanitize_run_token(s):
-    """Make a string safe as one Windows path component."""
+    """Make a string safe as one path component (see ``core.fileio.is_safe_name``)."""
     if s is None:
         return "unknown"
     text = str(s).strip()
     text = re.sub(r"\s*\([^)]*\)", "", text).strip()  # drop "(inline NewGTO)" etc.
-    text = text.replace(" ", "_")
-    bad = '<>:"/\\|?*'
-    text = "".join("_" if (c in bad or ord(c) < 32) else c for c in text)
-    text = text.strip(" ._")
+    text = "".join(c if is_safe_name(c) else "_" for c in text)
+    text = text.strip("._")
     return text or "unknown"
 
 
@@ -204,9 +213,10 @@ def resolve_basis_choice(symbol, Z, relativistic_mode):
     if args.basis_file:
         external_path = resolve_basis_file(args.basis_file, symbol)
         if external_path is None:
+            basis_root = Workspace.current().basis_sets_dir
             raise FileNotFoundError(
                 f"--basis-file '{args.basis_file}' not found for {symbol}. "
-                f"Tried paths under {BASIS_SETS_DIR}/{symbol}/ and as given."
+                f"Tried paths under {basis_root}/{symbol}/ and as given."
             )
         if args.pick_basis:
             print("  (--pick-basis ignored; --basis-file takes precedence)")
@@ -215,16 +225,16 @@ def resolve_basis_choice(symbol, Z, relativistic_mode):
     return chosen, None
 
 
-# Parse real CLI only when executed as a script. On import use empty argv so
-# helpers stay usable without launching the all-elements ORCA loop.
-args = parser.parse_args() if __name__ == "__main__" else parser.parse_args([])
+# CLI state is configured in _set_cli_state()/main() instead of at import, so
+# the module can be dispatched both as a script and by the frozen app runner.
+args = None  # type: argparse.Namespace | None
+TARGET = None
 
-TARGET = args.target
-
-FUNCTIONAL_GS = args.functional_gs or args.functional
-FUNCTIONAL_EX = args.functional_ex or args.functional
-SPLIT_FUNCTIONALS = FUNCTIONAL_GS != FUNCTIONAL_EX
-OUTNAME_SUFFIX = normalize_outname(args.outname)
+# ── Module CLI state (populated by _set_cli_state) ───────────────────────────
+FUNCTIONAL_GS = None
+FUNCTIONAL_EX = None
+SPLIT_FUNCTIONALS = False
+OUTNAME_SUFFIX = None
 
 SCF_TIGHTNESS_KEYWORDS = {
     "loose": "LooseSCF",
@@ -238,6 +248,18 @@ ANO_RCC_BASIS_TIERS = {
     "vtz": "ANO-RCC-VTZP",
     "vqz": "ANO-RCC-VQZP",
 }
+
+
+def _set_cli_state(argv=None):
+    """Parse CLI arguments and rebind the module-level state used by helpers."""
+    global args, TARGET, FUNCTIONAL_GS, FUNCTIONAL_EX, SPLIT_FUNCTIONALS, OUTNAME_SUFFIX
+    args = parser.parse_args(argv or [])
+    TARGET = args.target
+    FUNCTIONAL_GS = args.functional_gs or args.functional
+    FUNCTIONAL_EX = args.functional_ex or args.functional
+    SPLIT_FUNCTIONALS = FUNCTIONAL_GS != FUNCTIONAL_EX
+    OUTNAME_SUFFIX = normalize_outname(args.outname)
+
 
 
 def resolve_orca_executable():
@@ -260,6 +282,13 @@ def resolve_orca_executable():
     
     resolved = shutil.which("orca")
     if resolved:
+        # ORCA ships its modules (orca_scf, ...) beside the driver; on Linux
+        # desktops a bare "orca" on PATH is usually the GNOME screen reader.
+        folder = Path(resolved).resolve().parent
+        if not any((folder / name).is_file() for name in ("orca_scf", "orca_scf.exe")):
+            raise RuntimeError(
+                f"'orca' on PATH ({resolved}) is not the ORCA quantum-chemistry program "
+                f"(no orca_scf next to it); set ORCA_EXE to the ORCA executable.")
         return resolved
     
     raise RuntimeError(
@@ -298,10 +327,18 @@ def is_neutral_target(Z, symbol):
 
 
 # ── Directories ──────────────────────────────────────────────────────────────
-BASE_DIR = ORCA_OUTPUTS_DIR
-JSON_DIR = DATA_JSON_DIR
-os.makedirs(BASE_DIR, exist_ok=True)
-os.makedirs(JSON_DIR, exist_ok=True)
+# Resolved via the workspace at use time; registering
+# this module as a pipeline must not create anything on disk.
+# ``_run_one_species`` ensures both directories before the first write.
+
+def _run_dirs() -> tuple[str, str]:
+    """(orca_outputs_dir, data_json_dir) of the workspace in effect now."""
+    ws = Workspace.current()
+    base_dir = str(ws.orca_outputs_dir)
+    json_dir = str(ws.data_json_dir)
+    os.makedirs(base_dir, exist_ok=True)
+    os.makedirs(json_dir, exist_ok=True)
+    return base_dir, json_dir
 
 
 def orca_terminated_ok(text: str) -> bool:
@@ -321,30 +358,25 @@ def run_orca(inp_path: str, out_path: str) -> None:
     inp_base = os.path.basename(inp_abs)
     
     orca_exe = resolve_orca_executable()
-    
-    result = subprocess.run(
-        [orca_exe, inp_base],
-        shell=False,
-        cwd=work_dir,
-        capture_output=True,
-        text=True,
-        errors="ignore",
-    )
-    
-    with open(out_abs, "w", encoding="utf-8", errors="ignore") as f:
-        if result.stdout:
-            f.write(result.stdout)
+
+    # stdout goes straight to the .out file, so a long run can be followed
+    # (and a killed one still leaves its output); stderr is appended after.
+    with open(out_abs, "wb") as out_file:
+        result = subprocess.run(
+            [orca_exe, inp_base],
+            shell=False,
+            cwd=work_dir,
+            stdout=out_file,
+            stderr=subprocess.PIPE,
+        )
         if result.stderr:
-            f.write(result.stderr)
-    
+            out_file.write(result.stderr)
+
+    out_text = Path(out_abs).read_text(encoding="utf-8", errors="ignore")
     if result.returncode != 0:
-        tail = ((result.stderr or "") + (result.stdout or ""))[-800:]
         raise RuntimeError(
-            f"ORCA failed for {inp_path} (code {result.returncode})\n{tail}")
-    
-    with open(out_abs, encoding="utf-8", errors="ignore") as f:
-        out_text = f.read()
-    
+            f"ORCA failed for {inp_path} (code {result.returncode})\n{out_text[-800:]}")
+
     if not orca_terminated_ok(out_text):
         raise RuntimeError(f"ORCA did not terminate normally: {out_path}")
 
@@ -358,14 +390,6 @@ def default_nroots(symbol, charge, mult, calc_mode, soc_class_hint=None):
         if el_class:
             return default_soc_nroots(el_class, symbol=symbol)
         return 6
-    if TARGET is not None and sys.stdin.isatty():   # no prompt when driven by the GUI / a pipe
-        try:
-            prompt = "Number of excited-state roots [default: 20]: "
-            entered = input(prompt).strip()
-            if entered:
-                return int(entered)
-        except (ValueError, EOFError):
-            pass
     return 20
 
 
@@ -390,7 +414,12 @@ def should_prompt_bse(z):
     return args.pick_basis or z >= 87
 
 
-def select_bse_basis(symbol, z, default=None, include_nonrel=False):
+def select_bse_basis(symbol, z, default=None, include_nonrel=False, requested=None):
+    """The BSE basis to embed: *requested* if available for *z*, else *default*.
+
+    Lists the available bases so a run log shows what ``--basis`` accepts;
+    never prompts (a pipeline must not read stdin).
+    """
     if default is None:
         default = recipe_default_basis(symbol, z, args.relativistic)
     try:
@@ -447,24 +476,14 @@ def select_bse_basis(symbol, z, default=None, include_nonrel=False):
         return default
 
     print(f"  {'─'*60}")
-    print(f"  Enter number to select, or press Enter for default ({default}):")
-
-    choice = input("  > ").strip()
-    if not choice:
-        print(f"  Using default: {default}")
+    if requested is None:
+        print(f"  Using default: {default}  (choose another with --basis NAME)")
         return default
-    try:
-        idx = int(choice) - 1
-        if 0 <= idx < len(all_bases):
-            chosen = all_bases[idx]
-            print(f"  Selected: {chosen}")
-            return chosen
-    except ValueError:
-        if choice in all_bases:
-            print(f"  Selected: {choice}")
-            return choice
-    print(f"  Not recognised - using default: {default}")
-    return default
+    if requested not in all_bases:
+        raise PipelineError(
+            f"--basis {requested!r} is not available for {symbol} from basis_set_exchange")
+    print(f"  Selected: {requested}")
+    return requested
 
 
 def resolve_bse_basis(symbol, z, relativistic_mode):
@@ -479,10 +498,11 @@ def resolve_bse_basis(symbol, z, relativistic_mode):
         symbol, z,
         default=recipe_default_basis(symbol, z, relativistic_mode),
         include_nonrel=args.pick_basis,
+        requested=args.basis,
     )
 
 
-def resolve_basis_file(spec, symbol, basis_root=BASIS_SETS_DIR):
+def resolve_basis_file(spec, symbol, basis_root=None):
     """
     Resolve --basis-file to an absolute path.
     Accepts absolute/relative paths, or bare names/stems under resources/Basis sets/.
@@ -490,6 +510,8 @@ def resolve_basis_file(spec, symbol, basis_root=BASIS_SETS_DIR):
     """
     if not spec:
         return None
+    if basis_root is None:
+        basis_root = str(Workspace.current().basis_sets_dir)
     spec = spec.strip().strip('"').strip("'")
     if os.path.isfile(spec):
         return os.path.abspath(spec)
@@ -555,7 +577,6 @@ def _patch_inline_basis_recipes(_ot, symbol, z, basis_block_text):
         return _orig_ano(sym, z_arg)
 
     _ot.get_recipe_tddft = get_recipe_tddft_patched
-    _ot.get_recipe = get_recipe_tddft_patched
     _ot.get_recipe_soc = get_recipe_soc_patched
     _ot._build_ano_rcc_block = build_ano_rcc_block_patched
     return (_orig_tddft, _orig_soc, _orig_ano)
@@ -577,7 +598,7 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
     file_prefix: basename stem for .inp/.gbw (species_id, default=symbol).
     Atom line still uses chemical symbol; charge/mult go on * xyz.
     """
-    import orca_templates as _ot
+    from linak.integrations import orca_templates as _ot
 
     prefix = file_prefix or symbol
     basis_ctx = None
@@ -615,7 +636,7 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
                     symbol, charge, mult, nroots=nroots,
                     relativistic_mode=relativistic_mode,
                     scf_keyword=correlated_scf)
-            with open(paths[suffix], "w") as f:
+            with open(paths[suffix], "w", encoding="utf-8") as f:
                 f.write(text)
         else:
             gs_scf = scf_override or default_gs_scf_keyword(calc_mode)
@@ -623,7 +644,7 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
             paths["gs"] = os.path.join(element_dir, f"{prefix}_gs.inp")
             paths["ex"] = os.path.join(element_dir, f"{prefix}_ex.inp")
 
-            with open(paths["gs"], "w") as f:
+            with open(paths["gs"], "w", encoding="utf-8") as f:
                 f.write(ground_state(
                     symbol, charge, mult, functional=functional_gs,
                     relativistic_mode=relativistic_mode, scf_keyword=gs_scf))
@@ -646,13 +667,12 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
                     functional=functional_ex, relativistic_mode=relativistic_mode,
                     moinp_gbw=moinp, scf_keyword=ex_scf)
 
-            with open(paths["ex"], "w") as f:
+            with open(paths["ex"], "w", encoding="utf-8") as f:
                 f.write(ex_text)
     finally:
         if basis_ctx is not None:
             _orig_tddft, _orig_soc, _orig_ano = basis_ctx
             _ot.get_recipe_tddft = _orig_tddft
-            _ot.get_recipe = _orig_tddft
             _ot.get_recipe_soc = _orig_soc
             _ot._build_ano_rcc_block = _orig_ano
 
@@ -662,51 +682,59 @@ def write_inputs(symbol, charge, mult, Z, element_dir, calc_mode,
 
 
 # ── Main loop (script only - never on import) ─────────────────────────────────
-def main():
-  if SPLIT_FUNCTIONALS:
-    print(f"  functional = GS: {FUNCTIONAL_GS}  /  EX: {FUNCTIONAL_EX}")
-  else:
-    print(f"  functional = {FUNCTIONAL_GS}")
-  print(f"  mode       = {args.mode}")
-  print(f"  relativity = {args.relativistic}")
-  if args.scf_tightness is not None:
-    print(f"  scf        = {SCF_TIGHTNESS_KEYWORDS[args.scf_tightness]} "
-          f"(from --scf-tightness {args.scf_tightness})")
-  if args.basis_tightness is not None:
-    print(f"  basis tier = {ANO_RCC_BASIS_TIERS[args.basis_tightness]} "
-          f"(from --basis-tightness {args.basis_tightness}; Z>=87 only)")
-  if args.pick_basis:
-    print("  bse picker = on for all elements (--pick-basis)")
-  if args.basis_file:
-    print(f"  basis file = {args.basis_file} (--basis-file; overrides BSE picker)")
-  if OUTNAME_SUFFIX:
-    print(f"  outname    = {OUTNAME_SUFFIX}  (-> data_json/<species>_{OUTNAME_SUFFIX}.json "
-          f"+ run-tag folder)")
-  print(f"  ORCA outs  = {BASE_DIR}/<species>/<func>_<basis>_<SCF>[_<mode>][_<outname>]/")
-  if args.mode in ("soc", "alkali-soc"):
-    print(f"  soc-recipe = {args.soc_recipe}")
-    if args.soc_norb is not None:
-        print(f"  soc-norb   = {args.soc_norb}")
+def main(argv=None):
+    _set_cli_state(argv)
+    if SPLIT_FUNCTIONALS:
+      print(f"  functional = GS: {FUNCTIONAL_GS}  /  EX: {FUNCTIONAL_EX}")
+    else:
+      print(f"  functional = {FUNCTIONAL_GS}")
+    print(f"  mode       = {args.mode}")
+    print(f"  relativity = {args.relativistic}")
+    if args.scf_tightness is not None:
+      print(f"  scf        = {SCF_TIGHTNESS_KEYWORDS[args.scf_tightness]} "
+            f"(from --scf-tightness {args.scf_tightness})")
+    if args.basis_tightness is not None:
+      print(f"  basis tier = {ANO_RCC_BASIS_TIERS[args.basis_tightness]} "
+            f"(from --basis-tightness {args.basis_tightness}; Z>=87 only)")
+    if args.pick_basis:
+      print("  bse picker = on for all elements (--pick-basis)")
+    if args.basis_file:
+      print(f"  basis file = {args.basis_file} (--basis-file; overrides BSE picker)")
+    if OUTNAME_SUFFIX:
+      print(f"  outname    = {OUTNAME_SUFFIX}  (-> data/<species>_{OUTNAME_SUFFIX}.json "
+            f"+ run-tag folder)")
+    print(f"  ORCA outs  = {Workspace.current().orca_outputs_dir}/"
+          f"<species>/<func>_<basis>_<SCF>[_<mode>][_<outname>]/")
+    if args.mode in ("soc", "alkali-soc"):
+      print(f"  soc-recipe = {args.soc_recipe}")
+      if args.soc_norb is not None:
+          print(f"  soc-norb   = {args.soc_norb}")
 
-  species_list = []
-  if TARGET is not None:
-    try:
-        species_list = [resolve_species(TARGET)]
-    except ValueError as exc:
-        raise SystemExit(str(exc))
-  else:
-    for Z, (symbol, charge, multiplicity) in ELEMENTS.items():
-        if is_neutral_target(Z, symbol):
-            species_list.append(resolve_species(symbol))
+    species_list = []
+    if TARGET is not None:
+      species_list = [resolve_species(TARGET)]
+    else:
+      for Z, (symbol, charge, multiplicity) in ELEMENTS.items():
+          if is_neutral_target(Z, symbol):
+              species_list.append(resolve_species(symbol))
 
-  for sp in species_list:
-    _run_one_species(sp)
-
-  print("\n=== All requested calculations finished ===")
+    results = [_run_one_species(sp) for sp in species_list]
+    failed = results.count(False)
+    if failed:
+      print(f"\n=== {failed} calculation(s) failed ===")
+      return 1
+    if TARGET is not None and results[0] is None:
+      return 1  # the one requested species was skipped
+    print("\n=== All requested calculations finished ===")
+    return 0
 
 
 def _run_one_species(sp):
-    """Run ORCA + write JSON for one resolved species record."""
+    """Run ORCA + write JSON for one resolved species record.
+
+    Returns True when the JSON was written, False on a failure, and None
+    when the species does not apply to the requested mode (skipped).
+    """
     from linak.integrations.orca_templates import require_soc_class
 
     species_id = sp["species_id"]
@@ -721,16 +749,16 @@ def _run_one_species(sp):
     if calc_mode == "alkali" and not is_alkali_like(
             symbol, charge, multiplicity, soc_class_hint=soc_hint):
         print(f"\n=== Skipping {species_id}: not alkali / alkali-like ===")
-        return
+        return None
     if calc_mode == "casscf" and not is_alkali_neutral(symbol, charge, multiplicity):
         print(f"\n=== Skipping {species_id}: --mode casscf is neutral alkali only ===")
-        return
+        return None
     if args.mode in ("soc", "alkali-soc") and calc_mode == "soc":
         try:
             require_soc_class(symbol, charge, multiplicity, soc_class_hint=soc_hint)
         except (ValueError, NotImplementedError) as exc:
             print(f"\n=== Skipping {species_id}: {exc} ===")
-            return
+            return None
 
     nroots = default_nroots(
         symbol, charge, multiplicity, calc_mode, soc_class_hint=soc_hint)
@@ -749,7 +777,7 @@ def _run_one_species(sp):
             symbol, Z, args.relativistic)
     except FileNotFoundError as exc:
         print(f"  [X] {exc}")
-        return
+        return False
 
     basis_tag = basis_tag_label(
         chosen_basis, external_basis_path, symbol, Z, args.relativistic, calc_mode)
@@ -759,7 +787,8 @@ def _run_one_species(sp):
         FUNCTIONAL_GS, FUNCTIONAL_EX, basis_tag, OUTNAME_SUFFIX, calc_mode,
         soc_recipe=args.soc_recipe, soc_norb=args.soc_norb,
         scf_keyword=scf_tag)
-    element_dir = os.path.join(BASE_DIR, species_id, run_tag)
+    base_dir, _json_dir = _run_dirs()
+    element_dir = os.path.join(base_dir, species_id, run_tag)
     os.makedirs(element_dir, exist_ok=True)
     print(f"  run dir   = {element_dir}")
     paths, _gbw, bse_basis = write_inputs(
@@ -779,14 +808,14 @@ def _run_one_species(sp):
             label = "CASSCF + SOC" if args.soc_recipe == "casscf" else "CASSCF/NEVPT2 + SOC"
             print(f"  -> {label}...")
             run_orca(paths["casscf_soc"], out_path)
-            with open(out_path, "r", errors="ignore") as f:
+            with open(out_path, "r", encoding="utf-8", errors="ignore") as f:
                 ex_text = f.read()
             ground_energy = parse_ground_energy(ex_text)
         elif calc_mode == "casscf":
             out_path = os.path.join(element_dir, f"{species_id}_casscf.out")
             print("  -> CASSCF + SC-NEVPT2...")
             run_orca(paths["casscf"], out_path)
-            with open(out_path, "r", errors="ignore") as f:
+            with open(out_path, "r", encoding="utf-8", errors="ignore") as f:
                 ex_text = f.read()
             ground_energy = parse_ground_energy(ex_text)
         else:
@@ -794,26 +823,27 @@ def _run_one_species(sp):
             ex_out = os.path.join(element_dir, f"{species_id}_ex.out")
             print("  -> Ground state...")
             run_orca(paths["gs"], gs_out)
-            with open(gs_out, "r", errors="ignore") as f:
+            with open(gs_out, "r", encoding="utf-8", errors="ignore") as f:
                 gs_text = f.read()
             ground_energy = parse_ground_energy(gs_text)
 
             print("  -> Excited states (TD-DFT)...")
             run_orca(paths["ex"], ex_out)
-            with open(ex_out, "r", errors="ignore") as f:
+            with open(ex_out, "r", encoding="utf-8", errors="ignore") as f:
                 ex_text = f.read()
     except RuntimeError as exc:
         print(f"  [X] {exc}")
-        return
+        return False
 
     if calc_mode == "soc":
         raw_excitations = parse_soc_excitations(ex_text, ground_mult=multiplicity)
         if not raw_excitations:
             if "SOC CORRECTED ABSORPTION SPECTRUM" in ex_text:
-                print("  [X] SOC spectrum present but no transitions parsed - check parse_orca.py")
+                print("  [X] SOC spectrum present but no transitions parsed "
+                      "- check linak.integrations.orca_parser")
             else:
                 print("  [X] No SOC CORRECTED spectrum in ORCA output")
-            return
+            return False
     else:
         raw_excitations = parse_excitations(ex_text, ground_mult=multiplicity)
     excitations_unique = deduplicate_excitations(raw_excitations)
@@ -860,7 +890,8 @@ def _run_one_species(sp):
         "excitations": raw_excitations,
         "excitations_unique": excitations_unique,
         "orca_run_tag": run_tag,
-        "orca_outputs_dir": element_dir.replace("\\", "/"),
+        # Relative to the output folder, as before: no machine paths in results.
+        "orca_outputs_dir": f"orca_outputs/{species_id}/{run_tag}",
         **meta,
     }
     if soc_hint:
@@ -879,15 +910,16 @@ def _run_one_species(sp):
         out_name = "_".join(parts) + ".json"
     else:
         out_name = f"{species_id}.json"
-    out_file = os.path.join(JSON_DIR, out_name)
-    with open(out_file, "w") as f:
-        json.dump(result, f, indent=2)
+    _base_dir, json_dir = _run_dirs()
+    out_file = os.path.join(json_dir, out_name)
+    write_json(out_file, result)
 
     basis_disp = meta.get("basis_soc", meta.get("basis", "?")) if calc_mode == "soc" else meta.get("basis", "?")
     print(f"  [OK] Saved: {out_file}  [{meta['method']}, {basis_disp}]")
     if calc_mode == "soc" and sp["kind"] == "neutral":
-        print(f"     (TD-DFT screening data stays in {JSON_DIR}/{species_id}.json if present)")
+        print(f"     (TD-DFT screening data stays in {json_dir}/{species_id}.json if present)")
+    return True
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main(sys.argv[1:]))

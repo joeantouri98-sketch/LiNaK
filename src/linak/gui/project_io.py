@@ -2,51 +2,44 @@
 
 from __future__ import annotations
 
-import os
-import tempfile
 from pathlib import Path
 
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import QMessageBox
 
-from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, reference_path
-
-
-def is_project_root(path: Path) -> bool:
-    """Return whether *path* contains an installable LiNaK checkout."""
-    return (path / "pyproject.toml").is_file() and (path / "src/linak").is_dir()
+from linak.core.paths import reference_path
+from linak.core.species import is_ion_id
+from linak.core.workspace import Workspace
 
 
 def rydberg_species(root: Path) -> list[str]:
-    """Return species with a Rydberg dataset on disk."""
-    species = []
-    data_dir = root / DATA_JSON_DIR
-    if data_dir.exists():
-        suffix = "_rydberg.json"
-        species.extend(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
-    
-    # Also check bundled resources for reference species
-    resources_data_dir = reference_path("data_json")
-    if resources_data_dir.exists():
-        suffix = "_rydberg.json"
-        species.extend(p.name[: -len(suffix)] for p in resources_data_dir.glob(f"*{suffix}"))
-    
-    return sorted(set(species))
+    """Return the species with a Rydberg dataset in the folder *root*."""
+    suffix = "_rydberg.json"
+    data_dir = Workspace(root=root).data_json_dir
+    return sorted(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
+
+
+def _belongs_to_ion_of(species: str, stem: str) -> bool:
+    """True for ``Na_c1_lifetimes`` under ``Na``: the ion's file, not the atom's."""
+    first = stem[len(species) + 1:].split("_", 1)[0]
+    return is_ion_id(f"{species}_{first}")
 
 
 def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
     """Return plot and JSON output files for one species."""
     items: list[tuple[Path, str]] = []
-    plot_dir = root / PLOTS_DIR / species
+    ws = Workspace(root=root)
+    plot_dir = ws.plots_dir / species
     if plot_dir.exists():
         items.extend((path, "PLOT") for path in sorted(plot_dir.glob("*.html")))
 
-    data_dir = root / DATA_JSON_DIR
+    data_dir = ws.data_json_dir
     if data_dir.exists():
         items.extend(
             (path, "JSON")
             for path in sorted(data_dir.glob(f"{species}_*.json"))
+            if not _belongs_to_ion_of(species, path.stem)
         )
         exact = data_dir / f"{species}.json"
         if exact.exists():
@@ -57,11 +50,12 @@ def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
 def shared_outputs(root: Path) -> list[tuple[Path, str]]:
     """Return cross-element output files from the project root."""
     items: list[tuple[Path, str]] = []
-    plots_root = root / PLOTS_DIR
+    ws = Workspace(root=root)
+    plots_root = ws.plots_dir
     if plots_root.exists():
         items.extend((path, "PLOT") for path in sorted(plots_root.glob("*.html")))
 
-    data_dir = root / DATA_JSON_DIR
+    data_dir = ws.data_json_dir
     if data_dir.exists():
         for name in ("comparison_table.json", "nuclear_data.json"):
             path = data_dir / name
@@ -71,18 +65,24 @@ def shared_outputs(root: Path) -> list[tuple[Path, str]]:
 
 
 def open_pipeline_overview_html(root: Path, parent_widget) -> None:
-    """Open the project's Pipeline Overview document in the system browser."""
-    htmls_dir = reference_path("HTMLs")
-    candidates = (
-        list(htmls_dir.glob("*ipeline*verview*.html"))
+    """Open the project's Pipeline Overview document in the system browser.
+
+    Looks under the selected project root first, then falls back to the
+    bundled reference copy when the project has no ``HTMLs/`` directory.
+    """
+    search_dirs = (root / "HTMLs", reference_path("HTMLs"))
+    candidates = [
+        path
+        for htmls_dir in search_dirs
         if htmls_dir.exists()
-        else []
-    )
+        for path in sorted(htmls_dir.glob("*ipeline*verview*.html"))
+    ]
     if not candidates:
+        looked_in = ", ".join(str(d) for d in search_dirs)
         QMessageBox.information(
             parent_widget,
             "Not found",
-            f"Couldn't find a Pipeline Overview HTML file under {htmls_dir}. "
+            f"Couldn't find a Pipeline Overview HTML file under {looked_in}. "
             "Looking for a name like 'Pipeline Overview.html'.",
         )
         return
@@ -107,30 +107,7 @@ def ensure_project_safe_path(root: Path, target: Path) -> Path:
     target = target.expanduser()
     if not is_within_project(root, target):
         raise ValueError(
-            f"Refusing to write outside the LiNaK project folder:\n{target}\n\n"
+            f"Refusing to write outside the output folder:\n{target}\n\n"
             f"Allowed root: {root}"
         )
     return target
-
-
-def atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
-    """Write text atomically beside the destination file."""
-    path = path.expanduser()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    file_descriptor, temp_name = tempfile.mkstemp(
-        prefix=f".{path.stem}_",
-        suffix=path.suffix,
-        dir=str(path.parent),
-    )
-    try:
-        with os.fdopen(file_descriptor, "w", encoding=encoding, newline="") as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp_name, path)
-    except Exception:
-        try:
-            os.unlink(temp_name)
-        except OSError:
-            pass
-        raise

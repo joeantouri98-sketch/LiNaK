@@ -1,7 +1,7 @@
 """
 species.py  -  neutral atoms and registered ions (El_cN / El_aN)
 ------------------------------------------------------------------
-Neutrals come from element_data.ELEMENTS. Ions are an allow-list only.
+Neutrals come from core.elements.ELEMENTS. Ions are an allow-list only.
 
 Naming:
   Na       neutral sodium
@@ -18,14 +18,26 @@ SOC class hints (orca_templates.ElementClass strings):
 from __future__ import annotations
 
 import re
+from typing import TypedDict
 
 from linak.core.elements import ELEMENTS
+from linak.core.errors import InvalidSpeciesError
 
 _SYMBOL_TO_Z = {sym: z for z, (sym, _c, _m) in ELEMENTS.items()}
 _ION_RE = re.compile(r"^([A-Z][a-z]?)_([ca])(\d+)$")
 
+
+class _IonRecord(TypedDict):
+    """One entry of the ion allow-list."""
+
+    symbol: str
+    charge: int
+    multiplicity: int
+    soc_class: str
+
+
 # soc_class: ElementClass name string used by orca_templates
-_ION_REGISTRY = {
+_ION_REGISTRY: dict[str, _IonRecord] = {
     # Alkali-like cations (2S, mult=2) -> ALKALI_VALENCE CAS(1,n)
     "Be_c1": {"symbol": "Be", "charge": 1, "multiplicity": 2, "soc_class": "ALKALI_VALENCE"},
     "Mg_c1": {"symbol": "Mg", "charge": 1, "multiplicity": 2, "soc_class": "ALKALI_VALENCE"},
@@ -73,7 +85,7 @@ def parse_species_id(raw: str):
         return None
     text = str(raw).strip()
     if not text:
-        raise ValueError("Empty species id")
+        raise InvalidSpeciesError("Empty species id")
     m = _ION_RE.match(text)
     if m:
         sym, kind, mag_s = m.group(1), m.group(2), m.group(3)
@@ -88,7 +100,7 @@ def parse_species_id(raw: str):
         if z in ELEMENTS:
             sym = ELEMENTS[z][0]
             return sym, sym, None, None
-    raise ValueError(
+    raise InvalidSpeciesError(
         f"Invalid species id {raw!r}. Use a symbol (Na), Z, or ion stem "
         f"(Mg_c1 cation, Na_a1 anion).")
 
@@ -126,21 +138,21 @@ def resolve_species(raw: str) -> dict:
         }
 
     if species_id not in _ION_REGISTRY:
-        raise ValueError(
+        raise InvalidSpeciesError(
             f"Ion {species_id!r} is not in the allow-list. "
             f"Registered ions: {', '.join(listed_ion_ids())}")
 
     rec = _ION_REGISTRY[species_id]
     if rec["symbol"] != symbol:
-        raise ValueError(f"Internal registry mismatch for {species_id}")
+        raise RuntimeError(f"Internal registry mismatch for {species_id}")
     sign = 1 if kind_char == "c" else -1
     expect = sign * mag
     if rec["charge"] != expect:
-        raise ValueError(
+        raise InvalidSpeciesError(
             f"Ion stem {species_id} charge mismatch with registry "
             f"(stem implies {expect}, registry has {rec['charge']})")
     if symbol not in _SYMBOL_TO_Z:
-        raise ValueError(f"Unknown element symbol {symbol} in ion {species_id}")
+        raise InvalidSpeciesError(f"Unknown element symbol {symbol} in ion {species_id}")
 
     return {
         "species_id": species_id,
@@ -158,7 +170,7 @@ def require_neutral_species(raw: str, context: str = "this script") -> dict:
     """Resolve; ions unsupported as of yet for Tier-C (alkali-physics) tools."""
     sp = resolve_species(raw)
     if sp["kind"] == "ion":
-        raise SystemExit(
+        raise InvalidSpeciesError(
             f"{context}: ions unsupported as of yet "
             f"({sp['species_id']} / {sp['label']}). "
             f"Use a neutral symbol (e.g. Na), or runorca/plotinteractive for "
@@ -166,7 +178,7 @@ def require_neutral_species(raw: str, context: str = "this script") -> dict:
     return sp
 
 
-def species_json_stem(species_id: str, suffix: str = None) -> str:
+def species_json_stem(species_id: str, suffix: str | None = None) -> str:
     """Build data_json basename without .json: Mg_c1, Mg_c1_soc, Mg_c1_UKS."""
     if not suffix:
         return species_id

@@ -10,7 +10,6 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
-    QGroupBox,
     QHeaderView,
     QHBoxLayout,
     QLabel,
@@ -22,7 +21,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from linak.core.fileio import atomic_write_text
+from linak.core.workspace import default_workspace
+
 from .dataset_templates import CSV_DATASET_TEMPLATES
+from .project_io import ensure_project_safe_path
 
 
 class DatasetEditorDialog(QDialog):
@@ -36,12 +39,14 @@ class DatasetEditorDialog(QDialog):
         initial_text=None,
         default_path=None,
         file_path=None,
+        root=None,
     ):
         super().__init__(parent)
         self.dataset_name = dataset_name
         self.dataset_type = dataset_type
         self.default_path = Path(default_path or ".")
         self.file_path = Path(file_path) if file_path else None
+        self.root = Path(root) if root else default_workspace().root
 
         display_name = dataset_name.replace("_", " ").title()
         self.setWindowTitle(f"Edit {display_name} ({dataset_type.upper()})")
@@ -213,10 +218,9 @@ class DatasetEditorDialog(QDialog):
         if self.file_path is None:
             self._save_as()
         else:
-            self._write_current()
+            self._write_to(self.file_path)
 
     def _save_as(self):
-        self.default_path.mkdir(parents=True, exist_ok=True)
         base_name = "new_dataset" if self.dataset_name == "new" else self.dataset_name
         suffix = "json" if self.dataset_type == "json" else "csv"
         title = f"Save {suffix.upper()} dataset"
@@ -225,30 +229,30 @@ class DatasetEditorDialog(QDialog):
             self, title, str(suggested), f"{suffix.upper()} files (*.{suffix});;All files (*)"
         )
         if path:
-            self.file_path = Path(path)
-            self._write_current()
+            self._write_to(Path(path))
 
-    def _write_current(self):
-        if self.file_path is None:
-            return
+    def _write_to(self, path: Path) -> None:
+        """Validate and save the dataset to *path*; it becomes the file only on success."""
         try:
+            target = ensure_project_safe_path(self.root, path)
             if self.dataset_type == "json":
                 content = self.editor.toPlainText().strip() or "{}"
                 payload = json.loads(content)
                 if not isinstance(payload, (dict, list)):
                     raise ValueError("Top-level JSON must be an object or an array.")
-                self.file_path.write_text(
-                    json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-                    encoding="utf-8",
-                )
+                text = json.dumps(
+                    payload, indent=2, ensure_ascii=False, allow_nan=False
+                ) + "\n"
             else:
                 rows = self._csv_rows()
                 self._validate_csv(rows)
                 output = io.StringIO(newline="")
                 csv.writer(output, lineterminator="\n").writerows(rows)
-                self.file_path.write_text(output.getvalue(), encoding="utf-8")
-        except Exception as exc:
+                text = output.getvalue()
+            atomic_write_text(target, text)
+        except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "Save failed", f"Could not save dataset:\n\n{exc}")
             return
-        QMessageBox.information(self, "Dataset saved", f"Saved to:\n\n{self.file_path}")
+        self.file_path = target
+        QMessageBox.information(self, "Dataset saved", f"Saved to:\n\n{target}")
         self.accept()

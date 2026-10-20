@@ -8,7 +8,7 @@ authors = [
     { name = "LiNaK contributors" },
 ]
 dependencies = [
-    "numpy>=1.22",
+    "numpy>=2.0",
     "plotly>=5.0",
     "pyside6>=6.5",
     "scipy>=1.9",
@@ -17,8 +17,10 @@ dependencies = [
 [dependency-groups]
 dev = [
     "imageio",
+    "mypy>=1.11,<2",
     "nuitka==4.1.1",
     "pytest>=7.0",
+    "ruff==0.17.1",
 ]
 
 [project.scripts]
@@ -32,22 +34,26 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools_scm]
 fallback_version = "0+unknown"
 tag_regex = "^(?:[\\w-]+-)?[vV]?\\.?(?P<version>\\d+(?:\\.\\d+){0,2}[^+]*)(?:\\+.*)?$"
 
-[tool.setuptools.data-files]
-"resources/Basis sets" = ["resources/Basis sets/*.*"]
-"resources/Basis sets/Li" = ["resources/Basis sets/Li/*.*"]
-"resources/HTMLs" = ["resources/HTMLs/*.*"]
-"resources/Moments" = ["resources/Moments/*.*"]
-"resources/NIST Levels" = ["resources/NIST Levels/*.*"]
-"resources/data_json" = ["resources/data_json/*.*"]
-"resources/data_json/arc" = ["resources/data_json/arc/*.*"]
-"resources/f_values" = ["resources/f_values/*.*"]
-"resources/vendor" = ["resources/vendor/*.*"]
-
-
+[tool.setuptools.package-data]
+linak = [
+    "resources/Basis sets/**",
+    "resources/HTMLs/*",
+    "resources/Moments/*",
+    "resources/NIST Levels/*",
+    "resources/data_json/**",
+    "resources/f_values/*",
+    "resources/orca_outputs/**",
+    "resources/plots/**",
+    "resources/vendor/*",
+]
+"linak.report_templates" = ["*"]
 
 [project.optional-dependencies]
 arc = [
@@ -59,3 +65,48 @@ basis = [
 web = [
     "pyside6-addons>=6.5",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["build", "dist", ".linak"]
+
+[tool.ruff.lint]
+# Ratchet: rules the code does not pass yet. Fix the hits, then delete the line;
+# never add a rule here to silence new code.
+ignore = [
+    "BLE001",  # blind except
+    "C401",    # unnecessary generator/set
+    "C408",    # unnecessary collection call: dict()/tuple()
+    "FURB167", # regex flag alias
+    "I001",    # unsorted imports
+    "ISC004",  # implicit string concat in collection literal
+    "PERF102", # inverted dict iteration
+    "PLC0206", # dict index missing items
+    "PLW1510", # subprocess.run without check
+    "RET501",  # unnecessary return None
+    "RUF010",  # explicit f-string type conversion
+    "RUF015",  # iterable allocation for first element
+    "RUF019",  # unnecessary key check
+    "RUF046",  # unnecessary int() cast
+    "RUF059",  # unused unpacked variable
+    "RUF100",  # unused noqa
+    "S110",    # try-except-pass
+    "S112",    # try-except-continue
+    "SIM102",  # collapsible if
+    "SIM103",  # needless bool
+    "SIM114",  # if-with-same-arms
+    "SIM118",  # in dict.keys()
+    "UP006",   # non-PEP585 annotation
+    "UP009",   # utf-8 encoding declaration
+    "UP035",   # deprecated import
+    "UP045",   # non-PEP604 Optional annotation
+]
+
+[tool.mypy]
+python_version = "3.9"
+files = ["src/linak/core", "src/linak/physics"]
+mypy_path = "src"
+ignore_missing_imports = true
+warn_unused_configs = true
+no_site_packages = true

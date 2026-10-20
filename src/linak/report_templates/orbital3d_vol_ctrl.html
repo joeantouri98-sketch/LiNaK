@@ -1,0 +1,63 @@
+  <div class="sec">
+    <div class="st">Channel</div>
+    <div id="chan-row">
+      <button class="on" data-mode="0" onclick="setMode(0,this)">Density</button>
+      <button data-mode="1" onclick="setMode(1,this)">Re(ψ)</button>
+      <button data-mode="2" onclick="setMode(2,this)">Im(ψ)</button>
+      <button data-mode="3" onclick="setMode(3,this)">Phase</button>
+    </div>
+    <div id="cmap-note"></div>
+  </div>
+
+  <div class="sec">
+    <div class="st">Density display scale</div>
+    <select id="dscale" onchange="onScaleChange()">
+      <option value="0">Linear |ψ|²  (core only)</option>
+      <option value="1" selected>Amplitude |ψ|  (recommended)</option>
+      <option value="2">Logarithmic (faintest structure)</option>
+    </select>
+    <div class="st" style="margin-top:8px">Colour map (Density)</div>
+    <select id="cmap" onchange="onCmapChange()">
+      <option value="0">H-wavefunction (inferno)</option>
+      <option value="1">Viridis</option>
+      <option value="2">Plasma</option>
+      <option value="3">Hot</option>
+      <option value="4">Electric</option>
+    </select>
+  </div>
+
+  <div class="sec">
+    <div class="st">Display floor &nbsp;<span id="thv">$!iso_default</span></div>
+    <input type="range" id="thr-sl" min="0.01" max="0.6" value="$!iso_default" step="0.01"
+           oninput="document.getElementById('thv').textContent=
+             parseFloat(this.value).toFixed(2);threshold=parseFloat(this.value)">
+  </div>
+  <div class="sec">
+    <div class="st">Contrast &nbsp;<span id="gnv">1.6</span></div>
+    <input type="range" id="gain-sl" min="0.3" max="4.0" value="1.6" step="0.1"
+           oninput="document.getElementById('gnv').textContent=
+             parseFloat(this.value).toFixed(1);gain=parseFloat(this.value)">
+  </div>
+  <div class="sec">
+    <div class="st">Opacity &nbsp;<span id="opv">1.4</span></div>
+    <input type="range" id="op-sl" min="0.2" max="4.0" value="1.4" step="0.1"
+           oninput="document.getElementById('opv').textContent=
+             parseFloat(this.value).toFixed(1);opacityMul=parseFloat(this.value)">
+  </div>
+  <div class="sec">
+    <div class="st">Ray steps (quality) &nbsp;<span id="stv">128</span></div>
+    <input type="range" id="steps-sl" min="32" max="220" value="128" step="4"
+           oninput="document.getElementById('stv').textContent=this.value;
+             steps=parseInt(this.value)">
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+    <button onclick="clearOrb()">✕ Clear</button>
+    <button onclick="resetCamera()">↺ Reset view</button>
+  </div>
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:6px;margin-top:4px">
+    <div style="font-size:10px;color:#556;line-height:1.9">
+      <b>Drag</b> rotate &nbsp; <b>Scroll</b> zoom<br>
+      Grid: up to $!grid_default³ (+4 per ℓ), computed in browser
+    </div>
+  </div>

@@ -20,6 +20,9 @@ import numpy as np
 _trapezoid = getattr(np, 'trapezoid', None) or np.trapz
 
 # Angular / spectroscopic maps
+# NOTE: not imported from linak.physics.polarizability_core — that table stops
+# at 'g', whereas QDT level tokens can reach 'h' (see the [spdfgh] regex in
+# _parse_nl_token). Consolidating would drop the 'h' entry and change behaviour.
 L_CHAR = {"s": 0, "p": 1, "d": 2, "f": 3, "g": 4, "h": 5}
 L_INT = {v: k for k, v in L_CHAR.items()}
 
@@ -197,10 +200,6 @@ def numerov_fosc(n_upper, l_upper, n_lower, l_lower,
     ang = l_max / (2 * l_lower + 1)
     f = (2.0 / 3.0) * dE * ang * (R * R)
     return max(float(f), 0.0)
-
-
-def clear_wave_cache():
-    _cached_wave.cache_clear()
 
 
 def _parse_nl_token(token: str):
@@ -487,7 +486,7 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
     Returns {'global': info, 'types': {(l_lo, l_up): info}} where each info has
     scale, n_pairs, n_inliers, p16, p84, rel_spread (= (p84-p16)/(2 median)).
     """
-    pairs = {}
+    pairs: dict[tuple[str, str], list[tuple[float, float]]] = {}   # (NIST/model ratio, n* gap)
     near_deg = []
     for key, f_nist in (nist_fosc or {}).items():
         if not isinstance(key, tuple) or len(key) != 2:
@@ -598,7 +597,7 @@ def build_true_multiplet_f(fosc_jl: dict) -> dict:
     (f_line ~ w(Ju,Jl)/(2Jl+1)); a pair is skipped if any allowed upper level has
     no listed line at all. Returns {(lo_nl, up_nl): f_mult}.
 
-    NOTE: alpha_core's nist_fosc (sum over J_up of the lower-J-AVERAGED mean) equals
+    NOTE: polarizability_core's nist_fosc (sum over J_up of the lower-J-AVERAGED mean) equals
     this only when the lower or the upper level has a single J (s->p, p->s); for
     p->d, d->f, d->p, f->d it is larger by 1.45-1.48 (checked on Na NIST lines).
     """
@@ -606,7 +605,7 @@ def build_true_multiplet_f(fosc_jl: dict) -> dict:
         a, b = s.split('/') if '/' in s else (s, '1')
         return (2 * int(a)) // int(b)
 
-    groups = {}
+    groups: dict[tuple[str, str], dict[tuple[int, int], float]] = {}
     for (lo, up, Ju, Jl), (f, _acc) in (fosc_jl or {}).items():
         try:
             groups.setdefault((lo, up), {})[(_j2(Ju), _j2(Jl))] = float(f)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Atomic Data from Mendeleev and Astropy 
 
@@ -8,8 +7,6 @@ Usage: python atomicdata.py <ELEMENT>
 """
 
 import sys
-import json
-import os
 
 # MENDELEEV Package Demo
 
@@ -48,10 +45,10 @@ def demo_mendeleev(element_symbol):
         if config:
             print(f"  Ground state: {config}")
         else:
-            print(f"  Ground state: Not available")
+            print("  Ground state: Not available")
         
         # Periodic table position
-        print(f"\n Periodic Table Position:")
+        print("\n Periodic Table Position:")
         print(f"  Period: {element.period}")
         print(f"  Group: {element.group_id if element.group_id else 'N/A'}")
         print(f"  Block: {element.block}")
@@ -61,7 +58,7 @@ def demo_mendeleev(element_symbol):
         print(f"  Type: {element_type}")
         
         # Ionization energies (multiple)
-        print(f"\n Ionization Energies:")
+        print("\n Ionization Energies:")
         if hasattr(element, 'ionenergies') and element.ionenergies:
             ies = element.ionenergies
             for i in sorted(ies.keys())[:5]:  # First 5
@@ -74,7 +71,7 @@ def demo_mendeleev(element_symbol):
             print(f"\n⚡ Electron affinity: {element.electron_affinity:.3f} eV")
         
         # Other properties
-        print(f"\n Physical Properties:")
+        print("\n Physical Properties:")
         if element.atomic_radius:
             print(f"  Atomic radius: {element.atomic_radius} pm")
         if element.en_pauling:
@@ -204,7 +201,7 @@ def demo_periodictable(element_symbol):
         
         # Ions
         if hasattr(element, 'ions') and element.ions:
-            print(f"\n   Common ions:")
+            print("\n   Common ions:")
             for ion in element.ions:
                 print(f"  {element.symbol}{ion:+d}")
         
@@ -242,8 +239,8 @@ def demo_astropy(element_symbol):
         return None
     
     try:
-        print(f"\n  Astropy loaded successfully")
-        print(f"\n Physical Constants Available:")
+        print("\n  Astropy loaded successfully")
+        print("\n Physical Constants Available:")
         
         # Rydberg constant
         rydberg_hz = const.Ryd * const.c  # Convert to Hz
@@ -255,13 +252,13 @@ def demo_astropy(element_symbol):
         print(f"  Speed of light: {const.c}")
         
         # Example wavelength to energy conversion
-        print(f"\n  Example Unit Conversion:")
+        print("\n  Example Unit Conversion:")
         wavelength = 589.3 * u.nm
         energy = wavelength.to(u.eV, equivalencies=u.spectral())
         print(f"  589.3 nm → {energy.value:.3f} eV (Na D-line)")
         
-        print(f"\n  Astropy doesn't have atomic level database")
-        print(f"   Best for: constants, units, spectral conversions")
+        print("\n  Astropy doesn't have atomic level database")
+        print("   Best for: constants, units, spectral conversions")
         
         return {
             'package': 'astropy',
@@ -294,18 +291,18 @@ def demo_pyvalem(element_symbol):
         return None
     
     try:
-        print(f"\n PyValem loaded")
-        print(f"\n PyValem parses spectroscopic notation:")
+        print("\n PyValem loaded")
+        print("\n PyValem parses spectroscopic notation:")
         
         examples = ['2P_3/2', '1S_0', '3P_2', '4S_3/2']
         for ex in examples:
             try:
                 term = AtomicTermSymbol(ex)
                 print(f"  {ex:10} → S={term.S}, L={term.L}, J={term.J}")
-            except:
+            except Exception:
                 pass
         
-        print(f"\n PyValem is for notation parsing only")
+        print("\n PyValem is for notation parsing only")
         
         return None
         
@@ -331,36 +328,35 @@ def get_recommendations(element_data):
     
     element_type = element_data['type']
     element_symbol = element_data['element']
-    group = element_data.get('group')
     
     print(f"\nElement: {element_symbol} - {element_data.get('name', 'Unknown')}")
     print(f"Type: {element_type}")
     
     # Alkali metals
     if "Alkali Metal" in element_type:
-        print(f"\n EXCELLENT! Alkali atoms work perfectly with quantum defect theory")
-        print(f"   Recommended approach:")
+        print("\n EXCELLENT! Alkali atoms work perfectly with quantum defect theory")
+        print("   Recommended approach:")
         print(f"   1. python generate_rydberg_series.py {element_symbol}")
         print(f"   2. python plotryd.py {element_symbol}")
-        print(f"   This gives you the complete Rydberg series analytically!")
+        print("   This gives you the complete Rydberg series analytically!")
     
     # Alkaline earth metals
     elif "Alkaline Earth" in element_type:
-        print(f"\n Alkaline earth metals have 2 valence electrons")
-        print(f"   Quantum defect theory is complex (multiple series)")
-        print(f"   Recommended approaches:")
-        print(f"   1. TDDFT (ORCA) for low-lying excited states")
-        print(f"   2. NIST manual download for experimental data")
-        print(f"   3. MCSCF/CASSCF for accurate multi-electron states")
+        print("\n Alkaline earth metals have 2 valence electrons")
+        print("   Quantum defect theory is complex (multiple series)")
+        print("   Recommended approaches:")
+        print("   1. TDDFT (ORCA) for low-lying excited states")
+        print("   2. NIST manual download for experimental data")
+        print("   3. MCSCF/CASSCF for accurate multi-electron states")
     
     # Halogens
     elif "Halogen" in element_type:
-        print(f"\n Halogens have complex electronic structure (7 valence e⁻)")
-        print(f"   Quantum defect theory won't work well")
-        print(f"   Recommended approaches:")
-        print(f"   1. NIST manual download (has extensive halogen data)")
-        print(f"   2. TDDFT (ORCA) for excited states")
-        print(f"   3. Use built-in NIST data if available:")
+        print("\n Halogens have complex electronic structure (7 valence e⁻)")
+        print("   Quantum defect theory won't work well")
+        print("   Recommended approaches:")
+        print("   1. NIST manual download (has extensive halogen data)")
+        print("   2. TDDFT (ORCA) for excited states")
+        print("   3. Use built-in NIST data if available:")
         
         from fetch_nist import NIST_DATA
         if element_symbol in NIST_DATA:
@@ -371,30 +367,30 @@ def get_recommendations(element_data):
     
     # Transition metals
     elif "Transition Metal" in element_type:
-        print(f"\n Transition metals are very complex (d-electrons)")
-        print(f"   Quantum defect theory DOES NOT WORK")
-        print(f"   Recommended approaches:")
-        print(f"   1. TDDFT (ORCA) - but may struggle with d-d transitions")
-        print(f"   2. CASSCF/CASPT2 for accurate multi-reference states")
-        print(f"   3. NIST manual download for experimental data")
-        print(f"   4. Ligand field theory for coordination complexes")
+        print("\n Transition metals are very complex (d-electrons)")
+        print("   Quantum defect theory DOES NOT WORK")
+        print("   Recommended approaches:")
+        print("   1. TDDFT (ORCA) - but may struggle with d-d transitions")
+        print("   2. CASSCF/CASPT2 for accurate multi-reference states")
+        print("   3. NIST manual download for experimental data")
+        print("   4. Ligand field theory for coordination complexes")
     
     # Noble gases
     elif "Noble Gas" in element_type:
-        print(f"\n Noble gases have closed-shell ground states")
-        print(f"   Excitations involve core electrons - complex!")
-        print(f"   Recommended approaches:")
-        print(f"   1. NIST manual download for experimental data")
-        print(f"   2. High-level TDDFT or EOM-CCSD")
-        print(f"   3. Experimental spectroscopy data")
+        print("\n Noble gases have closed-shell ground states")
+        print("   Excitations involve core electrons - complex!")
+        print("   Recommended approaches:")
+        print("   1. NIST manual download for experimental data")
+        print("   2. High-level TDDFT or EOM-CCSD")
+        print("   3. Experimental spectroscopy data")
     
     # p-block elements
     elif "p-block" in element_type:
-        print(f"\n p-block elements have multiple valence electrons")
-        print(f"   Complexity depends on specific element")
-        print(f"   Recommended approaches:")
-        print(f"   1. NIST manual download (often has data)")
-        print(f"   2. TDDFT (ORCA) for excited states")
+        print("\n p-block elements have multiple valence electrons")
+        print("   Complexity depends on specific element")
+        print("   Recommended approaches:")
+        print("   1. NIST manual download (often has data)")
+        print("   2. TDDFT (ORCA) for excited states")
         
         from fetch_nist_working import NIST_DATA
         if element_symbol in NIST_DATA:
@@ -403,18 +399,18 @@ def get_recommendations(element_data):
     
     # f-block
     elif "f-block" in element_type or "Lanthanide" in element_type or "Actinide" in element_type:
-        print(f"\n Lanthanides/Actinides are EXTREMELY complex (f-electrons)")
-        print(f"   Quantum defect theory DOES NOT WORK")
-        print(f"   Even TDDFT struggles with f-f transitions")
-        print(f"   Recommended approaches:")
-        print(f"   1. Experimental data only (NIST manual)")
-        print(f"   2. Multi-reference methods (CASSCF/NEVPT2)")
-        print(f"   3. Crystal field theory for solid-state")
+        print("\n Lanthanides/Actinides are EXTREMELY complex (f-electrons)")
+        print("   Quantum defect theory DOES NOT WORK")
+        print("   Even TDDFT struggles with f-f transitions")
+        print("   Recommended approaches:")
+        print("   1. Experimental data only (NIST manual)")
+        print("   2. Multi-reference methods (CASSCF/NEVPT2)")
+        print("   3. Crystal field theory for solid-state")
     
     # Default
     else:
-        print(f"\n Element classification unclear")
-        print(f"   Try NIST manual download or TDDFT")
+        print("\n Element classification unclear")
+        print("   Try NIST manual download or TDDFT")
 
 
 
@@ -445,9 +441,9 @@ Examples:
     
     # Get data from all sources
     mendeleev_data = demo_mendeleev(element)
-    pt_data = demo_periodictable(element)
-    astropy_data = demo_astropy(element)
-    pyvalem_data = demo_pyvalem(element)
+    demo_periodictable(element)
+    demo_astropy(element)
+    demo_pyvalem(element)
     
     # Provide recommendations
     get_recommendations(mendeleev_data)

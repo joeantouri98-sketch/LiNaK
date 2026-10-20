@@ -3,7 +3,9 @@ name: Build release artifacts
 on:
   push:
     tags:
+      # Tag filters are case-sensitive; existing tags use an upper-case V.
       - "v*"
+      - "V*"
   workflow_dispatch:
 
 permissions:

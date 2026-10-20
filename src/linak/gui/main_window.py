@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 LiNaK Desktop Control Panel
 ----------------------------
@@ -7,27 +6,31 @@ pipeline: run pipeline stages (including ORCA) for a species and browse
 both freshly produced and already-on-disk plots/JSON, with the Plotly
 HTML plots rendered directly inside the window.
 
-This does not reimplement any physics -- it runs your existing scripts
-(runorca.py, rydberg.py, transitions.py, lifetimes.py, ...) as
-subprocesses with the same flags you'd use from the command line, then
-loads the JSON/HTML files those scripts already produce.
+This does not reimplement any physics: each stage runs the pipeline as a
+``linak --pipeline <name> ...`` subprocess with the same flags you'd use
+from the command line, then loads the JSON/HTML files it produces.
 
-Install:
-    pip install PySide6
+Run with ``linak-gui`` (or ``uv run linak-gui`` in a checkout).
 
-Run:
-    python linak_gui.py
+Outputs go to LiNaK's per-user data folder unless another folder is picked
+with File > Open output folder...; the bundled data and example results are
+copied into the folder in use (never overwriting). See Help in the menu bar
+for a flags reference and short physics notes per stage.
+
+The stage table lives in :mod:`.stages`, the Overview tab in
+:mod:`.overview`, subprocess helpers in :mod:`.stage_process` and the
+offline report cache in :mod:`.plot_cache`.
 """
+from __future__ import annotations
+
+import codecs
 import csv
-import hashlib
-import html
-import io
 import json
 import os
-import re
 import shutil
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -35,13 +38,12 @@ from PySide6.QtCore import (
     QProcessEnvironment,
     QSettings,
     Qt,
-    QUrl,
-    QObject,
     QThread,
+    QTimer,
+    QUrl,
     Signal,
-    Slot,
 )
-from PySide6.QtGui import QAction, QDesktopServices, QDoubleValidator, QFont, QIntValidator, QTextCursor
+from PySide6.QtGui import QAction, QDesktopServices, QFont, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -49,10 +51,8 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QFormLayout,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -66,25 +66,41 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QStatusBar,
     QTabWidget,
-    QTextBrowser,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
-from linak.core.paths import DATA_JSON_DIR, PLOTS_DIR, project_root, reference_path, resource_path
+
+from linak.core.elements import expand_element_families
+from linak.core.paths import PROJECT_ROOT_ENV, is_frozen_app
+from linak.core.species import resolve_species
+from linak.core.workspace import Workspace, default_workspace, seed_bundled_data
+
+from .dataset_editor import DatasetEditorDialog
+from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
+from .help_dialog import HelpDialog
+from .overview import SpeciesOverviewWidget
+from .plot_cache import local_plot_copy
 from .project_io import (
-    atomic_write_text,
-    ensure_project_safe_path,
-    is_project_root,
     open_pipeline_overview_html,
     rydberg_species,
     shared_outputs,
     species_outputs,
 )
-from .dataset_editor import DatasetEditorDialog
-from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
-from .help_dialog import HelpDialog
+from .stage_process import (
+    cli_log_paths,
+    kill_process_tree,
+    stage_env_values,
+    stage_program,
+    start_in_own_session,
+)
+from .stages import (
+    PIPELINE,
+    STAGE_BY_ID,
+    STAGE_PHYSICS,
+    isotope_prerequisite_issues,
+    stage_argv,
+    stage_has_output,
+)
 
 try:
     from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -92,2033 +108,32 @@ try:
 except ImportError:
     HAS_WEBENGINE = False
 
+
 ORG_NAME = "LiNaK"
 APP_NAME = "ControlPanel"
-ELEMENT_FAMILIES = {'alkali': ['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'], 'alkalis': ['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'], 'alkaline_earth': ['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra'], 'alkaline-earth': ['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra'], 'halogen': ['F', 'Cl', 'Br', 'I', 'At', 'Ts'], 'halogens': ['F', 'Cl', 'Br', 'I', 'At', 'Ts'], 'noble_gases': ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og'], 'noblegases': ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og'], 'chalcogens': ['O', 'S', 'Se', 'Te', 'Po', 'Lv'], 'pnictogens': ['N', 'P', 'As', 'Sb', 'Bi', 'Mc'], 'carbon_group': ['C', 'Si', 'Ge', 'Sn', 'Pb', 'Fl'], 'boron_group': ['B', 'Al', 'Ga', 'In', 'Tl', 'Nh'], 'transition': ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'], 'transition_metals': ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'], 'lanthanides': ['La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu'], 'actinides': ['Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']}
+# QSettings key remembering the folder picked with File > Open output folder...
+ROOT_SETTING = "root_path"
 
-PIPELINE = [
-    dict(id="runorca", label="ORCA (TD-DFT / SOC)", symbol="ORCA", script="runorca.py",
-         desc="Runs ORCA quantum chemistry (TD-DFT or CASSCF/NEVPT2+SOC) for this "
-              "species. Needs ORCA installed and callable as 'orca' on PATH. "
-              "TD-DFT and SOC are separate calculations, never one mixed job.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--mode", kind="choice", label="Calculation mode",
-                  choices=["auto", "tddft", "alkali", "soc", "alkali-soc", "casscf"],
-                  default="auto",
-                  help="auto: alkali doublets -> alkali TD-DFT; registered ions with an "
-                       "SOC class -> soc; else generic TD-DFT. tddft: force generic TD-DFT. "
-                       "alkali: force alkali TD-DFT (alkali / alkali-like only). "
-                       "soc / alkali-soc: CASSCF/NEVPT2 + spin-orbit coupling. "
-                       "casscf: CASSCF + SC-NEVPT2, no SOC (neutral alkalis only)."),
-             dict(name="--soc-recipe", kind="choice", label="SOC recipe (soc mode only)",
-                  choices=["casscf", "nevpt2"], default="nevpt2",
-                  help="casscf: smaller active space, bare CASSCF+DoSOC (cheap screening). "
-                       "nevpt2: larger active space + SC-NEVPT2+DoSOC (more accurate, "
-                       "but can take hours for Cs/Fr)."),
-             dict(name="--nroots", kind="int", label="Excited-state roots", default="",
-                  help="Number of excited states to compute. Leave blank for the runorca default: "
-                       "20, or the per-class SOC default (4-6) in soc mode."),
-             dict(name="--soc-norb", kind="int", label="SOC active-space orbitals (override)",
-                  default="", help="Override the CAS orbital count for SOC mode."),
-             dict(name="--functional", kind="str", label="DFT functional (GS + EX)",
-                  default="CAM-B3LYP",
-                  help="Used for both the ground-state and excited-state jobs unless "
-                       "overridden below."),
-             dict(name="--functional-gs", kind="str", label="Ground-state functional (override)",
-                  default="", help="Override the functional for the ground-state job only."),
-             dict(name="--functional-ex", kind="str", label="Excited-state functional (override)",
-                  default="",
-                  help="Override the functional for the TD-DFT excited-state job only."),
-             dict(name="--relativistic", kind="choice", label="Relativistic treatment",
-                  choices=["auto", "ecp", "dkh", "x2c"], default="auto"),
-             dict(name="--scf-tightness", kind="choice", label="SCF convergence (override)",
-                  choices=[("", "(mode default)"), "loose", "normal", "tight", "verytight"],
-                  default="",
-                  help="Default: alkali GS+EX use VeryTightSCF; other TD-DFT uses TightSCF; "
-                       "SOC/CASSCF use VeryTightSCF."),
-             dict(name="--basis-tightness", kind="choice",
-                  label="Heavy-element (Z>=87) basis tier",
-                  choices=[("", "(none)"), "vdz", "vtz", "vqz"], default="vtz",
-                  help="ANO-RCC basis tier for Fr and heavier. Keeping this set avoids an "
-                       "interactive basis-set picker prompt for those elements (this panel "
-                       "can't answer it); harmlessly ignored for lighter elements."),
-             dict(name="--basis-file", kind="path", label="External basis file (override)",
-                  default="",
-                  help="GAMESS-US or ORCA-format basis file (e.g. from "
-                       "basissetexchange.org). Overrides the basis-tightness tier."),
-             dict(name="--outname", kind="str", label="Output name suffix", default="",
-                  help="Write data_json/<el>_<SUFFIX>.json instead of <el>.json, and tag "
-                       "the orca_outputs/ run folder. Use this to keep a method-comparison "
-                       "run separate from your main result."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}.json", f"{DATA_JSON_DIR}/{{el}}_soc.json"]),
 
-    dict(id="orca_to_json", label="Re-parse ORCA output", symbol="->JSON",
-         script="orca_to_json.py",
-         desc="Re-parses existing orca_outputs/<species>/<run>/ files into data_json/ "
-              "without re-running ORCA (e.g. after hand-editing an input file).",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--run", kind="str", label="ORCA run tag (folder name)", default="",
-                  help="orca_outputs/<species>/<TAG>/ to re-parse. Required if more than "
-                       "one tagged run exists for this species."),
-             dict(name="--outname", kind="str", label="Output name suffix", default="",
-                  help="Write data_json/<species>_<SUFFIX>.json instead of <species>.json."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}.json"]),
+class _SeedWorker(QThread):
+    """Copies the bundled data and example results into a folder.
 
-    dict(id="rydberg", label="Rydberg series", symbol="QDT", script="rydberg.py",
-         desc="NIST levels + quantum defect theory -> Rydberg series.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--n-max", kind="int", label="Max n", default="50",
-                  help="Maximum principal quantum number for the Rydberg series."),
-             dict(name="--nist-only", kind="flag", label="NIST-only (no QDT model)",
-                  help="Write NIST ASD term levels only, no quantum-defect series. "
-                       "Auto-enabled for 3d transition metals regardless."),
-             dict(name="--nist-dir", kind="str", label="NIST levels directory (override)",
-                  default="",
-                  help="Override the 'NIST Levels/' folder the script reads from. "
-                       "Leave blank to use the default next to the scripts."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_rydberg.json"]),
-
-    dict(id="transitions", label="Transitions", symbol="E1", script="transitions.py",
-         desc="Applies electric-dipole selection rules to the level set.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="",
-                  help="Only keep transitions above this wavelength."),
-             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="",
-                  help="Only keep transitions below this wavelength."),
-             dict(name="--n-max", kind="int", label="Max n", default="",
-                  help="Only include states with n <= this value."),
-             dict(name="--visible", kind="flag", label="Visible only (380-750 nm)",
-                  help="Shorthand for --wl-min 380 --wl-max 750."),
-             dict(name="--uv", kind="flag", label="UV only (10-400 nm)",
-                  help="Shorthand for --wl-min 10 --wl-max 400."),
-             dict(name="--ir", kind="flag", label="IR only (750 nm - 1 mm)",
-                  help="Shorthand for --wl-min 750 --wl-max 1e6."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_transitions.json"]),
-
-    dict(id="lifetimes", label="Lifetimes", symbol="A/tau", script="lifetimes.py",
-         desc="Einstein A coefficients and radiative lifetimes.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--n-max", kind="int", label="Max n (Rydberg cutoff)", default="",
-                  help="Max principal quantum number for Rydberg transitions."),
-             dict(name="--orca-only", kind="flag", label="ORCA oscillator strengths only",
-                  help="Only use ORCA TD-DFT oscillator strengths."),
-             dict(name="--nist-only", kind="flag", label="NIST/Rydberg transitions only",
-                  help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_lifetimes.json"]),
-
-    dict(id="polarizability", label="Polarizability", symbol="alpha(w)",
-         script="polarizability.py",
-         desc="Dynamic polarizability, C6, magic wavelengths, AC Stark.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--excited", kind="str", label="Excited state label", default="",
-                  help="e.g. 3p3/2. Default: lowest dipole-allowed state from ground."),
-             dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)",
-                  default="200", help="Lower bound of the alpha(omega) wavelength scan."),
-             dict(name="--wl-max", kind="float", label="Scan max wavelength (nm)",
-                  default="2000", help="Upper bound of the alpha(omega) wavelength scan."),
-             dict(name="--n-grid", kind="int", label="Wavelength grid points", default="2000",
-                  help="Density of the alpha(omega) wavelength grid."),
-             dict(name="--intensity", kind="float", label="AC Stark intensity (kW/cm^2)",
-                  default="10", help="Peak intensity for the AC Stark / trap-depth panel."),
-             dict(name="--waist", kind="float", label="Beam waist (um)", default="1",
-                  help="1/e^2 beam waist for trap-frequency estimates."),
-             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
-                  help="Isotope whose mass is used for trap frequencies. Default: most abundant natural isotope."),
-             dict(name="--wl", kind="float", label="Point-calc wavelength (nm)", default="",
-                  help="Optional single wavelength for an AC Stark point calculation."),
-             dict(name="--heteronuclear", kind="flag", label="Heteronuclear C6 combining rule",
-                  help="Use the London combining rule for cross-species C6 "
-                       "(only matters with --all)."),
-             dict(name="--all", kind="flag", label="Run all available elements",
-                  help="Compute the polarizability workflow for all elements with sufficient data."),
-             dict(name="--state", kind="str", label="State-only alpha(0) lookup",
-                  default="",
-                  help="Example: 20s. Prints alpha(0) for one state and exits."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_polarizability.json",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_polarizability.html",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_magic_wavelengths.html"]),
-
-    dict(id="blackbody", label="Blackbody (BBR)", symbol="BBR", script="blackbody.py",
-         desc="Static + dynamic BBR shifts, depopulation, photoionization.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--excited", kind="str", label="Excited state label", default="",
-                  help="e.g. 3p3/2. Default: auto (first fine-structure partner)."),
-             dict(name="--T", kind="float", label="Temperature (K)", default="300",
-                  help="Temperature for shifts, rates, and photoionization."),
-             dict(name="--n-min", kind="int", label="Min n for BBR-rates table", default="",
-                  help="Default: ground n + 2."),
-             dict(name="--no-rates", kind="flag", label="Skip depopulation rates",
-                  help="Skip the bound-bound Gamma_BBR table (shifts only)."),
-             dict(name="--shift-n-min", kind="int", label="Min n for Rydberg shift table",
-                  default="", help="Lower bound of the on-the-fly alpha(0) / BBR-shift table."),
-             dict(name="--shift-n-max", kind="int", label="Max n for Rydberg shift table",
-                  default="", help="Default: series n_max minus the pad (see below)."),
-             dict(name="--state", kind="str", label="Extra states (e.g. 20s,25s)", default="",
-                  help="Comma-separated extra state labels to include in the shift table."),
-             dict(name="--no-rydberg-shifts", kind="flag", label="Skip high-n Rydberg shift table"),
-             dict(name="--no-rydberg-dyn", kind="flag", label="Skip dynamic Planck integral",
-                  help="Static (Itano) shift only for high-n Rydberg states."),
-             dict(name="--no-rydberg-cont", kind="flag", label="Skip TRK/tail/continuum completion"),
-             dict(name="--n-tail-max", kind="int", label="QDT discrete tail max n", default="200"),
-             dict(name="--n-pad", kind="int", label="Headroom below series n_max", default="5"),
-             dict(name="--pi-n-min", kind="int", label="Min n for photoionization table",
-                  default="", help="Default: same as the BBR-rates min n."),
-             dict(name="--no-pi", kind="flag", label="Skip continuum photoionization / quenching"),
-             dict(name="--field", kind="float", label="Extraction field for SFI (V/cm)",
-                  default="", help="Enables Beterov selective-field-ionization rates."),
-             dict(name="--no-mix", kind="flag", label="Skip multi-step BBR mixing"),
-             dict(name="--t1", kind="float", label="Mix ion-gate start (s)", default="0.0000003"),
-             dict(name="--t2", kind="float", label="Mix ion-gate end (s)", default="0.0000021"),
-             dict(name="--mix-dn-max", kind="int", label="Max |delta n| for mix partners",
-                  default="3"),
-             dict(name="--all", kind="flag", label="Run all available elements",
-                  help="Process every element with a valid BBR dataset."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_blackbody.json",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_blackbody.html"]),
-
-    dict(id="tweezer", label="Optical tweezer", symbol="R_sc", script="tweezer.py",
-         desc="Tweezer photon scattering rate & recoil heating.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--wl", kind="float", label="Trap wavelength (nm)", default="1064"),
-             dict(name="--intensity", kind="float", label="Peak intensity (kW/cm^2)", default="50"),
-             dict(name="--waist", kind="float", label="Beam waist (um)", default="1"),
-             dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)", default="400"),
-             dict(name="--wl-max", kind="float", label="Scan max wavelength (nm)", default="1600"),
-             dict(name="--n-grid", kind="int", label="Wavelength grid points", default="1500"),
-             dict(name="--all", kind="flag", label="Run all available elements",
-                  help="Run the tweezer tool for every element with both polarizability and lifetimes."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_tweezer.json",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_tweezer.html"]),
-
-    dict(id="hyperfine", label="Hyperfine / Zeeman", symbol="F", script="hyperfine.py",
-         desc="Breit-Rabi diagonalization; needs {el}_hf_constants.json.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
-                  help="Default: most abundant natural isotope (Fr: 210)."),
-             dict(name="--states", kind="strlist", label="States (e.g. 3s1/2 3p1/2 3p3/2)",
-                  default="",
-                  help="Space-separated state labels; default: everything in hf_constants.json."),
-             dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="500"),
-             dict(name="--B-points", kind="int", label="B-field sample points", default="500"),
-             dict(name="--all", kind="flag", label="Run all available elements",
-                  help="Process every element with hf_constants available."),
-             dict(name="--build-nuclear-data", kind="flag", label="Rebuild nuclear data",
-                  help="Rebuild data_json/nuclear_data.json from the IAEA CSV files."),
-             dict(name="--magn-csv", kind="str", label="Magnetic moment CSV", default="Moments/magn_mom_recomm.csv",
-                  help="CSV file for magnetic moments."),
-             dict(name="--elec-csv", kind="str", label="Electric moment CSV", default="Moments/elec_mom_recomm.csv",
-                  help="CSV file for electric moments."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-             dict(name="--output-dir", kind="str", label="Output directory", default=""),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_hyperfine.json",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_hyperfine.html",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_zeeman.html"]),
-
-    dict(id="feshbach", label="Feshbach resonances", symbol="a(B)", script="feshbach.py",
-         desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
-                  help="Default: auto from the resonances in the JSON file."),
-             dict(name="--B-points", kind="int", label="B-field sample points", default="2000"),
-             dict(name="--channel", kind="str", label="Entrance channel", default="",
-                  help="e.g. '|1,+1> + |1,+1>'. Default: the channel with the most s-wave resonances."),
-             dict(name="--kT-uK", kind="float", label="Collision energy (uK)", default="1",
-                  help="Collision energy as a temperature, for the sigma(B) panel."),
-             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
-                  help="Default: isotope_A from the feshbach JSON."),
-             dict(name="--all", kind="flag", label="Run all available elements",
-                  help="Process every element with a valid *_feshbach.json file."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-             dict(name="--output-dir", kind="str", label="Output directory", default=""),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/{{el}}_feshbach_out.json",
-                  f"{PLOTS_DIR}/{{el}}/{{el}}_feshbach.html"]),
-
-    dict(id="grotrian", label="Grotrian diagram", symbol="hv", script="plotinteractive.py",
-         desc="Interactive level diagram (plotinteractive.py). Needs ORCA data already "
-              "generated (the ORCA stage above) for this species.",
-         positional=lambda el: [el],
-         flags=[
-             # These are interactive answers consumed by plotinteractive.py. They are converted to stdin, not command-line arguments.
-             dict(name="__energy_shift", kind="choice",
-                  label="Energy reference",
-                  choices=[
-                      ("1", "Excitation energies"),
-                      ("2", "Absolute energies"),
-                      ("3", "Custom shift"),
-                  ],
-                  default="1",
-                  stdin_only=True),
-
-             dict(name="__absolute_ground", kind="float",
-                  label="Absolute ground energy (eV)",
-                  default="",
-                  stdin_only=True,
-                  help="Used when Energy reference is set to absolute energies."),
-
-             dict(name="__custom_shift", kind="float",
-                  label="Custom energy shift (eV)",
-                  default="",
-                  stdin_only=True,
-                  help="Used when Energy reference is set to custom shift."),
-
-             dict(name="__transition_wl_min", kind="float",
-                  label="NIST transition min wavelength (nm)",
-                  default="200",
-                  stdin_only=True),
-
-             dict(name="__transition_wl_max", kind="float",
-                  label="NIST transition max wavelength (nm)",
-                  default="2000",
-                  stdin_only=True),
-
-             dict(name="__orca_wl_min", kind="float",
-                  label="ORCA transition min wavelength (nm)",
-                  default="200",
-                  stdin_only=True),
-
-             dict(name="__orca_wl_max", kind="float",
-                  label="ORCA transition max wavelength (nm)",
-                  default="2000",
-                  stdin_only=True),
-
-             dict(name="__orbital_nmax", kind="int",
-                  label="Orbital viewer max n",
-                  default="10",
-                  stdin_only=True),
-
-             dict(name="__orbital_grid", kind="int",
-                  label="Orbital viewer grid",
-                  default="55",
-                  stdin_only=True),
-
-             dict(name="__spectra_wl_min", kind="float",
-                  label="Spectra min wavelength (nm)",
-                  default="200",
-                  stdin_only=True),
-
-             dict(name="__spectra_wl_max", kind="float",
-                  label="Spectra max wavelength (nm)",
-                  default="900",
-                  stdin_only=True),
-
-             dict(name="__filter_ie", kind="choice",
-                  label="Filter levels above ionization",
-                  choices=[
-                      ("y", "Filter above ionization"),
-                      ("n", "Keep all levels"),
-                  ],
-                  default="y",
-                  stdin_only=True),
-
-             dict(name="__transition_display", kind="choice",
-                  label="NIST/Rydberg transitions",
-                  choices=[
-                      ("1", "All"),
-                      ("2", "Visible only"),
-                      ("3", "UV + visible"),
-                      ("4", "Custom wavelength range"),
-                      ("5", "None"),
-                  ],
-                  default="1",
-                  stdin_only=True),
-
-             dict(name="__orca_display", kind="choice",
-                  label="ORCA transitions",
-                  choices=[
-                      ("1", "All"),
-                      ("2", "Visible only"),
-                      ("3", "UV + visible"),
-                      ("4", "Custom wavelength range"),
-                      ("5", "None"),
-                  ],
-                  default="1",
-                  stdin_only=True),
-
-             dict(name="__plot3_choice", kind="choice",
-                  label="Plot 3 transitions",
-                  choices=[
-                      ("1", "NIST only"),
-                      ("2", "NIST + Numerov, n ≤ 8"),
-                      ("3", "NIST + Numerov, n ≤ 12"),
-                      ("4", "All theoretical"),
-                  ],
-                  default="1",
-                  stdin_only=True),
-
-             dict(name="__launch_orbital", kind="choice",
-                  label="Launch orbital viewer",
-                  choices=[
-                      ("n", "No"),
-                      ("y", "Yes"),
-                  ],
-                  default="n",
-                  stdin_only=True),
-
-             dict(name="__launch_spectra", kind="choice",
-                  label="Launch spectra viewer",
-                  choices=[
-                      ("n", "No"),
-                      ("y", "Yes"),
-                  ],
-                  default="n",
-                  stdin_only=True),
-
-             dict(name="--plots", kind="choice", label="Plots to generate",
-                  choices=[
-                      ("1", "Grotrian diagram only"),
-                      ("2", "Grotrian + Spectrum"),
-                      ("3", "Grotrian + Spectrum + Excited\u2194excited Grotrian"),
-                      ("4", "All four, incl. 3D view (default)"),
-                  ],
-                  default="4",
-                  help="Cumulative, not exclusive: each option always includes every "
-                       "plot below it too, so '2' already writes both the Grotrian "
-                       "diagram and the Spectrum. Matches the script's own default "
-                       "of generating all four."),
-             dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
-                  help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
-         ],
-         stdin="1\n1\n1\n",
-         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_grotrian.html"]),
-
-    dict(id="spectra", label="Spectrum", symbol="lambda", script="spectra.py",
-         desc="Absorption + emission spectral bar chart.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="200"),
-             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="900"),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-         ],
-         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_spectra.html"]),
-
-    dict(id="orbital3d", label="Orbital viewer", symbol="psi^2", script="orbital3d.py",
-         desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--render", kind="choice", label="Rendering",
-                  choices=["volume", "isosurface"], default="volume",
-                  help="volume: WebGL2 raymarched volume (default, works offline). "
-                       "isosurface: classic Plotly |psi|^2 level-set surfaces."),
-             dict(name="--n-max", kind="int", label="Max n", default="10"),
-             dict(name="--grid", kind="int", label="Grid points per axis", default="",
-                  help="Blank = 96 (volume, max 128) or 55 (isosurface, max 75)."),
-             dict(name="--isovalue", kind="float", label="Lowest level / outer isovalue", default="0.04"),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-         ],
-         outputs=[f"{PLOTS_DIR}/{{el}}/{{el}}_orbital3d.html"]),
-
-    dict(id="compare", label="Compare elements", symbol="Sigma",
-         script="compare_elements.py",
-         desc="Adds selected element(s) to the cross-element CompTable.",
-         positional=lambda el: [],
-         flags=[
-             dict(name="__elements", kind="str", label="Elements / families",
-                  default="alkali",
-                  help="Examples: alkali, Li,Na,K, Mg, alkaline_earth."),
-             dict(name="--T", kind="float", label="Temperature (K)", default="300",
-                  help="Temperature for Doppler broadening in the CompTable."),
-         ],
-         outputs=[f"{DATA_JSON_DIR}/comparison_table.json",
-                  f"{PLOTS_DIR}/comparison_table.html"]),
-
-    dict(id="scattering", label="Scattering rate", symbol="R(D)",
-         script="scattering_rate.py",
-         desc="Near-resonant MOT scattering-rate widget.",
-         positional=lambda el: [],
-         flags=[
-             dict(name="--element", kind="str", label="Element symbol or id",
-                  default="Na",
-                  help="Single element for this CLI run, e.g. Na, K, Cs."),
-             dict(name="--line", kind="choice",
-                  label="Line shown when the plot first opens",
-                  choices=["D1", "D2"], default="D2",
-                  help="Both D1 and D2 are selectable inside the generated plot."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=DATA_JSON_DIR),
-             dict(name="--output-dir", kind="str", label="Output directory", default=PLOTS_DIR),
-         ],
-         outputs=[f"{PLOTS_DIR}/scattering_rate.html"]),
-
-]
-STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
-
-# Short physics context per stage for the Help dialog's "Pipeline stages" tab, summarized from HTMLs/Pipeline Overview.html.
-STAGE_PHYSICS = {
-    "runorca": (
-        "Runs ORCA quantum chemistry to get excitation energies and oscillator "
-        "strengths from an actual multi-electron calculation (TD-DFT/TDA with "
-        "CAM-B3LYP by default, or CASSCF + SC-NEVPT2 with spin-orbit coupling "
-        "for fine structure) rather than the one-electron quantum-defect model. "
-        "TD-DFT and SOC are separate calculations and are never combined into "
-        "one job."
-    ),
-    "orca_to_json": (
-        "Re-parses ORCA .out files already sitting in orca_outputs/ into the "
-        "same data_json/<species>.json format runorca.py would write, without "
-        "re-running ORCA -- useful after editing an input by hand or comparing "
-        "basis sets/functionals."
-    ),
-    "rydberg": (
-        "Fits quantum defects delta_l from NIST energy levels via "
-        "E = -Ry/(n-delta_l)^2, then extrapolates a full Rydberg series to "
-        "high n. delta_l packages how much the ionic core distorts the pure "
-        "hydrogenic Coulomb potential at small r; high-l states with almost "
-        "no core penetration have delta_l near zero."
-    ),
-    "transitions": (
-        "Applies the electric-dipole (E1) selection rules -- Delta l = +-1, "
-        "Delta J = 0, +-1 with J=0 to J=0 forbidden -- derived from the "
-        "Wigner-Eckart theorem and parity, to build the full network of "
-        "allowed transitions between levels."
-    ),
-    "lifetimes": (
-        "Sums Einstein A coefficients over every allowed decay channel of a "
-        "state to get its total spontaneous-emission rate and radiative "
-        "lifetime tau = 1/sum(A). Oscillator strengths are taken from NIST "
-        "first, then literature, then QD Numerov radial integrals "
-        "(NIST-overlap scaled), with the Bates-Damgaard Coulomb approximation "
-        "as a last resort."
-    ),
-    "polarizability": (
-        "Sums the dynamic polarizability alpha(omega) over the transition "
-        "network (second-order perturbation theory), integrates it at "
-        "imaginary frequency for the van der Waals C6 coefficient, and finds "
-        "magic wavelengths where two states experience the same AC Stark "
-        "shift."
-    ),
-    "blackbody": (
-        "Computes the energy shift a thermal photon bath induces on a state "
-        "(static Itano <E^2>_T term plus the full Planck-spectrum integral of "
-        "alpha(omega)), and the BBR-driven depopulation and photoionization "
-        "rates it causes for Rydberg states."
-    ),
-    "tweezer": (
-        "Uses the imaginary part of the complex polarizability (with finite "
-        "upper-state linewidths) to get the photon scattering rate and recoil "
-        "heating rate in a far-detuned optical tweezer -- the dissipative "
-        "counterpart to polarizability.py's conservative trap depth."
-    ),
-    "hyperfine": (
-        "Diagonalizes the hyperfine + Zeeman Hamiltonian (magnetic-dipole and "
-        "electric-quadrupole coupling of nuclear spin I to J) exactly at any "
-        "field strength, producing the full Breit-Rabi diagram and the "
-        "ground-state microwave clock frequency."
-    ),
-    "feshbach": (
-        "Evaluates the standard isolated-resonance form "
-        "a(B) = a_bg*(1 - Delta/(B-B0)) from literature resonance parameters "
-        "you supply, plus the resulting elastic cross-section -- not a full "
-        "coupled-channels calculation."
-    ),
-    "grotrian": (
-        "Builds the interactive energy-level (Grotrian) diagram from the "
-        "Rydberg, transitions, and ORCA data, with clickable filtering by "
-        "spectral region, data source, and wavelength window."
-    ),
-    "spectra": (
-        "Renders the absorption and emission line spectrum as colored bars "
-        "using each transition's real wavelength and oscillator strength."
-    ),
-    "orbital3d": (
-        "Draws the Rydberg-state orbital (exact Coulomb radial function at the "
-        "quantum-defect n*, spin-orbit m_j or spin-free m_l angular part) as a "
-        "volume or |psi|^2 isosurfaces -- outside the ionic core only; the core "
-        "region is not modelled."
-    ),
-    "compare": (
-        "Builds or updates the cross-element CompTable: D-line wavelengths, "
-        "lifetimes, natural/Doppler linewidths, saturation intensities, and "
-        "laser-cooling numbers side by side for Li through Fr."
-    ),
-    "scattering": (
-        "Plots the two-level optical-Bloch-equation scattering rate "
-        "R(I,Delta) = (Gamma/2) * s/(1+s+(2*Delta/Gamma)^2) versus detuning "
-        "and intensity for the MOT cooling transition."
-    ),
-}
-
-# CDN <script> tag Plotly emits (fig.to_html(include_plotlyjs='cdn')), e.g.
-#   <script src="https://cdn.plot.ly/plotly-4.0.0.min.js" integrity="..."
-#     crossorigin="anonymous"></script>
-# Matched loosely (any attributes) so it still works if the CDN host/version
-# changes between plotly package versions.
-PLOTLY_CDN_TAG_RE = re.compile(
-    r'<script\b[^>]*\bsrc="[^"]*plotly[^"]*\.js"[^>]*>\s*</script>',
-    re.IGNORECASE,
-)
-VENDOR_PLOTLY_JS = reference_path("vendor", "plotly.min.js")
-
-def _is_within_project_legacy(root: Path, candidate: Path) -> bool:
+    A first copy is ~170 MB, so it runs off the GUI thread; existing files
+    are never overwritten.
     """
-    Return True if candidate resolves to a path contained by the LiNaK root.
-    This blocks overwriting arbitrary files outside the project.
-    """
-    try:
-        root_resolved = root.resolve()
-        candidate_resolved = candidate.resolve(strict=False)
-    except Exception:
-        return False
-    return candidate_resolved == root_resolved or root_resolved in candidate_resolved.parents
 
-
-def _ensure_project_safe_path_legacy(root: Path, target: Path) -> Path:
-    """
-    Validate that target is inside the LiNaK project root and return it.
-    Prevents accidental writes outside the repo.
-    """
-    target = target.expanduser()
-    if not _is_within_project_legacy(root, target):
-        raise ValueError(
-            f"Refusing to write outside the LiNaK project folder:\n{target}\n\n"
-            f"Allowed root: {root}"
-        )
-    return target
-
-
-def _atomic_write_text_legacy(path: Path, text: str, *, encoding: str = "utf-8") -> None:
-    """
-    Write text atomically to a file in the same directory.
-    This avoids leaving a truncated file on crash or partial write.
-    """
-    path = path.expanduser()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(
-        prefix=f".{path.stem}_",
-        suffix=path.suffix,
-        dir=str(path.parent),
-    )
-    try:
-        with os.fdopen(fd, "w", encoding=encoding, newline="") as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp_name, path)
-    except Exception:
-        try:
-            os.unlink(temp_name)
-        except OSError:
-            pass
-        raise
-
-
-# Custom dataset editor templates
-
-JSON_DATASET_TEMPLATES_LEGACY = JSON_DATASET_TEMPLATES
-CSV_DATASET_TEMPLATES_LEGACY = CSV_DATASET_TEMPLATES
-
-
-# DISK SCANNING HELPERS
-
-def isotope_prerequisite_issues(root: Path, stage_id: str, element: str, A):
-    """Check that the data an isotope choice needs exists. Pure file inspection (the GUI does not
-    import the physics modules). Returns a list of (severity, text); severity is 'error' when the
-    stage cannot give a result for that isotope and 'warning' when it runs on approximations."""
-    issues = []
-    data = Path(root) / DATA_JSON_DIR
-
-    def _load(name):
-        try:
-            return json.loads((data / name).read_text(encoding="utf-8"))
-        except Exception:
-            return None
-
-    nd = _load("nuclear_data.json")
-    iso = None
-    if nd:
-        for rec in nd.get("isotopes", []):
-            if rec.get("symbol") == element and rec.get("A") == A:
-                iso = rec
-                break
-    if stage_id in ("hyperfine", "feshbach") and nd is not None and iso is None:
-        issues.append(("error", f"{element}-{A} is not in nuclear_data.json (no nuclear spin or moments)."))
-    if iso is not None and stage_id == "hyperfine" and not iso.get("I"):
-        issues.append(("error", f"{element}-{A} has nuclear spin I = 0: no hyperfine structure."))
-
-    # masses: the project's precise isotope table, parsed from constants.py without importing it
-    try:
-        text = (Path(root) / "constants.py").read_text(encoding="utf-8")
-        block = text[text.index("ISOTOPE_MASS_AMU = {"):]
-        block = block[:block.index("}")]
-        if not re.search(r"\(\s*'%s'\s*,\s*%d\s*\)\s*:" % (re.escape(element), A), block.replace('"', "'")):
-            if stage_id in ("feshbach", "polarizability"):
-                issues.append(("warning", f"No precise mass for {element}-{A} in constants.ISOTOPE_MASS_AMU; "
-                                          f"the average {element} atomic weight is used (wrong by up to a few %)."))
-    except Exception:
-        pass
-
-    if stage_id == "hyperfine":
-        raw = _load(f"{element}_hf_constants.json")
-        if raw is None:
-            issues.append(("error", f"{element}_hf_constants.json is missing: no hyperfine A/B constants for any isotope."))
-        else:
-            def _iso_of(block):
-                m = re.match(r"\s*%s-(\d+)" % re.escape(element), str(block.get("_isotope", "")))
-                return int(m.group(1)) if m else None
-            main_A = _iso_of(raw)
-            have = main_A == A or any(isinstance(v, dict) and k.startswith("_") and _iso_of(v) == A
-                                      for k, v in raw.items())
-            if main_A is not None and not have:
-                ref = next((r for r in (nd or {}).get("isotopes", [])
-                            if r.get("symbol") == element and r.get("A") == main_A), None)
-                if iso is None or ref is None or not ref.get("g_I"):
-                    issues.append(("error", f"No measured {element}-{A} hyperfine constants and no nuclear data to "
-                                            f"rescale from {element}-{main_A}."))
-                else:
-                    extra = "" if ref.get("Q_barn") else " Quadrupole B cannot be rescaled (reference Q = 0) and will be 0."
-                    issues.append(("warning", f"No measured {element}-{A} hyperfine constants. A and B will be RESCALED "
-                                              f"from {element}-{main_A} (A by g_I, B by Q; hyperfine anomaly ~0.1-1 % "
-                                              f"neglected, octupole dropped).{extra}"))
-
-    if stage_id == "feshbach":
-        fp = _load(f"{element}_feshbach.json")
-        if fp is None:
-            issues.append(("error", f"{element}_feshbach.json is missing."))
-        else:
-            jA = fp.get("isotope_A")
-            if jA and int(jA) != A:
-                issues.append(("warning", f"{element}_feshbach.json holds a_bg / B0 / Delta for {element}-{jA}. "
-                                          f"Resonances are isotope-specific, so those parameters are NOT those of "
-                                          f"{element}-{A}; only the mass-dependent quantities change."))
-    return issues
-
-
-def is_project_root_legacy(path: Path) -> bool:
-    return (path / "constants.py").exists() and (path / "rydberg.py").exists()
-
-
-def rydberg_species_legacy(root: Path):
-    """Species that already have at least a Rydberg JSON on disk."""
-    data_dir = root / DATA_JSON_DIR
-    if not data_dir.exists():
-        return []
-    suffix = "_rydberg.json"
-    return sorted(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
-
-
-def species_outputs_legacy(root: Path, species: str):
-    """(path, kind) pairs for one species: its plots and its JSON files."""
-    items = []
-    plot_dir = root / PLOTS_DIR / species
-    if plot_dir.exists():
-        items += [(p, "PLOT") for p in sorted(plot_dir.glob("*.html"))]
-    data_dir = root / DATA_JSON_DIR
-    if data_dir.exists():
-        items += [(p, "JSON") for p in sorted(data_dir.glob(f"{species}_*.json"))]
-        exact = data_dir / f"{species}.json"
-        if exact.exists():
-            items.append((exact, "JSON"))
-    return items
-
-
-def shared_outputs_legacy(root: Path):
-    """Cross-element outputs that live directly under plots/ and data_json/
-    (not inside a per-species subfolder): CompTable, C6 matrix, etc."""
-    items = []
-    plots_root = root / PLOTS_DIR
-    if plots_root.exists():
-        items += [(p, "PLOT") for p in sorted(plots_root.glob("*.html"))]
-    data_dir = root / DATA_JSON_DIR
-    if data_dir.exists():
-        for name in ("comparison_table.json", "nuclear_data.json"):
-            p = data_dir / name
-            if p.exists():
-                items.append((p, "JSON"))
-    return items
-
-
-def open_pipeline_overview_html_legacy(root: Path, parent_widget):
-    """Open HTMLs/Pipeline Overview.html (or similarly named file) in the
-    system browser, if it exists under the project root."""
-    htmls_dir = root / "HTMLs"
-    candidates = list(htmls_dir.glob("*ipeline*verview*.html")) if htmls_dir.exists() else []
-    if not candidates:
-        QMessageBox.information(
-            parent_widget, "Not found",
-            f"Couldn't find a Pipeline Overview HTML file under {htmls_dir}. "
-            "Looking for a name like 'Pipeline Overview.html'.",
-        )
-        return
-    QDesktopServices.openUrl(QUrl.fromLocalFile(str(candidates[0])))
-
-
-
-# HELP DIALOG
-
-class _HelpDialogLegacy(QDialog):
-    """Tabbed help: CLI flags reference (auto-generated from PIPELINE, so it
-    can't drift out of sync with the actual forms), short physics notes per
-    stage, and general usage tips."""
+    failed = Signal(str)
 
     def __init__(self, root: Path, parent=None):
         super().__init__(parent)
         self.root = root
-        self.setWindowTitle("LiNaK Control Panel \u2014 Help")
-        self.resize(800, 640)
 
-        layout = QVBoxLayout(self)
-        tabs = QTabWidget()
-        layout.addWidget(tabs)
-
-        flags_view = QTextBrowser()
-        flags_view.setHtml(self._flags_html())
-        tabs.addTab(flags_view, "CLI flags reference")
-
-        stages_view = QTextBrowser()
-        stages_view.setHtml(self._stages_html())
-        tabs.addTab(stages_view, "Pipeline stages")
-
-        about_view = QTextBrowser()
-        about_view.setHtml(self._about_html())
-        tabs.addTab(about_view, "About / tips")
-
-        btn_row = QHBoxLayout()
-        overview_btn = QPushButton("Open full Pipeline Overview (HTML)...")
-        overview_btn.clicked.connect(lambda: open_pipeline_overview_html(self.root, self))
-        btn_row.addWidget(overview_btn)
-        btn_row.addStretch(1)
-        close_btn = QPushButton("Close")
-        close_btn.clicked.connect(self.accept)
-        btn_row.addWidget(close_btn)
-        layout.addLayout(btn_row)
-
-    @staticmethod
-    def _flags_html():
-        parts = [
-            "<h2>CLI flags, by pipeline stage</h2>",
-            "<p>Every field in a stage's options form maps to one command-line "
-            "flag of that script. Leaving a field blank simply omits the flag, "
-            "so the script's own default applies.</p>",
-        ]
-        for stage in PIPELINE:
-            parts.append(f"<h3>{stage['label']} &nbsp; <code>{stage['script']}</code></h3>")
-            parts.append(f"<p>{stage['desc']}</p>")
-            flags = stage.get("flags", [])
-            if not flags:
-                parts.append("<p><i>No configurable options for this stage.</i></p>")
-                continue
-            parts.append(
-                "<table cellspacing='0' cellpadding='5' border='1' width='100%' "
-                "style='border-collapse:collapse;'>"
-                "<tr><th align='left'>Flag</th><th align='left'>Field</th>"
-                "<th align='left'>Default</th><th align='left'>Meaning</th></tr>"
-            )
-            for spec in flags:
-                kind = spec["kind"]
-                default = spec.get("default", "")
-                if kind == "flag":
-                    default_disp = "off"
-                elif kind == "choice":
-                    default_disp = default
-                    for c in spec["choices"]:
-                        if isinstance(c, tuple) and c[0] == default:
-                            default_disp = c[1]
-                            break
-                else:
-                    default_disp = default if default else "<i>(blank)</i>"
-                help_text = spec.get("help") or spec["label"]
-                parts.append(
-                    f"<tr><td><code>{spec['name']}</code></td>"
-                    f"<td>{spec['label']}</td>"
-                    f"<td>{default_disp}</td>"
-                    f"<td>{help_text}</td></tr>"
-                )
-            parts.append("</table>")
-        return "".join(parts)
-
-    @staticmethod
-    def _stages_html():
-        parts = [
-            "<h2>What each stage computes</h2>",
-            "<p>Short physics context for each pipeline stage; see the full "
-            "Pipeline Overview document (button below) for full derivations.</p>",
-        ]
-        for stage in PIPELINE:
-            blurb = STAGE_PHYSICS.get(stage["id"], "")
-            parts.append(f"<h3>{stage['label']}</h3><p>{blurb}</p>")
-        return "".join(parts)
-
-    @staticmethod
-    def _about_html():
-        return """
-        <h2>About this panel</h2>
-
-        <p>This is a thin control panel over your existing LiNaK scripts. It
-        runs them as subprocesses and displays the JSON, CSV, and HTML files
-        they produce. It does not reimplement the physics.</p>
-
-        <h3>Species IDs</h3>
-        <p>Bare element symbols such as <code>Na</code> and <code>Cs</code>
-        represent neutral atoms. Ion IDs such as <code>Na_c1</code>,
-        <code>Mg_c1</code>, and <code>Na_a1</code> are accepted when they are
-        registered by the project.</p>
-
-        <h3>Offline plot rendering</h3>
-        <p>Plots can be rendered using the bundled local
-        <code>vendor/plotly.min.js</code> file. The GUI does not modify the
-        original files under <code>plots/</code>.</p>
-
-        <h3>ORCA stages</h3>
-        <p>The ORCA stages require ORCA to be installed and callable as
-        <code>orca</code> on the system PATH. SOC and NEVPT2 calculations can
-        take a long time. Use Stop if a running subprocess must be cancelled.</p>
-
-        <h3>Grotrian diagram prerequisite</h3>
-        <p>The Grotrian diagram requires ORCA data to already exist for the
-        selected species. Run the ORCA stage first.</p>
-
-        <h3>Console and command preview</h3>
-        <p>The command preview below each stage shows the command that will be
-        executed. The Console tab shows stdout and stderr from the running
-        subprocess.</p>
-
-        <h3>Custom dataset editor</h3>
-        <p>The Edit menu provides editors for JSON and CSV datasets. Use
-        <code>Edit &gt; New...</code> to create a blank JSON or CSV dataset.
-        Use <code>Edit &gt; Open existing...</code> to load a dataset already
-        on disk.</p>
-
-        <p>Known JSON templates are available for Feshbach resonances,
-        transitions, lifetimes, polarizability, blackbody data, hyperfine
-        data, and Rydberg levels. CSV templates are available for lines,
-        levels, nuclear data, transitions, and lifetimes.</p>
-
-        <p>The JSON editor validates JSON syntax before saving. The CSV editor
-        provides editable rows and columns, supports adding and removing rows
-        or columns, and validates that the header is present and that rows have
-        consistent widths.</p>
-
-        <p>Known JSON templates are starter templates for manual data entry.
-        When editing an existing file, the existing structure is loaded without
-        being replaced by a template. Use <code>Save</code> to update the
-        opened file or <code>Save As...</code> to create a separate copy.</p>
-        """
-
-class BasisLookupWorker(QObject):
-    finished = Signal(list)
-    error = Signal(str)
-
-    def __init__(self, species: str):
-        super().__init__()
-        self.species = species
-
-    @Slot()
     def run(self):
         try:
-            import basis_set_exchange as bse
-            from linak.core.elements import ELEMENTS
+            seed_bundled_data(Workspace(root=self.root), include_examples=True)
+        except OSError as exc:
+            self.failed.emit(f"Could not copy the bundled data into {self.root}: {exc}")
 
-            species = self.species.strip()
-            if not species:
-                raise ValueError("No species selected.")
-
-            z = None
-            if species.isdigit():
-                z = int(species)
-            else:
-                for atomic_number, record in ELEMENTS.items():
-                    symbol = record[0]
-                    if symbol.lower() == species.lower():
-                        z = atomic_number
-                        break
-
-            if z is None:
-                raise ValueError(f"Unknown species: {species}")
-
-            names = []
-            for basis_name in bse.get_all_basis_names():
-                try:
-                    bse.get_basis(basis_name, elements=[z])
-                    names.append(basis_name)
-                except Exception:
-                    continue
-
-            self.finished.emit(sorted(set(names)))
-        except Exception as exc:
-            self.error.emit(str(exc))
-
-
-
-class _DatasetEditorDialogLegacy(QDialog):
-    """Editor for JSON and CSV datasets."""
-
-    def __init__(
-        self,
-        parent=None,
-        dataset_name="new",
-        dataset_type="json",
-        initial_text=None,
-        default_path=None,
-        file_path=None,
-    ):
-        super().__init__(parent)
-
-        self.dataset_name = dataset_name
-        self.dataset_type = dataset_type
-        self.default_path = Path(default_path or ".")
-        self.file_path = Path(file_path) if file_path else None
-
-        display_name = dataset_name.replace("_", " ").title()
-        self.setWindowTitle(
-            f"Edit {display_name} ({dataset_type.upper()})"
-        )
-        self.resize(950, 650)
-
-        layout = QVBoxLayout(self)
-
-        description = QLabel(
-            "Edit the dataset below. Use Save As... to choose a target file."
-        )
-        description.setWordWrap(True)
-        layout.addWidget(description)
-
-        if dataset_type == "json":
-            self.editor = QPlainTextEdit()
-            self.editor.setLineWrapMode(QPlainTextEdit.NoWrap)
-            self.editor.setPlainText(
-                initial_text if initial_text is not None else "{}"
-            )
-            layout.addWidget(self.editor, stretch=1)
-
-        else:
-            self.table = QTableWidget()
-            self.table.setAlternatingRowColors(True)
-            self.table.setSortingEnabled(False)
-            self.table.setEditTriggers(
-                QTableWidget.DoubleClicked
-                | QTableWidget.EditKeyPressed
-                | QTableWidget.AnyKeyPressed
-            )
-            self.table.horizontalHeader().setSectionResizeMode(
-                QHeaderView.Interactive
-            )
-
-            rows = initial_text
-            if rows is None:
-                rows = CSV_DATASET_TEMPLATES["new"]
-
-            self._populate_csv_table(rows)
-            layout.addWidget(self.table, stretch=1)
-
-            table_buttons = QHBoxLayout()
-
-            add_row_button = QPushButton("Add row")
-            add_row_button.clicked.connect(self._add_row)
-
-            remove_row_button = QPushButton("Remove selected row")
-            remove_row_button.clicked.connect(self._remove_selected_row)
-
-            add_column_button = QPushButton("Add column")
-            add_column_button.clicked.connect(self._add_column)
-
-            remove_column_button = QPushButton("Remove selected column")
-            remove_column_button.clicked.connect(
-                self._remove_selected_column
-            )
-
-            table_buttons.addWidget(add_row_button)
-            table_buttons.addWidget(remove_row_button)
-            table_buttons.addWidget(add_column_button)
-            table_buttons.addWidget(remove_column_button)
-            table_buttons.addStretch(1)
-            layout.addLayout(table_buttons)
-
-        bottom_buttons = QHBoxLayout()
-
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(self._save)
-
-        save_as_button = QPushButton("Save As...")
-        save_as_button.clicked.connect(self._save_as)
-
-        open_button = QPushButton("Open existing...")
-        open_button.clicked.connect(self._open_existing_file)
-
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(self.reject)
-
-        bottom_buttons.addWidget(save_button)
-        bottom_buttons.addWidget(save_as_button)
-        bottom_buttons.addWidget(open_button)
-        bottom_buttons.addStretch(1)
-        bottom_buttons.addWidget(close_button)
-
-        layout.addLayout(bottom_buttons)
-
-    def _populate_csv_table(self, rows):
-        if not rows:
-            rows = [["column_1"], [""]]
-
-        normalized = []
-
-        for row in rows:
-            if isinstance(row, (list, tuple)):
-                normalized.append([str(value) for value in row])
-            else:
-                normalized.append([str(row)])
-
-        column_count = max(len(row) for row in normalized)
-        row_count = len(normalized)
-
-        self.table.setColumnCount(column_count)
-        self.table.setRowCount(row_count)
-
-        for row_index, row in enumerate(normalized):
-            for column_index in range(column_count):
-                value = ""
-                if column_index < len(row):
-                    value = row[column_index]
-
-                self.table.setItem(
-                    row_index,
-                    column_index,
-                    QTableWidgetItem(value),
-                )
-
-        self.table.resizeColumnsToContents()
-
-    def _add_row(self):
-        row_index = self.table.rowCount()
-        self.table.insertRow(row_index)
-
-        for column_index in range(self.table.columnCount()):
-            self.table.setItem(
-                row_index,
-                column_index,
-                QTableWidgetItem(""),
-            )
-
-    def _remove_selected_row(self):
-        selected_rows = sorted(
-            {
-                index.row()
-                for index in self.table.selectionModel().selectedRows()
-            },
-            reverse=True,
-        )
-
-        for row_index in selected_rows:
-            self.table.removeRow(row_index)
-
-    def _add_column(self):
-        column_index = self.table.columnCount()
-        self.table.insertColumn(column_index)
-
-        for row_index in range(self.table.rowCount()):
-            self.table.setItem(
-                row_index,
-                column_index,
-                QTableWidgetItem(""),
-            )
-
-    def _remove_selected_column(self):
-        selected_columns = sorted(
-            {
-                index.column()
-                for index in self.table.selectionModel().selectedColumns()
-            },
-            reverse=True,
-        )
-
-        for column_index in selected_columns:
-            self.table.removeColumn(column_index)
-
-    def _csv_rows(self):
-        rows = []
-
-        for row_index in range(self.table.rowCount()):
-            row = []
-
-            for column_index in range(self.table.columnCount()):
-                item = self.table.item(row_index, column_index)
-                row.append("" if item is None else item.text())
-
-            rows.append(row)
-
-        while rows and all(value.strip() == "" for value in rows[-1]):
-            rows.pop()
-
-        return rows
-
-    def _validate_csv(self, rows):
-        if not rows:
-            raise ValueError("CSV dataset is empty.")
-
-        header = rows[0]
-
-        if not any(value.strip() for value in header):
-            raise ValueError("CSV header cannot be empty.")
-
-        if len(set(header)) != len(header):
-            raise ValueError("CSV column names must be unique.")
-
-        width = len(header)
-
-        for row_number, row in enumerate(rows[1:], start=2):
-            if len(row) != width:
-                raise ValueError(
-                    f"Row {row_number} has {len(row)} columns, "
-                    f"but the header has {width}."
-                )
-
-    def _open_existing_file(self):
-        if self.dataset_type == "json":
-            file_filter = "JSON files (*.json);;All files (*)"
-        else:
-            file_filter = "CSV files (*.csv);;All files (*)"
-
-        path, _selected_filter = QFileDialog.getOpenFileName(
-            self,
-            "Open dataset",
-            str(self.default_path),
-            file_filter,
-        )
-
-        if not path:
-            return
-
-        opened_path = Path(path)
-
-        try:
-            if self.dataset_type == "json":
-                self.editor.setPlainText(
-                    opened_path.read_text(encoding="utf-8")
-                )
-                self.file_path = opened_path
-
-            else:
-                with opened_path.open(
-                    "r",
-                    encoding="utf-8",
-                    newline="",
-                ) as handle:
-                    rows = list(csv.reader(handle))
-
-                if not rows:
-                    rows = [["column_1"], [""]]
-
-                self._populate_csv_table(rows)
-                self.file_path = opened_path
-                self.dataset_name = opened_path.stem
-
-            self.setWindowTitle(
-                f"Edit {opened_path.name} ({self.dataset_type.upper()})"
-            )
-
-        except Exception as exc:
-            QMessageBox.warning(
-                self,
-                "Open failed",
-                f"Could not open dataset:\n\n{exc}",
-            )
-
-    def _save(self):
-        if self.file_path is None:
-            self._save_as()
-        else:
-            self._write_current()
-
-    def _save_as(self):
-        self.default_path.mkdir(parents=True, exist_ok=True)
-
-        base_name = self.dataset_name
-        if base_name == "new":
-            base_name = "new_dataset"
-
-        if self.dataset_type == "json":
-            suggested = self.default_path / f"{base_name}.json"
-            title = "Save JSON dataset"
-            file_filter = "JSON files (*.json);;All files (*)"
-        else:
-            suggested = self.default_path / f"{base_name}.csv"
-            title = "Save CSV dataset"
-            file_filter = "CSV files (*.csv);;All files (*)"
-
-        path, _selected_filter = QFileDialog.getSaveFileName(
-            self,
-            title,
-            str(suggested),
-            file_filter,
-        )
-
-        if not path:
-            return
-
-        self.file_path = Path(path)
-        self._write_current()
-
-    def _write_current(self):
-        if self.file_path is None:
-            return
-
-        try:
-            if self.dataset_type == "json":
-                content = self.editor.toPlainText().strip()
-
-                if not content:
-                    content = "{}"
-
-                payload = json.loads(content)
-
-                if not isinstance(payload, (dict, list)):
-                    raise ValueError(
-                        "Top-level JSON must be an object or an array."
-                    )
-
-                self.file_path.write_text(
-                    json.dumps(
-                        payload,
-                        indent=2,
-                        ensure_ascii=False,
-                    ) + "\n",
-                    encoding="utf-8",
-                )
-
-            else:
-                rows = self._csv_rows()
-                self._validate_csv(rows)
-
-                output = io.StringIO(newline="")
-                writer = csv.writer(output, lineterminator="\n")
-                writer.writerows(rows)
-
-                self.file_path.write_text(
-                    output.getvalue(),
-                    encoding="utf-8",
-                    newline="",
-                )
-
-        except Exception as exc:
-            QMessageBox.warning(
-                self,
-                "Save failed",
-                f"Could not save dataset:\n\n{exc}",
-            )
-            return
-
-        QMessageBox.information(
-            self,
-            "Dataset saved",
-            f"Saved to:\n\n{self.file_path}",
-        )
-        self.accept()
-
-
-
-
-class SpeciesOverviewWidget(QWidget):
-    """Compact species dashboard for the selected species."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.root = Path(".")
-        self.species = ""
-
-        self._root_widget = QWidget(self)
-        self._cards_layout = QGridLayout(self._root_widget)
-        self._cards_layout.setColumnStretch(0, 1)
-        self._cards_layout.setColumnStretch(1, 1)
-
-        outer = QVBoxLayout(self)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._root_widget)
-        outer.addWidget(scroll)
-
-        btn_row = QHBoxLayout()
-        refresh_btn = QPushButton("Refresh overview")
-        refresh_btn.clicked.connect(self._refresh_from_button)
-        copy_btn = QPushButton("Copy summary")
-        copy_btn.clicked.connect(self._copy_summary)
-        btn_row.addWidget(refresh_btn)
-        btn_row.addWidget(copy_btn)
-        btn_row.addStretch(1)
-        outer.addLayout(btn_row)
-
-        self._summary_text = ""
-        self._empty_state()
-
-    def _refresh_from_button(self):
-        self.refresh(self.root, self.species)
-
-    def _copy_summary(self):
-        if self._summary_text:
-            QApplication.clipboard().setText(self._summary_text)
-
-    def _empty_state(self):
-        self._summary_text = ""
-        self._clear_cards()
-        placeholder = QGroupBox("Species overview")
-        form = QFormLayout(placeholder)
-        form.addRow("Status", QLabel("Select a species to view the computed summary."))
-        self._add_card(placeholder, 0, 0)
-
-    def _clear_cards(self):
-        while self._cards_layout.count():
-            item = self._cards_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-    @staticmethod
-    def _number(value):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
-
-    @staticmethod
-    def _format_value(value):
-        if value is None:
-            return "—"
-        if isinstance(value, bool):
-            return "Yes" if value else "No"
-        if isinstance(value, (int, float)):
-            x = float(value)
-            if x == 0:
-                return "0"
-            if abs(x) >= 1e5 or abs(x) < 1e-4:
-                return f"{x:.6e}"
-            return f"{x:.6g}"
-        return str(value)
-
-    @staticmethod
-    def _find_value(data, keys):
-        if isinstance(data, dict):
-            for key in keys:
-                if key in data and not isinstance(data[key], (dict, list)):
-                    return data[key]
-            for value in data.values():
-                found = SpeciesOverviewWidget._find_value(value, keys)
-                if found is not None:
-                    return found
-        elif isinstance(data, list):
-            for value in data:
-                found = SpeciesOverviewWidget._find_value(value, keys)
-                if found is not None:
-                    return found
-        return None
-
-    @staticmethod
-    def _find_list(data, keys):
-        if isinstance(data, dict):
-            for key in keys:
-                if isinstance(data.get(key), list):
-                    return data[key]
-            for value in data.values():
-                found = SpeciesOverviewWidget._find_list(value, keys)
-                if found is not None:
-                    return found
-        elif isinstance(data, list):
-            for value in data:
-                found = SpeciesOverviewWidget._find_list(value, keys)
-                if found is not None:
-                    return found
-        return None
-
-    @staticmethod
-    def _load_json(path):
-        try:
-            with path.open("r", encoding="utf-8") as handle:
-                return json.load(handle), None
-        except Exception as exc:  # noqa: BLE001
-            return None, str(exc)
-
-    def _add_card(self, card, row, col):
-        self._cards_layout.addWidget(card, row, col)
-
-    def _card(self, title, rows):
-        box = QGroupBox(title)
-        form = QFormLayout(box)
-        form.setLabelAlignment(Qt.AlignRight)
-        for label, value in rows:
-            form.addRow(label, QLabel(str(value)))
-        return box
-
-    def _make_species_card(self, core_data, rydberg_data):
-        rows = []
-        for label, keys in (
-            ("Species", ("label", "species_label", "species_id")),
-            ("Element", ("element", "symbol")),
-            ("Charge", ("charge",)),
-            ("Multiplicity", ("multiplicity",)),
-            ("Z", ("Z", "atomic_number")),
-            ("Ground energy", ("ground_energy_eV",)),
-            ("Ionization energy", ("ionization_energy_eV",)),
-        ):
-            value = self._find_value(core_data, keys)
-            if value is None:
-                value = self._find_value(rydberg_data, keys)
-            if value is not None:
-                rows.append((label, self._format_value(value)))
-
-        if not rows:
-            rows.append(("Data", "No core metadata found"))
-
-        return self._card("Species information", rows)
-
-    def _make_pipeline_card(self, root, species):
-        rows = []
-        for stage in PIPELINE:
-            if stage["id"] == "compare":
-                continue
-            present = False
-            for output in stage.get("outputs", []):
-                path = root / output.format(el=species)
-                if path.exists():
-                    present = True
-                    break
-            rows.append((stage["label"], "Complete" if present else "Missing"))
-        return self._card("Pipeline status", rows)
-
-    def _make_rydberg_card(self, data):
-        if not data:
-            return self._card("Rydberg series", [("Status", "Not available")])
-
-        rows = []
-        for label, keys in (
-            ("Method", ("method",)),
-            ("Ionization energy", ("ionization_energy_eV",)),
-            ("States", ("num_states",)),
-            ("Theoretical states", ("num_theoretical",)),
-            ("n min", ("n_start",)),
-            ("n max", ("n_max",)),
-        ):
-            value = self._find_value(data, keys)
-            if value is not None:
-                rows.append((label, self._format_value(value)))
-
-        defects = data.get("quantum_defects")
-        if isinstance(defects, dict) and defects:
-            defect_text = ", ".join(
-                f"{k}={self._format_value(v)}" for k, v in defects.items()
-            )
-            rows.append(("Quantum defects", defect_text))
-
-        return self._card("Rydberg series", rows)
-
-    def _make_transitions_card(self, data):
-        if not data:
-            return self._card("Transitions", [("Status", "Not available")])
-
-        trans_list = self._find_list(data, ("transitions", "lines"))
-        if not trans_list:
-            return self._card("Transitions", [("Status", "No transitions found")])
-
-        wl_values = []
-        fs = []
-        for row in trans_list:
-            if not isinstance(row, dict):
-                continue
-            wl = self._number(row.get("wavelength_nm", row.get("wl_nm", row.get("wl"))))
-            if wl is not None and wl > 0:
-                wl_values.append(wl)
-            fosc = self._number(row.get("fosc", row.get("oscillator_strength")))
-            if fosc is not None:
-                fs.append((fosc, row))
-
-        rows = [("Transitions", str(len(trans_list)))]
-        if wl_values:
-            rows.extend([
-                ("λ min", f"{min(wl_values):.3f} nm"),
-                ("λ max", f"{max(wl_values):.3f} nm"),
-            ])
-        if fs:
-            strongest, row = max(fs, key=lambda x: x[0])
-            label = row.get("label") or row.get("upper_label") or "transition"
-            rows.append(("Strongest f", f"{strongest:.3g}  ({label})"))
-
-        return self._card("Transitions", rows)
-
-    def _make_lifetimes_card(self, data):
-        if not data:
-            return self._card("Radiative lifetimes", [("Status", "Not available")])
-
-        lifetime_list = self._find_list(data, ("lifetimes", "states"))
-        if not lifetime_list:
-            return self._card("Radiative lifetimes", [("Status", "No lifetimes found")])
-
-        taus = []
-        channel_count = 0
-        source_counts = {}
-        for row in lifetime_list:
-            if not isinstance(row, dict):
-                continue
-            tau = self._number(row.get("lifetime_s", row.get("tau_s", row.get("tau"))))
-            if tau is not None:
-                taus.append(float(tau))
-            channels = row.get("channels", [])
-            if isinstance(channels, list):
-                channel_count += len(channels)
-                for ch in channels:
-                    if not isinstance(ch, dict):
-                        continue
-                    source = ch.get("fosc_source") or ch.get("source") or "unknown"
-                    source_counts[source] = source_counts.get(source, 0) + 1
-
-        rows = [("States", str(len(lifetime_list))), ("Channels", str(channel_count))]
-        if taus:
-            rows.extend([
-                ("τ min", self._format_value(min(taus))),
-                ("τ max", self._format_value(max(taus))),
-            ])
-        if source_counts:
-            src_text = ", ".join(f"{k}: {v}" for k, v in sorted(source_counts.items()))
-            rows.append(("Sources", src_text))
-
-        return self._card("Radiative lifetimes", rows)
-
-    def _make_polarizability_card(self, data):
-        if not data:
-            return self._card("Polarizability", [("Status", "Not available")])
-
-        rows = []
-        for key in ("alpha_0", "alpha_static", "C6_au", "C6_expt_au", "magic_wavelength_nm"):
-            value = self._find_value(data, (key,))
-            if value is not None:
-                rows.append((key, self._format_value(value)))
-        if not rows:
-            rows.append(("Status", "File present but no summary values found"))
-        return self._card("Polarizability", rows)
-
-
-    def _make_blackbody_card(self, data):
-        if not data:
-            return self._card(
-                "Blackbody radiation",
-                [("Status", "Not available")],
-            )
-
-        rows = []
-
-        # These are the physically useful scalar results emitted by blackbody.py. The search is recursive because some outputs are nested under result/shift/rates/continuum sections.
-        scalar_fields = (
-            ("Temperature", ("T_K", "temperature_K", "T")),
-            ("State", ("state", "state_label", "excited_state", "excited")),
-            ("Static shift", (
-                "static_shift_hz_at_T",
-                "shift_static_hz_at_T",
-                "static_hz_at_T",
-            )),
-            ("Dynamic shift", (
-                "dyn_shift_hz_at_T",
-                "dynamic_shift_hz_at_T",
-                "dyn_diff_hz_at_T",
-            )),
-            ("Total shift", (
-                "shift_hz_at_T",
-                "total_shift_hz_at_T",
-                "total_hz_at_T",
-            )),
-            ("BBR depopulation rate", (
-                "Gamma_BBR",
-                "gamma_bbr",
-                "Gamma_bbr",
-                "rate_BBR",
-                "bbr_rate_s",
-            )),
-            ("Photoionization rate", (
-                "Gamma_PI",
-                "gamma_pi",
-                "Gamma_pi",
-                "photoionization_rate",
-                "pi_rate_s",
-            )),
-            ("Total quenching rate", (
-                "Gamma_quench",
-                "gamma_quench",
-                "total_quench_rate",
-            )),
-            ("Effective lifetime", (
-                "tau_eff",
-                "effective_lifetime_s",
-                "lifetime_eff_s",
-            )),
-            ("BBR lifetime", (
-                "tau_BBR",
-                "tau_bbr",
-                "bbr_lifetime_s",
-            )),
-        )
-
-        already_seen = set()
-
-        for label, keys in scalar_fields:
-            value = self._find_value(data, keys)
-            if value is not None:
-                rows.append((label, self._format_value(value)))
-                already_seen.update(keys)
-
-        # Report whether optional physical blocks were included.
-        if isinstance(data, dict):
-            for block_name, label in (
-                ("rates", "Bound-bound rates table"),
-                ("continuum", "Continuum/photoionization block"),
-                ("rydberg_shifts", "Rydberg shifts table"),
-            ):
-                if block_name in data:
-                    block = data[block_name]
-                    if isinstance(block, list):
-                        value = f"Present ({len(block)} rows)"
-                    elif isinstance(block, dict):
-                        value = f"Present ({len(block)} fields)"
-                    else:
-                        value = "Present"
-                    rows.append((label, value))
-
-        if not rows:
-            rows.append(
-                (
-                    "Status",
-                    "File present but no recognized blackbody results found",
-                )
-            )
-
-        return self._card("Blackbody radiation", rows)
-
-    def _make_tweezer_card(self, data):
-        if not data:
-            return self._card("Optical tweezer", [("Status", "Not available")])
-
-        rows = []
-        for key in (
-            "wl_nm", "I_kWcm2", "waist_um", "trap_depth_uK",
-            "scattering_rate_s-1", "recoil_heating_K_s", "trap_frequency_Hz"
-        ):
-            value = self._find_value(data, (key,))
-            if value is not None:
-                rows.append((key, self._format_value(value)))
-
-        if not rows:
-            rows.append(("Status", "File present but no useful tweezer values found"))
-
-        return self._card("Optical tweezer", rows)
-
-
-    def _make_hyperfine_card(self, data):
-        if not data:
-            return self._card(
-                "Hyperfine / Zeeman",
-                [("Status", "Not available")],
-            )
-
-        box = QGroupBox("Hyperfine / Zeeman")
-        outer = QVBoxLayout(box)
-
-        summary = QFormLayout()
-        summary.setLabelAlignment(Qt.AlignRight)
-
-        for label, keys in (
-            ("Isotope", ("isotope_A", "isotope")),
-            ("Nuclear spin I", ("I", "nuclear_spin")),
-            ("Magnetic moment μI", ("mu_I", "mu")),
-            ("Quadrupole moment Q", ("Q_barn", "Q")),
-            ("Nuclear g-factor", ("gI", "g_I")),
-        ):
-            value = self._find_value(data, keys)
-            if value is not None:
-                summary.addRow(label, QLabel(self._format_value(value)))
-
-        special = data.get("special", {})
-        clock = special.get("microwave_clock", {}) if isinstance(special, dict) else {}
-
-        if clock:
-            summary.addRow(
-                "Clock transition",
-                QLabel(
-                    f"{clock.get('state', 'ground')}  "
-                    f"F={clock.get('F_upper', '—')} ↔ "
-                    f"F={clock.get('F_lower', '—')}"
-                ),
-            )
-
-            for label, key, unit in (
-                ("Clock frequency", "frequency_MHz", "MHz"),
-                ("Clock frequency", "frequency_GHz", "GHz"),
-                ("Clock frequency", "frequency_Hz", "Hz"),
-                ("Clock wavelength", "wavelength_cm", "cm"),
-                ("Clock wavelength", "wavelength_m", "m"),
-            ):
-                value = clock.get(key)
-                if value is not None:
-                    summary.addRow(
-                        label,
-                        QLabel(f"{self._format_value(value)} {unit}"),
-                    )
-
-            if clock.get("note"):
-                summary.addRow("Clock note", QLabel(str(clock["note"])))
-
-        states = data.get("states", [])
-        if states:
-            summary.addRow("Computed states", QLabel(str(len(states))))
-
-        outer.addLayout(summary)
-
-        if states:
-            outer.addWidget(QLabel("Hyperfine constants and F-levels"))
-
-            constants = QTableWidget()
-            constants.setColumnCount(7)
-            constants.setHorizontalHeaderLabels([
-                "State",
-                "J",
-                "A (MHz)",
-                "B (MHz)",
-                "C (kHz)",
-                "F",
-                "E_hf / gF",
-            ])
-            constants.setRowCount(0)
-            constants.setWordWrap(False)
-            constants.setTextElideMode(Qt.ElideNone)
-            constants.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            constants.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            constants.setSizeAdjustPolicy(
-                QTableWidget.AdjustToContents
-            )
-
-            row_index = 0
-            for state in states:
-                f_levels = state.get("F_levels", [])
-                if not f_levels:
-                    f_levels = [{}]
-
-                for f_level in f_levels:
-                    constants.insertRow(row_index)
-
-                    values = [
-                        state.get("label", ""),
-                        self._format_value(state.get("J")),
-                        self._format_value(state.get("A_MHz")),
-                        self._format_value(state.get("B_MHz")),
-                        self._format_value(state.get("C_kHz")),
-                        self._format_value(f_level.get("F")),
-                        (
-                            f"E={self._format_value(f_level.get('E_MHz'))} MHz; "
-                            f"gF={self._format_value(f_level.get('gF'))}"
-                        ),
-                    ]
-
-                    for column, value in enumerate(values):
-                        constants.setItem(
-                            row_index,
-                            column,
-                            QTableWidgetItem(str(value)),
-                        )
-
-                    row_index += 1
-
-            constants.resizeColumnsToContents()
-            constants.resizeRowsToContents()
-
-            
-            header_height = constants.horizontalHeader().height()
-            frame_height = constants.frameWidth() * 2
-            row_height = constants.verticalHeader().defaultSectionSize()
-            total_height = (
-                header_height
-                + frame_height
-                + constants.rowCount() * row_height
-                + 8
-            )
-            constants.setMinimumHeight(total_height)
-            constants.setMaximumHeight(total_height)
-
-            outer.addWidget(constants)
-
-        if not states and not clock:
-            outer.addWidget(
-                QLabel(
-                    "Hyperfine file is present but contains no "
-                    "states or clock transition."
-                )
-            )
-
-        return box
-
-    def _make_feshbach_card(self, data):
-        if not data:
-            return self._card("Feshbach summary", [("Status", "Not available")])
-
-        rows = []
-        for key in (
-            "isotope_A", "isotope", "a_bg_default_a0", "C6_au",
-            "C6_source", "beta6_a0", "a_bar_a0", "kT_uK",
-            "mass_amu", "mass_source", "k_a0inv"
-        ):
-            value = self._find_value(data, (key,))
-            if value is not None:
-                rows.append((key, self._format_value(value)))
-
-        resonances = data.get("resonances")
-        if isinstance(resonances, list) and resonances:
-            rows.append(("Resonances", str(len(resonances))))
-            b0s = [float(r.get("B0_G")) for r in resonances if self._number(r.get("B0_G")) is not None]
-            if b0s:
-                rows.append(("B0 range", f"{min(b0s):.1f}–{max(b0s):.1f} G"))
-
-        if not rows:
-            rows.append(("Status", "File present but no summary values found"))
-
-        return self._card("Feshbach summary", rows)
-
-
-    def _make_feshbach_channels_card(self, data):
-        if not data:
-            return self._card(
-                "Feshbach channels",
-                [("Status", "Not available")],
-            )
-
-        resonances = data.get("resonances")
-        if not isinstance(resonances, list) or not resonances:
-            return self._card(
-                "Feshbach channels",
-                [("Status", "No resonances found")],
-            )
-
-        box = QGroupBox(
-            f"Feshbach channels / resonances ({len(resonances)})"
-        )
-        layout = QVBoxLayout(box)
-
-        table = QTableWidget()
-        table.setColumnCount(7)
-        table.setHorizontalHeaderLabels([
-            "Label",
-            "Channel",
-            "Partial wave",
-            "B0 (G)",
-            "Δ (G)",
-            "a_bg (a0)",
-            "Reference",
-        ])
-        table.setRowCount(len(resonances))
-        table.setWordWrap(False)
-        table.setTextElideMode(Qt.ElideNone)
-        table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        table.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-
-        for row_index, resonance in enumerate(resonances):
-            values = [
-                resonance.get("label", ""),
-                resonance.get("channel", ""),
-                resonance.get("partial_wave", ""),
-                self._format_value(resonance.get("B0_G")),
-                self._format_value(resonance.get("Delta_G")),
-                self._format_value(resonance.get("a_bg_a0")),
-                resonance.get("ref", ""),
-            ]
-
-            for column, value in enumerate(values):
-                item = QTableWidgetItem(str(value))
-                item.setToolTip(str(value))
-                table.setItem(row_index, column, item)
-
-        table.resizeColumnsToContents()
-        table.resizeRowsToContents()
-
-        header_height = table.horizontalHeader().height()
-        frame_height = table.frameWidth() * 2
-        row_height = table.verticalHeader().defaultSectionSize()
-        total_height = (
-            header_height
-            + frame_height
-            + len(resonances) * row_height
-            + 12
-        )
-        table.setMinimumHeight(total_height)
-        table.setMaximumHeight(total_height)
-
-        layout.addWidget(table)
-        return box
-
-    def refresh(self, root, species):
-        self.root = Path(root)
-        self.species = str(species or "").strip()
-
-        if not self.species:
-            self._empty_state()
-            return
-
-        files = {}
-        for label, suffix in (
-            ("core", ".json"),
-            ("soc", "_soc.json"),
-            ("rydberg", "_rydberg.json"),
-            ("transitions", "_transitions.json"),
-            ("lifetimes", "_lifetimes.json"),
-            ("polarizability", "_polarizability.json"),
-            ("blackbody", "_blackbody.json"),
-            ("tweezer", "_tweezer.json"),
-            ("hyperfine", "_hyperfine.json"),
-            ("feshbach", "_feshbach.json"),
-            ("feshbach_result", "_feshbach_out.json"),
-        ):
-            path = self.root / DATA_JSON_DIR / f"{self.species}{suffix}"
-            if path.exists():
-                data, error = self._load_json(path)
-                if error:
-                    files[f"{label}_error"] = error
-                else:
-                    files[label] = data
-
-        self._clear_cards()
-
-        core = files.get("core", {})
-        rydberg = files.get("rydberg", {})
-        trans = files.get("transitions", {})
-        lt = files.get("lifetimes", {})
-        polar = files.get("polarizability", {})
-        bb = files.get("blackbody", {})
-        tw = files.get("tweezer", {})
-        hf = files.get("hyperfine", {})
-        fesh = files.get("feshbach_result", files.get("feshbach", {}))
-
-        cards = [
-            self._make_species_card(core, rydberg),
-            self._make_pipeline_card(self.root, self.species),
-            self._make_rydberg_card(rydberg),
-            self._make_transitions_card(trans),
-            self._make_lifetimes_card(lt),
-            self._make_polarizability_card(polar),
-            self._make_blackbody_card(bb),
-            self._make_tweezer_card(tw),
-            self._make_hyperfine_card(hf),
-            self._make_feshbach_card(fesh),
-            self._make_feshbach_channels_card(fesh),
-        ]
-
-        for index, card in enumerate(cards):
-            row = index // 2
-            col = index % 2
-            self._add_card(card, row, col)
-
-        self._summary_text = "\n".join(
-            f"{card.title()}" for card in cards
-        )
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -2127,45 +142,77 @@ class MainWindow(QMainWindow):
         self.resize(1320, 840)
 
         self.settings = QSettings(ORG_NAME, APP_NAME)
-        self.root = self._resolve_root()
+        self.root = self._initial_root()
         self.current_species = ""
         self.process: QProcess | None = None
         self.current_stage = None
         self.fallback_path: Path | None = None
-        self._interactive_stage = None
-        self._prompt_buffer = ""
-        self._answered_prompt_keys = set()
         self._flag_widgets: dict = {}
         self._basis_picker_checkbox = None
         self._basis_picker_combo = None
         self._basis_cache_dir = Path(tempfile.mkdtemp(prefix="linak_gui_basis_"))
         self._plot_cache_dir = Path(tempfile.mkdtemp(prefix="linak_gui_"))
+        self._seed_workers: set[_SeedWorker] = set()
 
         self._build_menu()
         self._build_ui()
+        self._seed_root()
         self._refresh_all()
 
     def closeEvent(self, event):
+        if self.process is not None and self.process.state() != QProcess.NotRunning:
+            kill_process_tree(self.process)
+            self.process.waitForFinished(3000)
+        self.process = None
+        # A QThread destroyed while running aborts the process; copies are
+        # atomic, so waiting for them is the only safe exit.
+        for worker in list(self._seed_workers):
+            worker.wait()
         shutil.rmtree(self._plot_cache_dir, ignore_errors=True)
         shutil.rmtree(self._basis_cache_dir, ignore_errors=True)
         super().closeEvent(event)
 
-    # project root
-    def _resolve_root(self) -> Path:
-        here = project_root()
-        if is_project_root(here):
-            return here
-        saved = self.settings.value("root_path", "")
-        if saved and is_project_root(Path(saved)):
+    # output folder
+    def _initial_root(self) -> Path:
+        """The folder this session starts in.
+
+        An explicit ``LINAK_PROJECT_ROOT`` wins; otherwise the folder picked
+        with File > Open output folder... in an earlier session, if it still
+        exists; otherwise LiNaK's per-user data folder.
+        """
+        saved = self.settings.value(ROOT_SETTING, "")
+        if saved and not os.environ.get(PROJECT_ROOT_ENV) and Path(saved).is_dir():
             return Path(saved)
-        return here
+        return default_workspace().root
+
+    def _seed_root(self) -> None:
+        """Copy the bundled data into the current folder, then refresh."""
+        worker = _SeedWorker(self.root, self)
+        worker.failed.connect(self._on_seed_failed)
+        worker.finished.connect(self._on_seed_finished)
+        self._seed_workers.add(worker)
+        worker.start()
+
+    def _on_seed_failed(self, message: str) -> None:
+        self._log(message)
+        QMessageBox.warning(self, "Bundled data not copied", message)
+
+    def _on_seed_finished(self) -> None:
+        worker = self.sender()
+        self._seed_workers.discard(worker)
+        worker.deleteLater()
+        self._refresh_all()
 
     def _build_menu(self):
         file_menu = self.menuBar().addMenu("&File")
 
-        open_act = QAction("Open LiNaK project folder...", self)
+        open_act = QAction("Open output folder...", self)
         open_act.triggered.connect(self._choose_root)
         file_menu.addAction(open_act)
+
+        default_act = QAction("Use default output folder", self)
+        default_act.triggered.connect(self._use_default_root)
+        file_menu.addAction(default_act)
 
         file_menu.addSeparator()
 
@@ -2306,28 +353,36 @@ class MainWindow(QMainWindow):
         opened_path = Path(path)
         suffix = opened_path.suffix.lower()
 
-        if suffix == ".json":
-            dataset_type = "json"
-            initial_text = opened_path.read_text(encoding="utf-8")
+        try:
+            if suffix == ".json":
+                dataset_type = "json"
+                initial_text = opened_path.read_text(encoding="utf-8")
 
-        elif suffix == ".csv":
-            dataset_type = "csv"
+            elif suffix == ".csv":
+                dataset_type = "csv"
 
-            with opened_path.open(
-                "r",
-                encoding="utf-8",
-                newline="",
-            ) as handle:
-                initial_text = list(csv.reader(handle))
+                with opened_path.open(
+                    "r",
+                    encoding="utf-8",
+                    newline="",
+                ) as handle:
+                    initial_text = list(csv.reader(handle))
 
-            if not initial_text:
-                initial_text = [["column_1"], [""]]
+                if not initial_text:
+                    initial_text = [["column_1"], [""]]
 
-        else:
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Unsupported file",
+                    "Please choose a .json or .csv file.",
+                )
+                return
+        except (OSError, UnicodeDecodeError) as exc:
             QMessageBox.warning(
                 self,
-                "Unsupported file",
-                "Please choose a .json or .csv file.",
+                "Open failed",
+                f"Could not read {opened_path.name}:\n\n{exc}",
             )
             return
 
@@ -2338,6 +393,7 @@ class MainWindow(QMainWindow):
             initial_text=initial_text,
             default_path=opened_path.parent,
             file_path=opened_path,
+            root=self.root,
         )
         dialog.exec()
 
@@ -2347,7 +403,7 @@ class MainWindow(QMainWindow):
                 dataset_name,
                 JSON_DATASET_TEMPLATES["new"],
             )
-            default_path = self.root / DATA_JSON_DIR
+            default_path = Workspace(root=self.root).data_json_dir
 
         else:
             initial_text = CSV_DATASET_TEMPLATES.get(
@@ -2356,7 +412,11 @@ class MainWindow(QMainWindow):
             )
             default_path = self.root
 
-        default_path.mkdir(parents=True, exist_ok=True)
+        try:
+            default_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            QMessageBox.warning(self, "Folder not writable", f"{default_path}:\n\n{exc}")
+            return
 
         dialog = DatasetEditorDialog(
             parent=self,
@@ -2364,24 +424,37 @@ class MainWindow(QMainWindow):
             dataset_type=dataset_type,
             initial_text=initial_text,
             default_path=default_path,
+            root=self.root,
         )
         dialog.exec()
 
     def _choose_root(self):
-        d = QFileDialog.getExistingDirectory(self, "LiNaK project folder", str(self.root))
+        """Pick the output folder the stage runs write into (any folder).
+
+        The choice is remembered for later sessions.
+        """
+        d = QFileDialog.getExistingDirectory(self, "Output folder", str(self.root))
         if not d:
             return
-        path = Path(d)
-        if not is_project_root(path):
-            QMessageBox.warning(
-                self, "Not a LiNaK folder",
-                f"{path}\n\ndoesn't contain rydberg.py / constants.py. "
-                "Pick the folder that has those scripts in it.",
-            )
-            return
-        self.root = path
-        self.settings.setValue("root_path", str(path))
+        self.settings.setValue(ROOT_SETTING, d)
+        self._switch_root(Path(d))
+
+    def _use_default_root(self):
+        """Go back to the per-user data folder and forget the chosen one."""
+        self.settings.remove(ROOT_SETTING)
+        self._switch_root(default_workspace().root)
+
+    def _switch_root(self, root: Path) -> None:
+        """Make *root* the current folder: forget the old folder's species."""
+        self.root = root
         self.current_species = ""
+        self.species_list.clear()
+        self.species_input.clear()
+        self.species_label.setText("No species selected.")
+        # The --data-dir/--output-dir defaults depend on the folder.
+        self._build_flags_form(self._selected_stage())
+        self._update_stage_desc()
+        self._seed_root()
         self._refresh_all()
 
     # UI 
@@ -2465,10 +538,6 @@ class MainWindow(QMainWindow):
 
         # Right: output browser + viewer
         right = QWidget()
-        right.setSizePolicy(
-            right.sizePolicy().horizontalPolicy(),
-            right.sizePolicy().verticalPolicy(),
-        )
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(6, 6, 6, 6)
         right_layout.setSpacing(6)
@@ -2514,10 +583,6 @@ class MainWindow(QMainWindow):
         viewer_box = QGroupBox("Viewer")
         vb = QVBoxLayout(viewer_box)
         self.viewer_stack = QStackedWidget()
-        self.viewer_stack.setSizePolicy(
-            self.viewer_stack.sizePolicy().horizontalPolicy(),
-            self.viewer_stack.sizePolicy().verticalPolicy(),
-        )
 
         if HAS_WEBENGINE:
             self.web_view = QWebEngineView()
@@ -2553,12 +618,7 @@ class MainWindow(QMainWindow):
         self.viewer_stack.setCurrentIndex(3)
 
         vb.addWidget(self.viewer_stack)
-        viewer_box.setSizePolicy(
-            viewer_box.sizePolicy().horizontalPolicy(),
-            viewer_box.sizePolicy().verticalPolicy(),
-        )
         right_splitter.addWidget(viewer_box)
-        right_splitter.setOrientation(Qt.Vertical)
         right_splitter.setChildrenCollapsible(False)
         right_splitter.setHandleWidth(8)
         right_splitter.setStretchFactor(0, 0)
@@ -2594,26 +654,28 @@ class MainWindow(QMainWindow):
         self._refresh_stage_markers()
         self._refresh_species_outputs()
         self._refresh_overview()
+        self._update_stage_desc()
         self._update_cmd_preview()
 
-    # stage selection 
+    # stage selection
     def _on_stage_selected(self, current, _previous):
-        if current is None:
-            self.stage_desc.setText("")
-            self._build_flags_form(None)
-            return
-        stage_id = current.data(Qt.UserRole)
-        stage = STAGE_BY_ID[stage_id]
-        self.stage_desc.setText(stage["desc"].replace("{el}", self.current_species or "<el>"))
-        self._build_flags_form(stage)
+        self._update_stage_desc()
+        self._build_flags_form(self._selected_stage())
+
+    def _update_stage_desc(self):
+        stage = self._selected_stage()
+        text = "" if stage is None else stage["desc"].replace(
+            "{el}", self.current_species or "<el>")
+        self.stage_desc.setText(text)
 
     def _build_flags_form(self, stage):
-        """Rebuild the options form for the selected stage: one labeled,
-        tooltipped widget per CLI flag (checkbox / dropdown / validated text
-        field / file-browse field), generated from that script's own
-        argparse schema."""
+        """Rebuild the options form for *stage*: one labelled, tooltipped
+        widget per CLI flag (checkbox / dropdown / text field / file-browse
+        field) from the stage table in :mod:`.stages`, which the tests check
+        against the pipeline's own argparse parser."""
         while self.flags_form.rowCount():
             self.flags_form.removeRow(0)
+        # removeRow() deleted every widget, the basis picker's included.
         self._flag_widgets = {}
         self._basis_picker_checkbox = None
         self._basis_picker_combo = None
@@ -2624,6 +686,10 @@ class MainWindow(QMainWindow):
         for spec in stage.get("flags", []):
             kind = spec["kind"]
             help_text = spec.get("help", "")
+            default = spec.get("default", "")
+            if callable(default):
+                # e.g. workspace_data_dir: resolved against the current folder.
+                default = default(self.root)
 
             if kind == "flag":
                 value_widget = QCheckBox()
@@ -2642,7 +708,7 @@ class MainWindow(QMainWindow):
                 value_widget.currentIndexChanged.connect(self._update_cmd_preview)
                 row_widget = value_widget
             elif kind == "path":
-                value_widget = QLineEdit(spec.get("default", ""))
+                value_widget = QLineEdit(default)
                 value_widget.textChanged.connect(self._update_cmd_preview)
                 browse_btn = QPushButton("Browse...")
                 browse_btn.clicked.connect(
@@ -2654,7 +720,7 @@ class MainWindow(QMainWindow):
                 hl.addWidget(browse_btn)
                 row_widget = container
             else:  # int, float, str, strlist
-                value_widget = QLineEdit(spec.get("default", ""))
+                value_widget = QLineEdit(default)
                 value_widget.textChanged.connect(self._update_cmd_preview)
                 row_widget = value_widget
 
@@ -2665,20 +731,18 @@ class MainWindow(QMainWindow):
             label.setToolTip(help_text or spec["label"])
             self.flags_form.addRow(label, row_widget)
 
+        if stage["id"] == "runorca":
+            self._basis_picker_checkbox = QCheckBox("Basis picker")
+            self._basis_picker_checkbox.setToolTip(
+                "GUI-only basis picker. It fills the existing --basis-file field "
+                "without using --pick-basis or terminal input."
+            )
+            self._basis_picker_checkbox.stateChanged.connect(self._toggle_basis_picker)
 
-        if stage is not None and stage["id"] == "runorca":
-            if self._basis_picker_checkbox is None:
-                self._basis_picker_checkbox = QCheckBox("Basis picker")
-                self._basis_picker_checkbox.setToolTip(
-                    "GUI-only basis picker. It fills the existing --basis-file field without using --pick-basis."
-                )
-                self._basis_picker_checkbox.stateChanged.connect(self._toggle_basis_picker)
-
-            if self._basis_picker_combo is None:
-                self._basis_picker_combo = QComboBox()
-                self._basis_picker_combo.setEnabled(False)
-                self._basis_picker_combo.setPlaceholderText("Select basis set")
-                self._basis_picker_combo.currentIndexChanged.connect(self._apply_selected_basis)
+            self._basis_picker_combo = QComboBox()
+            self._basis_picker_combo.setEnabled(False)
+            self._basis_picker_combo.setPlaceholderText("Select basis set")
+            self._basis_picker_combo.currentIndexChanged.connect(self._apply_selected_basis)
 
             self.flags_form.addRow(QLabel("Basis picker"), self._basis_picker_checkbox)
             self.flags_form.addRow(QLabel("Basis set"), self._basis_picker_combo)
@@ -2719,20 +783,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            from linak.core.elements import ELEMENTS
-
-            z = None
-            for atomic_number, record in ELEMENTS.items():
-                symbol = record[0]
-                if symbol.lower() == self.current_species.lower():
-                    z = atomic_number
-                    break
-
-            if z is None and self.current_species.isdigit():
-                z = int(self.current_species)
-
-            if z is None:
-                raise ValueError(f"Unknown species: {self.current_species}")
+            z = resolve_species(self.current_species)["Z"]
 
             names = []
             for basis_name in bse.get_all_basis_names():
@@ -2765,21 +816,9 @@ class MainWindow(QMainWindow):
 
         try:
             import basis_set_exchange as bse
-            from linak.core.elements import ELEMENTS
 
             species = self.current_species.strip()
-            z = None
-            for atomic_number, record in ELEMENTS.items():
-                symbol = record[0]
-                if symbol.lower() == species.lower():
-                    z = atomic_number
-                    break
-
-            if z is None and species.isdigit():
-                z = int(species)
-
-            if z is None:
-                raise ValueError(f"Unknown species: {species}")
+            z = resolve_species(species)["Z"]
 
             basis_text = None
             for fmt in ("orca", "gamess_us", "gaussian94"):
@@ -2815,40 +854,20 @@ class MainWindow(QMainWindow):
         if path:
             line_edit.setText(path)
 
-    def _expand_compare_elements(self, raw):
-        """Expand family aliases and comma-separated element ids."""
-        values = []
-        seen = set()
-
-        for token in str(raw or "").split(","):
-            token = token.strip()
-            if not token:
-                continue
-
-            key = token.lower().replace(" ", "_")
-            expanded = ELEMENT_FAMILIES.get(key, [token])
-
-            for value in expanded:
-                value = value.strip()
-                if value and value not in seen:
-                    seen.add(value)
-                    values.append(value)
-
-        return values
-
     def _compare_elements_from_form(self):
         entry = self._flag_widgets.get("__elements")
         if entry is None:
             return []
 
         _kind, widget = entry
-        return self._expand_compare_elements(widget.text())
+        return expand_element_families(widget.text())
 
     def _collect_extra_args(self):
         """Turn the current options-form values into an argv list."""
         args = []
         for name, (kind, w) in self._flag_widgets.items():
-            # Fields beginning with "__" are GUI-only stdin answers. They must not be passed to argparse as command-line flags.
+            # GUI-only field (not a CLI flag): the compare stage's element
+            # expander; its values are appended separately in _run_stage.
             if name.startswith("__"):
                 continue
             if kind == "flag":
@@ -2869,202 +888,51 @@ class MainWindow(QMainWindow):
                     args += [name, text]
         return args
 
+    def _stage_pipeline_args(self, stage, species):
+        """``linak --pipeline`` arguments for *stage*, or None without elements."""
+        extra = self._collect_extra_args()
+        if stage["id"] == "compare":
+            elements = self._compare_elements_from_form()
+            if not elements:
+                return None
+            extra = ["--elements", *elements, *extra]
+        return stage_argv(stage, species, extra)
+
     def _update_cmd_preview(self, *_unused):
         stage = self._selected_stage()
         if stage is None:
             self.cmd_preview.setText("")
             return
-
-        species = self.current_species or "<species>"
-        extra = self._collect_extra_args()
-
-        if stage["id"] == "compare":
-            elements = self._compare_elements_from_form()
-            if not elements:
-                self.cmd_preview.setText(
-                    "$ linak --pipeline compare_elements "
-                    "--elements <enter elements>"
-                )
-                return
-            extra = ["--elements", *elements, *extra]
-
-        args = [stage["script"], *stage["positional"](species), *extra]
-        self.cmd_preview.setText(
-            "$ linak --pipeline "
-            + " ".join(str(value) for value in args)
-        )
-
-    def _stdin_for_stage(self, stage, extra_args):
-        """Prepare interactive prompt handling.
-
-        plotinteractive.py has conditional prompts. For example, the
-        ionization-filter prompt only appears when levels above the
-        ionization threshold are detected. Therefore answers must be sent
-        as prompts appear instead of writing one fixed stdin block.
-        """
-        if stage["id"] != "grotrian":
-            return stage.get("stdin")
-
-        self._interactive_stage = stage
-        self._prompt_buffer = ""
-        self._answered_prompt_keys = set()
-        return None
-
-    def _grotrian_value(self, key, fallback=""):
-        item = self._flag_widgets.get(key)
-        if item is None:
-            return fallback
-        _kind, widget = item
-
-        if hasattr(widget, "currentData"):
-            value = widget.currentData()
-        else:
-            value = widget.text().strip()
-
-        return str(value).strip() if value is not None else fallback
-
-    def _send_interactive_answer(self, key, value):
-        if self.process is None:
+        args = self._stage_pipeline_args(stage, self.current_species or "<species>")
+        if args is None:
+            self.cmd_preview.setText(
+                "$ linak --pipeline compare_elements --elements <enter elements>")
             return
-        if key in self._answered_prompt_keys:
-            return
+        self.cmd_preview.setText("$ linak --pipeline " + " ".join(args))
 
-        self._answered_prompt_keys.add(key)
-        answer = str(value).strip() + "\n"
-        self.process.write(answer.encode("utf-8"))
-
-    def _respond_to_plotinteractive_prompt(self, text):
-        """Answer plotinteractive.py prompts as they appear.
-
-        This handles conditional prompts correctly and preserves numeric
-        values entered in the GUI.
-        """
-        if self._interactive_stage is None or self.process is None:
-            return
-
-        self._prompt_buffer += text
-        lower = self._prompt_buffer.lower()
-
-        # Energy reference selection.
-        if "enter choice (1/2/3)" in lower:
-            self._send_interactive_answer(
-                "energy-choice",
-                self._grotrian_value("__energy_shift", "1"),
-            )
-
-        # Numeric value after absolute-energy selection.
-        if "enter absolute ground state energy" in lower:
-            value = self._grotrian_value("__absolute_ground", "")
-            if value == "":
-                value = "0"
-            self._send_interactive_answer("absolute-ground", value)
-
-        # Numeric value after custom-shift selection.
-        if "enter energy shift value" in lower:
-            value = self._grotrian_value("__custom_shift", "")
-            if value == "":
-                value = "0"
-            self._send_interactive_answer("custom-shift", value)
-
-        # Conditional ionization-level filter.
-        if "filter them out? (y/n)" in lower:
-            self._send_interactive_answer(
-                "ionization-filter",
-                self._grotrian_value("__filter_ie", "y"),
-            )
-
-        # NIST/Rydberg transition selection.
-        if (
-            "transition display options" in lower
-            and "enter choice [default: 1]" in lower
-        ):
-            self._send_interactive_answer(
-                "nist-transition-choice",
-                self._grotrian_value("__transition_display", "1"),
-            )
-
-        # Custom NIST wavelength range.
-        if "min wavelength (nm)" in lower and "transition display options" in lower:
-            self._send_interactive_answer(
-                "nist-wavelength-min",
-                self._grotrian_value("__transition_wl_min", "200"),
-            )
-
-        if (
-            "max wavelength (nm)" in lower
-            and "transition display options" in lower
-        ):
-            self._send_interactive_answer(
-                "nist-wavelength-max",
-                self._grotrian_value("__transition_wl_max", "2000"),
-            )
-
-        # ORCA transition selection.
-        if (
-            "orca transition display options" in lower
-            and "enter choice [default: 1]" in lower
-        ):
-            self._send_interactive_answer(
-                "orca-transition-choice",
-                self._grotrian_value("__orca_display", "1"),
-            )
-
-        # Custom ORCA wavelength range.
-        if "min wavelength (nm)" in lower and "orca transition display options" in lower:
-            self._send_interactive_answer(
-                "orca-wavelength-min",
-                self._grotrian_value("__orca_wl_min", "200"),
-            )
-
-        if "max wavelength (nm)" in lower and "orca transition display options" in lower:
-            self._send_interactive_answer(
-                "orca-wavelength-max",
-                self._grotrian_value("__orca_wl_max", "2000"),
-            )
-
-        # Plot 3 selection.
-        if (
-            "plot 3: grotrian display options" in lower
-            and "enter choice [default: 1]" in lower
-        ):
-            self._send_interactive_answer(
-                "plot3-choice",
-                self._grotrian_value("__plot3_choice", "1"),
-            )
-
-        # Optional orbital viewer.
-        if "launch orbital3d.py" in lower:
-            answer = self._grotrian_value("__launch_orbital", "n")
-            self._send_interactive_answer("launch-orbital", answer)
-
-        if "n-max for orbital series" in lower:
-            self._send_interactive_answer(
-                "orbital-nmax",
-                self._grotrian_value("__orbital_nmax", "10"),
-            )
-
-        if "grid points per axis" in lower:
-            self._send_interactive_answer(
-                "orbital-grid",
-                self._grotrian_value("__orbital_grid", "55"),
-            )
-
-        # Optional spectra viewer.
-        if "launch spectra.py" in lower:
-            answer = self._grotrian_value("__launch_spectra", "n")
-            self._send_interactive_answer("launch-spectra", answer)
-
-        if "wavelength min (nm)" in lower and "launch spectra.py" in lower:
-            self._send_interactive_answer(
-                "spectra-wavelength-min",
-                self._grotrian_value("__spectra_wl_min", "200"),
-            )
-
-        if "wavelength max (nm)" in lower and "launch spectra.py" in lower:
-            self._send_interactive_answer(
-                "spectra-wavelength-max",
-                self._grotrian_value("__spectra_wl_max", "900"),
-            )
+    def _confirm_isotope_data(self, stage, pipeline_args) -> bool:
+        """False if an explicit --isotope lacks data and the user cancels the run."""
+        if stage["id"] not in ("hyperfine", "feshbach", "polarizability") or "--isotope" not in pipeline_args:
+            return True
+        try:
+            iso_A = int(pipeline_args[pipeline_args.index("--isotope") + 1])
+        except (ValueError, IndexError):
+            return True
+        if not self.current_species:
+            return True
+        issues = isotope_prerequisite_issues(self.root, stage["id"], self.current_species, iso_A)
+        if not issues:
+            return True
+        body = "\n\n".join(("ERROR: " if sev == "error" else "Warning: ") + txt for sev, txt in issues)
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle(f"Isotope {self.current_species}-{iso_A}: missing data")
+        box.setText(body)
+        run_btn = box.addButton("Run anyway", QMessageBox.AcceptRole)
+        box.addButton("Cancel", QMessageBox.RejectRole)
+        box.setDefaultButton(box.buttons()[-1])
+        box.exec()
+        return box.clickedButton() is run_btn
 
     def _selected_stage(self):
         item = self.stage_list.currentItem()
@@ -3073,13 +941,6 @@ class MainWindow(QMainWindow):
         return STAGE_BY_ID[item.data(Qt.UserRole)]
 
     def _run_stage(self):
-        if not is_project_root(self.root) and not reference_path("data_json").is_dir():
-            QMessageBox.warning(
-                self, "No project folder",
-                "Use File > Open LiNaK project folder... to point this app "
-                "at the folder containing rydberg.py first.",
-            )
-            return
         stage = self._selected_stage()
         if stage is None:
             QMessageBox.information(self, "Pick a stage", "Select a pipeline stage first.")
@@ -3091,55 +952,20 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Busy", "A stage is already running.")
             return
 
-        extra_args = self._collect_extra_args()
-
-        if stage["id"] == "compare":
-            elements = self._compare_elements_from_form()
-            if not elements:
-                QMessageBox.warning(
-                    self,
-                    "No elements",
-                    "Enter elements or a family, for example: alkali or Li,Na,K.",
-                )
-                return
-            extra_args = ["--elements", *elements, *extra_args]
-
-        if stage["id"] in ("hyperfine", "feshbach", "polarizability") and "--isotope" in extra_args:
-            try:
-                iso_A = int(extra_args[extra_args.index("--isotope") + 1])
-            except (ValueError, IndexError):
-                iso_A = None
-            if iso_A is not None and self.current_species:
-                issues = isotope_prerequisite_issues(self.root, stage["id"], self.current_species, iso_A)
-                if issues:
-                    has_err = any(sev == "error" for sev, _ in issues)
-                    body = "\n\n".join(("ERROR: " if sev == "error" else "Warning: ") + txt for sev, txt in issues)
-                    box = QMessageBox(self)
-                    box.setIcon(QMessageBox.Warning)
-                    box.setWindowTitle(f"Isotope {self.current_species}-{iso_A}: missing data")
-                    box.setText(body)
-                    run_btn = box.addButton("Run anyway", QMessageBox.AcceptRole)
-                    box.addButton("Cancel", QMessageBox.RejectRole)
-                    box.setDefaultButton(box.buttons()[-1])
-                    box.exec()
-                    if box.clickedButton() is not run_btn:
-                        return
-
-        pipeline_args = [
-            str(value)
-            for value in [
-                stage["script"],
-                *stage["positional"](self.current_species),
-                *extra_args,
-            ]
-        ]
-        if getattr(sys, "frozen", False):
-            args = ["--pipeline", *pipeline_args]
-        else:
-            args = ["-m", "linak", "--pipeline", *pipeline_args]
+        pipeline_args = self._stage_pipeline_args(stage, self.current_species)
+        if pipeline_args is None:
+            QMessageBox.warning(
+                self,
+                "No elements",
+                "Enter elements or a family, for example: alkali or Li,Na,K.",
+            )
+            return
+        if not self._confirm_isotope_data(stage, pipeline_args):
+            return
+        program, args = stage_program(pipeline_args)
 
         self.console.clear()
-        self._log(f"$ {sys.executable} {' '.join(args)}")
+        self._log(f"$ {program} {' '.join(args)}")
         self.statusBar().showMessage(f"Running {stage['label']} for {self.current_species}...")
         self.run_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
@@ -3148,42 +974,125 @@ class MainWindow(QMainWindow):
         proc.setWorkingDirectory(str(self.root))
 
         env = QProcessEnvironment.systemEnvironment()
-        env.insert("PYTHONUTF8", "1")
-        env.insert("PYTHONIOENCODING", "utf-8")
-        if is_project_root(self.root):
-            env.insert("LINAK_PROJECT_ROOT", str(self.root))
+        for name, value in stage_env_values(self.root).items():
+            env.insert(name, value)
         proc.setProcessEnvironment(env)
+        # A pipeline never reads stdin; a stray input() must fail, not hang.
+        proc.setStandardInputFile(QProcess.nullDevice())
+        start_in_own_session(proc)
 
-        proc.setProgram(sys.executable)
+        proc.setProgram(program)
         proc.setArguments(args)
-        proc.readyReadStandardOutput.connect(lambda: self._on_output(proc))
-        proc.readyReadStandardError.connect(lambda: self._on_output(proc, err=True))
+        decoders = {
+            False: codecs.getincrementaldecoder("utf-8")(errors="replace"),
+            True: codecs.getincrementaldecoder("utf-8")(errors="replace"),
+        }
+        proc.readyReadStandardOutput.connect(
+            lambda: self._log(decoders[False].decode(bytes(proc.readAllStandardOutput())),
+                              newline=False))
+        proc.readyReadStandardError.connect(
+            lambda: self._log(decoders[True].decode(bytes(proc.readAllStandardError())),
+                              newline=False))
+        proc.started.connect(lambda: self._start_stage_log_tail(proc))
+        proc.finished.connect(lambda code, status: self._stop_stage_log_tail())
         proc.finished.connect(lambda code, status: self._on_finished(stage, code, status))
+        proc.finished.connect(proc.deleteLater)
         proc.errorOccurred.connect(self._on_process_error)
 
         self.process = proc
         self.current_stage = stage
         proc.start()
-        stdin_text = self._stdin_for_stage(stage, extra_args)
-        if stdin_text and proc.waitForStarted(3000):
-            proc.write(stdin_text.encode("utf-8"))
-            proc.closeWriteChannel()
 
     def _stop_stage(self):
-        if self.process is not None:
-            self.process.kill()
+        if self.process is not None and self.process.state() != QProcess.NotRunning:
+            kill_process_tree(self.process)
 
-    def _on_output(self, proc: QProcess, err=False):
-        data = bytes(proc.readAllStandardError() if err else proc.readAllStandardOutput())
-        text = data.decode("utf-8", errors="replace")
-        if text:
-            self._log(text, newline=False)
-            if not err and self._interactive_stage is not None:
-                self._respond_to_plotinteractive_prompt(text)
+    # ------------------------------------------------------------------
+    # Frozen-mode CLI logs
+    #
+    # The bundle is a GUI-subsystem executable built with Nuitka's
+    # --disable-console: stdout/stderr are not pipes but forced to files in
+    # the OS temp dir ({TEMP}/LiNaK_stdout_{PID}.log etc., see
+    # pysidedeploy.spec). QProcess therefore sees no output for frozen stage
+    # runs; the Console tab is fed by tailing those files instead.
+    # ------------------------------------------------------------------
 
-    def _on_process_error(self, _error):
-        if self.process is not None:
-            self._log(f"\n[process error: {self.process.errorString()}]")
+    def _start_stage_log_tail(self, proc: QProcess) -> None:
+        """Begin tailing the frozen child's CLI log files (no-op in dev).
+
+        Also prunes log files from stage runs older than a day, so the temp
+        dir does not grow unboundedly.
+        """
+        if not is_frozen_app():
+            return
+        stdout_log, stderr_log = cli_log_paths(int(proc.processId()))
+        cutoff = time.time() - 24 * 3600
+        for pattern in ("LiNaK_stdout_*.log", "LiNaK_stderr_*.log"):
+            for stale in stdout_log.parent.glob(pattern):
+                try:
+                    if stale.is_file() and stale.stat().st_mtime < cutoff:
+                        stale.unlink()
+                except OSError:
+                    pass
+        # path -> [utf-8 decoder, byte offset]
+        self._stage_log_tail = {
+            path: [codecs.getincrementaldecoder("utf-8")(errors="replace"), 0]
+            for path in (stdout_log, stderr_log)
+        }
+        timer = QTimer(self)
+        timer.timeout.connect(self._poll_stage_logs)
+        timer.start(200)
+        self._stage_log_timer = timer
+        self._poll_stage_logs()
+
+    def _poll_stage_logs(self) -> None:
+        """Append new bytes of the child's log files to the Console tab."""
+        for path, entry in self._stage_log_tail.items():
+            decoder, offset = entry
+            try:
+                size = path.stat().st_size
+            except OSError:
+                continue
+            if size <= offset:
+                continue
+            try:
+                with path.open("rb") as fh:
+                    fh.seek(offset)
+                    data = fh.read()
+            except OSError:
+                continue
+            entry[1] = size
+            self._log(decoder.decode(data), newline=False)
+
+    def _stop_stage_log_tail(self) -> None:
+        """Drain the tail once more and stop it."""
+        timer = getattr(self, "_stage_log_timer", None)
+        if timer is None:
+            return
+        self._poll_stage_logs()
+        timer.stop()
+        timer.deleteLater()
+        self._stage_log_timer = None
+        self._stage_log_tail = {}
+
+    def _reset_process_state(self):
+        """Return the run controls to idle once no child is running."""
+        self.run_btn.setEnabled(True)
+        self.stop_btn.setEnabled(False)
+        self.process = None
+
+    def _on_process_error(self, error):
+        proc = self.process
+        if proc is None or error == QProcess.ProcessError.Crashed:
+            return  # a crash (or Stop) is reported by finished()
+        message = proc.errorString()
+        self._log(f"\n[process error: {message}]")
+        self._stop_stage_log_tail()
+        if proc.state() == QProcess.NotRunning:
+            # FailedToStart emits no finished() signal, so the run controls
+            # must be reset here or the UI stays stuck on "Busy".
+            self.statusBar().showMessage(f"{self.current_stage['label']}: {message}")
+            self._reset_process_state()
 
     def _on_finished(self, stage, code, _status):
         ok = code == 0
@@ -3191,14 +1100,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(
             f"{stage['label']}: {'finished' if ok else f'failed (exit {code})'}"
         )
-        self.run_btn.setEnabled(True)
-        self.stop_btn.setEnabled(False)
-        if self.process is not None:
-            self.process.closeWriteChannel()
-        self.process = None
-        self._interactive_stage = None
-        self._prompt_buffer = ""
-        self._answered_prompt_keys = set()
+        self._reset_process_state()
         self._refresh_all()
 
     def _log(self, text: str, newline=True):
@@ -3210,15 +1112,12 @@ class MainWindow(QMainWindow):
 
     # output lists / viewer
     def _refresh_stage_markers(self):
+        ws = Workspace(root=self.root)
         for i in range(self.stage_list.count()):
             item = self.stage_list.item(i)
             stage = STAGE_BY_ID[item.data(Qt.UserRole)]
-            done = False
-            if self.current_species:
-                done = any(
-                    (self.root / p.format(el=self.current_species)).exists()
-                    for p in stage["outputs"]
-                )
+            done = bool(self.current_species) and stage_has_output(
+                stage, ws, self.current_species)
             mark = "\u2713 " if done else "\u00b7  "
             item.setText(f"{mark}[{stage['symbol']}]  {stage['label']}")
 
@@ -3283,16 +1182,9 @@ class MainWindow(QMainWindow):
         self._refresh_species_outputs()
         self._refresh_shared_outputs()
         self._refresh_overview()
-        self._refresh_overview()
 
     def _update_status(self):
-        if is_project_root(self.root):
-            self.statusBar().showMessage(f"Project: {self.root}")
-        else:
-            self.statusBar().showMessage(
-                f"'{self.root}' doesn't look like a LiNaK folder \u2014 "
-                "use File > Open LiNaK project folder..."
-            )
+        self.statusBar().showMessage(f"Output folder: {self.root}")
 
     def _on_output_clicked(self, item: QListWidgetItem):
         data = item.data(Qt.UserRole)
@@ -3306,7 +1198,8 @@ class MainWindow(QMainWindow):
         if kind == "PLOT":
             if HAS_WEBENGINE:
                 self.viewer_stack.setCurrentIndex(0)
-                self.web_view.load(QUrl.fromLocalFile(str(self._local_plot_copy(path))))
+                self.web_view.load(
+                    QUrl.fromLocalFile(str(local_plot_copy(path, self._plot_cache_dir))))
             else:
                 self.viewer_stack.setCurrentIndex(2)
                 self.fallback_path = path
@@ -3314,51 +1207,16 @@ class MainWindow(QMainWindow):
             self.viewer_stack.setCurrentIndex(1)
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
-                self.json_view.setPlainText(json.dumps(data, indent=2))
+                self.json_view.setPlainText(json.dumps(data, indent=2, ensure_ascii=False))
             except Exception as exc:  # noqa: BLE001 - show any parse error to the user
                 self.json_view.setPlainText(f"Failed to parse {path.name}:\n{exc}")
-
-    def _local_plot_copy(self, path: Path) -> Path:
-        """
-        Return a locally-renderable copy of a generated Plotly HTML file.
-        The *whole directory* it lives in is mirrored into a temp cache
-        with every .html file's CDN <script> tag rewritten to the bundled
-        vendor/plotly.min.js -- not just the one file being opened. That
-        matters because "hub" pages such as <el>_blackbody.html embed
-        sibling files (<el>_blackbody_shifts.html, etc.) in an <iframe> by
-        a same-directory relative path, and that link only resolves if the
-        sibling sits patched right next to it -- otherwise the hub loads
-        but its embedded frame is blank / still hits the CDN.
-        Cached by mtime, so repeat views are instant; nothing under
-        plots/ on disk is ever modified.
-        """
-        if not VENDOR_PLOTLY_JS.exists() or not path.exists():
-            return path  
-        src_dir = path.parent
-        key = hashlib.sha1(str(src_dir.resolve()).encode("utf-8")).hexdigest()[:16]
-        dest_dir = self._plot_cache_dir / key
-        try:
-            dest_dir.mkdir(parents=True, exist_ok=True)
-            vendor_url = QUrl.fromLocalFile(str(VENDOR_PLOTLY_JS)).toString()
-            for src_file in src_dir.glob("*.html"):
-                dest_file = dest_dir / src_file.name
-                if dest_file.exists() and dest_file.stat().st_mtime >= src_file.stat().st_mtime:
-                    continue
-                html = src_file.read_text(encoding="utf-8", errors="replace")
-                patched, n = PLOTLY_CDN_TAG_RE.subn(
-                    f'<script src="{vendor_url}"></script>', html, count=1)
-                dest_file.write_text(patched if n else html, encoding="utf-8")
-        except OSError:
-            return path
-        candidate = dest_dir / path.name
-        return candidate if candidate.exists() else path
 
     def _open_fallback_in_browser(self):
         if self.fallback_path is not None:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.fallback_path)))
 
     def _open_file_dialog(self):
-        start_dir = str(self.root / PLOTS_DIR)
+        start_dir = str(Workspace(root=self.root).plots_dir)
         path_str, _filter = QFileDialog.getOpenFileName(
             self, "Open plot or JSON file", start_dir,
             "Plots and data (*.html *.json);;All files (*)",
@@ -3377,7 +1235,3 @@ def main():
     window = MainWindow()
     window.show()
     return app.exec()
-
-
-if __name__ == "__main__":
-    main()
