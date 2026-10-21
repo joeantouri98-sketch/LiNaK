@@ -200,7 +200,11 @@ def isat_from_sigma(wl_nm, sigma_m2, tau_s):
     """
     Saturation intensity [W/m²] from cross-section and lifetime.
     I_sat = hν / (2 σ τ)
+    Returns 0.0 (= "undefined", the file's convention for a missing I_sat) when σ or τ is not
+    a positive number, instead of dividing by zero.
     """
+    if not (sigma_m2 and tau_s and sigma_m2 > 0 and tau_s > 0):
+        return 0.0
     E_J = h * c / (wl_nm * 1e-9)
     return E_J / (2 * sigma_m2 * tau_s)
 
@@ -417,6 +421,8 @@ def build_from_literature(element, T_K):
         tau  = lit.get(tau_key)
         fosc = lit.get(fosc_key)
         if wl is None or tau is None:
+            return None
+        if tau <= 0:
             return None
         tau_s = tau * 1e-9
         A_s   = 1.0 / tau_s

@@ -2856,7 +2856,9 @@ _SOURCE_GROUPS = {
     'ORCA': 'ORCA', 'EOM-CCSD': 'ORCA',
     'Numerov': 'Numerov',
     'Coulomb': 'Coulomb', 'Coulomb(approx)': 'Coulomb',
-    'unknown': 'Coulomb',
+    # 'unknown' (and any source string not listed) gets its OWN group: lumping it into
+    # Coulomb would present an unclassified f-value as an approximation of known provenance.
+    'unknown': 'unclassified',
 }
 
 for _t in _lifetimes_trans:
@@ -2867,7 +2869,7 @@ for _t in _lifetimes_trans:
     _dE  = _t['delta_E_eV']
     _ul  = _t['upper_label']
     _ll  = _t['lower_label']
-    _src = _SOURCE_GROUPS.get(_t.get('fosc_source', ''), 'Coulomb')
+    _src = _SOURCE_GROUPS.get(_t.get('fosc_source', ''), 'unclassified')
     _reg = _t.get('region', '')
     _acc = _t.get('fosc_acc') or _t.get('fosc_source', '')
     _A   = _t.get('A_s', 0)
@@ -2903,7 +2905,9 @@ print(f"  Absorption lines (gs→X): {len(_abs_lines)} "
       f"ORCA:{sum(1 for r in _abs_lines if r['src']=='ORCA')} "
       f"Numerov:{sum(1 for r in _abs_lines if r['src']=='Numerov')} "
       f"literature:{sum(1 for r in _abs_lines if r['src']=='literature')} "
-      f"Coulomb:{sum(1 for r in _abs_lines if r['src']=='Coulomb')}]")
+      f"NIST-extrap:{sum(1 for r in _abs_lines if r['src']=='NIST-extrap')} "
+      f"Coulomb:{sum(1 for r in _abs_lines if r['src']=='Coulomb')} "
+      f"unclassified:{sum(1 for r in _abs_lines if r['src']=='unclassified')}]")
 
 # ── Build spectra per source and broadening type ──────────────────────────────
 # ── Adaptive wavelength grid ──────────────────────────────────────────────────
@@ -3006,6 +3010,7 @@ _num_lines    = [r for r in _abs_lines if r['src'] == 'Numerov']
 _nxt_lines    = [r for r in _abs_lines if r['src'] == 'NIST-extrap']
 _lit_lines    = [r for r in _abs_lines if r['src'] == 'literature']
 _coul_lines   = [r for r in _abs_lines if r['src'] == 'Coulomb']
+_unk_lines    = [r for r in _abs_lines if r['src'] == 'unclassified']
 
 _SRC_LINE_GROUPS = [
     ('NIST', _nist_lines),
@@ -3014,6 +3019,7 @@ _SRC_LINE_GROUPS = [
     ('NIST-extrap', _nxt_lines),
     ('literature', _lit_lines),
     ('Coulomb', _coul_lines),
+    ('unclassified', _unk_lines),
     ('All', _abs_lines),
 ]
 
@@ -3031,6 +3037,7 @@ _SRC_COLORS = {
     'NIST': '#1a6eb5', 'ORCA': '#c0392b', 'Numerov': '#0e7c6b',
     'NIST-extrap': '#5b9bd5',
     'literature': '#c47a00', 'Coulomb': '#27ae60',
+    'unclassified': '#7f8c8d',
 }
 _SRC_COLORS_JS = json.dumps(_SRC_COLORS)   # serialised for JS f-string injection
 _BROAD_COLORS = {
@@ -3049,6 +3056,12 @@ _BROAD_COLORS = {
     ('Coulomb', 'doppler'):      '#27ae60',
     ('Coulomb', 'instrumental'): '#58d68d',
     ('Coulomb', 'natural'):      '#1e8449',
+    ('NIST-extrap', 'doppler'):      '#5b9bd5',
+    ('NIST-extrap', 'instrumental'): '#85c1e9',
+    ('NIST-extrap', 'natural'):      '#2e6a9e',
+    ('unclassified', 'doppler'):      '#7f8c8d',
+    ('unclassified', 'instrumental'): '#aab7b8',
+    ('unclassified', 'natural'):      '#5f6a6a',
     ('All',     'doppler'):      '#8e44ad',
     ('All',     'instrumental'): '#bb8fce',
     ('All',     'natural'):      '#6c3483',
@@ -3101,7 +3114,9 @@ for _src_key, _lines, _col in [
         ('ORCA',       _orca_lines, _SRC_COLORS['ORCA']),
         ('Numerov',    _num_lines,  _SRC_COLORS['Numerov']),
         ('literature', _lit_lines,  _SRC_COLORS['literature']),
+        ('NIST-extrap', _nxt_lines, _SRC_COLORS['NIST-extrap']),
         ('Coulomb',    _coul_lines, _SRC_COLORS['Coulomb']),
+        ('unclassified', _unk_lines, _SRC_COLORS['unclassified']),
 ]:
     if not _lines:
         continue
@@ -3126,7 +3141,9 @@ for _src_key, _lines, _col in [
         ('ORCA',       _orca_lines, _SRC_COLORS['ORCA']),
         ('Numerov',    _num_lines,  _SRC_COLORS['Numerov']),
         ('literature', _lit_lines,  _SRC_COLORS['literature']),
+        ('NIST-extrap', _nxt_lines, _SRC_COLORS['NIST-extrap']),
         ('Coulomb',    _coul_lines, _SRC_COLORS['Coulomb']),
+        ('unclassified', _unk_lines, _SRC_COLORS['unclassified']),
 ]:
     if not _lines:
         continue

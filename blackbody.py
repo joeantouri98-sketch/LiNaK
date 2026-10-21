@@ -124,7 +124,14 @@ def bbr_static_shift_hz(alpha0_au, T_K):
     """
     E2_au = mean_E_squared_au(T_K)
     dE_au = -0.5 * alpha0_au * E2_au
-    return dE_au * HARTREE_TO_HZ
+    return dE_au * HARTREE_TO_HZ + 0.0      # + 0.0 turns IEEE -0.0 (T = 0) into 0.0
+
+
+def _pct_str(num, den, fmt='+.3f'):
+    """'num/den in %' formatted, or 'n/a' when the denominator is zero (e.g. T = 0 K)."""
+    if den == 0:
+        return 'n/a'
+    return format(num / den * 100, fmt) + '%'
 
 
 def _u_planck_arr(omega_rad_s, T_K):
@@ -811,7 +818,7 @@ def run_rydberg_shifts(element, data, T_K=300.0, n_min=None, n_max=None,
         extra = ''
         if hit.get('shift_dyn_hz') is not None:
             extra = (f", dnu_dyn = {hit['shift_dyn_hz']:+.4g} Hz"
-                     f" (FW ratio = {hit['shift_dyn_hz']/fw:.3f})")
+                     f" (FW ratio = {hit['shift_dyn_hz']/fw:.3f})" if fw else " (FW ratio n/a: Farley-Wing shift is 0)")
             cm = hit.get('cont_meta') or {}
             if do_cont and cm.get('trk_scale') is not None:
                 extra += f" [TRK scale={cm['trk_scale']:g}]"
@@ -1527,11 +1534,11 @@ def run_element(element, excited_label=None, T_K=300.0, data_dir='data_json',
     print(f"\n  At T = {T_K:.1f} K:")
     print(f"    dnu_stat(ground)    = {shift_gs_T:+.4f} Hz")
     print(f"    dnu_total(ground)   = {dyn_gs_T:+.4f} Hz   "
-          f"(dynamic correction: {corr_gs_T:+.5f} Hz, {corr_gs_T/shift_gs_T*100:+.3f}%)")
+          f"(dynamic correction: {corr_gs_T:+.5f} Hz, {_pct_str(corr_gs_T, shift_gs_T)})")
     if shift_ex_T is not None:
         print(f"    dnu_stat(excited)   = {shift_ex_T:+.4f} Hz")
         print(f"    dnu_total(excited)  = {dyn_ex_T:+.4f} Hz   "
-              f"(dynamic correction: {corr_ex_T:+.5f} Hz, {corr_ex_T/shift_ex_T*100:+.3f}%)")
+              f"(dynamic correction: {corr_ex_T:+.5f} Hz, {_pct_str(corr_ex_T, shift_ex_T)})")
         print(f"    dnu_stat(diff)      = {shift_diff_T:+.4f} Hz   "
               f"(excited - ground; shift on the {gs_label}->{excited_label} transition)")
         print(f"    dnu_total(diff)     = {dyn_diff_T:+.4f} Hz")

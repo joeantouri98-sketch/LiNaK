@@ -102,8 +102,15 @@ if os.path.exists(ct_file):
                     'A':    d['A_s'],
                     'Isat': d['Isat_nat_mWcm2'],
                     'tau':  d['tau_ns'],
-                    'vrec': d.get('v_rec_ms', 1.0),
-                    'Erec': d.get('E_rec_nK', 100.0),
+                    # comparison_table.json stores the recoil velocity in m/s (v_rec_ms) and,
+                    # when present, in cm/s (v_rec_cms); the table below is labelled cm/s, so
+                    # convert. If neither is stored, compute h/(lambda m) rather than invent 1.0.
+                    'vrec': (d['v_rec_cms'] if d.get('v_rec_cms') is not None else
+                             d['v_rec_ms'] * 100.0 if d.get('v_rec_ms') is not None else
+                             2 * np.pi * hbar / (d['wl_nm'] * 1e-9 * row['mass_amu'] * amu) * 100.0),
+                    'Erec': (d['E_rec_nK'] if d.get('E_rec_nK') is not None else
+                             (2 * np.pi * hbar / (d['wl_nm'] * 1e-9)) ** 2
+                             / (2 * row['mass_amu'] * amu) / kB * 1e9),
                 }
     print(f"Loaded {len(ELEMENTS)} elements from {ct_file}")
 else:
@@ -153,7 +160,8 @@ def v_capture(G, k):
     return G / k  # m/s
 
 def recoil_vel(el, line):
-    return ELEMENTS[el][line].get('vrec', 1.0)  # cm/s
+    """Single-photon recoil velocity in cm/s (as stored in ELEMENTS[...]['vrec'])."""
+    return ELEMENTS[el][line]['vrec']
 
 # ============================================================================
 # BUILD ALL TRACES FOR EACH ELEMENT × LINE COMBINATION
