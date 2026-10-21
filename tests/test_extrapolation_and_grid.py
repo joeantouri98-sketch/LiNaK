@@ -134,3 +134,12 @@ def test_np_lifetimes_match_beterov_at_high_n(na_lifetimes):
         bav = 6.0 / (2.0 / b1 + 4.0 / b3)
         got = 6.0 / (2.0 / st[f"{n}p1/2"] + 4.0 / st[f"{n}p3/2"]) if f"{n}p1/2" in st else st[f"{n}p"]
         assert abs(got / bav - 1.0) < 0.05
+
+
+def test_extrapolated_5s_np_uncertainty_is_not_dominated_by_window_spread(na_lifetimes):
+    """Where extrapolation and the NIST-calibrated Numerov agree, quoted f uncertainty stays ~10-25 %
+    (the window-spread term alone reached 150-220 % at n=35-47 because a short window cannot fix the asymptote)."""
+    rows = [t for t in na_lifetimes["transitions"]
+            if t["fosc_source"] == "NIST-extrap" and t["lower_label"] == "5s" and t.get("fosc_model")]
+    assert rows and max(t["fosc_delta"] for t in rows) < 0.30
+    assert all("Numerov" in t["fosc_acc"] for t in rows)

@@ -84,7 +84,10 @@ EATOMIC_V_M     = 5.14220674763e11      # V/m  E_h/(e a₀)
 
 # FESHBACH / SCATTERING
 
-A_BAR_FACTOR = 0.955978                 # ā / β₆ (Gribakin–Flambaum)
+# Gribakin–Flambaum mean scattering length for a -C6/r^6 tail: abar = [2 pi / Gamma(1/4)^2] * beta6
+# with beta6 = (2 mu C6 / hbar^2)^(1/4). (The often-quoted 0.955978 multiplies R_vdW = beta6 / 2.)
+A_BAR_FACTOR = 0.4779888                # abar / beta6, = 2 pi / Gamma(1/4)^2
+A_BAR_FACTOR_RVDW = 0.9559776           # abar / R_vdW (R_vdW = beta6 / 2)
 
 
 # MASSES
@@ -138,6 +141,29 @@ ALKALI_MASS_AMU = {
     'Li': 7.016004, 'Na': 22.989769, 'K': 38.963707,
     'Rb': 86.909180, 'Cs': 132.905452, 'Fr': 223.019736,
 }
+
+
+# Natural isotopic abundance (atom %, IUPAC / NIST). Used to pick the DEFAULT isotope when the
+# user gives no --isotope; an explicit isotope always overrides it.
+NATURAL_ABUNDANCE_PCT = {
+    ('Li', 6): 7.59,  ('Li', 7): 92.41,
+    ('Na', 23): 100.0,
+    ('K', 39): 93.2581, ('K', 40): 0.0117, ('K', 41): 6.7302,
+    ('Rb', 85): 72.17, ('Rb', 87): 27.83,
+    ('Cs', 133): 100.0,
+}
+# Elements with no primordial isotope: the isotope the shipped constants files cover.
+DEFAULT_ISOTOPE_NO_ABUNDANCE = {'Fr': 210}
+
+
+def default_isotope_A(element):
+    """Mass number of the default isotope: the most abundant one in nature.
+    Elements without a natural abundance (Fr) use DEFAULT_ISOTOPE_NO_ABUNDANCE.
+    Returns None if the element is in neither table (caller falls back to its own rule)."""
+    cands = {A: p for (el, A), p in NATURAL_ABUNDANCE_PCT.items() if el == element}
+    if cands:
+        return max(cands, key=cands.get)
+    return DEFAULT_ISOTOPE_NO_ABUNDANCE.get(element)
 
 
 # EXPERIMENTAL REFERENCE TABLES (shared)

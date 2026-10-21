@@ -2,6 +2,7 @@
 """Na magnetic Feshbach a(B) formula and literature-parameter anchors."""
 from __future__ import annotations
 
+import json
 import math
 
 import numpy as np
@@ -60,3 +61,41 @@ def test_multi_resonance_product_near_background(na_feshbach_params, anchors):
     vals = multi_resonance_a(B, na_feshbach_params["resonances"], a_bg)
     for v in vals:
         assert abs(float(v) - a_bg) / abs(a_bg) < 0.02
+
+
+# ---- PHYSICS_BUGS P1 / P10 / P16 --------------------------------------------------------------
+def test_a_bar_is_gribakin_flambaum_for_beta6():
+    """abar = 2 pi / Gamma(1/4)^2 * beta6 (= 0.956 * R_vdW with R_vdW = beta6/2)."""
+    from feshbach import a_bar_a0, beta6_a0
+    import pytest
+    assert a_bar_a0(100.0) == pytest.approx(100.0 * 2.0 * math.pi / math.gamma(0.25) ** 2, rel=1e-6)
+    b = beta6_a0(4698.0, 86.90918)          # Rb-87, C6 = 4698 au
+    assert 164.0 < b < 166.5                 # R_vdW = 82.9 a0
+    assert abs(a_bar_a0(b) - 78.99) < 0.2    # literature abar(Rb-87) = 78.99 a0
+    assert abs(a_bar_a0(b) - 0.955978 * b / 2.0) < 1e-3
+
+
+def test_shipped_na_out_json_has_corrected_a_bar(data_dir):
+    d = json.load(open(data_dir / "Na_feshbach_out.json"))
+    assert abs(d["a_bar_a0"] / d["beta6_a0"] - 0.477989) < 1e-4
+
+
+def test_nonpositive_c6_is_rejected_with_clear_error():
+    from feshbach import beta6_a0
+    import pytest
+    for bad in (-5.0, 0.0, float("nan")):
+        with pytest.raises(ValueError, match="C6"):
+            beta6_a0(bad, 23.0)
+
+
+def test_resonance_sign_convention_and_schema():
+    """a_bg > 0, Delta > 0: a -> +inf just below B0 and -inf just above; zero at B0 + Delta."""
+    import pytest
+    from feshbach import validate_feshbach_params
+    assert scattering_length(905.0 - 1e-3, 54.54, 905.0, 1.04) > 1e3
+    assert scattering_length(905.0 + 1e-3, 54.54, 905.0, 1.04) < -1e3
+    assert abs(float(scattering_length(906.04, 54.54, 905.0, 1.04))) < 1e-9
+    # negative Delta is legitimate (e.g. 6Li 834 G) and must pass; Delta = 0 must not
+    validate_feshbach_params({"resonances": [{"B0_G": 834.0, "Delta_G": -300.0, "a_bg_a0": -1405.0}]})
+    with pytest.raises(ValueError):
+        validate_feshbach_params({"resonances": [{"B0_G": 834.0, "Delta_G": 0.0}]})

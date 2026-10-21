@@ -773,6 +773,8 @@ for t in transitions:
 # ---------------------------------------------------------------------------
 _EXTRAP_K = 6
 _EXTRAP_MAX_RMS = 0.05
+_EXTRAP_MODEL_AGREE = 0.10   # extrap and model within 10 %: window spread is not used
+_EXTRAP_MODEL_FLOOR = 0.10   # typical Numerov scale spread (s->p ~ 10-20 %), kept as an uncertainty floor
 _EXTRAP_BACKOFF = (0, 2, 4)
 _extrap_info = {}
 n_extrapolated = 0       # recovered (previously dropped) channels
@@ -884,7 +886,7 @@ def _extrap_channel(tt, fits):
     rms = max(fit['rms'] for _, fit in used)
     dnist = max(fit['delta'] for _, fit in used)
     d_ex = (dnist**2 + rms**2 + (0.5 * spread)**2)**0.5
-    return dict(f=f_eff, A=A_ch, g_up=g_up, g_lo=g_l_, delta=d_ex, rms=rms, spread=spread,
+    return dict(f=f_eff, A=A_ch, g_up=g_up, g_lo=g_l_, delta=d_ex, d_nist=dnist, rms=rms, spread=spread,
                 n_fit_max=max(fit['n_max'] for _, fit in used))
 
 
@@ -926,12 +928,24 @@ if (_gate_drops or _model_rows) and not _is_metal:
         f_model = tt['fosc']
         _extrap_vs_model[(tt['lower_label'], tt['upper_l'])].append(res['f'] / f_model if f_model else float('nan'))
         d_mod = abs(res['f'] / f_model - 1.0) / 2.0 if f_model else 0.0
-        d_tot = (res['delta']**2 + d_mod**2)**0.5
+        if f_model and abs(res['f'] / f_model - 1.0) < _EXTRAP_MODEL_AGREE:
+            # Two different estimates (NIST-series extrapolation, NIST-calibrated grid-converged Numerov)
+            # agree: the window-to-window spread only measures how poorly a SHORT window fixes the
+            # asymptote a of y = a + b/n*^2 (it grows ~ linearly with n), not the error of the value.
+            # Use NIST accuracy + fit rms + half the extrap/model difference + the Numerov scale spread floor.
+            d_ex = (res['d_nist']**2 + res['rms']**2)**0.5
+            d_tot = (d_ex**2 + d_mod**2 + _EXTRAP_MODEL_FLOOR**2)**0.5
+            _acc_txt = (f"extrap(n>{res['n_fit_max']}, rms {100*res['rms']:.1f}%, "
+                        f"within {100*abs(res['f'] / f_model - 1.0):.0f}% of Numerov)")
+        else:
+            d_tot = (res['delta']**2 + d_mod**2)**0.5
+            _acc_txt = (f"extrap(n>{res['n_fit_max']}, rms {100*res['rms']:.1f}%, "
+                        f"window spread {100*res['spread']:.0f}%)")
         tt['fosc_model'] = f_model
         tt['fosc_model_source'] = tt['fosc_source']
         tt['fosc'] = res['f']
         tt['fosc_source'] = 'NIST-extrap'
-        tt['fosc_acc'] = f"extrap(n>{res['n_fit_max']}, rms {100*res['rms']:.1f}%, window spread {100*res['spread']:.0f}%)"
+        tt['fosc_acc'] = _acc_txt
         tt['fosc_delta'] = d_tot
         tt['g_upper'], tt['g_lower'] = res['g_up'], res['g_lo']
         tt['A_s'] = res['A']

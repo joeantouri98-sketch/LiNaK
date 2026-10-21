@@ -6,6 +6,10 @@
   "Q_barn": -0.04,
   "gI": 2.170938,
   "special": {
+    "cycling": [
+      2.0,
+      3.0
+    ],
     "microwave_clock": {
       "F_upper": 2.0,
       "F_lower": 1.0,
@@ -16,6 +20,12 @@
       "wavelength_cm": 37.33646225365694,
       "note": "Zero-field ground \u0394F=1 interval (m_F=0 clock to first order in B)",
       "state": "2s1/2"
+    },
+    "cycling_line": {
+      "lower": "2s1/2",
+      "upper": "2p3/2",
+      "F_lower": 2.0,
+      "F_upper": 3.0
     }
   },
   "states": [

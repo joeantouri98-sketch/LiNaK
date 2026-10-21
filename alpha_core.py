@@ -269,6 +269,8 @@ def load_nist_metal_lines(element, f_values_dir='f_values', verbose=True,
     n_fik = 0
     n_rows = 0
     n_skip = 0
+    n_dup = 0
+    max_dup_spread = 0.0
 
     for _row in _reader:
         try:
@@ -354,7 +356,10 @@ def load_nist_metal_lines(element, f_values_dir='f_values', verbose=True,
                     sigma_line[key] = f_abs * delta
                     gA_line[key] = _gA if _gA > 0 else None
                 else:
+                    n_dup += 1
                     if _fik is not None and _fik > 0:
+                        max_dup_spread = max(max_dup_spread,
+                                             abs(_fik - fosc_line[key]) / max(fosc_line[key], 1e-30))
                         fosc_line[key] = 0.5 * (fosc_line[key] + _fik)
                     if _gA > 0:
                         prev = gA_line.get(key) or 0.0
@@ -390,6 +395,10 @@ def load_nist_metal_lines(element, f_values_dir='f_values', verbose=True,
         print(f"  NIST metal lines loaded: {n_rows} rows, "
               f"{len(fosc_line)} unique (lo,up) from {nist_file}  "
               f"({n_fik} published fik; skipped {n_skip})")
+        if n_dup:
+            print(f"    note: {n_dup} duplicate (lo,up) label pairs merged in fosc_line "
+                  f"(published fik averaged; max spread {max_dup_spread:.0%}). The line-level "
+                  f"tables (lines / fosc_jl) keep every line separately.")
     return out
 
 
@@ -1207,11 +1216,54 @@ def _ls_state_term(t, state_label, data):
     return f, src, +1
 
 
+
+# ── f-value uncertainty (P11) ───────────────────────────────────────────────
+# Relative 1σ on each oscillator strength: the NIST/literature accuracy grade when known,
+# otherwise a per-source estimate. These are estimates, not measurements: NIST grades are
+# NIST's own; the Numerov / Coulomb numbers are the typical spread of those models against
+# NIST-graded A–B lines. The ionic-core term carries no uncertainty (α_core's own error is
+# NOT included in the propagated α and C₆ errors).
+SOURCE_REL_UNCERTAINTY = {
+    'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'ORCA': 0.25,
+    'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
+}
+
+
+def fosc_rel_uncertainty(src, acc=None):
+    """Relative 1σ of one f-value from its accuracy grade (if any) or its source."""
+    if acc in ACC_UNCERTAINTY:
+        return ACC_UNCERTAINTY[acc]
+    return SOURCE_REL_UNCERTAINTY.get(src, SOURCE_REL_UNCERTAINTY['unknown'])
+
+
+def _transition_acc(src, data, lower_label, upper_label, upper_J):
+    """NIST / literature accuracy grade of the row actually used, or None."""
+    try:
+        ll, ul = parse_state_nl(lower_label), parse_state_nl(upper_label)
+    except Exception:
+        return None
+    for key in ((ll, ul), (ul, ll)):
+        if src == 'NIST':
+            if upper_J:
+                g = (data.get('nist_acc_j') or {}).get((key[0], key[1], upper_J))
+                if g:
+                    return g
+            g = (data.get('nist_acc') or {}).get(key)
+            if g:
+                return g
+        elif src == 'literature':
+            if upper_J:
+                g = (data.get('literature_acc_j') or {}).get((key[0], key[1], upper_J))
+                if g:
+                    return g
+    return None
+
+
 def build_transitions_for_state(state_label, data, all_transitions):
     """
     Build signed transition list for polarizability sums.
 
-    Each entry: delta_E_au, fosc, sign, other_label, source, wl_nm
+    Each entry: delta_E_au, fosc, sign, other_label, source, wl_nm, sigma_f (1σ on fosc)
     sign = +1 upward from state, -1 downward from state.
     """
     result = []
@@ -1258,6 +1310,8 @@ def build_transitions_for_state(state_label, data, all_transitions):
                 other_label = other_label,
                 source      = src,
                 wl_nm       = t['wavelength_nm'],
+                sigma_f     = f * fosc_rel_uncertainty(
+                    src, _transition_acc(src, data, ll, ul, upper_J)),
             ))
             continue
 
@@ -1290,6 +1344,8 @@ def build_transitions_for_state(state_label, data, all_transitions):
             other_label = other_label,
             source      = src,
             wl_nm       = t['wavelength_nm'],
+            sigma_f     = f * fosc_rel_uncertainty(
+                src, _transition_acc(src, data, ll, ul, upper_J)),
         ))
 
     # ── Ionic-core contribution ──────────────────────────────────────────────
@@ -1310,6 +1366,7 @@ def build_transitions_for_state(state_label, data, all_transitions):
             other_label = 'core',
             source      = 'core',
             wl_nm       = 45.56335 / omega_c,
+            sigma_f     = 0.0,
         ))
 
     return result
@@ -1356,14 +1413,77 @@ def alpha0_static(transitions_list):
 
 
 def alpha_imag_freq(xi_au, transitions_list):
-    """Polarizability at imaginary frequency iξ (atomic units)."""
+    """
+    Polarizability at imaginary frequency iξ (atomic units):  α(iξ) = Σ_k s_k f_k / (ΔE_k² + ξ²),
+    with s_k = +1 for transitions upward from the state and −1 downward (same signs as
+    alpha_real). For a ground state every s_k = +1, so α(iξ) > 0; for an excited state the
+    downward terms are negative and α(iξ) can change sign.
+    """
     result = 0.0
     for tr in transitions_list:
         dE    = abs(tr['delta_E_au'])
         f     = tr['fosc']
         denom = dE**2 + xi_au**2
-        result += f / denom
+        result += tr.get('sign', 1.0) * f / denom
     return result
+
+
+def alpha_sigma(omega_au, transitions_list, guard=1e-4):
+    """
+    1σ on α(ω) from the f-value uncertainties, assuming independent errors (quadrature):
+        σ_α² = Σ_k [σ_f,k / (ΔE_k² − ω²)]²
+    Transitions without 'sigma_f' contribute 0. ω = 0 gives the static-α error.
+    """
+    var = 0.0
+    for tr in transitions_list:
+        s = tr.get('sigma_f') or 0.0
+        if s == 0.0:
+            continue
+        dE = abs(tr['delta_E_au'])
+        denom = dE**2 - omega_au**2
+        if abs(denom) < guard * dE:
+            continue
+        var += (s / denom) ** 2
+    return math.sqrt(var)
+
+
+def c6_sigma(transitions_A, transitions_B=None, n_x=4000):
+    """
+    1σ on C₆ = (3/π)∫ α_A(iξ) α_B(iξ) dξ (B = A for the homonuclear case) from independent
+    f-value errors, by first-order propagation: σ_C6² = Σ_k (∂C₆/∂f_k · σ_k)², where
+        ∂C₆/∂f_k = (3/π) ∫ s_k/(ΔE_k² + ξ²) · [α_other(iξ)(+ α_same for A=B)] dξ.
+    Integrated on the same log-mapped grid as compute_C6 (trapezoid, n_x points).
+    """
+    homo = transitions_B is None
+    B = transitions_A if homo else transitions_B
+    def _grid(tr):
+        dEs = [abs(t['delta_E_au']) for t in tr if t['delta_E_au'] != 0]
+        return min(dEs), max(dEs)
+    lo = min(_grid(transitions_A)[0], _grid(B)[0])
+    hi = max(_grid(transitions_A)[1], _grid(B)[1])
+    xi0 = 0.1 * lo
+    x = np.linspace(0.0, math.log(1.0 + 10.0 * hi / xi0), n_x)
+    xi = xi0 * (np.exp(x) - 1.0)
+    w = xi0 * np.exp(x)                       # dξ/dx
+
+    def _alpha_and_kernel(tr):
+        dE = np.array([abs(t['delta_E_au']) for t in tr])
+        s = np.array([t.get('sign', 1.0) for t in tr])
+        f = np.array([t['fosc'] for t in tr])
+        kern = s[None, :] / (dE[None, :] ** 2 + xi[:, None] ** 2)    # (n_x, M)
+        return kern @ f, kern
+    aA, kA = _alpha_and_kernel(transitions_A)
+    aB, kB = (aA, kA) if homo else _alpha_and_kernel(B)
+
+    var = 0.0
+    sA = np.array([t.get('sigma_f') or 0.0 for t in transitions_A])
+    gA = (3.0 / math.pi) * np.trapezoid((kA * (2 * aA if homo else aB)[:, None]) * w[:, None], x, axis=0)
+    var += float(np.sum((gA * sA) ** 2))
+    if not homo:
+        sB = np.array([t.get('sigma_f') or 0.0 for t in B])
+        gB = (3.0 / math.pi) * np.trapezoid((kB * aA[:, None]) * w[:, None], x, axis=0)
+        var += float(np.sum((gB * sB) ** 2))
+    return math.sqrt(var)
 
 
 def alpha_real_vectorized(omega_au_arr, transitions_list, guard=1e-4):

@@ -12,11 +12,12 @@ a constant at fixed intensity, not a second independent calculation.
 Physics summary
 ---------------
 Dynamic polarizability (atomic units):
-    α_n(ω) = (2/3) Σ_k  f_nk · (E_k - E_n) / [(E_k - E_n)² - ω²]
+    α_n(ω) = Σ_k  s_k · f_nk / [(E_k - E_n)² - ω²]
 
-where f_nk is the absorption oscillator strength, energies in Hartree,
-ω in Hartree (= atomic units of frequency).  Positive terms: transitions
-upward (k above n).  Negative terms: transitions downward (k below n).
+where f_nk is the absorption oscillator strength (already the orientation-averaged
+value, so there is no extra 2/3 or ΔE prefactor), energies in Hartree, ω in Hartree
+(= atomic units of frequency).  s_k = +1 for transitions upward (k above n) and −1
+downward (k below n).
 
 Static polarizability: α(0)  [a₀³ = atomic units of volume]
 
@@ -26,7 +27,7 @@ C₆ coefficient via Casimir-Polder integral:
 
 where α(iξ) is the polarizability at imaginary frequency, which is smooth
 and positive everywhere (no resonances), computed by replacing ω → iξ:
-    α_n(iξ) = (2/3) Σ_k  f_nk · (E_k - E_n) / [(E_k - E_n)² + ξ²]
+    α_n(iξ) = Σ_k  s_k · f_nk / [(E_k - E_n)² + ξ²]
 
 Magic wavelengths: roots of  α_ground(ω) - α_excited(ω) = 0
 Found by scanning ω grid and bracketing sign changes, then bisecting.
@@ -106,6 +107,8 @@ from alpha_core import (
     L_CHAR,
     alpha0_static,
     alpha_imag_freq,
+    alpha_sigma,
+    c6_sigma,
     alpha_real,
     build_transitions_for_state,
     eV_to_au,
@@ -131,6 +134,8 @@ from constants import (
     KB_SI,
     AMU_KG,
     ATOMIC_MASS_AMU,
+    ISOTOPE_MASS_AMU,
+    default_isotope_A,
 )
 
 # ============================================================================
@@ -385,7 +390,7 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
-                data_dir='data_json'):
+                data_dir='data_json', isotope_A=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
@@ -426,6 +431,11 @@ def run_element(element, excited_label=None,
     # ── C₆ coefficient ──────────────────────────────────────────────────────
     print(f"  Computing C₆ (Casimir-Polder integral)...")
     C6 = compute_C6(trans_gs)
+    alpha0_sigma = alpha_sigma(0.0, trans_gs)
+    C6_sigma = c6_sigma(trans_gs) if trans_gs else 0.0
+    print(f"  f-value propagated 1σ (independent errors; core α excluded): "
+          f"α(0) ± {alpha0_sigma:.2f} au ({alpha0_sigma/abs(alpha0)*100:.1f}%)   "
+          f"C₆ ± {C6_sigma:.1f} au ({C6_sigma/abs(C6)*100:.1f}%)" if alpha0 and C6 else "")
     C6_expt = C6_EXPT.get(element)
 
     if C6_expt:
@@ -449,12 +459,12 @@ def run_element(element, excited_label=None,
         for t in all_transitions:
             if t['lower_label'] == gs_label:
                 candidates.append(t['upper_label'])
+        # Only states with a known energy can be ranked; an unknown energy must not
+        # masquerade as "lowest" (the old -999 default made it win).
+        candidates = [c for c in candidates if data['state_energy_au'].get(c) is not None]
         if candidates:
             # Pick the one with lowest energy
-            def sort_key(lbl):
-                E = data['state_energy_au'].get(lbl, -999)
-                return E
-            candidates.sort(key=sort_key)
+            candidates.sort(key=lambda lbl: data['state_energy_au'][lbl])
             excited_label = candidates[0]
 
     if excited_label:
@@ -489,7 +499,13 @@ def run_element(element, excited_label=None,
     # to be a separate script (acstark.py) that re-loaded polarizability.py's
     # saved output. Merged into one process: same physics, one fewer file.
     I_ref_Wm2 = kWcm2_to_Wm2(I_ref_kWcm2)
-    mass_amu  = ATOMIC_MASS_AMU.get(element)
+    # Trap frequencies need the mass of the ISOTOPE actually trapped (default: most abundant
+    # natural isotope; --isotope overrides), not the IUPAC average atomic weight.
+    iso_A = isotope_A if isotope_A is not None else default_isotope_A(element)
+    mass_amu = ISOTOPE_MASS_AMU.get((element, iso_A)) if iso_A is not None else None
+    if mass_amu is None:
+        mass_amu = ATOMIC_MASS_AMU.get(element)
+        iso_A = None
     if mass_amu is None:
         print(f"  ⚠  Mass for {element} unknown — trap frequencies will be skipped")
 
@@ -546,7 +562,9 @@ def run_element(element, excited_label=None,
         excited_label    = excited_used,
         alpha0_au        = round(alpha0, 4),
         alpha0_expt_au   = alpha0_expt,
+        alpha0_sigma_au  = round(alpha0_sigma, 4),
         C6_au            = round(C6, 2),
+        C6_sigma_au      = round(C6_sigma, 2),
         C6_expt_au       = C6_expt,
         magic_wavelengths = magic_results,
         transitions_gs   = trans_gs,
@@ -559,6 +577,7 @@ def run_element(element, excited_label=None,
         wl_max           = wl_max,
         I_ref_kWcm2      = I_ref_kWcm2,
         mass_amu         = mass_amu,
+        isotope_A        = iso_A,
         waist_um         = waist_um,
         point_result     = point_result,
     )
@@ -749,7 +768,8 @@ def plot_polarizability(result, out_dir):
     if alpha0_expt:
         err0 = (alpha0 - alpha0_expt) / alpha0_expt * 100
         a0_str += f" (expt: {alpha0_expt:.1f}, {err0:+.1f}%)"
-    mass_str = (f'm = {mass_amu:.3f} amu (IUPAC avg) &nbsp;·&nbsp; '
+    _iso = result.get('isotope_A')
+    mass_str = (f'm = {mass_amu:.3f} amu ({"%s-%d" % (result["element"], _iso) if _iso else "IUPAC avg"}) &nbsp;·&nbsp; '
                 if mass_amu else '')
 
     fig.update_layout(
@@ -1342,11 +1362,12 @@ def _trim_transitions(trans_list):
     """
     Keep only the fields needed to recompute alpha(omega) / alpha(i*xi) at any
     frequency: delta_E_au, fosc, sign, other_label, source, wl_nm. These are
-    exactly the fields alpha_real()/alpha_imag_freq() read — nothing else.
+    exactly the fields alpha_real()/alpha_imag_freq() read, plus sigma_f (the f-value 1σ used for error bars).
     """
     return [
         dict(delta_E_au=t['delta_E_au'], fosc=t['fosc'], sign=t['sign'],
-             other_label=t['other_label'], source=t['source'], wl_nm=t['wl_nm'])
+             other_label=t['other_label'], source=t['source'], wl_nm=t['wl_nm'],
+             sigma_f=t.get('sigma_f'))
         for t in trans_list
     ]
 
@@ -1365,7 +1386,9 @@ def save_json(result, data_dir='data_json'):
         excited_label=result['excited_label'],
         alpha0_au=result['alpha0_au'],
         alpha0_expt_au=result.get('alpha0_expt_au'),
+        alpha0_sigma_au=result.get('alpha0_sigma_au'),
         C6_au=result['C6_au'],
+        C6_sigma_au=result.get('C6_sigma_au'),
         C6_expt_au=result.get('C6_expt_au'),
         magic_wavelengths=result['magic_wavelengths'],
         n_gs_transitions=len(result['transitions_gs']),
@@ -1393,6 +1416,8 @@ def main():
     parser.add_argument('--heteronuclear', action='store_true')
     parser.add_argument('--data-dir', default='data_json')
     parser.add_argument('--n-grid', type=int, default=2000)
+    parser.add_argument('--isotope', type=int, default=None,
+                        help='Mass number A used for the trap-frequency mass (default: most abundant natural isotope)')
     parser.add_argument('--intensity', type=float, default=10.0)
     parser.add_argument('--waist', type=float, default=1.0)
     parser.add_argument('--wl', type=float, default=None)
@@ -1452,6 +1477,7 @@ def main():
             waist_um=args.waist,
             wl_point=args.wl,
             data_dir=data_dir,
+            isotope_A=args.isotope,
         )
         if result is None:
             continue

@@ -861,7 +861,7 @@ def add_rydberg_traces(fig, sorted_ryd, rydberg_energy_counts, rydberg_excitatio
             hover += (f'<br>\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
                       f'<br>\u03c4 = {tau:.2f} \u00b1 {sigma_tau:.2f} ns'
                       f'<br>Dominant: {src_str}  Overall: {qual_str}'
-                      f'<br>\u0394\u03bd_nat = {nat_lw:.4f} \u03bceV')
+                      f'<br>\u0394\u03bd_nat = {nat_lw:.3g} \u03bceV')
         hover += '<extra></extra>'
 
         show_leg = leg_key not in legend_done

@@ -58,6 +58,7 @@ from constants import (
     HBAR_EV_S,
     nuclide_label,
     nuclide_plain,
+    default_isotope_A,
 )
 
 # ============================================================================
@@ -67,7 +68,7 @@ from constants import (
 parser = argparse.ArgumentParser(description='Hyperfine structure and Zeeman diagram')
 parser.add_argument('element', nargs='?', default=None)
 parser.add_argument('--isotope',   type=int,   default=None,
-                    help='Mass number A (default: most abundant stable isotope)')
+                    help='Mass number A (default: the most abundant natural isotope; Fr: 210)')
 parser.add_argument('--states',    nargs='+',  default=None,
                     help='States to include e.g. 3s1/2 3p1/2 3p3/2')
 parser.add_argument('--B-max',     type=float, default=500.0,
@@ -83,7 +84,8 @@ parser.add_argument('--build-nuclear-data', action='store_true',
                     help='Rebuild nuclear_data.json from IAEA CSV files')
 parser.add_argument('--magn-csv',  default='Moments/magn_mom_recomm.csv')
 parser.add_argument('--elec-csv',  default='Moments/elec_mom_recomm.csv')
-args = parser.parse_args()
+# Parse the command line only when run as a script, so the module can be imported (tests, GUI).
+args = parser.parse_args() if __name__ == '__main__' else parser.parse_args([])
 
 DATA_DIR = args.data_dir
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -279,23 +281,9 @@ def fetch_hf_constants_nist(element, out_path):
     return None
 
 
-def load_hf_constants(element, data_dir):
-    """
-    Load hyperfine constants from data_json/<element>_hf_constants.json.
-    Returns dict: state_label -> {A_MHz, B_MHz} or None if file missing.
-    """
-    path = os.path.join(data_dir, f"{element}_hf_constants.json")
-    if not os.path.exists(path):
-        print(f"\n  No hf_constants file found for {element}.")
-        fetch_hf_constants_nist(element, path)
-        return None
-
-    with open(path) as f:
-        raw = json.load(f)
-
-    # Filter out metadata keys (starting with '_')
+def _parse_hf_block(block):
     hf = {}
-    for key, val in raw.items():
+    for key, val in block.items():
         if key.startswith('_'):
             continue
         if isinstance(val, dict) and 'A_MHz' in val:
@@ -306,7 +294,71 @@ def load_hf_constants(element, data_dir):
                 'gJ_exp': float(val['gJ_exp']) if 'gJ_exp' in val else None,
                 'S_exp':  float(val['S_exp'])  if 'S_exp'  in val else None,
             }
-    return hf if hf else None
+    return hf
+
+
+def _block_isotope_A(block, element):
+    """Mass number named in a block's '_isotope' string ('Rb-87 (I=3/2)' -> 87), or None."""
+    m = re.match(r'\s*' + re.escape(element) + r'-(\d+)', str(block.get('_isotope', '')))
+    return int(m.group(1)) if m else None
+
+
+def load_hf_constants(element, data_dir, isotope_A=None):
+    """
+    Load hyperfine constants from data_json/<element>_hf_constants.json for ONE isotope.
+    Returns dict: state_label -> {A_MHz, B_MHz, C_kHz, ...} or None if file missing.
+
+    Isotope handling (A = isotope_A; None = whatever the main block is):
+      1. main block's '_isotope' is element-A          -> use it
+      2. an alt block ('_Rb87_D_line', ...) is element-A -> use that block
+      3. otherwise rescale the main block from its reference isotope:
+            A_hf ∝ g_I   and   B_hf ∝ Q     (hyperfine anomaly neglected, ~0.1-1 %)
+         with a printed warning; C (octupole) is dropped (no scaling law).
+    Provenance of the last call is left in load_hf_constants.last_source (a string).
+    """
+    path = os.path.join(data_dir, f"{element}_hf_constants.json")
+    if not os.path.exists(path):
+        print(f"\n  No hf_constants file found for {element}.")
+        fetch_hf_constants_nist(element, path)
+        return None
+
+    with open(path) as f:
+        raw = json.load(f)
+
+    main_A = _block_isotope_A(raw, element)
+    load_hf_constants.last_source = f"main block ({raw.get('_isotope', 'isotope not stated')})"
+    if isotope_A is None or main_A is None or isotope_A == main_A:
+        hf = _parse_hf_block(raw)
+        return hf if hf else None
+
+    for key, val in raw.items():
+        if key.startswith('_') and isinstance(val, dict) and _block_isotope_A(val, element) == isotope_A:
+            hf = _parse_hf_block(val)
+            load_hf_constants.last_source = f"alt block {key} ({val.get('_isotope')})"
+            return hf if hf else None
+
+    # ---- no block for this isotope: rescale from the reference isotope ----
+    ref = get_isotope(element, main_A)
+    tgt = get_isotope(element, isotope_A)
+    base = _parse_hf_block(raw)
+    if not base or ref is None or tgt is None or not ref.get('g_I'):
+        print(f"  ERROR: no {element}-{isotope_A} hyperfine constants and cannot rescale "
+              f"from {element}-{main_A}; add a block to {path}")
+        return None
+    fA = tgt['g_I'] / ref['g_I']
+    fB = (tgt['Q_barn'] / ref['Q_barn']) if ref.get('Q_barn') else 0.0
+    hf = {}
+    for lbl, c in base.items():
+        hf[lbl] = dict(c, A_MHz=c['A_MHz'] * fA, B_MHz=c['B_MHz'] * fB, C_kHz=0.0)
+    load_hf_constants.last_source = (f"RESCALED from {element}-{main_A}: A x {fA:.5f} (g_I ratio), "
+                                     f"B x {fB:.5f} (Q ratio)")
+    print(f"  WARNING: no measured {element}-{isotope_A} hyperfine constants in {os.path.basename(path)}.\n"
+          f"           Rescaled from {element}-{main_A}: A x {fA:.5f} (g_I), B x {fB:.5f} (Q); "
+          f"hyperfine anomaly neglected (~0.1-1 %), octupole dropped.")
+    return hf
+
+
+load_hf_constants.last_source = ''
 
 # ============================================================================
 # STEP 3 — NUCLEAR DATA HELPERS
@@ -315,12 +367,17 @@ def load_hf_constants(element, data_dir):
 def get_isotope(element, A=None):
     """
     Return the isotope dict for (element, A).
-    If A is None: return the most abundant stable isotope
-    (or longest-lived if no stable isotope exists).
+    If A is None the default is the most abundant NATURAL isotope
+    (constants.default_isotope_A: Li-7, Na-23, K-39, Rb-85, Cs-133; Fr-210, the isotope the
+    shipped constants file covers). An explicit A always overrides the default.
+    Elements outside that table fall back to the highest-A stable isotope, else the longest-lived.
     """
     isos = NUCLEAR.get(element, [])
     if not isos:
         return None
+
+    if A is None:
+        A = default_isotope_A(element)
 
     if A is not None:
         for iso in isos:
@@ -329,18 +386,9 @@ def get_isotope(element, A=None):
         print(f"  Warning: {element}-{A} not found in nuclear_data.json")
         return None
 
-    # Priority: stable isotope with highest abundance (proxy: smallest A among stable)
     stable = [i for i in isos if i['stable']]
     if stable:
-        # For alkalis the most common stable isotope is usually the lightest stable one
-        # Use the one with the most common isotope conventions:
-        # Li-7 (92.5%), Na-23 (100%), K-39 (93.3%), Rb-87 (28%) or Rb-85 (72%)
-        # Cs-133 (100%), Fr: none stable
-        # Heuristic: pick the stable isotope with highest A (often most abundant for alkalis)
-        # This is imperfect — user can override with --isotope
         return stable[-1]
-
-    # No stable: return longest-lived
     return max(isos, key=lambda i: i['halflife_s'])
 
 
@@ -383,57 +431,52 @@ def F_levels(I, J):
     return Fs
 
 
+def _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, ident):
+    """
+    Hyperfine interaction as a polynomial in K = F(F+1) − I(I+1) − J(J+1) = 2 I·J.
+
+    K may be a float (energy of one |F⟩ level) or a square matrix (the operator 2 I·J in the
+    |m_I, m_J⟩ basis; `ident` is then the identity matrix). The SAME expression serves both, so the
+    Breit–Rabi Hamiltonian at B = 0 reproduces `hyperfine_energy` to machine precision.
+
+      dipole      E_A = A/2 · K
+      quadrupole  E_B = B · [3/2 K(K+1) − 2 I(I+1) J(J+1)] / [(2I−1) 2I (2J−1) 2J]
+      octupole    E_C = C · [5K²(K/4 + 1) + K(I(I+1) + J(J+1) + 3 − 3 I(I+1) J(J+1))
+                             − 5 I(I+1) J(J+1)] / [I(I−1)(2I−1) J(J−1)(2J−1)]
+
+    The octupole expression is Steck's (Rb/Cs D-line data); it equals, up to one constant, the
+    exact rank-3 angular factor (−1)^{I+J+F} {I J F; J I 3} (checked to 1e-16 for several I, J).
+    Quadrupole needs I ≥ 1 and J ≥ 1; octupole needs I ≥ 3/2 and J ≥ 3/2 (otherwise exactly 0).
+    """
+    mat = np.ndim(K) == 2
+    II, JJ = I * (I + 1), J * (J + 1)
+    E = 0.5 * A_MHz * K
+    if B_MHz != 0.0 and I >= 1.0 - 1e-9 and J >= 1.0 - 1e-9:
+        denom = (2*I - 1) * (2*I) * (2*J - 1) * (2*J)
+        if abs(denom) > 1e-12:
+            KK1 = K @ K + K if mat else K * (K + 1)
+            E = E + B_MHz * (1.5 * KK1 - 2 * II * JJ * ident) / denom
+    if C_kHz != 0.0 and I >= 1.5 - 1e-9 and J >= 1.5 - 1e-9:
+        denom = I * (I - 1) * (2*I - 1) * J * (J - 1) * (2*J - 1)
+        if abs(denom) > 1e-12:
+            K2 = K @ K if mat else K * K
+            K3 = K2 @ K if mat else K2 * K
+            poly = (1.25 * K3 + 5.0 * K2 + (II + JJ + 3 - 3 * II * JJ) * K - 5 * II * JJ * ident)
+            E = E + (C_kHz * 1e-3) * poly / denom
+    return E
+
+
 def hyperfine_energy(F, I, J, A_MHz, B_MHz=0.0, C_kHz=0.0):
     """
-    Hyperfine energy of state |I, J, F⟩ in MHz relative to the centroid.
+    Hyperfine energy of |I, J, F⟩ in MHz relative to the centroid, with magnetic dipole (A, MHz),
+    electric quadrupole (B, MHz) and magnetic octupole (C, kHz) terms. See `_hf_polynomial` for the
+    formulas (K = F(F+1) − I(I+1) − J(J+1)).
 
-    Includes three multipole terms:
-      Magnetic dipole (A):
-        E_A = (A/2) · K
-      Electric quadrupole (B):
-        E_B = B · [3K(K+1)/4 − I(I+1)J(J+1)] / [2I(2I−1)·2J(2J−1)]
-      Magnetic octupole (C):
-        E_C = C · K(K+1)(K+2) · [5K − 6I(I+1) − 6J(J+1) + ... ] / denom_oct
-        Simplified:  E_C = C · [5K³ + 3K²(1−2I(I+1)−2J(J+1)) + ...] / denom_oct
-      where K = F(F+1) − I(I+1) − J(J+1)
-
-    A in MHz, B in MHz, C in kHz (converted internally to MHz).
-    B term requires I >= 1 AND J >= 1.
-    C term requires I >= 3/2 AND J >= 3/2 (else identically zero).
-
-    Reference for octupole formula:
-      Armstrong (1971) Adv. At. Mol. Phys. 7:149
-      Woodgate (1966) Proc. Roy. Soc. A293:117
+    References: Steck, Alkali D Line Data (hyperfine structure section); Armstrong (1971)
+    Adv. At. Mol. Phys. 7:149.
     """
     K = F*(F+1) - I*(I+1) - J*(J+1)
-    E = 0.5 * A_MHz * K
-
-    # Quadrupole term — requires I >= 1 AND J >= 1
-    if B_MHz != 0.0 and I >= 1.0 - 1e-9 and J >= 1.0 - 1e-9:
-        denom_IJ = (2*I - 1) * (2*I) * (2*J - 1) * (2*J)
-        if abs(denom_IJ) > 1e-12:
-            E += B_MHz * (1.5*K*(K+1) - 2*I*(I+1)*J*(J+1)) / denom_IJ
-
-    # Octupole term — requires I >= 3/2 AND J >= 3/2
-    # Uses the Schwartz (1955) / Armstrong (1971) denominator:
-    #   (2I−1)(2I)(2I+1)(2I+2) × (2J−1)(2J)(2J+1)(2J+2)
-    # which is non-zero for I >= 3/2, J >= 3/2 (unlike the naive 2I-3 form).
-    # Typical magnitude: sub-kHz shifts, informational for all but optical clocks.
-    if C_kHz != 0.0 and I >= 1.5 - 1e-9 and J >= 1.5 - 1e-9:
-        C_MHz = C_kHz * 1e-3
-        denom_oct = (
-            (2*I - 1) * (2*I) * (2*I + 1) * (2*I + 2) *
-            (2*J - 1) * (2*J) * (2*J + 1) * (2*J + 2)
-        )
-        if abs(denom_oct) > 1e-12:
-            II  = I * (I + 1)
-            JJ  = J * (J + 1)
-            # Armstrong (1971) Adv. At. Mol. Phys. 7:149, eq. (3.5)
-            E_oct = (10*K*(K+1)*(K+2)
-                     - 12*(K+1)*II*JJ
-                     + 3*(K+1)*(II + JJ))
-            E += C_MHz * E_oct / denom_oct
-    return E
+    return _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, 1.0)
 
 
 def lande_gJ(L, S, J, gJ_exp=None):
@@ -487,20 +530,21 @@ def zeeman_energy_weak(F, mF, E_hf_MHz, gF):
 # ============================================================================
 
 def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
-                        B_gauss_array):
+                        B_gauss_array, C_kHz=0.0):
     """
     Exact Breit-Rabi diagonalisation for arbitrary B field.
 
-    Builds the full (2I+1)(2J+1) × (2I+1)(2J+1) Hamiltonian matrix
-    H = H_hf + H_Z   at each B value and diagonalises it.
+    Builds the full (2I+1)(2J+1) × (2I+1)(2J+1) Hamiltonian H = H_hf + H_Z and diagonalises it at
+    every B.
 
-    H_hf couples all |m_I, m_J⟩ states.
-    H_Z  = (g_J·μ_B·m_J − g_I·μ_N·m_I)·B   (diagonal in |m_I, m_J⟩ basis)
+    H_hf is the EXACT hyperfine operator (dipole + quadrupole + octupole, no approximation): the
+    operator K = 2 I·J is built in the |m_I, m_J⟩ basis (I_zJ_z + ½(I_+J_- + I_-J_+)) and the same
+    polynomial in K that gives the analytic F-level energies (`_hf_polynomial`) is applied to the
+    matrix. At B = 0 the eigenvalues therefore equal `hyperfine_energy` exactly, with (2F+1)-fold
+    degeneracy.
+    H_Z = (g_J μ_B m_J − g_I μ_N m_I) B  (diagonal in |m_I, m_J⟩).
 
-    Basis: |m_I, m_J⟩ ordered as:
-      m_I = −I, −I+1, ..., +I
-      m_J = −J, −J+1, ..., +J
-    Combined index: idx = (m_I_index)*(2J+1) + m_J_index
+    Basis index: idx = (m_I index)·(2J+1) + (m_J index), m = −I..+I, −J..+J.
 
     Returns:
       energies[B_idx, level_idx]  — sorted eigenvalues in MHz
@@ -516,45 +560,24 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
     def idx(mi_i, mj_i):
         return mi_i * dim_J + mj_i
 
-    # ── Build H_hf  (I·J operator in |m_I, m_J⟩ basis) ─────────────────────
-    # I·J = I_z·J_z + (1/2)(I_+·J_- + I_-·J_+)
-    # Matrix elements:
-    #   ⟨m_I, m_J|I_z·J_z|m_I, m_J⟩ = m_I·m_J
-    #   ⟨m_I+1, m_J-1|I_+·J_-|m_I, m_J⟩ = sqrt[(I-m_I)(I+m_I+1)(J+m_J)(J-m_J+1)]
-
-    H_hf = np.zeros((dim, dim))
-
-    # Diagonal: A/2 * K where K = F(F+1)-I(I+1)-J(J+1)
-    # But in |m_I,m_J⟩ basis H_hf is not diagonal.
-    # Build it directly from I·J:
+    # ── K = 2 I·J ───────────────────────────────────────────────────────────
+    # ⟨m_I, m_J|I_zJ_z|m_I, m_J⟩ = m_I m_J
+    # ⟨m_I+1, m_J−1|I_+J_-|m_I, m_J⟩ = sqrt[(I−m_I)(I+m_I+1)] sqrt[(J+m_J)(J−m_J+1)]
+    IJ = np.zeros((dim, dim))
     for mi_i, mI in enumerate(mI_vals):
         for mj_i, mJ in enumerate(mJ_vals):
             r = idx(mi_i, mj_i)
-            # I_z J_z term
-            H_hf[r, r] += A_MHz * mI * mJ
-
-            # Quadrupole B term — diagonal in |m_I, m_J⟩ basis:
-            # 3(I_z)²·(J_z)² - I²J²  ...  complex in this basis, use full tensor
-            # For simplicity include leading quadrupole correction diagonally:
-            # B·[3(m_I·m_J)² + 3(m_I·m_J)/2 - I(I+1)J(J+1)] / denom
-            if B_MHz_quad != 0.0 and I >= 1 and J >= 1:
-                denom = (2*I-1)*2*I*(2*J-1)*2*J
-                if abs(denom) > 1e-12:
-                    u = mI * mJ
-                    H_hf[r, r] += B_MHz_quad * (3*u*u + 1.5*u - I*(I+1)*J*(J+1)) / denom
-
-            # I_+ J_- term: ⟨m_I+1, m_J-1|...|m_I, m_J⟩
+            IJ[r, r] += mI * mJ
             if mi_i + 1 < dim_I and mj_i - 1 >= 0:
-                mI_p = mI_vals[mi_i + 1]
-                mJ_m = mJ_vals[mj_i - 1]
-                r2   = idx(mi_i+1, mj_i-1)
-                me   = (math.sqrt((I - mI)*(I + mI + 1)) *
-                        math.sqrt((J + mJ)*(J - mJ + 1)))
-                H_hf[r2, r] += 0.5 * A_MHz * me
-                H_hf[r, r2] += 0.5 * A_MHz * me   # Hermitian
+                r2 = idx(mi_i + 1, mj_i - 1)
+                me = (math.sqrt((I - mI)*(I + mI + 1)) *
+                      math.sqrt((J + mJ)*(J - mJ + 1)))
+                IJ[r2, r] += 0.5 * me
+                IJ[r, r2] += 0.5 * me
+    K_mat = 2.0 * IJ
+    H_hf = _hf_polynomial(K_mat, I, J, A_MHz, B_MHz_quad, C_kHz, np.eye(dim))
 
-    # ── Compute H_Z diagonal at each B ──────────────────────────────────────
-    # H_Z[r] = (gJ·μ_B·mJ − gI·μ_N·mI) · B
+    # ── H_Z diagonal (per Gauss) ────────────────────────────────────────────
     H_Z_diag = np.array([
         gJ * MU_B_MHz_G * mJ_vals[mj_i]
         - gI * MU_N_MHz_G * mI_vals[mi_i]
@@ -562,33 +585,29 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
         for mj_i in range(dim_J)
     ])
 
-    # ── Build |F, m_F⟩ basis ordering at B=0 for labelling ─────────────────
-    # Eigenvectors of H_hf at B=0 → identify (F, m_F) quantum numbers
-    evals0, evecs0 = np.linalg.eigh(H_hf)
-    # For each eigenvector find the dominant |m_I, m_J⟩ and infer F, m_F
+    # ── (F, m_F) labels at B = 0 ────────────────────────────────────────────
+    # A vanishing probe field along z splits each (2F+1)-fold level by m_F so that the eigenvectors
+    # are m_F eigenstates (H_hf commutes with F_z = m_I + m_J); it is far below any energy scale.
+    mF_diag = np.array([mI_vals[i] + mJ_vals[j] for i in range(dim_I) for j in range(dim_J)])
+    evals0, evecs0 = np.linalg.eigh(H_hf + np.diag(1e-9 * mF_diag))
+    Fs = F_levels(I, J)
+    E_F = {F_: hyperfine_energy(F_, I, J, A_MHz, B_MHz_quad, C_kHz) for F_ in Fs}
     labels = []
     for k in range(dim):
         v      = evecs0[:, k]
         dom_r  = int(np.argmax(np.abs(v)**2))
-        mi_i   = dom_r // dim_J
-        mj_i   = dom_r %  dim_J
-        mI     = mI_vals[mi_i]
-        mJ     = mJ_vals[mj_i]
+        mI     = mI_vals[dom_r // dim_J]
+        mJ     = mJ_vals[dom_r %  dim_J]
         mF_approx = round(2*(mI + mJ)) / 2   # m_F = m_I + m_J
-        # Estimate F from energy: E ≈ A/2·K
-        # For the ground state family, use closest F level energy
-        Fs   = F_levels(I, J)
-        best_F = min(Fs, key=lambda F_: abs(evals0[k] - hyperfine_energy(F_, I, J, A_MHz, B_MHz_quad)))
+        best_F = min(Fs, key=lambda F_: abs(evals0[k] - E_F[F_]))
         labels.append((best_F, mF_approx))
 
-    # ── Diagonalise at each B ────────────────────────────────────────────────
+    # ── Diagonalise at each B ───────────────────────────────────────────────
     all_energies = np.zeros((len(B_gauss_array), dim))
-
     for bi, B in enumerate(B_gauss_array):
         H = H_hf.copy()
         np.fill_diagonal(H, H.diagonal() + H_Z_diag * B)
-        evals = np.linalg.eigvalsh(H)
-        all_energies[bi] = evals
+        all_energies[bi] = np.linalg.eigvalsh(H)
 
     return all_energies, labels
 
@@ -615,12 +634,15 @@ def allowed_transitions(Fs_lower, Fs_upper):
     return transitions
 
 
-def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_gs):
+def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_gs,
+                                 B_MHz_gs=0.0, C_kHz_gs=0.0):
     """
     Identify:
-      - Cycling transition: F_max → F_max + 1  (closed for laser cooling)
-      - Clock transition:   ΔF=1, Δm_F=0       (B-insensitive to 1st order)
-      - Microwave transitions: within ground state (ΔF=1)
+      - Cycling transition: F_max → F_max + 1  (closed for laser cooling). Needs the real list of
+        allowed (F_lower, F_upper) pairs of the resonance line (see `allowed_transitions`); with an
+        empty list no cycling transition is reported.
+      - Microwave clock: ground ΔF=1 interval at m_F = 0 (B-insensitive to 1st order), computed
+        with the full A, B and C ground-state constants (B and C vanish for J = 1/2).
     """
     F_max_gs = max(Fs_ground)
     special  = {}
@@ -631,13 +653,11 @@ def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_
             special['cycling'] = (F_l, F_u)
             break
 
-    # Ground-state microwave transition: ΔF=1 within ground multiplet
-    # Most important for clocks: F_max ↔ F_max-1 at m_F=0
     if len(Fs_ground) >= 2:
         F1 = Fs_ground[-1]   # F_max
         F2 = Fs_ground[-2]   # F_max - 1
-        dE = hyperfine_energy(F1, I_gs, J_gs, A_MHz_gs) - \
-             hyperfine_energy(F2, I_gs, J_gs, A_MHz_gs)
+        dE = hyperfine_energy(F1, I_gs, J_gs, A_MHz_gs, B_MHz_gs, C_kHz_gs) - \
+             hyperfine_energy(F2, I_gs, J_gs, A_MHz_gs, B_MHz_gs, C_kHz_gs)
         nu_MHz = abs(dE)
         special['microwave_clock'] = {
             'F_upper': F1, 'F_lower': F2,
@@ -682,7 +702,8 @@ def run_element(element, isotope_A=None, state_labels=None,
         return None
 
     # ── HF constants ─────────────────────────────────────────────────────────
-    hf_consts = load_hf_constants(element, data_dir)
+    hf_consts = load_hf_constants(element, data_dir, A)
+    print(f"  HF constants: {load_hf_constants.last_source}")
     if hf_consts is None:
         print(f"  No hf_constants available. Fill in {data_dir}/{element}_hf_constants.json")
         return None
@@ -731,7 +752,8 @@ def run_element(element, isotope_A=None, state_labels=None,
         gJ = lande_gJ(L, S, J, gJ_exp=gJ_exp)
 
         # Extrapolate if state not in file but same (l,J) exists
-        if A_MHz == 0.0:
+        a_missing = 'A_MHz' not in hfc     # key presence, not value: a measured A of 0 is data
+        if a_missing:
             # Find a reference state with same l and J
             for ref_label, ref_hfc in hf_consts.items():
                 ref = parse_state_label(ref_label)
@@ -746,11 +768,12 @@ def run_element(element, isotope_A=None, state_labels=None,
                         A_MHz = ref_hfc['A_MHz'] * scale
                         B_MHz = ref_hfc.get('B_MHz', 0.0) * scale
                         C_kHz = ref_hfc.get('C_kHz', 0.0) * scale
+                        a_missing = False
                         print(f"    {slabel}: A_hf extrapolated from {ref_label} "
                               f"× (n*/n*)³ = {A_MHz:.3f} MHz")
                     break
 
-        if A_MHz == 0.0:
+        if a_missing:
             print(f"    {slabel}: A_hf = 0 (not in hf_constants) — F levels degenerate")
 
         # F levels and energies (now including octupole C)
@@ -772,7 +795,7 @@ def run_element(element, isotope_A=None, state_labels=None,
 
         # Breit-Rabi
         BR_energies, BR_labels = breit_rabi_energies(
-            I, J, A_MHz, B_MHz, gJ, gI, B_arr)
+            I, J, A_MHz, B_MHz, gJ, gI, B_arr, C_kHz)
 
         print(f"\n  State {slabel}:  J={J}  g_J={gJ:.4f}"
               f"{'  [experimental]' if gJ_exp is not None else '  [Landé]'}"
@@ -810,8 +833,23 @@ def run_element(element, isotope_A=None, state_labels=None,
     Fs_gs     = gs['Fs']
     A_MHz_gs  = gs['A_MHz']
 
-    # Microwave / clock transition in ground state
-    special = identify_special_transitions([], Fs_gs, I, gs['J'], A_MHz_gs)
+    # Resonance line for the cycling transition: ground state -> the highest-J np state in the run
+    # (the D2 line for J_gs = 1/2). The real allowed (F, F') list is built from the two F ladders.
+    ex_candidates = [s for s in state_results if s['l'] == 'p']
+    transitions_gs_ex, ex_label = [], None
+    if ex_candidates and gs['l'] == 's':
+        ex = max(ex_candidates, key=lambda s: s['J'])
+        transitions_gs_ex = allowed_transitions(Fs_gs, ex['Fs'])
+        ex_label = ex['label']
+
+    # Microwave / clock transition and cycling transition in the ground state
+    special = identify_special_transitions(transitions_gs_ex, Fs_gs, I, gs['J'], A_MHz_gs,
+                                           gs['B_MHz'], gs['C_kHz'])
+    if 'cycling' in special:
+        special['cycling_line'] = {'lower': gs['label'], 'upper': ex_label,
+                                   'F_lower': special['cycling'][0], 'F_upper': special['cycling'][1]}
+        print(f"\n  Cycling transition: {gs['label']} F={special['cycling'][0]:.0f} -> "
+              f"{ex_label} F'={special['cycling'][1]:.0f}")
     if 'microwave_clock' in special:
         special['microwave_clock']['state'] = gs['label']
 

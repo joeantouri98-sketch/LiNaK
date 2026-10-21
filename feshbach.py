@@ -12,12 +12,15 @@ Near an isolated magnetic Feshbach resonance the s-wave scattering length is
 
 where a_bg is the background scattering length, B₀ the resonance field, and
 Δ the magnetic width (Chin, Grimm, Julienne & Tiesinga, Rev. Mod. Phys. 82,
-1225 (2010)). Sign convention: Δ > 0 ⇒ a → +∞ just above B₀.
+1225 (2010)). Sign convention (Chin et al.): the zero crossing is at B₀ + Δ. For a_bg·Δ > 0, a → +∞
+just BELOW B₀ and → −∞ just above it; Δ and a_bg may each be negative, so the sign of Δ
+is physical and is not validated (only Δ ≠ 0 and finite values are required).
 
 From the Casimir–Polder C₆ (already computed by polarizability.py):
 
     β₆ = (2 μ C₆ / ℏ²)^{1/4}          van der Waals length
-    ā  ≈ 0.955978 β₆                  mean scattering length (Gribakin–Flambaum)
+    ā  = 0.477989 β₆ = 0.955978 R_vdW   mean scattering length (Gribakin–Flambaum),
+                                       R_vdW = β₆/2 (so ā = 0.956 R_vdW, not 0.956 β₆)
 
 Elastic s-wave cross section at collision wave number k:
 
@@ -67,6 +70,7 @@ from constants import (
     A_BAR_FACTOR,
     ALKALI_MASS_AMU as ATOMIC_MASS_AMU,
     ISOTOPE_MASS_AMU,
+    default_isotope_A,
     C6_EXPT as C6_EXPT_FALLBACK,
     nuclide_label,
     nuclide_plain,
@@ -120,7 +124,34 @@ def load_feshbach_params(element, data_dir='data_json'):
             f'Create it with resonances: B0_G, Delta_G, a_bg_a0 '
             f'(see data_json/Na_feshbach.json).')
     with open(path, encoding='utf-8') as f:
-        return json.load(f)
+        params = json.load(f)
+    validate_feshbach_params(params, path)
+    return params
+
+
+def validate_feshbach_params(params, source='feshbach json'):
+    """Schema check for the curated resonance list (the sign of Delta is physical and not checked)."""
+    res = params.get('resonances') or []
+    for i, r in enumerate(res):
+        for key in ('B0_G', 'Delta_G'):
+            if key not in r:
+                raise ValueError(f'{source}: resonance #{i} ({r.get("label", "?")}) lacks {key}')
+            v = float(r[key])
+            if not math.isfinite(v):
+                raise ValueError(f'{source}: resonance #{i} {key} is not finite')
+        if float(r['Delta_G']) == 0.0:
+            raise ValueError(f'{source}: resonance #{i} ({r.get("label", "?")}) has Delta_G = 0 (no resonance)')
+        if 'a_bg_a0' in r and not math.isfinite(float(r['a_bg_a0'])):
+            raise ValueError(f'{source}: resonance #{i} a_bg_a0 is not finite')
+    return params
+
+
+def _checked_C6(value, source):
+    value = float(value)
+    if not math.isfinite(value) or value <= 0.0:
+        raise ValueError(f'C6 from {source} is {value!r}; a positive, finite C6 is required '
+                         f'(beta6 = (2 mu C6/hbar^2)^(1/4) is undefined otherwise)')
+    return value
 
 
 def load_C6_au(element, data_dir='data_json'):
@@ -130,50 +161,31 @@ def load_C6_au(element, data_dir='data_json'):
         with open(path, encoding='utf-8') as f:
             d = json.load(f)
         if 'C6_au' in d:
-            return float(d['C6_au']), 'polarizability.json'
+            return _checked_C6(d['C6_au'], 'polarizability.json'), 'polarizability.json'
         if 'C6_expt_au' in d and d['C6_expt_au']:
-            return float(d['C6_expt_au']), 'polarizability.json (expt)'
+            return _checked_C6(d['C6_expt_au'], 'polarizability.json (expt)'), 'polarizability.json (expt)'
     if element in C6_EXPT_FALLBACK:
-        return C6_EXPT_FALLBACK[element], 'C6_EXPT table'
+        return _checked_C6(C6_EXPT_FALLBACK[element], 'C6_EXPT table'), 'C6_EXPT table'
     raise ValueError(f'No C₆ available for {element}')
 
 
 def load_mass_amu(element, isotope_A=None, data_dir='data_json'):
-    """Isotope mass from nuclear_data.json, else elemental fallback."""
+    """Mass of the isotope actually used: explicit isotope_A, else the most abundant natural
+    isotope (constants.default_isotope_A). Precise table first, then nuclear_data.json 'mass_amu'
+    if it ever carries one, then the elemental fallback (flagged in the source string)."""
+    A = int(isotope_A) if isotope_A is not None else default_isotope_A(element)
+    if A is not None and (element, A) in ISOTOPE_MASS_AMU:
+        return ISOTOPE_MASS_AMU[(element, A)], f'ISOTOPE_MASS_AMU (A={A})'
     path = os.path.join(data_dir, 'nuclear_data.json')
-    if os.path.exists(path):
+    if A is not None and os.path.exists(path):
         with open(path, encoding='utf-8') as f:
             nd = json.load(f)
-        cands = [iso for iso in nd.get('isotopes', [])
-                 if iso.get('symbol') == element]
-        if isotope_A is not None:
-            cands = [iso for iso in cands if iso.get('A') == isotope_A]
-        else:
-            # Prefer stable isotopes
-            stable = [iso for iso in cands if iso.get('stable')]
-            if stable:
-                cands = stable
-        if cands:
-            # nuclear_data may not store mass — use A as approx if needed
-            iso = cands[0]
-            if 'mass_amu' in iso:
-                return float(iso['mass_amu']), f"nuclear_data A={iso.get('A')}"
-            if isotope_A or iso.get('A'):
-                A = isotope_A or iso['A']
-                key = (element, int(A))
-                if key in ISOTOPE_MASS_AMU:
-                    return ISOTOPE_MASS_AMU[key], f'ISOTOPE_MASS_AMU (A={A})'
-                if element in ATOMIC_MASS_AMU:
-                    return ATOMIC_MASS_AMU[element], f'ATOMIC_MASS_AMU (A={A})'
-    if isotope_A is not None and (element, int(isotope_A)) in ISOTOPE_MASS_AMU:
-        return ISOTOPE_MASS_AMU[(element, int(isotope_A))], f'ISOTOPE_MASS_AMU (A={isotope_A})'
+        for iso in nd.get('isotopes', []):
+            if iso.get('symbol') == element and iso.get('A') == A and 'mass_amu' in iso:
+                return float(iso['mass_amu']), f'nuclear_data A={A}'
     if element in ATOMIC_MASS_AMU:
-        return ATOMIC_MASS_AMU[element], 'ATOMIC_MASS_AMU'
+        return ATOMIC_MASS_AMU[element], f'ATOMIC_MASS_AMU fallback (no mass for A={A})'
     raise ValueError(f'No mass for {element}')
-
-# ============================================================================
-# PHYSICS
-# ============================================================================
 
 def reduced_mass_kg(mass_amu):
     """Identical-atom reduced mass μ = m/2."""
@@ -187,6 +199,7 @@ def beta6_a0(C6_au, mass_amu):
 
     Working in SI then converting to a₀ keeps units transparent.
     """
+    C6_au = _checked_C6(C6_au, 'beta6_a0 argument')
     mu = reduced_mass_kg(mass_amu)
     C6_SI = C6_au * AU_TO_SI_C6
     beta_m = (2.0 * mu * C6_SI / HBAR_SI**2) ** 0.25
@@ -194,7 +207,8 @@ def beta6_a0(C6_au, mass_amu):
 
 
 def a_bar_a0(beta6):
-    """Mean scattering length ā ≈ 0.956 β₆ (Gribakin–Flambaum)."""
+    """Mean scattering length ā = [2π/Γ(1/4)²] β₆ = 0.477989 β₆ (Gribakin–Flambaum),
+    for β₆ = (2μC₆/ℏ²)^{1/4}. Equivalently ā = 0.955978 R_vdW with R_vdW = β₆/2."""
     return A_BAR_FACTOR * beta6
 
 
@@ -264,7 +278,14 @@ def multi_resonance_a(B, resonances, a_bg_default):
 def compute_element(element, data_dir='data_json', isotope_A=None,
                     B_max=None, B_points=2000, kT_uK=1.0):
     params = load_feshbach_params(element, data_dir)
-    A = isotope_A or params.get('isotope_A')
+    A = isotope_A or params.get('isotope_A') or default_isotope_A(element)
+    json_A = params.get('isotope_A')
+    if isotope_A and json_A and int(isotope_A) != int(json_A):
+        print(f"  WARNING: {element}_feshbach.json holds a_bg / B0 / Delta for {element}-{json_A}, "
+              f"but isotope {isotope_A} was requested. Resonance positions and widths are "
+              f"isotope-specific (they change with the scattering lengths), so only the mass and "
+              f"C6-derived a-bar change here -- the resonance parameters are NOT those of "
+              f"{element}-{isotope_A}.")
     resonances = params.get('resonances', [])
     if not resonances:
         raise ValueError(f'{element}_feshbach.json has no resonances')
