@@ -189,7 +189,12 @@ def alpha_complex(omega_au, transitions_list):
     Return (Re[α], Im[α]) in atomic units at real frequency ω.
 
     Uses the same f / (ω_k² − ω²) convention as alpha_real, with a
-    Lorentzian damping −i Γ ω in the denominator.  Near a pole the
+    Lorentzian damping −i Γ_ω ω in the denominator, with the frequency-dependent
+    radiative damping of a classical oscillator, Γ_ω = Γ (ω/ω_k)² (Grimm, Weidemüller &
+    Ovchinnikov, Adv. At. Mol. Opt. Phys. 42, 95 (2000), Eqs. 2 and 10), so that the
+    off-resonant scattering rate is Γ_sc ∝ (ω/ω_k)³ (Γ/(ω_k−ω) + Γ/(ω_k+ω))².
+    A constant Γ overestimates Im α, hence R_sc, by (ω_k/ω)² (≈3.3 for Na at 1064 nm).
+    Near a pole the
     real part is set to NaN (same spirit as alpha_real's guard band).
     """
     re = 0.0
@@ -202,7 +207,7 @@ def alpha_complex(omega_au, transitions_list):
         sgn = tr['sign']
         Gam = tr.get('Gamma_au', 0.0) or 0.0
         x = dE * dE - omega_au * omega_au
-        y = Gam * omega_au
+        y = Gam * omega_au * (omega_au / dE) ** 2 if dE else 0.0   # Γ_ω ω, Γ_ω = Γ(ω/ω_k)²
         if abs(x) < GUARD * abs(dE) and Gam <= 0:
             near_pole = True
             continue
@@ -242,7 +247,7 @@ def channel_contributions(omega_au, transitions_list, I_Wm2, top_n=5):
         f = tr['fosc']
         sgn = tr['sign']
         x = dE * dE - omega_au * omega_au
-        y = Gam * omega_au
+        y = Gam * omega_au * (omega_au / dE) ** 2 if dE else 0.0   # Γ_ω ω, Γ_ω = Γ(ω/ω_k)²
         denom2 = x * x + y * y
         if denom2 <= 0:
             continue
@@ -743,7 +748,7 @@ def save_json(result, data_dir='data_json'):
         wl_range_nm=[result['wl_min'], result['wl_max']],
         point=_clean(pt),
         note=(
-            'R_sc from Im[alpha(omega)] with Gamma = A_total from lifetimes.json. '
+            'R_sc from Im[alpha(omega)] with Gamma = A_total from lifetimes.json, scaled as Gamma(omega/omega_k)^2 per channel (Grimm et al. 2000, Eq. 10). '
             'Heating uses 2 E_r(lambda_trap) per scatter. '
             'tau_heat = |U|/E_dot is an order-of-magnitude trap lifetime. '
             'Conservative depth/freqs also in polarizability.py AC Stark panel.'
@@ -780,7 +785,7 @@ if __name__ == '__main__':
     os.makedirs('plots', exist_ok=True)
     print(f"tweezer.py v{__version__}")
 
-    from species import require_neutral_species
+    from alpha_core import require_alpha_species
 
     if args.all:
         elements = []
@@ -798,7 +803,7 @@ if __name__ == '__main__':
             available = get_available_elements(data_dir)
             print("Available elements:", ", ".join(available) if available else "none")
             args.element = input("Enter element symbol: ").strip()
-        elements = [require_neutral_species(args.element, "tweezer.py")["species_id"]]
+        elements = [require_alpha_species(args.element, "tweezer.py")["species_id"]]
 
     for el in elements:
         el_out = os.path.join('plots', el)

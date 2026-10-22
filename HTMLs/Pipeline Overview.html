@@ -606,16 +606,14 @@ p {
   <p class="hero-sub">
     <b>LiNaK</b>: an alkali-atom AMO pipeline. Every formula, every approximation, every physical assumption used across the full alkali track:
     <code style="font-family:var(--mono);font-size:13px;color:var(--blue)">runorca → rydberg → transitions → lifetimes → polarizability → blackbody → tweezer → hyperfine → feshbach → plots / compare</code>,
-    derived from first principles. Shared SI/CODATA values live in
+    derived from first principles. 
+    <br> - Shared SI/CODATA values live in
     <span class="file-badge">constants.py</span>.
-    TD-DFT and SOC are <b>separate</b> <span class="file-badge">runorca.py</span> invocations
-    (different JSON; overlay with <code>plotinteractive --soc-only</code> / <code>--extra</code>).
-    <b>Ions and 3d metals are not fully supported</b>: they are limited to
+    <br>- <b>Ions and 3d metals are not fully supported</b>: they are limited to
     NIST level/line plotting and ORCA SOC (accuracy varies by species), not the
     full AMO chain (QDT polarizability, BBR, tweezers, hyperfine, Feshbach).
-    The pipeline has been <b>tested for the alkalis (Li–Fr) and for Fe and Cr</b>.
-    Shipped worked outputs in-tree: neutral <code>Na</code> and
-    <code>Na_c1</code> (Na<sup>+</sup>). Fe and Cr were tested but their JSON /
+    <br>- The pipeline has been <b>tested for the alkalis (Li–Fr)</b>.
+    Other species were tested but their JSON /
     ORCA folders are not shipped
     (see <a href="#sec17-ions" style="color:var(--blue2)">CLI: ions</a> and
     <a href="#sec17-metals" style="color:var(--blue2)">CLI: metals</a>);
@@ -709,9 +707,7 @@ p {
   </svg>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SECTION 01: MATHEMATICAL PREREQUISITES -->
-<!-- ═══════════════════════════════════════════════════════════ -->
 <section class="section reveal" id="sec1">
   <div class="section-header">
     <div class="section-eyebrow">Section 01: Foundational Physics</div>
@@ -724,8 +720,7 @@ p {
       conventions that tie atomic and SI quantities together. Rather than re-deriving
       pieces of these ad hoc wherever they are needed, this section builds all seven
       from first principles, once, rigorously. Later sections link back here instead
-      of restating results. Derivations A&ndash;F are collapsed by default (click a
-      title to expand); the notation table and the pipeline conventions in G stay open.
+      of restating results.
     </p>
   </div>
 
@@ -2033,10 +2028,8 @@ p {
   <div class="subsection">
     <h3>G. Units, Constants, and Pipeline Conventions</h3>
     <p>
-      Subsections A-F derive the physics. This subsection records every numerical
-      convention, conversion factor, and modeling assumption the code relies on,
-      so nothing is left implicit when reading later sections or comparing to
-      experiment.
+      This subsection records every numerical
+      convention, conversion factor, and modeling assumption the code relies on.
     </p>
 
     <h4>Atomic units versus SI and spectroscopic units</h4>
@@ -2107,11 +2100,11 @@ p {
       <b>NIST ASD level files</b> report energies upward from the ground state
       ($E_{\rm gs}=0$); the ionization limit sits at $E=E_{\rm IE}$. Binding
       energies used in QDT inversion are $E_{\rm bind}=E_{\rm IE}-E_{n,l,J}$.
-      After <span class="file-badge">rydberg.py</span>, the pipeline JSON
+      <br> - After <span class="file-badge">rydberg.py</span>, the pipeline JSON
       (<code>&lt;el&gt;_rydberg.json</code>) stores
       <b>ionization-relative</b> energies: continuum at 0, bound states negative,
       ground state at $-E_{\rm IE}$ (see <a href="#sec3">Section 03</a>).
-      ORCA excited-state tables report excitation energies above the ground-state
+      <br> - ORCA excited-state tables report excitation energies above the ground-state
       SCF reference. When merging ORCA and NIST data, always check which reference
       zero each column uses before subtracting levels.
     </p>
@@ -2449,7 +2442,7 @@ p {
     </ol>
     <div class="annotation amber">
       <span class="icon">!</span>
-      <p><b>Why the cutoff matters.</b> Before the cutoff was introduced, the norm was taken over
+      <p><b>Importance of the cutoff:</b> Before the cutoff was introduced, the norm was taken over
       the whole grid, including the divergent inner continuation. That inflated the norm and
       shrank $u$ in the physical region, so every Numerov $f$ came out too small and the
       NIST-overlap scale partly absorbed the error. After the fix the bare Numerov $f$ is larger
@@ -2460,7 +2453,7 @@ p {
       $\Gamma_{\rm SFI}$ are unchanged.</p>
     </div>
     <p>
-      <b>Checks.</b> At integer $n^*$ the numerical function must equal the hydrogenic
+      <b>Checks:</b> At integer $n^*$ the numerical function must equal the hydrogenic
       closed form; <span class="file-badge">tests/test_qdt_radial_normalisation.py</span>
       verifies this for $Z=1,2$ against SciPy's associated-Laguerre functions, that the
       small-defect outer-lobe peak lies within 5&nbsp;% of the hydrogenic one, that less than
@@ -2470,9 +2463,9 @@ p {
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
+
 <!-- SECTION 03: RYDBERG SERIES -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+
 <section class="section reveal" id="sec3">
   <div class="section-header">
     <div class="section-eyebrow">Section 03: rydberg.py</div>
@@ -2510,8 +2503,7 @@ p {
       file, and it does <b>not</b> export oscillator strengths, Stark maps, pair
       interactions, or blockade radii. To try ARC energies in the downstream chain,
       copy that file over <code>data_json/&lt;el&gt;_rydberg.json</code> manually, then
-      restore NIST afterward. Lifetimes still need NIST (or ORCA) $f$ values;
-      Sr/Ca ARC levels are not a full alkali AMO path. See <a href="#sec17">CLI</a>
+      restore NIST afterward. Lifetimes still need NIST (or ORCA) $f$ values. See <a href="#sec17">CLI</a>
       and <a href="#sec20">References</a>.
     </p>
   </div>
@@ -2564,9 +2556,9 @@ p {
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
+
 <!-- SECTION 04: TD-DFT -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+
 <section class="section reveal" id="sec4">
   <div class="section-header">
     <div class="section-eyebrow">Section 04: runorca.py, parse_orca.py</div>
@@ -2576,9 +2568,11 @@ p {
       the pipeline uses ORCA's TD-DFT (Tamm-Dancoff Approximation, TDA) with the
       CAM-B3LYP range-separated hybrid functional. Here we explain what the calculation
       actually computes and why the output format is structured the way it is.
-      Fine structure is a <b>separate</b> job: <code>--mode soc</code> (CASSCF/NEVPT2+DoSOC),
+      <br> Fine structure is a <b>separate</b> job: <code>--mode soc</code> (CASSCF/NEVPT2+DoSOC),
       writing <code>*_soc*.json</code> rather than the TD-DFT <code>&lt;El&gt;.json</code>
       (see <a href="#sec17">CLI</a>).
+      <br> TD-DFT and SOC are <b>separate</b> <span class="file-badge">runorca.py</span> invocations
+    (different JSON; overlay with <code>plotinteractive --soc-only</code> / <code>--extra</code>).
     </p>
   </div>
 
@@ -2587,13 +2581,10 @@ p {
     <p>
       <b>Two ORCA tracks.</b> One <span class="file-badge">runorca.py</span> invocation
       is either TD-DFT (<code>auto</code>/<code>tddft</code>/<code>alkali</code>) <em>or</em>
-      SOC (<code>soc</code> / alias <code>alkali-soc</code>), never both.
+      SOC (<code>soc</code> / alias <code>alkali-soc</code>), never both at once. <br>
       <code>--mode casscf</code> is CASSCF/NEVPT2 <em>without</em> DoSOC.
       Overlay SOC on the Grotrian with <code>plotinteractive.py &lt;El&gt; --soc-only</code>
-      or <code>--extra</code>. For Cs/Fr, <code>--soc-recipe nevpt2</code> (larger CAS)
-      can take many hours; <code>casscf</code> is the cheaper screening path.
-      Fr ($Z\ge87$) needs <code>--basis-tightness vtz</code> (or <code>vdz</code>/<code>vqz</code>)
-      so the BSE ANO-RCC basis embeds non-interactively.
+      or <code>--extra</code>.
     </p>
   </div>
 
@@ -2871,12 +2862,12 @@ p {
       <p><b>Trust note:</b> Alkali lifetime channels are almost entirely NIST +
       NIST-extrap + scaled Numerov (Coulomb fraction ≈ 0). The scales are computed at load time
       from each element's own NIST∩Numerov ratios (robust inliers in [0.25, 4];
-      no hardcoded element table). Where a NIST $f$ and the scaled model differ by more than 1.5×
+      no hardcoded element table). <br>Where a NIST $f$ and the scaled model differ by more than 1.5×
       the pair is listed in <code>nist_model_comparison</code> (flag only; neither value is overridden, and
-      <code>model_unreliable</code> marks rows where the <em>model</em> fails, e.g. Na $3d\to np$). Direct Beterov $\Gamma_{\rm PI}$ is unchanged
+      <code>model_unreliable</code> marks rows where the <em>model</em> fails, e.g. Na $3d\to np$). <br>Direct Beterov $\Gamma_{\rm PI}$ is unchanged
       by $f$ sources; mix rates and high-$n$ dyn BBR <em>do</em> move when
       partner $A$ values change. Static Itano high-$n$ shifts remain diagnostic
-      only. Scorecard: <code>python tools/fosc_audit.py Na</code> →
+      only. <br>Scorecard: <code>python tools/fosc_audit.py Na</code> →
       <span class="file-badge">tests/results/fosc_audit_Na.json</span>.</p>
     </div>
     <div class="annotation amber">
@@ -2994,59 +2985,46 @@ p {
     </div>
     <p>
       That Lorentzian peak is what Steck's isotropic Na D2 sheet uses
-      ($\sigma\sim1.10\times10^{-9}$&nbsp;cm², $I_{\rm sat}\sim9.4$&nbsp;mW/cm²).
-      A closed cycling transition has a still larger peak cross-section
-      $\sigma_0=3\lambda^2/(2\pi)$ (hence a lower $I_{\rm sat}$):
-      $I_{\rm sat}=\pi hc\Gamma/(3\lambda^3)\approx6.26$&nbsp;mW/cm² for Na D2.
-    </p>
-    <p>
-      The pipeline stores a different but internally consistent convention: replace
-      the Lorentzian peak factor $2/(\pi\Delta\nu)$ by the rectangular estimate
-      $1/\Delta\nu$ (area divided by FWHM). With $\Delta\nu_{\rm nat}=A/(2\pi)$ this
-      collapses to the CompTable / <code>lifetimes.py</code> formula
+      ($\sigma\sim1.10\times10^{-9}$&nbsp;cm², $I_{\rm sat}\sim9.4$&nbsp;mW/cm²), and it is
+      what <code>lifetimes.py</code> and <code>compare_elements.py</code> now store:
     </p>
     <div class="math-block green">
       <div class="math-label">Pipeline natural peak (JSON / CompTable)</div>
       $$\sigma_{\rm nat}^{\rm peak}
-        = \frac{\lambda^2}{8\pi}\cdot\frac{g_u}{g_l}\cdot\frac{A}{\Delta\nu_{\rm nat}}
-        = \frac{\lambda^2}{4}\frac{g_u}{g_l}$$
+        = \frac{\lambda^2}{4\pi^2}\cdot\frac{g_u}{g_l}\cdot\frac{A}{\Delta\nu_{\rm nat}}
+        = \frac{\lambda^2}{2\pi}\frac{g_u}{g_l}$$
     </div>
     <p>
-      For Na D2 ($g_u/g_l=2$) this gives
-      $\sigma_{\rm nat}\approx1.736\times10^{-9}$&nbsp;cm² and
-      $I_{\rm sat}^{\rm nat}\approx5.98$&nbsp;mW/cm² - the numbers in
-      <code>Na_lifetimes.json</code> and <code>comparison_table.json</code>.
-      Keep the Lorentzian / cycling values in mind when comparing to Steck; do not
-      mix conventions inside one calculation.
+      For Na D2 ($g_u/g_l=2$) this gives $\sigma_{\rm nat}\approx1.10\times10^{-9}$&nbsp;cm² and
+      $I_{\rm sat}^{\rm nat}\approx9.4$&nbsp;mW/cm². A closed, stretched-state cycling transition has a
+      larger peak $\sigma_0=3\lambda^2/(2\pi)$ and hence the lower
+      $I_{\rm sat}=\pi hc\Gamma/(3\lambda^3)\approx6.26$&nbsp;mW/cm² quoted by Steck; do not mix the
+      two conventions inside one calculation.
     </p>
+    <div class="annotation amber">
+      <p>Earlier versions replaced the Lorentzian peak factor $2/(\pi\Delta\nu)$ by $1/\Delta\nu$,
+      which made $\sigma_{\rm nat}$ too large by $\pi/2$ ($\lambda^2/4$ instead of $\lambda^2/2\pi$) and
+      $I_{\rm sat}$ too small by $2/\pi$ (5.98 instead of 9.4&nbsp;mW/cm² for Na D2).</p>
+    </div>
     <div class="math-block purple">
-      <div class="math-label">Pipeline Doppler peak (CompTable scaling)</div>
+      <div class="math-label">Doppler peak</div>
       $$\sigma_{\rm Dop}^{\rm peak}
-        = \sigma_{\rm nat}^{\rm peak}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\cdot\sqrt{\frac{\ln 2}{\pi}}$$
+        = \sigma_{\rm nat}^{\rm peak}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\cdot\sqrt{\pi\ln 2}$$
     </div>
     <p>
-      This is what <span class="file-badge">compare_elements.py</span> and
-      <span class="file-badge">lifetimes.py</span> write for Doppler columns.
       A unit-normalised Gaussian of FWHM $\Delta\nu_D$ has peak
-      $\phi_G(0)=2\sqrt{\ln 2/\pi}/\Delta\nu_D$, so the proper Gaussian peak
-      built from $\int\sigma\,d\nu$ is larger by a factor of 2 than the CompTable
-      scaling above. The pipeline keeps the CompTable form so every table and JSON
-      agree.
+      $\phi_G(0)=2\sqrt{\ln 2/\pi}/\Delta\nu_D$. Writing
+      $\sigma(\nu)=\sigma_{\rm nat}^{\rm peak}\,(\pi\Delta\nu_{\rm nat}/2)\,\phi(\nu)$, which reproduces
+      $\sigma_{\rm nat}^{\rm peak}$ for the Lorentzian, gives the $\sqrt{\pi\ln 2}$ factor above. (An earlier
+      version used $\sqrt{\ln 2/\pi}$, short by $\pi$; combined with the old $\sigma_{\rm nat}$ it made the
+      Doppler columns 2&times; too small.) Natural and Doppler $I_{\rm sat}$ both use
+      $I_{\rm sat}=h\nu/(2\sigma_{\rm peak}\tau)$ with the matching $\sigma$.
     </p>
     <p>
       At $T=300$&nbsp;K for Na D2, $\Delta\nu_D/\Delta\nu_{\rm nat}\approx134$, so
-      $\sigma_{\rm Dop}$ is orders of magnitude below $\sigma_{\rm nat}$: the
+      $\sigma_{\rm Dop}$ is two orders of magnitude below $\sigma_{\rm nat}$: the
       absorption is spread over a much wider frequency range.
     </p>
-    <div class="annotation amber">
-      <p>The factor $\sqrt{\ln 2 / \pi}$ in the CompTable Doppler formula is the
-      Gaussian shape factor that maps natural peak $\times$ linewidth ratio onto
-      the Doppler-averaged peak used in the HTML slider. It is <em>not</em> the
-      full $\phi_G(0)$ normalisation (that would carry an extra 2). Natural and
-      Doppler $I_{\rm sat}$ both use $I_{\rm sat}=h\nu/(2\sigma_{\rm peak}\tau)$
-      with the matching $\sigma$.
-      </p>
-    </div>
   </div>
 </section>
 
@@ -3109,10 +3087,9 @@ p {
       $I_{\rm sat}=\pi hc\Gamma/(3\lambda^3)$, is
       <b>not</b> equivalent to the pipeline expression. It belongs with
       $\sigma_0=3\lambda^2/(2\pi)$ (stretched $m_F$ cycling). For isotropic /
-      $m_J$-averaged light the Lorentzian peak
-      $\sigma=\lambda^2/(2\pi)\,(g_u/g_l)$ gives a higher $I_{\rm sat}$
-      ($\sim9.4$&nbsp;mW/cm² for Na D2); the pipeline $\lambda^2/4$ convention
-      gives $\sim5.98$&nbsp;mW/cm². Always state which $\sigma$ you used.
+      $m_J$-averaged light the pipeline uses the Lorentzian peak
+      $\sigma=\lambda^2/(2\pi)\,(g_u/g_l)$, which gives the higher $I_{\rm sat}$
+      ($\sim9.4$&nbsp;mW/cm² for Na D2). Always state which $\sigma$ you used.
     </p>
   </div>
 
@@ -3255,7 +3232,7 @@ p {
       $$f_{lu} \xrightarrow{\times\,{\rm PREF}/\lambda^2 \cdot g_l/g_u} A_{ul}\,[{\rm s}^{-1}]
         \xrightarrow{1/\sum A} \tau\,[{\rm ns}]$$
       $$A_{ul} \xrightarrow{\times\,c^3/(8\pi h\nu^3)} B_{21}\,[{\rm m^3\,J^{-1}\,s^{-2}}]$$
-      $$A_{ul} \xrightarrow{(\lambda^2/8\pi)(g_u/g_l)(A/\Delta\nu_{\rm nat})} \sigma_{\rm nat}^{\rm peak}=\tfrac{\lambda^2}{4}\tfrac{g_u}{g_l}\,[{\rm cm}^2]$$
+      $$A_{ul} \xrightarrow{(\lambda^2/4\pi^2)(g_u/g_l)(A/\Delta\nu_{\rm nat})} \sigma_{\rm nat}^{\rm peak}=\tfrac{\lambda^2}{2\pi}\tfrac{g_u}{g_l}\,[{\rm cm}^2]$$
       $$\sigma_{\rm nat}^{\rm peak} \xrightarrow{h\nu/(2\sigma\tau)} I_{\rm sat}\,[{\rm mW/cm}^2]$$
       $$I_{\rm sat} \xrightarrow{{\rm two\text{-}level\,OBE}} R_{\rm scatt}(I,\Delta)\,[{\rm s}^{-1}]
         \xrightarrow{\times\,\hbar k} F_{\rm rad}\,[{\rm aN}]$$
@@ -3441,12 +3418,13 @@ p {
     </div>
     <p>
       Validated in-code against (1) the Itano $\langle E^2\rangle_T$ limit to
-      $<0.02\%$ and (2) the Farley-Wing high-$n$ closed form at 300&nbsp;K. For
+      $<0.02\%$ and (2) the Farley-Wing high-$n$ closed form at 300&nbsp;K. <br> - For
       ground-state alkalis the dynamic correction is only a few tenths of a
-      percent of the static term (unlike Sr clocks, where it can reach $\sim7\%$).
-      For Na at 300&nbsp;K: $\Delta\nu_{\rm gs}=-1.40$&nbsp;Hz (static),
+      percent of the static term (unlike Sr clocks, where it can reach $\sim7\%$). <br>
+      - For Na at 300&nbsp;K: $\Delta\nu_{\rm gs}=-1.40$&nbsp;Hz (static),
       $-1.40$&nbsp;Hz (full dynamic, JSON $-1.404$); D1 differential
-      $\approx-0.52$&nbsp;Hz (<a href="#sec16">Na Step&nbsp;7</a>). Outputs:
+      $\approx-0.52$&nbsp;Hz (<a href="#sec16">Na Step&nbsp;7</a>). <br> 
+      - Outputs:
       <code>data_json/&lt;el&gt;_blackbody.json</code> and fullscreen HTML plots
       under <code>plots/&lt;el&gt;/</code>: a chooser hub
       <code>&lt;el&gt;_blackbody.html</code> plus separate
@@ -3796,16 +3774,15 @@ p {
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SECTION 15: visualization -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+
 <section class="section reveal" id="sec15">
   <div class="section-header">
     <div class="section-eyebrow">Section 15: plotinteractive.py, orbital3d.py, spectra.py</div>
     <h2>Visualization Suite</h2>
     <p class="section-intro">
       After the physics JSON exists, three scripts turn it into interactive HTML.
-      These do not change numbers; they are the lab-facing front end of the pipeline.
+      These do not change numbers; they are the front end of the pipeline.
     </p>
   </div>
 
@@ -3913,9 +3890,7 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SECTION 16: NA FULL WORKED EXAMPLE -->
-<!-- ═══════════════════════════════════════════════════════════ -->
 <section class="section reveal" id="sec16">
   <div class="section-header">
     <div class="section-eyebrow">Section 16: Complete Pipeline Walkthrough</div>
@@ -4285,30 +4260,27 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
     <h4>Peak absorption cross-sections (pipeline convention)</h4>
     <div class="math-block green">
       <div class="math-label">Na D2 peak cross-sections (CompTable / lifetimes.py)</div>
-      $$\sigma_{\rm nat}^{\rm peak} = \frac{\lambda^2}{4}\frac{g_u}{g_l}
-        = \frac{(589.1575\times10^{-9})^2}{4}\cdot 2
-        = 1.736\times10^{-13}\,{\rm m^2}
-        = 1.736\times10^{-9}\,{\rm cm^2}$$
+      $$\sigma_{\rm nat}^{\rm peak} = \frac{\lambda^2}{2\pi}\frac{g_u}{g_l}
+        = \frac{(589.1575\times10^{-9})^2}{2\pi}\cdot 2
+        = 1.105\times10^{-13}\,{\rm m^2}
+        = 1.105\times10^{-9}\,{\rm cm^2}$$
       $$\sigma_{\rm Dop}^{\rm peak}
-        = \sigma_{\rm nat}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\sqrt{\frac{\ln 2}{\pi}}
-        = 6.070\times10^{-16}\,{\rm m^2}
-        = 6.070\times10^{-12}\,{\rm cm^2}$$
+        = \sigma_{\rm nat}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\sqrt{\pi\ln 2}
+        = 1.214\times10^{-15}\,{\rm m^2}
+        = 1.214\times10^{-11}\,{\rm cm^2}$$
     </div>
     <p style="font-size:13px;color:var(--text2)">
-      Literature Lorentzian isotropic peak would be
-      $\sigma=\lambda^2/(2\pi)\cdot(g_u/g_l)\approx1.10\times10^{-9}$&nbsp;cm²
-      ($I_{\rm sat}\sim9.4$&nbsp;mW/cm²). Cycling $\sigma_0=3\lambda^2/(2\pi)$ gives
-      $I_{\rm sat}\approx6.26$&nbsp;mW/cm². The pipeline numbers below use
-      $\lambda^2/4$ (see <a href="#sec7">Section 07</a>).
+      Cycling $\sigma_0=3\lambda^2/(2\pi)$ would give
+      $I_{\rm sat}\approx6.26$&nbsp;mW/cm² (see <a href="#sec7">Section 07</a>).
     </p>
 
     <h4>Saturation intensity</h4>
     <div class="math-block purple">
       <div class="math-label">Na D2 I_sat (both broadening regimes)</div>
       $$I_{\rm sat}^{\rm nat} = \frac{h\nu}{2\sigma_{\rm nat}\tau}
-        = 5.983\,{\rm mW/cm^2}$$
+        = 9.40\,{\rm mW/cm^2}$$
       $$I_{\rm sat}^{\rm Dop} = \frac{h\nu}{2\sigma_{\rm Dop}\tau}
-        = 1711\,{\rm mW/cm^2}$$
+        = 856\,{\rm mW/cm^2}$$
     </div>
   </div>
 
@@ -4371,10 +4343,10 @@ python plotinteractive.py Na -e BLY3P -e PBE0 --plots 1
       <tr><td>Einstein B₂₁</td><td>$B_{21}$</td><td>$7.56\times10^{20}$ m³J⁻¹s⁻²</td><td>$c^3A/(8\pi h\nu^3)$</td><td>lifetimes.py</td></tr>
       <tr><td>Natural linewidth</td><td>$\Delta\nu_{\rm nat}$</td><td>9.802 MHz</td><td>$\Gamma/2\pi$</td><td>lifetimes.py</td></tr>
       <tr><td>Doppler FWHM (300K)</td><td>$\Delta\nu_D$</td><td>1316.5 MHz</td><td>Maxwell-Boltzmann</td><td>lifetimes.py</td></tr>
-      <tr><td>Peak σ (natural)</td><td>$\sigma_{\rm nat}$</td><td>$1.736\times10^{-9}$ cm²</td><td>$\lambda^2/4\cdot g_u/g_l$</td><td>lifetimes.py</td></tr>
-      <tr><td>Peak σ (Doppler)</td><td>$\sigma_{\rm Dop}$</td><td>$6.070\times10^{-12}$ cm²</td><td>CompTable Gaussian scaling</td><td>lifetimes.py</td></tr>
-      <tr><td>I_sat (natural)</td><td>$I_{\rm sat}^{\rm nat}$</td><td>5.983 mW/cm²</td><td>$h\nu/(2\sigma\tau)$</td><td>lifetimes.py</td></tr>
-      <tr><td>I_sat (Doppler)</td><td>$I_{\rm sat}^{\rm Dop}$</td><td>1711 mW/cm²</td><td>$h\nu/(2\sigma_D\tau)$</td><td>lifetimes.py</td></tr>
+      <tr><td>Peak σ (natural)</td><td>$\sigma_{\rm nat}$</td><td>$1.105\times10^{-9}$ cm²</td><td>$\lambda^2/2\pi\cdot g_u/g_l$</td><td>lifetimes.py</td></tr>
+      <tr><td>Peak σ (Doppler)</td><td>$\sigma_{\rm Dop}$</td><td>$1.214\times10^{-11}$ cm²</td><td>Lorentzian peak &times; Gaussian scaling</td><td>lifetimes.py</td></tr>
+      <tr><td>I_sat (natural)</td><td>$I_{\rm sat}^{\rm nat}$</td><td>9.40 mW/cm²</td><td>$h\nu/(2\sigma\tau)$</td><td>lifetimes.py</td></tr>
+      <tr><td>I_sat (Doppler)</td><td>$I_{\rm sat}^{\rm Dop}$</td><td>856 mW/cm²</td><td>$h\nu/(2\sigma_D\tau)$</td><td>lifetimes.py</td></tr>
       <tr><td>Recoil velocity</td><td>$v_{\rm rec}$</td><td>2.946 cm/s</td><td>$\hbar k/m$</td><td>compare_elements.py</td></tr>
       <tr><td>Recoil energy</td><td>$E_{\rm rec}/k_B$</td><td>1200 nK</td><td>$mv_{\rm rec}^2/(2k_B)$</td><td>compare_elements.py</td></tr>
       <tr><td>Doppler limit</td><td>$T_{\rm Dop}$</td><td>235 μK</td><td>$\hbar\Gamma/2k_B$</td><td>compare_elements.py</td></tr>
@@ -5134,7 +5106,7 @@ python arc_bridge.py Sr --n-max 40
       <span class="file-badge">compare_elements.py</span>. Machine-readable
       companion: <code>data_json/comparison_table.json</code> only (HTML under
       <code>plots/</code>). Physics definitions live in
-      <a href="#sec8">Section 08</a>; this section is the lab-facing legend
+      <a href="#sec8">Section 08</a>; this section is the legend
       for every column, control, and trend. Neutral alkalis only;
       ions and 3d metals are unsupported here (same scope as polarizability
       and Feshbach).
@@ -5224,7 +5196,7 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
       <tr><th>Column</th><th>Meaning</th></tr>
       <tr><td>$\Delta\nu_{\rm nat}$ (MHz)</td><td>Natural FWHM $=A/(2\pi)$. Typically $\sim5$–$10$&nbsp;MHz for alkalis</td></tr>
       <tr><td>$\sigma_{\rm peak}$ ($10^{-9}$&nbsp;cm²)</td><td>On-resonance peak absorption cross-section, $m_J$-averaged, isotropic light. A Na atom&rsquo;s geometric size is $\sim10^{-15}$&nbsp;cm²; the resonant $\sigma$ is $\sim10^6\times$ larger</td></tr>
-      <tr><td>$I_{\rm sat}$ (mW/cm²)</td><td>Intensity where stimulated emission matches spontaneous emission: $I_{\rm sat}=h\nu/(2\sigma_{\rm peak}\tau)$. Above this the transition saturates. Uses the pipeline $\sigma=\lambda^2/4\cdot g_u/g_l$ (Na D2 $\approx5.98$&nbsp;mW/cm²). Steck cycling ($\sigma_0=3\lambda^2/(2\pi)$) is $\approx6.26$; Steck isotropic Lorentzian is $\approx9.4$</td></tr>
+      <tr><td>$I_{\rm sat}$ (mW/cm²)</td><td>Intensity where stimulated emission matches spontaneous emission: $I_{\rm sat}=h\nu/(2\sigma_{\rm peak}\tau)$. Above this the transition saturates. Uses the Lorentzian peak $\sigma=\lambda^2/(2\pi)\cdot g_u/g_l$ (Na D2 $\approx9.40$&nbsp;mW/cm², Steck's isotropic value). Steck cycling ($\sigma_0=3\lambda^2/(2\pi)$) is $\approx6.26$</td></tr>
     </table>
     <p style="font-size:13px;color:var(--text2)">
       Related (not a CompTable column): the Einstein $B_{21}$ for stimulated
@@ -5277,7 +5249,7 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
       <div class="math-label">Doppler FWHM and peak $\sigma$ (recomputed in-browser when $T$ changes)</div>
       $$\Delta\nu_D=\nu_0\sqrt{8\ln 2\cdot\frac{k_BT}{mc^2}},\qquad
         \nu_0=\frac{c}{\lambda}$$
-      $$\sigma_D=\sigma_{\rm nat}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\cdot\sqrt{\frac{\ln 2}{\pi}}$$
+      $$\sigma_D=\sigma_{\rm nat}\cdot\frac{\Delta\nu_{\rm nat}}{\Delta\nu_D}\cdot\sqrt{\pi\ln 2}$$
     </div>
     <div class="math-block green">
       <div class="math-label">Cooling extremes (D₂)</div>
@@ -5314,12 +5286,12 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
     </p>
     <table class="def-table">
       <tr><th>El</th><th>$\Delta E_{\rm SOC}$ (meV)</th><th>$\lambda_{D2}$ (nm)</th><th>$\tau_{D2}$ (ns)</th><th>$I_{\rm sat}^{\rm nat}$ (mW/cm²)</th><th>$E_{\rm rec}$ (nK)</th><th>$\Delta\nu_D/\Delta\nu_{\rm nat}$</th></tr>
-      <tr><td>Li</td><td>0.042</td><td>670.96</td><td>27.11</td><td>2.43</td><td>3064</td><td>358</td></tr>
-      <tr><td>Na</td><td>2.13</td><td>589.16</td><td>16.24</td><td>5.98</td><td>1200</td><td>134</td></tr>
-      <tr><td>K</td><td>7.16</td><td>766.70</td><td>26.46</td><td>1.67</td><td>417</td><td>129</td></tr>
-      <tr><td>Rb</td><td>29.5</td><td>780.24</td><td>26.23</td><td>1.59</td><td>184</td><td>85</td></tr>
-      <tr><td>Cs</td><td>68.7</td><td>852.35</td><td>30.50</td><td>1.05</td><td>99</td><td>72.5</td></tr>
-      <tr><td>Fr</td><td>209</td><td>718.18</td><td>21.02</td><td>2.55</td><td>83</td><td>45.8</td></tr>
+      <tr><td>Li</td><td>0.042</td><td>670.96</td><td>27.11</td><td>3.82</td><td>3064</td><td>358</td></tr>
+      <tr><td>Na</td><td>2.13</td><td>589.16</td><td>16.24</td><td>9.40</td><td>1200</td><td>134</td></tr>
+      <tr><td>K</td><td>7.16</td><td>766.70</td><td>26.46</td><td>2.62</td><td>417</td><td>129</td></tr>
+      <tr><td>Rb</td><td>29.5</td><td>780.24</td><td>26.23</td><td>2.50</td><td>184</td><td>85</td></tr>
+      <tr><td>Cs</td><td>68.7</td><td>852.35</td><td>30.50</td><td>1.65</td><td>99</td><td>72.5</td></tr>
+      <tr><td>Fr</td><td>209</td><td>718.18</td><td>21.02</td><td>4.01</td><td>83</td><td>45.8</td></tr>
     </table>
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.85">
       <li><b>SOC splitting</b> grows steeply with $Z$ (Li 0.04&nbsp;meV &rarr; Fr $\sim200$&nbsp;meV). Not a pure $Z^4$ fit for the whole group once relativistic / screening effects matter, but the hierarchy is unambiguous.</li>
@@ -5343,7 +5315,7 @@ python compare_elements.py      <span class="comment"># rebuild CompTable</span>
         A\approx6.16\times10^7\,{\rm s}^{-1},\quad
         f\approx0.641\ ({\rm AA})$$
       $$\Delta\nu_{\rm nat}\approx9.80\,{\rm MHz},\quad
-        I_{\rm sat}^{\rm nat}\approx5.98\,{\rm mW/cm^2},\quad
+        I_{\rm sat}^{\rm nat}\approx9.40\,{\rm mW/cm^2},\quad
         R_{\rm max}\approx3.08\times10^7\,{\rm s}^{-1}$$
       $$v_{\rm rec}\approx2.95\,{\rm cm/s},\quad
         E_{\rm rec}\approx1200\,{\rm nK},\quad

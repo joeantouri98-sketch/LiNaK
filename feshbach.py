@@ -92,6 +92,9 @@ parser.add_argument('--B-max', type=float, default=None,
                     help='Max B field in Gauss (default: auto from resonances)')
 parser.add_argument('--B-points', type=int, default=2000,
                     help='Number of B-field sample points')
+parser.add_argument('--channel', default=None,
+                    help="Entrance channel for the combined a(B) curve, e.g. '|1,+1> + |1,+1>' "
+                         "(default: the channel with the most s-wave resonances)")
 parser.add_argument('--kT-uK', type=float, default=1.0,
                     help='Collision energy as temperature [µK] for σ(B) '
                          '(default: 1 µK)')
@@ -238,12 +241,58 @@ def wave_number_a0(kT_uK, mass_amu):
     return k_SI * A0_M   # 1/m · m/a₀⁻¹ → a₀⁻¹
 
 
-def sigma_el_a0(a_a0, k_a0inv):
-    """σ_el / a₀² = 4π a² / (1 + k² a²)."""
+_Z_ALKALI = {'Li': 3, 'Na': 11, 'K': 19, 'Rb': 37, 'Cs': 55, 'Fr': 87}
+
+
+def is_boson(element, A):
+    """Quantum statistics of the neutral atom: it is a boson when its number of fermions
+    (Z electrons + Z protons + (A-Z) neutrons = A + Z) is even. None if Z is unknown."""
+    Z = _Z_ALKALI.get(element)
+    if Z is None or A is None:
+        return None
+    return (int(A) + Z) % 2 == 0
+
+
+def channel_kets(channel):
+    """Internal states of an entrance channel string like '|1,+1> + |1,+1>' -> ['|1,+1>', '|1,+1>']."""
+    import re
+    return [k.replace(' ', '') for k in re.findall(r'\|[^>]*>', channel or '')]
+
+
+def identical_particles(channel):
+    """True when both atoms are in the same internal state (needs a parsable '|..> + |..>')."""
+    kets = channel_kets(channel)
+    return len(kets) == 2 and kets[0] == kets[1]
+
+
+def sigma_el_a0(a_a0, k_a0inv, identical_bosons=False):
+    """
+    s-wave elastic cross section, in a0^2:
+        sigma = 4 pi a^2 / (1 + k^2 a^2)   distinguishable atoms (different internal states)
+        sigma = 8 pi a^2 / (1 + k^2 a^2)   two identical bosons (same internal state)
+    (Pethick & Smith, Bose-Einstein Condensation in Dilute Gases, Sec. 5.1). Identical fermions
+    have no s-wave scattering; callers must not ask for it.
+    """
     a = np.asarray(a_a0, dtype=float)
     ka2 = (k_a0inv * a) ** 2
+    pref = 8.0 * np.pi if identical_bosons else 4.0 * np.pi
     with np.errstate(invalid='ignore'):
-        return 4.0 * np.pi * a**2 / (1.0 + ka2)
+        return pref * a**2 / (1.0 + ka2)
+
+
+def group_s_wave_by_channel(resonances):
+    """
+    {channel: [resonances]} for the s-wave resonances only, in file order.
+    The product form a(B) = a_bg prod_i (1 - Delta_i/(B - B0_i)) holds for the poles of ONE
+    s-wave entrance channel (Lange et al., PRA 79, 013622 (2009)); resonances of other channels
+    belong to other a(B) curves, and d/g-wave poles are not poles of the s-wave scattering length.
+    """
+    groups = {}
+    for r in resonances:
+        if str(r.get('partial_wave', 's')).lower() != 's':
+            continue
+        groups.setdefault(r.get('channel', '') or '', []).append(r)
+    return groups
 
 
 def multi_resonance_a(B, resonances, a_bg_default):
@@ -276,7 +325,7 @@ def multi_resonance_a(B, resonances, a_bg_default):
 # ============================================================================
 
 def compute_element(element, data_dir='data_json', isotope_A=None,
-                    B_max=None, B_points=2000, kT_uK=1.0):
+                    B_max=None, B_points=2000, kT_uK=1.0, channel=None):
     params = load_feshbach_params(element, data_dir)
     A = isotope_A or params.get('isotope_A') or default_isotope_A(element)
     json_A = params.get('isotope_A')
@@ -307,17 +356,45 @@ def compute_element(element, data_dir='data_json', isotope_A=None,
         B_hi = max(B_hi, 500.0)
     B = np.linspace(0.0, B_hi, B_points)
 
-    # Combined a(B) for all s-wave resonances in the file
-    a_comb = multi_resonance_a(B, resonances, a_bg_default)
-    sig_comb = sigma_el_a0(a_comb, k_th)
+    # a(B) per entrance channel (s-wave poles of ONE channel multiply; channels never mix)
+    boson = is_boson(element, A)
+    groups = group_s_wave_by_channel(resonances)
+    if not groups:
+        raise ValueError(f'{element}_feshbach.json has no s-wave resonances')
+    if channel is not None and channel not in groups:
+        raise ValueError(f"channel {channel!r} not in {list(groups)}")
+    default_channel = channel if channel is not None else max(groups, key=lambda c: len(groups[c]))
+    channels = []
+    for ch, rs in groups.items():
+        ident = identical_particles(ch)
+        a_ch = multi_resonance_a(B, rs, a_bg_default)
+        if ident and boson is False:
+            sig_ch = np.zeros_like(a_ch)       # identical fermions: no s-wave collisions
+        else:
+            sig_ch = sigma_el_a0(a_ch, k_th, identical_bosons=bool(ident and boson))
+        channels.append({
+            'channel': ch,
+            'labels': [r.get('label', '') for r in rs],
+            'a_bg_a0': float(rs[0].get('a_bg_a0', a_bg_default)),
+            'identical_bosons': bool(ident and boson),
+            'a_a0': a_ch,
+            'sigma_a02': sig_ch,
+        })
+    sel = next(c for c in channels if c['channel'] == default_channel)
+    a_comb, sig_comb = sel['a_a0'], sel['sigma_a02']
+    if len(groups) > 1:
+        print(f"  NOTE: {len(groups)} entrance channels in {element}_feshbach.json; the combined curve "
+              f"is channel {default_channel!r} (use --channel to pick another).")
 
-    # Per-resonance curves (isolated single-pole form)
+    # Per-resonance curves (isolated single-pole form; s-wave only)
     per_res = []
     for res in resonances:
         a_bg = float(res.get('a_bg_a0', a_bg_default))
         B0 = float(res['B0_G'])
         Delta = float(res['Delta_G'])
-        a = scattering_length(B, a_bg, B0, Delta)
+        is_s = str(res.get('partial_wave', 's')).lower() == 's'
+        ident = identical_particles(res.get('channel', ''))
+        a = scattering_length(B, a_bg, B0, Delta) if is_s else None
         per_res.append({
             'label': res.get('label', f"B0={B0}G"),
             'channel': res.get('channel', ''),
@@ -327,7 +404,8 @@ def compute_element(element, data_dir='data_json', isotope_A=None,
             'a_bg_a0': a_bg,
             'ref': res.get('ref', ''),
             'a_a0': a,
-            'sigma_a02': sigma_el_a0(a, k_th),
+            'sigma_a02': (sigma_el_a0(a, k_th, identical_bosons=bool(ident and boson))
+                          if is_s else None),
         })
 
     return {
@@ -345,6 +423,9 @@ def compute_element(element, data_dir='data_json', isotope_A=None,
         'B_G': B,
         'a_combined_a0': a_comb,
         'sigma_combined_a02': sig_comb,
+        'default_channel': default_channel,
+        'channels': channels,
+        'is_boson': boson,
         'resonances': per_res,
         'params_note': params.get('note', ''),
     }
@@ -374,22 +455,41 @@ def plot_feshbach(result, output_dir):
     # Combined curve
     fig.add_trace(go.Scatter(
         x=B, y=result['a_combined_a0'],
-        mode='lines', name='combined a(B)',
+        mode='lines', name=f"a(B) {result['default_channel'] or 'combined'}",
         line=dict(color='#f0f4ff', width=2.2),
         hovertemplate='B=%{x:.2f} G<br>a=%{y:.4g} a₀<extra>combined</extra>',
     ), row=1, col=1)
 
     fig.add_trace(go.Scatter(
         x=B, y=result['sigma_combined_a02'],
-        mode='lines', name='combined σ',
+        mode='lines', name=f"σ {result['default_channel'] or 'combined'}",
         line=dict(color='#f0f4ff', width=2.2),
         hovertemplate='B=%{x:.2f} G<br>σ=%{y:.4g} a₀²<extra>combined</extra>',
         showlegend=False,
     ), row=2, col=1)
 
+    # Other entrance channels (each its own product over that channel's s-wave poles)
+    for ch in result['channels']:
+        if ch['channel'] == result['default_channel']:
+            continue
+        fig.add_trace(go.Scatter(
+            x=B, y=np.clip(np.asarray(ch['a_a0'], dtype=float), -5000, 5000),
+            mode='lines', name=f"a(B) {ch['channel']}", visible='legendonly',
+            line=dict(width=1.8),
+            hovertemplate='B=%{x:.2f} G<br>a=%{y:.4g} a₀<extra>' + ch['channel'] + '</extra>',
+        ), row=1, col=1)
+        fig.add_trace(go.Scatter(
+            x=B, y=ch['sigma_a02'], mode='lines', name=f"σ {ch['channel']}",
+            visible='legendonly', line=dict(width=1.8), showlegend=False,
+        ), row=2, col=1)
+
     # Individual resonances (clipped for readability)
     for i, res in enumerate(result['resonances']):
         c = colors[i % len(colors)]
+        if res['a_a0'] is None:     # d/g-wave pole: not a pole of the s-wave a(B); marker only
+            for _row in (1, 2):
+                fig.add_vline(x=res['B0_G'], line=dict(color=c, width=1, dash='dot'), row=_row, col=1)
+            continue
         a = np.array(res['a_a0'], dtype=float)
         # Clip display of poles for legibility
         a_plot = np.clip(a, -5000, 5000)
@@ -514,8 +614,23 @@ def write_output_json(result, data_dir='data_json'):
                 'Delta_G': r['Delta_G'],
                 'a_bg_a0': r['a_bg_a0'],
                 'ref': r['ref'],
+                'in_s_wave_a': r['a_a0'] is not None,
             }
             for r in result['resonances']
+        ],
+        'default_channel': result['default_channel'],
+        'is_boson': result['is_boson'],
+        'channels': [
+            {
+                'channel': c['channel'],
+                'labels': c['labels'],
+                'a_bg_a0': c['a_bg_a0'],
+                'identical_bosons': c['identical_bosons'],
+                'sigma_prefactor': '8*pi*a^2' if c['identical_bosons'] else '4*pi*a^2',
+                'a_a0': [None if (math.isnan(v) or math.isinf(v)) else round(float(v), 4)
+                         for v in np.asarray(c['a_a0'], dtype=float)[::step]],
+            }
+            for c in result['channels']
         ],
         'B_G': result['B_G'][::step].tolist(),
         'a_combined_a0': [
@@ -545,6 +660,7 @@ def run_one(element, args):
         B_max=args.B_max,
         B_points=args.B_points,
         kT_uK=args.kT_uK,
+        channel=getattr(args, 'channel', None),
     )
     print(f"  C6   = {result['C6_au']:.2f} au  ({result['C6_source']})")
     print(f"  beta6= {result['beta6_a0']:.3f} a0")

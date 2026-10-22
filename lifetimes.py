@@ -113,6 +113,7 @@ ee_fosc   = {}   # (upper_state_idx, lower_state_idx) -> fosc (excited->excited,
 
 # NIST f-values — shared loader in alpha_core (J-resolved + precision D-lines)
 from alpha_core import (
+    coulomb_fosc,
     load_nist_fvalues,
     load_literature_fvalues,
     parse_term_from_label,
@@ -219,62 +220,7 @@ if _is_metal:
 #   We use the simple scaling: f ∝ n*^-3 relative to known value
 
 
-def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
-    """
-    Coulomb approximation for oscillator strength (Bates & Damgaard 1949).
-
-    For a transition n_lower l_lower -> n_upper l_upper with quantum defects:
-        n*_u = n_upper - delta_upper
-        n*_l = n_lower - delta_lower
-
-    The absorption oscillator strength scales as:
-        f_lu ∝ n*_l^2 * n*_u^2 / (n*_u^2 - n*_l^2)^3
-
-    We use the semi-empirical formula for alkali-like transitions:
-        f_lu = C_l * (n*_l * n*_u)^3 / (n*_u^2 - n*_l^2)^3
-
-    where C_l accounts for the angular momentum factor and is derived
-    from the known hydrogenic limit.
-
-    Angular factors for Δl = ±1 (only allowed E1):
-        l_max = max(l_upper, l_lower)
-        C = (2/3) * l_max / (2*l_lower + 1)
-
-    Reference: Cowan, "The Theory of Atomic Structure and Spectra" (1981)
-    """
-    n_eff_u = n_upper  - delta_upper
-    n_eff_l = n_lower  - delta_lower
-
-    if n_eff_u <= n_eff_l or n_eff_u <= 0 or n_eff_l <= 0:
-        return 0.0
-
-    # Guard against near-degenerate n_eff (same-n transitions like 4f->4d)
-    # When n_eff_u ≈ n_eff_l the denominator (n*_u² - n*_l²) → 0 and the
-    # Coulomb approximation diverges. The actual matrix element for same-n
-    # transitions is small and can't be computed this way — return 0.
-    if (n_eff_u**2 - n_eff_l**2) < 0.5 * n_eff_u:
-        return 0.0
-
-    l_max = max(l_upper, l_lower)
-
-    # Angular momentum factor
-    C_ang = (2.0/3.0) * l_max / (2*l_lower + 1)
-
-    # Energy difference in Rydberg units
-    delta_E_ry = 1.0/n_eff_l**2 - 1.0/n_eff_u**2
-
-    # Radial matrix element squared in atomic units (Coulomb approximation)
-    # |<n*_l l | r | n*_u l'>|^2 ≈ (n*_u * n*_l)^3 / (n*_u^2 - n*_l^2)^3
-    # × correction for non-integer n* (slowly varying, ~1 for high n*)
-    n_prod = n_eff_u * n_eff_l
-    n_diff_sq = n_eff_u**2 - n_eff_l**2
-    R_sq = n_prod**3 / n_diff_sq**3
-
-    # f = (g_upper / g_lower) * (4/3) * delta_E_ry * C_ang * R_sq
-    # Note: this is f_lu (absorption), g ratio already in C_ang
-    f = (4.0/3.0) * delta_E_ry * C_ang * R_sq * (2*l_upper + 1) / (2*l_lower + 1)
-
-    return max(f, 0.0)
+# coulomb_fosc is imported from alpha_core (single implementation; P26).
 
 
 NIST_J_6J = True   # fix G: line-level NIST f + 6j completion over lower fine-structure levels
@@ -1122,7 +1068,10 @@ for state_label, tlist in sorted(A_by_upper.items(),
     # Both in SI: spectral energy density ρ(ν) units [J m⁻³ Hz⁻¹]
     #
     # Peak absorption cross-section at line centre (natural broadening):
-    #   σ_peak = (λ²/8π) · (g₂/g₁) · A₂₁ / (Δν_nat)
+    #   σ_peak = (λ²/2π) · (g₂/g₁) · (A₂₁/A_total) = (λ²/4π²) · (g₂/g₁) · A₂₁ / Δν_nat
+    #   (a unit-normalised Lorentzian peaks at 2/(π·Δν_nat); P22: the old (λ²/8π)·A/Δν used 1/Δν
+    #    and was π/2 too large. For A₂₁ = A_total: σ = (g₂/g₁)·λ²/2π, Steck's two-level value
+    #    is 3λ²/2π for the stretched cycling transition.)
     #   Δν_nat = A_total / (2π)             [Hz]  natural linewidth (FWHM)
     #
     # Saturation intensity (two-level approximation):
@@ -1147,7 +1096,7 @@ for state_label, tlist in sorted(A_by_upper.items(),
     delta_nu_nat = A_total / (2 * math.pi)
 
     # Peak cross-section at line centre [m²] — natural broadening (Lorentzian)
-    sigma_peak_m2 = (dom_wl_m**2 / (8 * math.pi)) * (g_upper / g_lower) * (dom_A / delta_nu_nat)
+    sigma_peak_m2 = (dom_wl_m**2 / (4 * math.pi**2)) * (g_upper / g_lower) * (dom_A / delta_nu_nat)
     sigma_peak_cm2 = sigma_peak_m2 * 1e4   # cm²
 
     # Saturation intensity [W m⁻²] — two-level closed transition approximation
@@ -1159,11 +1108,10 @@ for state_label, tlist in sorted(A_by_upper.items(),
     #The Doppler FWHM is:
     #   Δν_D = (ν₀/c) · √(8·k_B·T·ln2 / m)
     # Peak cross-section with Doppler broadening (CompTable / compare_elements):
-    #   σ_peak_dop = σ_peak_nat · (Δν_nat / Δν_D) · √(ln2/π)
-    # with σ_peak_nat from the pipeline natural convention above.
-    # Note: a unit-normalised Gaussian lineshape peak is larger by a factor 2
-    # (φ(0)=2√(ln2/π)/Δν_D rather than √(ln2/π)/Δν_D); the pipeline keeps the
-    # CompTable scaling so lifetimes JSON and comparison_table.html agree.
+    #   σ_peak_dop = σ_peak_nat · (Δν_nat / Δν_D) · √(π·ln2)
+    # Derivation: σ(ν) = σ₀·(πΔν_nat/2)·φ(ν) with φ normalised; Lorentzian φ(0)=2/(πΔν_nat) gives σ₀,
+    # Gaussian φ(0)=2√(ln2/π)/Δν_D gives σ₀·(Δν_nat/Δν_D)·√(π ln2). (The previous √(ln2/π) was
+    # short by π; together with the π/2 error in σ_nat it made σ_dop 2x too small.)
     #
     # Saturation intensity with Doppler broadening (same formula, different σ):
     #   I_sat_dop = hν / (2 · σ_peak_dop · τ)
@@ -1202,12 +1150,10 @@ for state_label, tlist in sorted(A_by_upper.items(),
 
         # Peak cross-section with Doppler broadening [m²]
         # Matches compare_elements.sigma_peak_doppler:
-        #   σ_D = σ_nat · (Δν_nat / Δν_D) · √(ln 2 / π)
-        # (scales the pipeline natural peak; see Overview §07 for the
-        # proper-Gaussian factor-of-two relative to this convention).
+        #   σ_D = σ_nat · (Δν_nat / Δν_D) · √(π ln 2)
         sigma_peak_dop_m2  = (
             sigma_peak_m2 * (delta_nu_nat / delta_nu_dop)
-            * math.sqrt(math.log(2) / math.pi)
+            * math.sqrt(math.pi * math.log(2))
         )
         sigma_peak_dop_cm2 = sigma_peak_dop_m2 * 1e4
 
@@ -1506,7 +1452,7 @@ if reliable:
     print(f"    Δν_nat = A_total/(2π)                   natural linewidth FWHM [MHz]")
     print(f"    Δν_D = (ν/c)·√(8k_BT·ln2/m)            Doppler FWHM at T={T_DOPPLER_K:.0f} K [MHz]")
     print(f"    σ_nat = (λ²/8π)·(g_u/g_l)·A/Δν_nat     natural peak cross-section [cm²]")
-    print(f"    σ_dop = σ_nat·(Δν_nat/Δν_D)·√(ln2/π)   Doppler peak [cm²] (CompTable)")
+    print(f"    σ_dop = σ_nat·(Δν_nat/Δν_D)·√(π·ln2)   Doppler peak [cm²]")
     print(f"    I_sat = hν/(2·σ·τ)                      saturation intensity [mW/cm²]")
     print(f"    v_rec = ħk/m                             recoil velocity [cm/s]")
     print(f"    E_rec = ħ²k²/2m                         recoil energy [nK]")

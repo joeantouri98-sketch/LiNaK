@@ -357,7 +357,7 @@ def default_nroots(symbol, charge, mult, calc_mode, soc_class_hint=None):
         if el_class:
             return default_soc_nroots(el_class, symbol=symbol)
         return 6
-    if TARGET is not None:
+    if TARGET is not None and sys.stdin.isatty():   # no prompt when driven by the GUI / a pipe
         try:
             prompt = "Number of excited-state roots [default: 20]: "
             entered = input(prompt).strip()

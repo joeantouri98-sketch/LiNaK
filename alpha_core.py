@@ -9,6 +9,7 @@ scripts (e.g. tweezer.py).  No argparse or plotting — safe to import.
 __version__ = '1.0'
 
 import csv
+import functools
 import io
 import json
 import math
@@ -122,24 +123,66 @@ def _normalize_asd_term(term):
     return t
 
 
+# Coulomb-approximation oscillator strengths (last-resort tier and the blackbody QDT tail).
+#
+# Hybrid (P26). The previous closed form (n*_u n*_l)^3/(n*_u^2-n*_l^2)^3 failed the hydrogen limit
+# (1s-2p 0.593 vs 0.4162, 2p-3d 0.237 vs 0.6958, 3d-4f 0.183 vs 1.0175) and was 10-17x too large for
+# alkali s->p lines. It is replaced by the Bates-Damgaard radial integral evaluated numerically:
+#   n*_u <= COULOMB_WHITTAKER_NMAX : exact Whittaker functions W_{n*,l+1/2} (scipy hyperu), integrated
+#       from the inner classical turning point (from r = 0 when both defects vanish, which is then the
+#       exact hydrogen result). Agrees with the exact hydrogenic f to 1e-4 and with the Numerov integral
+#       to 0.1-0.4 % for alkali defects.
+#   above that : the Numerov radial integral in qdt_radial (log-space start, no overflow), which
+#       reproduces the exact hydrogenic f to <= 2 % up to n = 200.
+COULOMB_WHITTAKER_NMAX = 12.0
+
+
+def _coulomb_R(ns, l, r):
+    """Normalised Coulomb-approximation radial function R(r) = N W_{ns,l+1/2}(2r/ns) / r."""
+    from scipy.special import hyperu, gamma
+    z = 2.0 * r / ns
+    with np.errstate(all='ignore'):
+        W = np.exp(-z / 2.0) * z ** (l + 1) * hyperu(l + 1 - ns, 2 * l + 2, z)
+    N = 1.0 / math.sqrt(ns * ns * abs(gamma(ns + l + 1) * gamma(ns - l)))
+    return N * W / r
+
+
+def _coulomb_turning_point(ns, l):
+    x = 1.0 - l * (l + 1) / (ns * ns)
+    return ns * ns * (1.0 - math.sqrt(x)) if x > 0 else ns * ns
+
+
+def _whittaker_fosc(ns_u, l_u, ns_l, l_l, hydrogenic):
+    r_lo = 1e-5 if hydrogenic else max(1e-5, _coulomb_turning_point(ns_u, l_u),
+                                      _coulomb_turning_point(ns_l, l_l))
+    r = np.geomspace(r_lo, 40.0 * max(ns_u, ns_l) ** 2 + 200.0, 12000)
+    prod = _coulomb_R(ns_u, l_u, r) * _coulomb_R(ns_l, l_l, r) * r ** 4
+    prod = np.where(np.isfinite(prod), prod, 0.0)
+    I = float(np.trapezoid(prod, np.log(r))) if hasattr(np, 'trapezoid') else float(np.trapz(prod, np.log(r)))
+    dE = 0.5 / ns_l ** 2 - 0.5 / ns_u ** 2
+    return (2.0 / 3.0) * dE * max(l_u, l_l) / (2 * l_l + 1) * I * I
+
+
+@functools.lru_cache(maxsize=200000)
+def _coulomb_fosc_cached(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
+    ns_u, ns_l = n_upper - delta_upper, n_lower - delta_lower
+    if ns_u <= ns_l or ns_l <= 0.5 or abs(l_upper - l_lower) != 1:
+        return 0.0
+    if ns_u <= l_upper + 0.51 or ns_l <= l_lower + 0.51:
+        return 0.0
+    if ns_u <= COULOMB_WHITTAKER_NMAX:
+        hydrogenic = abs(delta_upper) < 1e-3 and abs(delta_lower) < 1e-3
+        f = _whittaker_fosc(ns_u, l_upper, ns_l, l_lower, hydrogenic)
+    else:
+        from qdt_radial import numerov_fosc
+        f = numerov_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower)
+    return f if (math.isfinite(f) and f > 0.0) else 0.0
+
+
 def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
-    """Coulomb approximation for oscillator strength (Bates & Damgaard 1949)."""
-    n_eff_u = n_upper - delta_upper
-    n_eff_l = n_lower - delta_lower
-
-    if n_eff_u <= n_eff_l or n_eff_u <= 0 or n_eff_l <= 0:
-        return 0.0
-    if (n_eff_u**2 - n_eff_l**2) < 0.5 * n_eff_u:
-        return 0.0
-
-    l_max  = max(l_upper, l_lower)
-    C_ang  = (2.0/3.0) * l_max / (2*l_lower + 1)
-    dE_ry  = 1.0/n_eff_l**2 - 1.0/n_eff_u**2
-    n_prod = n_eff_u * n_eff_l
-    n_diff = n_eff_u**2 - n_eff_l**2
-    R_sq   = n_prod**3 / n_diff**3
-    f      = (4.0/3.0) * dE_ry * C_ang * R_sq * (2*l_upper + 1) / (2*l_lower + 1)
-    return max(f, 0.0)
+    """Coulomb-approximation absorption oscillator strength (multiplet-averaged nl -> n'l')."""
+    return _coulomb_fosc_cached(int(n_upper), int(l_upper), int(n_lower), int(l_lower),
+                                round(float(delta_upper), 6), round(float(delta_lower), 6))
 
 
 # ============================================================================
@@ -184,7 +227,17 @@ def _j_degeneracy(J_str):
 
 
 def is_transition_metal_species(element):
-    """True for 3d TM neutrals (Fe, …) that use the NIST line-list path."""
+    """True for species that use the NIST line-list path (no QDT model): 3d TM neutrals (Fe, …),
+    and any species whose data_json/<El>_rydberg.json was built with `rydberg.py --nist-only`
+    (method 'NIST ASD levels (no QDT)'), so the later stages see the same level scheme."""
+    try:
+        _rf = os.path.join('data_json', f"{str(element).strip()}_rydberg.json")
+        if os.path.exists(_rf):
+            with open(_rf) as _f:
+                if 'no QDT' in str(json.load(_f).get('method', '')):
+                    return True
+    except (OSError, ValueError):
+        pass
     try:
         from orca_templates import TRANSITION_METAL_3D
         from species import resolve_species
@@ -981,11 +1034,25 @@ def get_available_elements(data_dir='data_json'):
         m = re.match(r'^(\w+)_rydberg\.json$', fname)
         if m:
             el = m.group(1)
-            if is_ion_id(el):
+            if is_ion_id(el) or is_transition_metal_species(el):
                 continue
             if os.path.exists(os.path.join(data_dir, f"{el}_transitions.json")):
                 available.append(el)
     return sorted(available)
+
+
+def require_alpha_species(raw, context="this script"):
+    """Like species.require_neutral_species, but also rejects 3d transition metals and any species
+    built with `rydberg.py --nist-only` (no QDT scheme): the polarizability machinery would invent
+    two configuration-based channels for them and ignore their NIST line lists (Fe alpha0 = 23 au
+    from two f = 0.64 channels, a meaningless number). Returns the resolved species dict."""
+    from species import require_neutral_species
+    sp = require_neutral_species(raw, context)
+    if is_transition_metal_species(sp["species_id"]):
+        raise SystemExit(
+            f"{context}: {sp['species_id']} has no quantum-defect (alkali-like) level scheme, so a "
+            f"sum-over-states polarizability would be meaningless. Not supported.")
+    return sp
 
 
 def load_cached_transitions(element, data_dir='data_json'):
@@ -1336,6 +1403,16 @@ def build_transitions_for_state(state_label, data, all_transitions):
 
         if f <= 0:
             continue
+
+        if sign == -1:
+            # The state is the UPPER level: its emission strength is f_nk = -(g_k/g_n) f_kn, with f_kn
+            # the tabulated absorption value (Mitroy, Safronova & Clark 2010). The LS path already
+            # includes this factor; without it a 3p3/2 -> 3s channel is 2x too large (g_k/g_n = 2/4).
+            _g_lo, _g_up = _j_degeneracy(t.get('lower_J')), _j_degeneracy(upper_J)
+            if not (_g_lo and _g_up):   # nl-collapsed levels: use the full nl degeneracies for both
+                _g_lo = 2 * (2 * L_CHAR.get(ll_char, 0) + 1)
+                _g_up = 2 * (2 * L_CHAR.get(lu, 0) + 1)
+            f = f * _g_lo / _g_up
 
         result.append(dict(
             delta_E_au  = dE_au,

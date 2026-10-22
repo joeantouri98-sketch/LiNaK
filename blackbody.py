@@ -265,11 +265,22 @@ def _qd_delta(qd, l_char):
     return float(qd.get(l_char, 0.0) or 0.0)
 
 
-def _qdt_energy_au(n, l_char, qd):
+def _qdt_energy_au(n, l_char, qd, mass_factor=1.0):
+    """E = -(R_M/R_inf)/(2 n*^2) in Hartree; mass_factor = R_M/(Z^2 R_inf) (1.0 = infinite mass)."""
     n_eff = int(n) - _qd_delta(qd, l_char)
     if n_eff <= 0:
         return None
-    return -0.5 / (n_eff * n_eff)
+    return -0.5 * mass_factor / (n_eff * n_eff)
+
+
+def _rydberg_mass_factor(data):
+    """R_M / (Z^2 R_inf) from the Rydberg JSON's reduced-mass constant (1.0 if absent)."""
+    ryd = data.get('ryd') or {}
+    ry = ryd.get('rydberg_constant_eV')
+    if not ry:
+        return 1.0
+    z = float(ryd.get('z_core') or 1.0)
+    return float(ry) / (z * z * (HARTREE_TO_EV / 2.0))
 
 
 def discrete_tail_partners(label, data, n_from, n_to):
@@ -287,18 +298,44 @@ def discrete_tail_partners(label, data, n_from, n_to):
     if L0 is None:
         return []
     qd = data.get('qd') or {}
+    _mass_factor = _rydberg_mass_factor(data)
     out = []
-    for n in range(int(n_from), int(n_to) + 1):
-        for l_char, L in L_CHAR.items():
-            if abs(L - L0) != 1:
-                continue
-            E = _qdt_energy_au(n, l_char, qd)
+    n_from, n_to = int(n_from), int(n_to)
+    d0 = _qd_delta(qd, l0)
+    # Exact radial integrals (hydrogen-validated Coulomb/Numerov hybrid in alpha_core) for n' up to
+    # n_dense, then a PCHIP interpolation of g(n') = f n*'^3 / dE in 1/n*' on a geometric anchor set.
+    # g is smooth for n' >> n0 (threshold law f ~ dE / n*'^3); it is NOT smooth near the diagonal
+    # (n' ~ n0, dE -> 0), hence the dense exact region n_dense ~ 1.5 n0. Interpolation error < 2 %.
+    n_dense = min(n_to, max(n_from + 9, int(math.ceil(1.5 * n0))))
+    for l_char, L in L_CHAR.items():
+        if abs(L - L0) != 1:
+            continue
+        du = _qd_delta(qd, l_char)
+        exact_ns = list(range(n_from, n_dense + 1))
+        f_of = {n: coulomb_fosc(n, L, n0, L0, du, d0) for n in exact_ns}
+        if n_to > n_dense:
+            anchors = sorted(set([n_dense] + [int(round(n_dense * (n_to / n_dense) ** (k / 8.0)))
+                                              for k in range(1, 9)] + [n_to]))
+            xs, ys = [], []
+            for na in anchors:
+                nsu, nsl = na - du, n0 - d0
+                dE = 0.5 / nsl ** 2 - 0.5 / nsu ** 2
+                fa = f_of[na] if na in f_of else coulomb_fosc(na, L, n0, L0, du, d0)
+                if fa > 0 and dE > 0:
+                    xs.append(1.0 / nsu)
+                    ys.append(fa * nsu ** 3 / dE)
+            if len(xs) >= 3:
+                from scipy.interpolate import PchipInterpolator
+                P = PchipInterpolator(xs[::-1], ys[::-1])
+                for n in range(n_dense + 1, n_to + 1):
+                    nsu, nsl = n - du, n0 - d0
+                    dE = 0.5 / nsl ** 2 - 0.5 / nsu ** 2
+                    f_of[n] = max(float(P(1.0 / nsu)), 0.0) * dE / nsu ** 3
+        for n in range(n_from, n_to + 1):
+            E = _qdt_energy_au(n, l_char, qd, _mass_factor)
             if E is None or E <= E0:
                 continue
-            f = coulomb_fosc(
-                n, L, n0, L0,
-                _qd_delta(qd, l_char), _qd_delta(qd, l0),
-            )
+            f = f_of.get(n, 0.0)
             if f <= 0:
                 continue
             out.append(dict(
@@ -659,8 +696,10 @@ def run_rates(element, T_K=300.0, n_min=None, data_dir='data_json'):
         states=[
             dict(
                 state=r['state'], n=r['n'], l=r['l'],
-                Gamma_rad_s=round(r['Gamma_rad_s'], 6),
-                Gamma_BBR_s=round(r['Gamma_BBR_s'], 6),
+                # 12 significant digits, not round(x, 6): the PI-inclusive tau_eff / Gamma_quench /
+                # mixing rates are later built from these stored values (P46).
+                Gamma_rad_s=float(f"{r['Gamma_rad_s']:.12g}"),
+                Gamma_BBR_s=float(f"{r['Gamma_BBR_s']:.12g}"),
                 tau_rad_s=(None if r['tau_rad_s'] is None else round(r['tau_rad_s'], 8)),
                 tau_eff_s=(None if r['tau_eff_s'] is None else round(r['tau_eff_s'], 8)),
                 top_channels=r['top_channels'],
@@ -2172,7 +2211,7 @@ if __name__ == '__main__':
     if args.state:
         extra_states = [s.strip() for s in args.state.split(',') if s.strip()]
 
-    from species import require_neutral_species
+    from alpha_core import require_alpha_species
 
     if args.all:
         elements = get_available_elements(DATA_DIR)
@@ -2184,7 +2223,7 @@ if __name__ == '__main__':
             available = get_available_elements(DATA_DIR)
             print("Available elements:", ', '.join(available) if available else 'none')
             args.element = input("Enter element symbol: ").strip()
-        elements = [require_neutral_species(args.element, "blackbody.py")["species_id"]]
+        elements = [require_alpha_species(args.element, "blackbody.py")["species_id"]]
 
     for el in elements:
         el_out_dir = os.path.join('plots', el)

@@ -60,26 +60,16 @@ from constants import HC_EV_NM as HC_NM
 from rydberg import label_to_pretty
 from species import resolve_species
 
-DLINES_FALLBACK = {
-    "Li": [{"wl": 670.776, "fosc": 0.4956, "label": "2p→2s",     "src": "lit"}],
-    "Na": [{"wl": 589.158, "fosc": 0.6408, "label": "3p3/2→3s",  "src": "lit"},
-           {"wl": 589.756, "fosc": 0.3204, "label": "3p1/2→3s",  "src": "lit"}],
-    "K":  [{"wl": 766.700, "fosc": 0.6761, "label": "4p3/2→4s",  "src": "lit"},
-           {"wl": 770.108, "fosc": 0.3380, "label": "4p1/2→4s",  "src": "lit"}],
-    "Rb": [{"wl": 780.241, "fosc": 0.6944, "label": "5p3/2→5s",  "src": "lit"},
-           {"wl": 794.979, "fosc": 0.3472, "label": "5p1/2→5s",  "src": "lit"}],
-    "Cs": [{"wl": 852.347, "fosc": 0.7143, "label": "6p3/2→6s",  "src": "lit"},
-           {"wl": 894.593, "fosc": 0.3571, "label": "6p1/2→6s",  "src": "lit"}],
-    "Fr": [{"wl": 718.183, "fosc": 0.5000, "label": "7p3/2→7s",  "src": "lit"},
-           {"wl": 817.165, "fosc": 0.3000, "label": "7p1/2→7s",  "src": "lit"}],
-}
+from dline_literature import LITERATURE as _DLIT, dline_transitions as _dline_transitions
+# Hard-coded D-line fallback, derived from the single literature table (never a second copy of numbers).
+DLINES_FALLBACK = {el: _dline_transitions(el) for el in _DLIT}
 
 SRC_COLORS = {
     "NIST": "#1a6eb5", "precision": "#1a6eb5", "NIST-extrap": "#5b9bd5",
     "literature": "#c47a00", "lit": "#c47a00",
     "ORCA": "#c0392b", "EOM-CCSD": "#c0392b",
     "Numerov": "#0e7c6b",
-    "Coulomb": "#27ae60", "Coulomb(approx)": "#8e44ad",
+    "Coulomb": "#27ae60", "Coulomb(approx)": "#52be80",
     "transitions": "#888", "?": "#aaa",
 }
 

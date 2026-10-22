@@ -99,3 +99,45 @@ def test_resonance_sign_convention_and_schema():
     validate_feshbach_params({"resonances": [{"B0_G": 834.0, "Delta_G": -300.0, "a_bg_a0": -1405.0}]})
     with pytest.raises(ValueError):
         validate_feshbach_params({"resonances": [{"B0_G": 834.0, "Delta_G": 0.0}]})
+
+
+# ---- PHYSICS_BUGS P24 / P25 (fork review) -----------------------------------------------------
+def test_quantum_statistics_from_isotope():
+    from feshbach import is_boson
+    assert is_boson('Na', 23) and is_boson('K', 39) and is_boson('Rb', 87) and is_boson('Cs', 133)
+    assert is_boson('Li', 6) is False and is_boson('K', 40) is False and is_boson('Li', 7)
+    assert is_boson('Xx', 3) is None
+
+
+def test_sigma_el_identical_bosons_is_twice_distinguishable():
+    from feshbach import sigma_el_a0
+    a = np.array([50.0, 500.0]); k = 0.001
+    assert np.allclose(sigma_el_a0(a, k, identical_bosons=True), 2 * sigma_el_a0(a, k))
+    assert np.allclose(sigma_el_a0(a, 0.0), 4 * np.pi * a ** 2)
+    assert np.allclose(sigma_el_a0(a, 0.0, identical_bosons=True), 8 * np.pi * a ** 2)
+
+
+def test_channel_parsing_and_grouping(na_feshbach_params):
+    from feshbach import identical_particles, group_s_wave_by_channel
+    assert identical_particles('|1,+1> + |1,+1>') and not identical_particles('|1> + |2>')
+    assert not identical_particles('ee (highest F=2 stretched)')
+    g = group_s_wave_by_channel(na_feshbach_params['resonances'])
+    assert len(g) == 2 and len(g['|1,+1> + |1,+1>']) == 3 and len(g['|1,-1> + |1,-1>']) == 1
+    mixed = [{'channel': 'x', 'partial_wave': 'd'}, {'channel': 'x', 'partial_wave': 's'}]
+    assert len(group_s_wave_by_channel(mixed)['x']) == 1       # d-wave poles never enter a_s(B)
+
+
+def test_combined_curve_does_not_mix_channels():
+    import os
+    from feshbach import compute_element
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data_json')
+    r = compute_element('Na', root, B_points=3000)
+    B = r['B_G']
+    comb = np.asarray(r['a_combined_a0'])
+    # the |1,-1> pole at 1195 G must not appear in the |1,+1> curve ...
+    i = int(np.argmin(abs(B - 1195.0)))
+    assert abs(comb[i]) < 5000
+    # ... but it is in its own channel's curve
+    other = next(c for c in r['channels'] if c['channel'] == '|1,-1> + |1,-1>')
+    assert np.nanmax(np.abs(other['a_a0'][i - 3:i + 4])) > 1e3
+    assert r['sigma_combined_a02'][0] == np.pi * 8 * comb[0] ** 2 / (1 + (r['k_a0inv'] * comb[0]) ** 2)

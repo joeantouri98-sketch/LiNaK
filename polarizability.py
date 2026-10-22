@@ -262,12 +262,13 @@ def compute_C6(transitions_list, n_xi=2000):
 
 def C6_combining_rule(C6_A, C6_B, alpha0_A, alpha0_B):
     """
-    London combining rule for heteronuclear C₆:
-    C₆^AB = 2·α_A·α_B·C₆_AA·C₆_BB / (α_B·C₆_AA + α_A·C₆_BB)
-    All quantities in atomic units.
+    Tang (1969) combining rule for the heteronuclear C₆ (London form with static α):
+        C₆^AB = 2 α_A α_B C₆^A C₆^B / (α_B² C₆^A + α_A² C₆^B)
+    All quantities in atomic units. For A = B it returns C₆^A exactly (units: C₆, not α·C₆).
     Returns 0 if any input is zero.
+    Reference: K. T. Tang, Phys. Rev. 177, 108 (1969).
     """
-    denom = alpha0_B * C6_A + alpha0_A * C6_B
+    denom = alpha0_B**2 * C6_A + alpha0_A**2 * C6_B
     if denom == 0 or C6_A == 0 or C6_B == 0:
         return 0.0
     return 2.0 * alpha0_A * alpha0_B * C6_A * C6_B / denom
@@ -1429,13 +1430,13 @@ def main():
     os.makedirs('plots', exist_ok=True)
     print(f"polarizability.py v{__version__}")
 
-    from species import require_neutral_species
+    from alpha_core import require_alpha_species
 
     if args.state:
         if args.element is None:
             print("Provide an element with --state, e.g. python polarizability.py Na --state 20s")
             sys.exit(1)
-        el = require_neutral_species(args.element, "polarizability.py")["species_id"]
+        el = require_alpha_species(args.element, "polarizability.py")["species_id"]
         data = load_element(el, data_dir)
         if data is None:
             sys.exit(1)
@@ -1461,7 +1462,7 @@ def main():
             available = get_available_elements(data_dir)
             print("Available elements:", ", ".join(available) if available else "none")
             args.element = input("Enter element symbol: ").strip()
-        elements = [require_neutral_species(args.element, "polarizability.py")["species_id"]]
+        elements = [require_alpha_species(args.element, "polarizability.py")["species_id"]]
 
     all_results = []
     for el in elements:

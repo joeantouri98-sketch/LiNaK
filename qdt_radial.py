@@ -79,11 +79,12 @@ def radial_wavefunction(n: int, l: int, delta: float,
     u = np.zeros_like(r)
     # Asymptotic start at outer two points
     kappa = z / ns
-    u[-1] = r[-1] ** ns * math.exp(-kappa * r[-1])
-    u[-2] = r[-2] ** ns * math.exp(-kappa * r[-2])
-    if u[-1] == 0.0 or not np.isfinite(u[-1]):
-        u[-1] = 1e-300
-        u[-2] = 1e-300
+    # Log-space start: r**ns overflows for n* >~ 70 (the old code then returned ~1e-233 or 0).
+    # Only the ratio of the two start values matters (the solution is normalised afterwards).
+    _a1 = ns * math.log(r[-1]) - kappa * r[-1]
+    _a2 = ns * math.log(r[-2]) - kappa * r[-2]
+    u[-1] = 1.0
+    u[-2] = math.exp(max(min(_a2 - _a1, 600.0), -600.0))
 
     # Inward Numerov
     for i in range(n_grid - 3, -1, -1):
@@ -96,8 +97,8 @@ def radial_wavefunction(n: int, l: int, delta: float,
         else:
             u[i] = num / den
         # Prevent overflow: rescale periodically
-        if abs(u[i]) > 1e200:
-            u[i:] *= 1e-200
+        if abs(u[i]) > 1e100:     # keep u*u (and its sum over up to 1.5e5 points) below float overflow
+            u[i:] *= 1e-100
 
     # Force regular origin behavior softly (u→0)
     u[0] = 0.0

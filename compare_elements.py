@@ -75,87 +75,7 @@ from element_data import ELEMENTS
 pi = math.pi
 _Z_BY_SYMBOL = {sym: Z for Z, (sym, _q, _m) in ELEMENTS.items()}
 
-# ============================================================================
-# LITERATURE / FALLBACK VALUES
-# ============================================================================
-# Used when pipeline JSON is not available.
-# Sources: Steck D-line data sheets, NIST ASD, Sansonetti 2011.
-# fosc_* are J-resolved absorption oscillator strengths (not multiplet totals).
-
-LITERATURE = {
-    'Li': {
-        'Z': 3, 'mass_amu': 6.941, 'gs': '2s', 'np': '2p',
-        'IE_eV': 5.391714,
-        'D1_nm': 670.976,   'D2_nm': 670.962,
-        'tau_D1_ns': 27.10,  'tau_D2_ns': 27.10,
-        'fosc_D1': 0.2490,   'fosc_D2': 0.4980,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 0.3995,   'delta_p': 0.0472,
-        'soc_meV': 0.043,
-        'source': 'literature',
-    },
-    'Na': {
-        'Z': 11, 'mass_amu': 22.990, 'gs': '3s', 'np': '3p',
-        'IE_eV': 5.139076,
-        'D1_nm': 589.7558, 'D2_nm': 589.1583,
-        'tau_D1_ns': 16.299, 'tau_D2_ns': 16.249,
-        'fosc_D1': 0.3200,   'fosc_D2': 0.6410,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 1.3478,   'delta_p': 0.8551,
-        'soc_meV': 2.19,
-        'source': 'literature',
-    },
-    'K': {
-        'Z': 19, 'mass_amu': 39.098, 'gs': '4s', 'np': '4p',
-        'IE_eV': 4.340664,
-        'D1_nm': 770.1083, 'D2_nm': 766.7000,
-        'tau_D1_ns': 26.72,  'tau_D2_ns': 26.37,
-        'fosc_D1': 0.3320,   'fosc_D2': 0.6660,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 2.1800,   'delta_p': 1.7130,
-        'soc_meV': 7.23,
-        'source': 'literature',
-    },
-    'Rb': {
-        'Z': 37, 'mass_amu': 85.468, 'gs': '5s', 'np': '5p',
-        'IE_eV': 4.177128,
-        'D1_nm': 794.9788, 'D2_nm': 780.2414,
-        'tau_D1_ns': 27.70,  'tau_D2_ns': 26.24,
-        'fosc_D1': 0.3424,   'fosc_D2': 0.6958,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 3.1311,   'delta_p': 2.6549,
-        'soc_meV': 29.43,
-        'source': 'literature',
-    },
-    'Cs': {
-        'Z': 55, 'mass_amu': 132.905, 'gs': '6s', 'np': '6p',
-        'IE_eV': 3.893905,
-        'D1_nm': 894.5930, 'D2_nm': 852.3471,
-        'tau_D1_ns': 34.894, 'tau_D2_ns': 30.462,
-        'fosc_D1': 0.3435,   'fosc_D2': 0.7142,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 4.0493,   'delta_p': 3.5915,
-        'soc_meV': 68.70,   # 554.04 cm^-1 NIST ASD
-        'source': 'literature',
-    },
-    'Fr': {
-        'Z': 87, 'mass_amu': 223.000, 'gs': '7s', 'np': '7p',
-        'IE_eV': 4.072741,
-        'D1_nm': 817.2,    'D2_nm': 718.2,
-        'tau_D1_ns': 29.45, 'tau_D2_ns': 21.02,   # Simsarian 1999
-        'fosc_D1': 0.340,   'fosc_D2': 0.736,
-        'g_upper_D1': 2, 'g_lower_D1': 2,
-        'g_upper_D2': 4, 'g_lower_D2': 2,
-        'delta_s': 4.9731,  'delta_p': 4.4965,
-        'soc_meV': 209.10,  # 1686.6 cm^-1 NIST ASD / Sansonetti 2007
-        'source': 'literature',
-    },
-}
+from dline_literature import LITERATURE   # single authoritative D-line table (P18)
 
 # ============================================================================
 # PHYSICS FUNCTIONS
@@ -172,10 +92,10 @@ def sigma_peak_nat(wl_nm, g_upper, g_lower):
     Peak absorption cross-section for natural (Lorentzian) broadening [m²].
 
     Matches lifetimes.py with Δν_nat = A/(2π):
-      σ = (λ²/8π)·(g_u/g_l)·(A/Δν_nat) = (λ²/4)·(g_u/g_l)
-    Isotropic / m_J-averaged light.
+      σ = (λ²/4π²)·(g_u/g_l)·(A/Δν_nat) = (λ²/2π)·(g_u/g_l)      (P22)
+    (Lorentzian peak 2/(πΔν_nat).) Isotropic / m_J-averaged light.
     """
-    return (wl_nm * 1e-9)**2 / 4.0 * (g_upper / g_lower)
+    return (wl_nm * 1e-9)**2 / (2.0 * pi) * (g_upper / g_lower)
 
 def sigma_peak_doppler(wl_nm, A_s, T_K, mass_amu, g_upper, g_lower,
                        sig_nat_m2=None, dnu_nat_Hz=None):
@@ -184,7 +104,7 @@ def sigma_peak_doppler(wl_nm, A_s, T_K, mass_amu, g_upper, g_lower,
 
     Scales the natural peak by linewidths (consistent with the natural σ shown
     in the table):
-      σ_D = σ_nat · (Δν_nat / Δν_D) · √(ln 2 / π)
+      σ_D = σ_nat · (Δν_nat / Δν_D) · √(π ln 2)
     with Δν_nat = A/(2π) [Hz] and Δν_D = Doppler FWHM [Hz].
     """
     if sig_nat_m2 is None:
@@ -194,7 +114,7 @@ def sigma_peak_doppler(wl_nm, A_s, T_K, mass_amu, g_upper, g_lower,
     dnu_D = doppler_fwhm_Hz(wl_nm, T_K, mass_amu)
     if dnu_D <= 0:
         return sig_nat_m2
-    return sig_nat_m2 * (dnu_nat_Hz / dnu_D) * math.sqrt(math.log(2) / pi)
+    return sig_nat_m2 * (dnu_nat_Hz / dnu_D) * math.sqrt(math.log(2) * pi)
 
 def isat_from_sigma(wl_nm, sigma_m2, tau_s):
     """
@@ -730,8 +650,8 @@ td.separator {{ border-right: 2px solid #ddd; }}
 <div class="footnotes">
   <b>Notes:</b>
   Natural σ_peak matches lifetimes.py Lorentzian peak
-  (σ ∝ λ²/4 × g_u/g_l for Δν_nat = A/2π); isotropic / m_J-averaged light.
-  Doppler σ_D = σ_nat × (Δν_nat/Δν_D) × √(ln2/π), recomputed live with the T slider.
+  (σ = λ²/2π × g_u/g_l for a Lorentzian of width A/2π); isotropic / m_J-averaged light.
+  Doppler σ_D = σ_nat × (Δν_nat/Δν_D) × √(π ln2), recomputed live with the T slider.
   I_sat = hν/(2σ_peak τ) — two-level approximation (cycling transition I_sat lower by ~3).
   R_scatt(max) = A/2 — maximum scattering rate at I→∞ on resonance.
   F_rad = ħk · R_scatt — radiation pressure force in aN (10⁻¹⁸ N).
@@ -771,7 +691,7 @@ function isatFromSigma_mWcm2(wl_nm, sig_cm2, tau_s) {{
 // Scale natural σ to Doppler using FWHM ratio (matches Python / table σ_nat)
 function sigmaDopplerFromNat_cm2(sig_nat_cm2, dnu_nat_MHz, dnu_D_MHz) {{
   if (!sig_nat_cm2 || !dnu_nat_MHz || !dnu_D_MHz) return 0;
-  return sig_nat_cm2 * (dnu_nat_MHz / dnu_D_MHz) * Math.sqrt(Math.log(2) / pi);
+  return sig_nat_cm2 * (dnu_nat_MHz / dnu_D_MHz) * Math.sqrt(Math.log(2) * pi);
 }}
 
 // State
