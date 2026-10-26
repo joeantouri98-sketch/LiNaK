@@ -16,21 +16,21 @@
     "I_Wm2": 500000000.0,
     "waist_um": 1.0,
     "mass_amu": 22.99,
-    "alpha_re_au": 232.86519688500883,
-    "alpha_im_au": 3.5678961256257346e-06,
-    "U_J": -3.6160727070342525e-28,
-    "U_uK": -26.19110800090575,
-    "U_kHz_h": -545.7341418328106,
-    "R_sc_Hz": 0.10507480809703182,
-    "R_sc_per_s": 0.10507480809703182,
+    "alpha_re_au": 232.8651968187197,
+    "alpha_im_au": 1.0945819371020724e-06,
+    "U_J": -3.6160727060048744e-28,
+    "U_uK": -26.191107993449997,
+    "U_kHz_h": -545.7341416774578,
+    "R_sc_Hz": 0.03223552002016503,
+    "R_sc_per_s": 0.03223552002016503,
     "E_r_J": 5.079380397004599e-30,
     "E_r_nK": 367.8980245525545,
-    "heating_J_s": 1.0674298409341671e-30,
-    "heating_uK_s": 0.07731362865827353,
-    "tau_heat_s": 338.7644385011409,
-    "tau_scatter_s": 9.517029039696608,
-    "nu_r_Hz": 30979.51896662743,
-    "nu_z_Hz": 7419.103460365954,
+    "heating_J_s": 3.274729369553511e-31,
+    "heating_uK_s": 0.023718768271686078,
+    "tau_heat_s": 1104.2355864960846,
+    "tau_scatter_s": 31.021680412614618,
+    "nu_r_Hz": 30979.518962218,
+    "nu_z_Hz": 7419.103459309965,
     "zR_um": 2.952624674426497,
     "top_channels": [
       {
@@ -38,7 +38,7 @@
         "wl_nm": 589.1575,
         "fosc": 0.641,
         "Gamma_s": 61590053.24455138,
-        "R_sc_Hz": 0.07002446384177903,
+        "R_sc_Hz": 0.021469932248340887,
         "source": "NIST"
       },
       {
@@ -46,7 +46,7 @@
         "wl_nm": 589.7549,
         "fosc": 0.32,
         "Gamma_s": 61369449.763897955,
-        "R_sc_Hz": 0.03503676231525373,
+        "R_sc_Hz": 0.010764286875067017,
         "source": "NIST"
       },
       {
@@ -54,7 +54,7 @@
         "wl_nm": 330.3314,
         "fosc": 0.009,
         "Gamma_s": 9548935.145290153,
-        "R_sc_Hz": 8.870483715076579e-06,
+        "R_sc_Hz": 8.5499797165344e-07,
         "source": "NIST"
       },
       {
@@ -62,7 +62,7 @@
         "wl_nm": 330.3924,
         "fosc": 0.00446,
         "Gamma_s": 9511926.449057395,
-        "R_sc_Hz": 4.382361418865617e-06,
+        "R_sc_Hz": 4.2255803180071994e-07,
         "source": "NIST"
       },
       {
@@ -70,10 +70,10 @@
         "wl_nm": 285.3644,
         "fosc": 0.00131,
         "Gamma_s": 2763390.2785511985,
-        "R_sc_Hz": 1.972733068753356e-07,
+        "R_sc_Hz": 1.4190123355797838e-08,
         "source": "NIST"
       }
     ]
   },
-  "note": "R_sc from Im[alpha(omega)] with Gamma = A_total from lifetimes.json. Heating uses 2 E_r(lambda_trap) per scatter. tau_heat = |U|/E_dot is an order-of-magnitude trap lifetime. Conservative depth/freqs also in polarizability.py AC Stark panel."
+  "note": "R_sc from Im[alpha(omega)] with Gamma = A_total from lifetimes.json, scaled as Gamma(omega/omega_k)^2 per channel (Grimm et al. 2000, Eq. 10). Heating uses 2 E_r(lambda_trap) per scatter. tau_heat = |U|/E_dot is an order-of-magnitude trap lifetime. Conservative depth/freqs also in polarizability.py AC Stark panel."
 }

@@ -55,15 +55,14 @@ from constants import (
     MU_N_MHz_G,
     MU_B_HZ_T,
     HC_EV_NM,
+    C_SI,
     HBAR_EV_S,
     nuclide_label,
     nuclide_plain,
     default_isotope_A,
 )
 
-# ============================================================================
 # ARGUMENT PARSING
-# ============================================================================
 
 parser = argparse.ArgumentParser(description='Hyperfine structure and Zeeman diagram')
 parser.add_argument('element', nargs='?', default=None)
@@ -90,27 +89,47 @@ args = parser.parse_args() if __name__ == '__main__' else parser.parse_args([])
 DATA_DIR = args.data_dir
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# ============================================================================
-# STEP 1 — BUILD nuclear_data.json FROM IAEA CSVs  (if requested or missing)
-# ============================================================================
+
+# STEP 1 : BUILD nuclear_data.json FROM IAEA CSVs  (if requested or missing)
+
+_HL_UNITS = {'fs': 1e-15, 'ps': 1e-12, 'ns': 1e-9, 'us': 1e-6, 'ms': 1e-3,
+             's': 1.0, 'm': 60.0, 'h': 3600.0, 'd': 86400.0, 'y': 3.156e7}
+
+
+def parse_spin(s):
+    """Nuclear spin from IAEA strings such as '3/2', '(3+)', '3/2(-)', '1(-)' (parity dropped)."""
+    s = re.sub(r'[()+\-\s]', '', str(s))
+    if '/' in s:
+        try:
+            n, d = s.split('/')
+            return int(n) / int(d)
+        except (ValueError, ZeroDivisionError):
+            return None
+    try:
+        v = float(s)
+        return v if v >= 0 else None
+    except ValueError:
+        return None
+
+
+def halflife_s(s):
+    """Half-life in seconds from '22.5 ms', '4.9 m', '1.2e3 y' ...; inf = stable, 0.0 = unknown.
+    Longest unit first: 'ms' must not be read as 'm' (minutes) -- that made Fr-219 22.5 ms = 1350 s."""
+    s = str(s).strip().lower()
+    if s == 'stable':
+        return float('inf')
+    m = re.match(r'([\d.]+(?:\s*x\s*10\^?\d+)?)\s*(fs|ps|ns|us|ms|s|m|h|d|y)\b', s)
+    if not m:
+        return 0.0
+    try:
+        return float(re.sub(r'\s*x\s*10\^?', 'e', m.group(1))) * _HL_UNITS[m.group(2)]
+    except ValueError:
+        return 0.0
+
 
 def build_nuclear_data(magn_csv, elec_csv, out_path):
     """Parse IAEA magnetic + quadrupole CSV files into nuclear_data.json."""
     import csv
-
-    def parse_spin(s):
-        s = s.strip().lstrip('(').rstrip(')').rstrip('+-')
-        if '/' in s:
-            try:
-                n, d = s.split('/')
-                return int(n) / int(d)
-            except:
-                return None
-        try:
-            v = float(s)
-            return v if v >= 0 else None
-        except:
-            return None
 
     def parse_float(s):
         s = str(s).strip()
@@ -121,23 +140,6 @@ def build_nuclear_data(magn_csv, elec_csv, out_path):
             return float(s)
         except:
             return None
-
-    def halflife_s(s):
-        s = s.strip().lower()
-        if s in ('stable', ''):
-            return float('inf')
-        m = re.match(r'([\d.]+(?:\s*x\s*10\^?\d+)?)\s*(s|m|h|d|y|ms|us|ns|ps|fs)?', s)
-        if not m:
-            return 0.0
-        num_s = re.sub(r'\s*x\s*10\^?', 'e', m.group(1))
-        try:
-            num = float(num_s)
-        except:
-            num = 0.0
-        unit = (m.group(2) or 's').strip()
-        mult = {'fs':1e-15,'ps':1e-12,'ns':1e-9,'us':1e-6,'ms':1e-3,
-                's':1,'m':60,'h':3600,'d':86400,'y':3.156e7}.get(unit, 1)
-        return num * mult
 
     magn = {}
     with open(magn_csv, encoding='utf-8', errors='ignore') as f:
@@ -222,9 +224,8 @@ for iso in _nd['isotopes']:
 for sym in NUCLEAR:
     NUCLEAR[sym].sort(key=lambda x: x['A'])
 
-# ============================================================================
-# STEP 2 — LOAD / FETCH  <element>_hf_constants.json
-# ============================================================================
+
+# STEP 2 : LOAD / FETCH  <element>_hf_constants.json
 
 def fetch_hf_constants_nist(element, out_path):
     """
@@ -255,8 +256,7 @@ def fetch_hf_constants_nist(element, out_path):
             if len(cols) < 5:
                 continue
             # Look for lines with config + J + level energy
-            # NIST ASD tab format varies; extract what we can
-            # This is a best-effort parse — the user should verify
+            # NIST ASD tab format varies
             pass
 
         print(f"  NIST ASD fetched but hf parsing requires manual verification.")
@@ -337,7 +337,7 @@ def load_hf_constants(element, data_dir, isotope_A=None):
             load_hf_constants.last_source = f"alt block {key} ({val.get('_isotope')})"
             return hf if hf else None
 
-    # ---- no block for this isotope: rescale from the reference isotope ----
+    # no block for this isotope: rescale from the reference isotope 
     ref = get_isotope(element, main_A)
     tgt = get_isotope(element, isotope_A)
     base = _parse_hf_block(raw)
@@ -360,9 +360,7 @@ def load_hf_constants(element, data_dir, isotope_A=None):
 
 load_hf_constants.last_source = ''
 
-# ============================================================================
-# STEP 3 — NUCLEAR DATA HELPERS
-# ============================================================================
+# STEP 3 : NUCLEAR DATA HELPERS
 
 def get_isotope(element, A=None):
     """
@@ -415,9 +413,8 @@ def parse_state_label(label):
         J = l_int + 0.5   # default to J = l + 1/2 for doublet
     return n, l_char, J
 
-# ============================================================================
-# STEP 4 — HYPERFINE PHYSICS
-# ============================================================================
+
+# STEP 4 :  HYPERFINE PHYSICS
 
 def F_levels(I, J):
     """Return list of allowed F quantum numbers: |I-J|, ..., I+J."""
@@ -525,9 +522,7 @@ def zeeman_energy_weak(F, mF, E_hf_MHz, gF):
     return E_hf_MHz, gF * MU_B_MHz_G * mF   # (offset, slope_per_gauss)
 
 
-# ============================================================================
-# STEP 5 — BREIT-RABI EXACT DIAGONALISATION
-# ============================================================================
+# STEP 5 : BREIT-RABI EXACT DIAGONALISATION
 
 def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
                         B_gauss_array, C_kHz=0.0):
@@ -560,7 +555,7 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
     def idx(mi_i, mj_i):
         return mi_i * dim_J + mj_i
 
-    # ── K = 2 I·J ───────────────────────────────────────────────────────────
+    # K = 2 I·J 
     # ⟨m_I, m_J|I_zJ_z|m_I, m_J⟩ = m_I m_J
     # ⟨m_I+1, m_J−1|I_+J_-|m_I, m_J⟩ = sqrt[(I−m_I)(I+m_I+1)] sqrt[(J+m_J)(J−m_J+1)]
     IJ = np.zeros((dim, dim))
@@ -577,7 +572,7 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
     K_mat = 2.0 * IJ
     H_hf = _hf_polynomial(K_mat, I, J, A_MHz, B_MHz_quad, C_kHz, np.eye(dim))
 
-    # ── H_Z diagonal (per Gauss) ────────────────────────────────────────────
+    # H_Z diagonal (per Gauss)
     H_Z_diag = np.array([
         gJ * MU_B_MHz_G * mJ_vals[mj_i]
         - gI * MU_N_MHz_G * mI_vals[mi_i]
@@ -585,13 +580,16 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
         for mj_i in range(dim_J)
     ])
 
-    # ── (F, m_F) labels at B = 0 ────────────────────────────────────────────
+    #(F, m_F) labels at B = 0 
     # A vanishing probe field along z splits each (2F+1)-fold level by m_F so that the eigenvectors
     # are m_F eigenstates (H_hf commutes with F_z = m_I + m_J); it is far below any energy scale.
     mF_diag = np.array([mI_vals[i] + mJ_vals[j] for i in range(dim_I) for j in range(dim_J)])
-    evals0, evecs0 = np.linalg.eigh(H_hf + np.diag(1e-9 * mF_diag))
+    # F² = I(I+1) + J(J+1) + 2 I·J is added as a tiny tie-breaker so that F is a good label even when
+    # the hyperfine levels are degenerate (A = B = C = 0): the labels then come from <F²>, not from
+    # the nearest F energy (which is arbitrary when every F has the same energy).
+    F2_mat = (I*(I+1) + J*(J+1)) * np.eye(dim) + K_mat
+    evals0, evecs0 = np.linalg.eigh(H_hf + np.diag(1e-9 * mF_diag) + 1e-7 * F2_mat)
     Fs = F_levels(I, J)
-    E_F = {F_: hyperfine_energy(F_, I, J, A_MHz, B_MHz_quad, C_kHz) for F_ in Fs}
     labels = []
     for k in range(dim):
         v      = evecs0[:, k]
@@ -599,10 +597,11 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
         mI     = mI_vals[dom_r // dim_J]
         mJ     = mJ_vals[dom_r %  dim_J]
         mF_approx = round(2*(mI + mJ)) / 2   # m_F = m_I + m_J
-        best_F = min(Fs, key=lambda F_: abs(evals0[k] - E_F[F_]))
+        F2_exp = float(np.real(v.conj() @ F2_mat @ v))
+        best_F = min(Fs, key=lambda F_: abs(F_*(F_+1) - F2_exp))
         labels.append((best_F, mF_approx))
 
-    # ── Diagonalise at each B ───────────────────────────────────────────────
+    # Diagonalise at each B 
     all_energies = np.zeros((len(B_gauss_array), dim))
     for bi, B in enumerate(B_gauss_array):
         H = H_hf.copy()
@@ -612,9 +611,8 @@ def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
     return all_energies, labels
 
 
-# ============================================================================
-# STEP 6 — TRANSITION SELECTION RULES
-# ============================================================================
+
+# STEP 6 : TRANSITION SELECTION RULES
 
 def allowed_transitions(Fs_lower, Fs_upper):
     """
@@ -664,17 +662,16 @@ def identify_special_transitions(transitions_list, Fs_ground, I_gs, J_gs, A_MHz_
             'frequency_MHz': nu_MHz,
             'frequency_GHz': nu_MHz / 1e3,
             'frequency_Hz':  nu_MHz * 1e6,
-            'wavelength_m':  3e8 / (nu_MHz * 1e6) if nu_MHz > 0 else None,
-            'wavelength_cm': 3e4 / nu_MHz if nu_MHz > 0 else None,
+            'wavelength_m':  C_SI / (nu_MHz * 1e6) if nu_MHz > 0 else None,
+            'wavelength_cm': C_SI * 1e-4 / nu_MHz if nu_MHz > 0 else None,
             'note': 'Zero-field ground ΔF=1 interval (m_F=0 clock to first order in B)',
         }
 
     return special
 
 
-# ============================================================================
-# STEP 7 — MAIN COMPUTATION PER ELEMENT
-# ============================================================================
+# STEP 7 : MAIN COMPUTATION PER ELEMENT
+
 
 def run_element(element, isotope_A=None, state_labels=None,
                 B_max=500.0, B_points=500, data_dir='data_json'):
@@ -683,7 +680,7 @@ def run_element(element, isotope_A=None, state_labels=None,
     print(f"  {element}  — Hyperfine Structure")
     print(f"{'='*65}")
 
-    # ── Nuclear data ─────────────────────────────────────────────────────────
+    # Nuclear data 
     iso = get_isotope(element, isotope_A)
     if iso is None:
         print(f"  ERROR: No nuclear data found for {element}")
@@ -701,14 +698,14 @@ def run_element(element, isotope_A=None, state_labels=None,
         print(f"  I=0: no hyperfine structure. Exiting.")
         return None
 
-    # ── HF constants ─────────────────────────────────────────────────────────
+    # HF constants 
     hf_consts = load_hf_constants(element, data_dir, A)
     print(f"  HF constants: {load_hf_constants.last_source}")
     if hf_consts is None:
         print(f"  No hf_constants available. Fill in {data_dir}/{element}_hf_constants.json")
         return None
 
-    # ── Rydberg data for state energies ──────────────────────────────────────
+    # Rydberg data for state energies 
     ryd_file = os.path.join(data_dir, f"{element}_rydberg.json")
     ryd_data = {}
     if os.path.exists(ryd_file):
@@ -721,7 +718,7 @@ def run_element(element, isotope_A=None, state_labels=None,
 
     print(f"  States: {', '.join(state_labels)}")
 
-    # ── Process each state ───────────────────────────────────────────────────
+    # Process each state 
     B_arr = np.linspace(0, B_max, B_points)
     state_results = []
 
@@ -733,10 +730,10 @@ def run_element(element, isotope_A=None, state_labels=None,
 
         n, l_char, J = parsed
         l_int = {'s':0,'p':1,'d':2,'f':3,'g':4}.get(l_char, 0)
-        S = 0.5   # electron spin — overridden by S_exp for non-alkalis
+        S = 0.5   # electron spin; overridden by S_exp for non-alkalis
         L = l_int
 
-        # HF constants — read all fields including new ones
+        # HF constants ; read all fields including new ones
         hfc    = hf_consts.get(slabel, {})
         A_MHz  = hfc.get('A_MHz', 0.0)
         B_MHz  = hfc.get('B_MHz', 0.0)
@@ -828,8 +825,10 @@ def run_element(element, isotope_A=None, state_labels=None,
         print("  No states processed.")
         return None
 
-    # Ground state identification (lowest energy state = first in state_labels)
-    gs = state_results[0]
+    # Ground state = lowest n, then lowest l, then lowest J. It must not depend on the order the
+    # states were listed (--states 3p 3s would otherwise take the 3p level as the "clock" state).
+    _L_ORDER = 'spdfghik'
+    gs = min(state_results, key=lambda s: (s['n'], _L_ORDER.find(s['l']) if s['l'] in _L_ORDER else 99, s['J']))
     Fs_gs     = gs['Fs']
     A_MHz_gs  = gs['A_MHz']
 
@@ -874,9 +873,8 @@ def run_element(element, isotope_A=None, state_labels=None,
     }
 
 
-# ============================================================================
-# STEP 8 — PLOTS
-# ============================================================================
+# STEP 8 : PLOTS
+
 
 ELEM_COLORS = {
     'Li':'#4df0b0','Na':'#f0c54d','K':'#4d9ff0',
@@ -888,7 +886,7 @@ def mF_color(mF, F):
     """Map m_F in [-F, +F] to a colour."""
     if F < 1e-9:
         return '#ffffff'
-    norm = mF / F   # -1 to +1
+    norm = max(-1.0, min(1.0, mF / F))   # -1 to +1 (clamped: never an invalid rgb())
     # Diverging: blue (norm=-1) → white (0) → red (norm=+1)
     r = int(255 * max(0, norm))
     b = int(255 * max(0, -norm))
@@ -944,7 +942,7 @@ def plot_hyperfine(result, out_dir):
         ],
     )
 
-    # ---- ROW 1: shared-axis level diagram (single x/y for all states) ------
+    # ROW 1: shared-axis level diagram (single x/y for all states) 
     COL_W  = 1.4
     COL_SP = 2.4
     MF_DY  = 0.035
@@ -1127,7 +1125,7 @@ def plot_hyperfine(result, out_dir):
                      gridcolor='#1a2540', zeroline=True,
                      zerolinecolor='rgba(255,255,255,0.1)', row=1, col=1)
 
-    # ---- ROW 2 TRACE SET A: Splittings bar chart (log scale) ---------------
+    #  ROW 2 TRACE SET A: Splittings bar chart (log scale)
     bar_x, bar_y, bar_col, bar_hover, bar_line_w, bar_line_c = [], [], [], [], [], []
     for si, st in enumerate(states):
         Fs   = st['Fs']
@@ -1180,7 +1178,7 @@ def plot_hyperfine(result, out_dir):
     fig.update_yaxes(title_text='|\u0394E| (MHz) (log scale)',
                      type='log', gridcolor='#1a2540', row=2, col=1)
 
-    # ---- Constants table data — rendered as an HTML overlay panel below ----
+    # Constants table data — rendered as an HTML overlay panel below
     # (go.Table sharing a row with go.Bar via visible-toggling is unreliable:
     # Plotly's default template draws a residual background for hidden Table
     # traces. An HTML/JS overlay panel is robust and matches the dropdown
@@ -1201,7 +1199,7 @@ def plot_hyperfine(result, out_dir):
         )
         tbl_F_gF.append(gF_lines)
 
-    # ---- Overall layout ------------------------------------------------------
+    # Overall layout 
     mc_str = ''
     if mc_nu is not None:
         Fu_i = int(mc_Fu) if mc_Fu == int(mc_Fu) else mc_Fu
@@ -1287,7 +1285,7 @@ def plot_hyperfine(result, out_dir):
                 '</style>')
     raw_html = raw_html.replace('</head>', _fs_css + '</head>', 1)
 
-    # ---- Inject dropdown toggle + HTML constants / clock panels --------------
+    # Inject dropdown toggle + HTML constants / clock panels 
     import json as _json_hf
     _tbl_rows_js = _json_hf.dumps([
         {'state': s, 'A': a, 'B': b, 'C': c, 'gJ': gj, 'src': src, 'gF': gf}
@@ -1508,10 +1506,7 @@ def plot_zeeman(result, out_dir):
     print(f"  ✓ {out_file}")
     return out_file
 
-
-# ============================================================================
-# STEP 9 — SAVE JSON
-# ============================================================================
+# STEP 9 : SAVE JSON
 
 def save_json(result, data_dir):
     el  = result['element']
@@ -1548,10 +1543,7 @@ def save_json(result, data_dir):
         json.dump(out, f, indent=2)
     print(f"  ✓ {path}")
 
-
-# ============================================================================
 # MAIN
-# ============================================================================
 
 def get_available_elements(data_dir):
     from species import is_ion_id

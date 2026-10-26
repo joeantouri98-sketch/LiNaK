@@ -12,17 +12,11 @@ This does not reimplement any physics -- it runs your existing scripts
 subprocesses with the same flags you'd use from the command line, then
 loads the JSON/HTML files those scripts already produce.
 
-Install (one-time):
+Install:
     pip install PySide6
 
 Run:
     python linak_gui.py
-
-Place this file inside your LiNaK project root (same folder as
-rydberg.py) and it will find everything automatically. If it's
-somewhere else, use File > Open LiNaK project folder... to point it
-at the right place; the choice is remembered next time. See Help in
-the menu bar for a flags reference and short physics notes per stage.
 """
 import csv
 import hashlib
@@ -109,9 +103,9 @@ PIPELINE = [
                   help="casscf: smaller active space, bare CASSCF+DoSOC (cheap screening). "
                        "nevpt2: larger active space + SC-NEVPT2+DoSOC (more accurate, "
                        "but can take hours for Cs/Fr)."),
-             dict(name="--nroots", kind="int", label="Excited-state roots", default="20",
-                  help="Number of excited states to compute. Default: 20, or the SOC "
-                       "class default in soc mode."),
+             dict(name="--nroots", kind="int", label="Excited-state roots", default="",
+                  help="Number of excited states to compute. Leave blank for the runorca default: "
+                       "20, or the per-class SOC default (4-6) in soc mode."),
              dict(name="--soc-norb", kind="int", label="SOC active-space orbitals (override)",
                   default="", help="Override the CAS orbital count for SOC mode."),
              dict(name="--functional", kind="str", label="DFT functional (GS + EX)",
@@ -226,6 +220,8 @@ PIPELINE = [
                   default="10", help="Peak intensity for the AC Stark / trap-depth panel."),
              dict(name="--waist", kind="float", label="Beam waist (um)", default="1",
                   help="1/e^2 beam waist for trap-frequency estimates."),
+             dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
+                  help="Isotope whose mass is used for trap frequencies. Default: most abundant natural isotope."),
              dict(name="--wl", kind="float", label="Point-calc wavelength (nm)", default="",
                   help="Optional single wavelength for an AC Stark point calculation."),
              dict(name="--heteronuclear", kind="flag", label="Heteronuclear C6 combining rule",
@@ -304,7 +300,7 @@ PIPELINE = [
          positional=lambda el: [el],
          flags=[
              dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
-                  help="Default: most abundant stable isotope."),
+                  help="Default: most abundant natural isotope (Fr: 210)."),
              dict(name="--states", kind="strlist", label="States (e.g. 3s1/2 3p1/2 3p3/2)",
                   default="",
                   help="Space-separated state labels; default: everything in hf_constants.json."),
@@ -332,6 +328,8 @@ PIPELINE = [
              dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
                   help="Default: auto from the resonances in the JSON file."),
              dict(name="--B-points", kind="int", label="B-field sample points", default="2000"),
+             dict(name="--channel", kind="str", label="Entrance channel", default="",
+                  help="e.g. '|1,+1> + |1,+1>'. Default: the channel with the most s-wave resonances."),
              dict(name="--kT-uK", kind="float", label="Collision energy (uK)", default="1",
                   help="Collision energy as a temperature, for the sigma(B) panel."),
              dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
@@ -719,6 +717,79 @@ CSV_DATASET_TEMPLATES = {'new': [['column_1', 'column_2'], ['', '']], 'lines': [
 
 
 # DISK SCANNING HELPERS
+
+def isotope_prerequisite_issues(root: Path, stage_id: str, element: str, A):
+    """Check that the data an isotope choice needs exists. Pure file inspection (the GUI does not
+    import the physics modules). Returns a list of (severity, text); severity is 'error' when the
+    stage cannot give a result for that isotope and 'warning' when it runs on approximations."""
+    issues = []
+    data = Path(root) / "data_json"
+
+    def _load(name):
+        try:
+            return json.loads((data / name).read_text(encoding="utf-8"))
+        except Exception:
+            return None
+
+    nd = _load("nuclear_data.json")
+    iso = None
+    if nd:
+        for rec in nd.get("isotopes", []):
+            if rec.get("symbol") == element and rec.get("A") == A:
+                iso = rec
+                break
+    if stage_id in ("hyperfine", "feshbach") and nd is not None and iso is None:
+        issues.append(("error", f"{element}-{A} is not in nuclear_data.json (no nuclear spin or moments)."))
+    if iso is not None and stage_id == "hyperfine" and not iso.get("I"):
+        issues.append(("error", f"{element}-{A} has nuclear spin I = 0: no hyperfine structure."))
+
+    # masses: the project's precise isotope table, parsed from constants.py without importing it
+    try:
+        text = (Path(root) / "constants.py").read_text(encoding="utf-8")
+        block = text[text.index("ISOTOPE_MASS_AMU = {"):]
+        block = block[:block.index("}")]
+        if not re.search(r"\(\s*'%s'\s*,\s*%d\s*\)\s*:" % (re.escape(element), A), block.replace('"', "'")):
+            if stage_id in ("feshbach", "polarizability"):
+                issues.append(("warning", f"No precise mass for {element}-{A} in constants.ISOTOPE_MASS_AMU; "
+                                          f"the average {element} atomic weight is used (wrong by up to a few %)."))
+    except Exception:
+        pass
+
+    if stage_id == "hyperfine":
+        raw = _load(f"{element}_hf_constants.json")
+        if raw is None:
+            issues.append(("error", f"{element}_hf_constants.json is missing: no hyperfine A/B constants for any isotope."))
+        else:
+            def _iso_of(block):
+                m = re.match(r"\s*%s-(\d+)" % re.escape(element), str(block.get("_isotope", "")))
+                return int(m.group(1)) if m else None
+            main_A = _iso_of(raw)
+            have = main_A == A or any(isinstance(v, dict) and k.startswith("_") and _iso_of(v) == A
+                                      for k, v in raw.items())
+            if main_A is not None and not have:
+                ref = next((r for r in (nd or {}).get("isotopes", [])
+                            if r.get("symbol") == element and r.get("A") == main_A), None)
+                if iso is None or ref is None or not ref.get("g_I"):
+                    issues.append(("error", f"No measured {element}-{A} hyperfine constants and no nuclear data to "
+                                            f"rescale from {element}-{main_A}."))
+                else:
+                    extra = "" if ref.get("Q_barn") else " Quadrupole B cannot be rescaled (reference Q = 0) and will be 0."
+                    issues.append(("warning", f"No measured {element}-{A} hyperfine constants. A and B will be RESCALED "
+                                              f"from {element}-{main_A} (A by g_I, B by Q; hyperfine anomaly ~0.1-1 % "
+                                              f"neglected, octupole dropped).{extra}"))
+
+    if stage_id == "feshbach":
+        fp = _load(f"{element}_feshbach.json")
+        if fp is None:
+            issues.append(("error", f"{element}_feshbach.json is missing."))
+        else:
+            jA = fp.get("isotope_A")
+            if jA and int(jA) != A:
+                issues.append(("warning", f"{element}_feshbach.json holds a_bg / B0 / Delta for {element}-{jA}. "
+                                          f"Resonances are isotope-specific, so those parameters are NOT those of "
+                                          f"{element}-{A}; only the mass-dependent quantities change."))
+    return issues
+
 
 def is_project_root(path: Path) -> bool:
     return (path / "constants.py").exists() and (path / "rydberg.py").exists()
@@ -2532,6 +2603,8 @@ class MainWindow(QMainWindow):
         while self.flags_form.rowCount():
             self.flags_form.removeRow(0)
         self._flag_widgets = {}
+        self._basis_picker_checkbox = None
+        self._basis_picker_combo = None
         if stage is None:
             self.cmd_preview.setText("")
             return
@@ -2586,24 +2659,6 @@ class MainWindow(QMainWindow):
                 self._basis_picker_checkbox = QCheckBox("Basis picker")
                 self._basis_picker_checkbox.setToolTip(
                     "GUI-only basis picker. It fills the existing --basis-file field without using --pick-basis."
-                )
-                self._basis_picker_checkbox.stateChanged.connect(self._toggle_basis_picker)
-
-            if self._basis_picker_combo is None:
-                self._basis_picker_combo = QComboBox()
-                self._basis_picker_combo.setEnabled(False)
-                self._basis_picker_combo.setPlaceholderText("Select basis set")
-                self._basis_picker_combo.currentIndexChanged.connect(self._apply_selected_basis)
-
-            self.flags_form.addRow(QLabel("Basis picker"), self._basis_picker_checkbox)
-            self.flags_form.addRow(QLabel("Basis set"), self._basis_picker_combo)
-
-        if stage is not None and stage["id"] == "runorca":
-            if self._basis_picker_checkbox is None:
-                self._basis_picker_checkbox = QCheckBox("Basis picker")
-                self._basis_picker_checkbox.setToolTip(
-                    "GUI-only basis picker. It fills the existing --basis-file field "
-                    "without using terminal input."
                 )
                 self._basis_picker_checkbox.stateChanged.connect(self._toggle_basis_picker)
 
@@ -3034,6 +3089,27 @@ class MainWindow(QMainWindow):
                 )
                 return
             extra_args = ["--elements", *elements, *extra_args]
+
+        if stage["id"] in ("hyperfine", "feshbach", "polarizability") and "--isotope" in extra_args:
+            try:
+                iso_A = int(extra_args[extra_args.index("--isotope") + 1])
+            except (ValueError, IndexError):
+                iso_A = None
+            if iso_A is not None and self.current_species:
+                issues = isotope_prerequisite_issues(self.root, stage["id"], self.current_species, iso_A)
+                if issues:
+                    has_err = any(sev == "error" for sev, _ in issues)
+                    body = "\n\n".join(("ERROR: " if sev == "error" else "Warning: ") + txt for sev, txt in issues)
+                    box = QMessageBox(self)
+                    box.setIcon(QMessageBox.Warning)
+                    box.setWindowTitle(f"Isotope {self.current_species}-{iso_A}: missing data")
+                    box.setText(body)
+                    run_btn = box.addButton("Run anyway", QMessageBox.AcceptRole)
+                    box.addButton("Cancel", QMessageBox.RejectRole)
+                    box.setDefaultButton(box.buttons()[-1])
+                    box.exec()
+                    if box.clickedButton() is not run_btn:
+                        return
 
         args = [
             str(value)

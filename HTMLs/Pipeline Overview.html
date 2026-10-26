@@ -3001,11 +3001,6 @@ p {
       $I_{\rm sat}=\pi hc\Gamma/(3\lambda^3)\approx6.26$&nbsp;mW/cm² quoted by Steck; do not mix the
       two conventions inside one calculation.
     </p>
-    <div class="annotation amber">
-      <p>Earlier versions replaced the Lorentzian peak factor $2/(\pi\Delta\nu)$ by $1/\Delta\nu$,
-      which made $\sigma_{\rm nat}$ too large by $\pi/2$ ($\lambda^2/4$ instead of $\lambda^2/2\pi$) and
-      $I_{\rm sat}$ too small by $2/\pi$ (5.98 instead of 9.4&nbsp;mW/cm² for Na D2).</p>
-    </div>
     <div class="math-block purple">
       <div class="math-label">Doppler peak</div>
       $$\sigma_{\rm Dop}^{\rm peak}
@@ -3015,9 +3010,7 @@ p {
       A unit-normalised Gaussian of FWHM $\Delta\nu_D$ has peak
       $\phi_G(0)=2\sqrt{\ln 2/\pi}/\Delta\nu_D$. Writing
       $\sigma(\nu)=\sigma_{\rm nat}^{\rm peak}\,(\pi\Delta\nu_{\rm nat}/2)\,\phi(\nu)$, which reproduces
-      $\sigma_{\rm nat}^{\rm peak}$ for the Lorentzian, gives the $\sqrt{\pi\ln 2}$ factor above. (An earlier
-      version used $\sqrt{\ln 2/\pi}$, short by $\pi$; combined with the old $\sigma_{\rm nat}$ it made the
-      Doppler columns 2&times; too small.) Natural and Doppler $I_{\rm sat}$ both use
+      $\sigma_{\rm nat}^{\rm peak}$ for the Lorentzian, gives the $\sqrt{\pi\ln 2}$ factor above. Natural and Doppler $I_{\rm sat}$ both use
       $I_{\rm sat}=h\nu/(2\sigma_{\rm peak}\tau)$ with the matching $\sigma$.
     </p>
     <p>
@@ -3038,7 +3031,7 @@ p {
     <p class="section-intro">
       Each absorbed photon transfers momentum $\hbar k$ to the atom. At high enough
       scattering rates this radiation pressure force can decelerate and cool atoms.
-      The pipeline computes all key laser cooling parameters.
+      The pipeline computes key laser cooling parameters.
     </p>
   </div>
 
@@ -3222,7 +3215,7 @@ p {
   </div>
 
   <div class="subsection">
-    <h3>Connecting f, A, B, σ, I_sat: the complete chain</h3>
+    <h3>Connecting f, A, B, σ, I_sat:</h3>
     <p>
       Every observable in the pipeline traces back to a single $f_{lu}$ value.
       Here is the complete chain of derived quantities:

@@ -8,7 +8,7 @@ an estimate of how long an atom stays trapped before heating out.
 
 This is the piece left after polarizability.py absorbed the conservative
 AC Stark / trap-depth / ω_r,ω_z calculator.  Do NOT use this script for
-near-resonant laser-cooling curves — that is scattering_rate.py.
+near-resonant laser-cooling curves, that is scattering_rate.py.
 
 Physics
 -------
@@ -102,9 +102,9 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-# ============================================================================
+
 # CONSTANTS (derived)
-# ============================================================================
+
 
 # R_sc (s⁻¹) = R_SC_PREFACTOR * Im[α_au] * I[W/m²]
 R_SC_PREFACTOR = 4.0 * math.pi * A0_SI**3 / (HBAR_SI * C_SI)
@@ -116,9 +116,9 @@ DEFAULT_WL_NM = {
 DEFAULT_I_KWCM2 = 50.0
 DEFAULT_WAIST_UM = 1.0
 
-# ============================================================================
+
 # LIFETIMES → Γ LOOKUP
-# ============================================================================
+
 
 def load_gamma_map(element, data_dir='data_json'):
     """
@@ -180,9 +180,9 @@ def attach_gamma(transitions_gs, gamma_map):
     return out, n_with, n_skip_core
 
 
-# ============================================================================
+
 # COMPLEX POLARIZABILITY / SCATTERING
-# ============================================================================
+
 
 def alpha_complex(omega_au, transitions_list):
     """
@@ -266,9 +266,9 @@ def channel_contributions(omega_au, transitions_list, I_Wm2, top_n=5):
     return rows[:top_n]
 
 
-# ============================================================================
+
 # POINT EVALUATION
-# ============================================================================
+
 
 def evaluate_point(transitions, wl_nm, I_kWcm2, waist_um, mass_amu):
     """Full tweezer point calculation at one (λ, I, w0)."""
@@ -323,9 +323,9 @@ def evaluate_point(transitions, wl_nm, I_kWcm2, waist_um, mass_amu):
     )
 
 
-# ============================================================================
+
 # SPECTRUM
-# ============================================================================
+
 
 def compute_spectra(transitions, wl_min, wl_max, n_grid, I_kWcm2, mass_amu):
     """Wavelength sweep of Re[α], Im[α], R_sc, heating, τ_heat at fixed I."""
@@ -380,9 +380,7 @@ def compute_spectra(transitions, wl_min, wl_max, n_grid, I_kWcm2, mass_amu):
     )
 
 
-# ============================================================================
 # RUN ELEMENT
-# ============================================================================
 
 def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
                 waist_um=DEFAULT_WAIST_UM, wl_min=400.0, wl_max=1600.0,
@@ -478,9 +476,8 @@ def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
     )
 
 
-# ============================================================================
+
 # PLOT
-# ============================================================================
 
 def plot_tweezer(result, out_dir):
     el = result['element']
@@ -718,10 +715,7 @@ def _inject_controls(raw_html, result):
     raw_html = raw_html.replace('</body>', html + js + '</body>', 1)
     return raw_html
 
-
-# ============================================================================
 # SAVE JSON
-# ============================================================================
 
 def _clean(obj):
     """Replace non-JSON floats with None."""
@@ -759,10 +753,7 @@ def save_json(result, data_dir='data_json'):
         json.dump(out, f, indent=2)
     print(f"  ✓ {path}")
 
-
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

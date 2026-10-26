@@ -1,0 +1,153 @@
+{
+ "element": "Rb",
+ "note": "Published reduced electric-dipole matrix elements |D| (a.u.) between the first excited np level and ns/nd levels, transcribed from the cited tables. Used by tools/make_arc_fvalues.py to write PUBLISHED literature rows and to scale the ARC model-potential tail. Edit/add rows here when new values appear.",
+ "transitions": [
+  {
+   "lower": "5p1/2",
+   "upper": "4d3/2",
+   "D": 8.037,
+   "D_unc": 0.043,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "4d3/2",
+   "D": 3.628,
+   "D_unc": 0.02,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "4d5/2",
+   "D": 10.889,
+   "D_unc": 0.058,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "5d3/2",
+   "D": 1.616,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "5d3/2",
+   "D": 0.787,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "5d5/2",
+   "D": 2.334,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "6d3/2",
+   "D": 1.18,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "6d3/2",
+   "D": 0.558,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "6d5/2",
+   "D": 1.658,
+   "D_unc": null,
+   "ref": "Safronova, Williams & Clark, Phys. Rev. A 69, 022509 (2004), Table II (all-order SD, unscaled)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "7d3/2",
+   "D": 0.798,
+   "D_unc": 0.008,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "7d3/2",
+   "D": 0.374,
+   "D_unc": 0.003,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "7d5/2",
+   "D": 1.118,
+   "D_unc": 0.01,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "8d3/2",
+   "D": 0.613,
+   "D_unc": 0.004,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "8d3/2",
+   "D": 0.286,
+   "D_unc": 0.002,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "8d5/2",
+   "D": 0.855,
+   "D_unc": 0.006,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "6s",
+   "D": 4.145,
+   "D_unc": 0.01,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "6s",
+   "D": 6.047,
+   "D_unc": 0.013,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "7s",
+   "D": 0.953,
+   "D_unc": 0.005,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "7s",
+   "D": 1.35,
+   "D_unc": 0.008,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p1/2",
+   "upper": "8s",
+   "D": 0.502,
+   "D_unc": 0.003,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  },
+  {
+   "lower": "5p3/2",
+   "upper": "8s",
+   "D": 0.708,
+   "D_unc": 0.005,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended)"
+  }
+ ]
+}

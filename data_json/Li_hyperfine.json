@@ -16,8 +16,8 @@
       "frequency_MHz": 803.5040866,
       "frequency_GHz": 0.8035040866000001,
       "frequency_Hz": 803504086.6,
-      "wavelength_m": 0.37336462253656943,
-      "wavelength_cm": 37.33646225365694,
+      "wavelength_m": 0.37310632640160113,
+      "wavelength_cm": 37.310632640160115,
       "note": "Zero-field ground \u0394F=1 interval (m_F=0 clock to first order in B)",
       "state": "2s1/2"
     },

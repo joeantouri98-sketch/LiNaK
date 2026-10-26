@@ -28,9 +28,8 @@ from constants import (
     C6_EXPT,
 )
 
-# ============================================================================
-# ELEMENT / SPECTROSCOPY TABLES (not universal CODATA — stay here)
-# ============================================================================
+
+# ELEMENT / SPECTROSCOPY TABLES 
 
 L_CHAR = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
 
@@ -45,7 +44,7 @@ ACC_UNCERTAINTY = {
     'D+':  0.35,  'D':  0.50, 'E':  0.70,
 }
 
-# ── Precision D-line oscillator strengths (J-resolved, absorption) ──────────
+# Precision D-line oscillator strengths (J-resolved, absorption)
 # Only Fr is active: NIST ASD D1 gA sits ~5% off the MOT lifetime
 # measurement (Simsarian et al., PRA 57, 2448 (1998); τ(7p1/2)=29.45 ns,
 # τ(7p3/2)=21.02 ns). Li–Cs use J-resolved NIST ASD from the lines files.
@@ -62,7 +61,7 @@ PRECISION_FOSC_J = {
     'Fr': {('7s', '7p'): {'1/2': 0.3400, '3/2': 0.7357}},
 }
 
-# ── Ionic core polarizabilities (au) ────────────────────────────────────────
+# Ionic core polarizabilities (au) 
 # RRPA / relativistic coupled-cluster + experiment (Mitroy, Safronova & Clark
 # review 2010; Lim, Laerdahl & Schwerdtfeger 2002). A pure valence
 # sum-over-states misses this entirely; it is 0.1% (Li) to 6.4% (Fr) of α(0).
@@ -75,9 +74,7 @@ ALPHA_CORE_AU = {
 }
 CORE_ELECTRONS = {'Li': 2, 'Na': 10, 'K': 18, 'Rb': 36, 'Cs': 54, 'Fr': 86}
 
-# ============================================================================
 # CONVERSIONS & HELPERS
-# ============================================================================
 
 def omega_au_from_nm(wl_nm):
     """Convert wavelength in nm to angular frequency in atomic units."""
@@ -124,8 +121,7 @@ def _normalize_asd_term(term):
 
 
 # Coulomb-approximation oscillator strengths (last-resort tier and the blackbody QDT tail).
-#
-# Hybrid (P26). The previous closed form (n*_u n*_l)^3/(n*_u^2-n*_l^2)^3 failed the hydrogen limit
+# The previous closed form (n*_u n*_l)^3/(n*_u^2-n*_l^2)^3 failed the hydrogen limit
 # (1s-2p 0.593 vs 0.4162, 2p-3d 0.237 vs 0.6958, 3d-4f 0.183 vs 1.0175) and was 10-17x too large for
 # alkali s->p lines. It is replaced by the Bates-Damgaard radial integral evaluated numerically:
 #   n*_u <= COULOMB_WHITTAKER_NMAX : exact Whittaker functions W_{n*,l+1/2} (scipy hyperu), integrated
@@ -185,9 +181,9 @@ def coulomb_fosc(n_upper, l_upper, n_lower, l_lower, delta_upper, delta_lower):
                                 round(float(delta_upper), 6), round(float(delta_lower), 6))
 
 
-# ============================================================================
+
 # NIST F-VALUE LOADER  (shared by polarizability, blackbody, lifetimes)
-# ============================================================================
+
 
 
 def unwrap_asd_field(val):
@@ -867,9 +863,8 @@ def load_nist_fvalues(element, f_values_dir='f_values', verbose=True,
     )
 
 
-# ============================================================================
+
 # LITERATURE OVERLAY (curated f above Coulomb / Numerov)
-# ============================================================================
 
 def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
     """
@@ -898,9 +893,9 @@ def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
         up = row.get('upper')
         f = row.get('f_abs')
         ref = str(row.get('ref') or '')
-        # Only accept rows that explicitly cite NIST ASD or a named independent calculation
-        # (ARC model-potential tables; used only where NIST lists no f). No guessed overlays.
-        if 'NIST ASD' not in ref and not ref.startswith('ARC '):
+        # Only accept rows that explicitly cite NIST ASD, a published table ('PUBLISHED ...') or a named
+        # independent calculation (ARC model-potential tables; used only where NIST lists no f).
+        if 'NIST ASD' not in ref and not ref.startswith(('ARC ', 'PUBLISHED')):
             continue
         if not lo or not up or f is None:
             continue
@@ -927,9 +922,9 @@ def load_literature_fvalues(element, f_values_dir='f_values', verbose=True):
                 n_rows=len(raw.get('transitions', [])), path=path)
 
 
-# ============================================================================
+
 # ELEMENT DATA LOADER
-# ============================================================================
+
 
 def load_element(element, data_dir='data_json', f_values_dir='f_values', verbose=True):
     """
@@ -1091,9 +1086,8 @@ def default_excited_label(data, all_transitions=None):
     return candidates[0]
 
 
-# ============================================================================
+
 # OSCILLATOR STRENGTH LOOKUP
-# ============================================================================
 
 def get_fosc(lower_label, upper_label, lower_n, upper_n,
              lower_l, upper_l, nist_fosc, qd, upper_J_str=None,
@@ -1150,7 +1144,7 @@ def get_fosc(lower_label, upper_label, lower_n, upper_n,
                 f = f_total
             return f, 'NIST'
 
-    # --- Literature overlay ---
+    # Literature overlay
     if literature_fosc_j and upper_J_str:
         for key in [(_ll_nl, _ul_nl), (_ul_nl, _ll_nl)]:
             jkey = (key[0], key[1], upper_J_str)
@@ -1181,7 +1175,7 @@ def get_fosc(lower_label, upper_label, lower_n, upper_n,
     ll_int = L_CHAR.get(lower_l, 0)
     ul_int = L_CHAR.get(upper_l, 0)
 
-    # --- Numerov QD radial (optional NIST-overlap scale) ---
+    # Numerov QD radial (optional NIST-overlap scale)
     if prefer_numerov:
         try:
             from qdt_radial import numerov_fosc_scaled as _numerov_fosc
@@ -1224,9 +1218,9 @@ def get_fosc(lower_label, upper_label, lower_n, upper_n,
     return 0.0, 'unknown'
 
 
-# ============================================================================
+
 # TRANSITION NETWORK FOR ONE STATE
-# ============================================================================
+
 
 def _ls_state_term(t, state_label, data):
     """
@@ -1284,7 +1278,7 @@ def _ls_state_term(t, state_label, data):
 
 
 
-# ── f-value uncertainty (P11) ───────────────────────────────────────────────
+# f-value uncertainty 
 # Relative 1σ on each oscillator strength: the NIST/literature accuracy grade when known,
 # otherwise a per-source estimate. These are estimates, not measurements: NIST grades are
 # NIST's own; the Numerov / Coulomb numbers are the typical spread of those models against
@@ -1425,7 +1419,7 @@ def build_transitions_for_state(state_label, data, all_transitions):
                 src, _transition_acc(src, data, ll, ul, upper_J)),
         ))
 
-    # ── Ionic-core contribution ──────────────────────────────────────────────
+    # Ionic-core contribution
     # The core is common to every valence state, so it is appended to each
     # state's network identically (it cancels exactly in Δα, as it should).
     # One-pole Padé constrained by the TRK sum rule: f_c = N_core electrons,
@@ -1449,9 +1443,8 @@ def build_transitions_for_state(state_label, data, all_transitions):
     return result
 
 
-# ============================================================================
+
 # DYNAMIC POLARIZABILITY
-# ============================================================================
 
 def alpha_real(omega_au, transitions_list):
     """

@@ -33,9 +33,9 @@ import sys
 import math
 import argparse
 
-# ============================================================================
+
 # ARGUMENT PARSING
-# ============================================================================
+
 
 parser = argparse.ArgumentParser(description='Cross-element alkali comparison table')
 parser.add_argument('--T',        type=float, default=300.0,
@@ -75,11 +75,11 @@ from element_data import ELEMENTS
 pi = math.pi
 _Z_BY_SYMBOL = {sym: Z for Z, (sym, _q, _m) in ELEMENTS.items()}
 
-from dline_literature import LITERATURE   # single authoritative D-line table (P18)
+from dline_literature import LITERATURE
 
-# ============================================================================
+
 # PHYSICS FUNCTIONS
-# ============================================================================
+
 
 def doppler_fwhm_Hz(wl_nm, T_K, mass_amu):
     """Doppler FWHM in Hz (Gaussian profile)."""
@@ -148,9 +148,9 @@ def rad_pressure_force(wl_nm, A_s):
     p_photon = h / (wl_nm * 1e-9)   # kg·m/s
     return p_photon * max_scattering_rate(A_s) * 1e18   # → aN
 
-# ============================================================================
+
 # LOAD PIPELINE DATA
-# ============================================================================
+
 
 def load_element_data(element, data_dir):
     """
@@ -189,7 +189,7 @@ def load_element_data(element, data_dir):
         print(f"    No p-state lifetimes found for {element}")
         return None
 
-    # ── Find D1 and D2 among lowest-n p-states ──────────────────────────────
+    # Find D1 and D2 among lowest-n p-states 
     n_p = p_states[0]['n']
     lowest_p = sorted(
         [x for x in p_states if x['n'] == n_p],
@@ -401,9 +401,9 @@ def build_from_literature(element, T_K):
         T_K=T_K,
     )
 
-# ============================================================================
+
 # BUILD TABLE
-# ============================================================================
+
 
 print(f"\n{'='*70}")
 print(f"  Cross-Element Alkali Comparison  (T = {T_K:.0f} K)")
@@ -438,9 +438,9 @@ with open(json_out, 'w', encoding='utf-8') as f:
     json.dump({'T_K': T_K, 'elements': table_data}, f, indent=2)
 print(f"\nSaved JSON: {json_out}")
 
-# ============================================================================
+
 # BUILD INTERACTIVE HTML TABLE
-# ============================================================================
+
 
 import json as _json
 

@@ -1,0 +1,1193 @@
+{
+ "element": "Li",
+ "transitions": [
+  {
+   "lower": "2s",
+   "upper": "14p",
+   "upper_J": "1/2",
+   "f_abs": 4.3865e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "14p",
+   "upper_J": "3/2",
+   "f_abs": 8.7714e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "15p",
+   "upper_J": "1/2",
+   "f_abs": 3.5713e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "15p",
+   "upper_J": "3/2",
+   "f_abs": 7.1412e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "16p",
+   "upper_J": "1/2",
+   "f_abs": 2.9458e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "16p",
+   "upper_J": "3/2",
+   "f_abs": 5.8904e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "17p",
+   "upper_J": "1/2",
+   "f_abs": 2.4579e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "17p",
+   "upper_J": "3/2",
+   "f_abs": 4.915e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "18p",
+   "upper_J": "1/2",
+   "f_abs": 2.072e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "18p",
+   "upper_J": "3/2",
+   "f_abs": 4.1432e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "19p",
+   "upper_J": "1/2",
+   "f_abs": 1.7627e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "19p",
+   "upper_J": "3/2",
+   "f_abs": 3.5247e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "20p",
+   "upper_J": "1/2",
+   "f_abs": 1.5119e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "20p",
+   "upper_J": "3/2",
+   "f_abs": 3.0233e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "21p",
+   "upper_J": "1/2",
+   "f_abs": 1.3065e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "21p",
+   "upper_J": "3/2",
+   "f_abs": 2.6126e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "22p",
+   "upper_J": "1/2",
+   "f_abs": 1.1367e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "22p",
+   "upper_J": "3/2",
+   "f_abs": 2.2729e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "23p",
+   "upper_J": "1/2",
+   "f_abs": 9.95e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "23p",
+   "upper_J": "3/2",
+   "f_abs": 1.9896e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "24p",
+   "upper_J": "1/2",
+   "f_abs": 8.7591e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "24p",
+   "upper_J": "3/2",
+   "f_abs": 1.7515e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "25p",
+   "upper_J": "1/2",
+   "f_abs": 7.7507e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "25p",
+   "upper_J": "3/2",
+   "f_abs": 1.5499e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "26p",
+   "upper_J": "1/2",
+   "f_abs": 6.8913e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "26p",
+   "upper_J": "3/2",
+   "f_abs": 1.378e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "27p",
+   "upper_J": "1/2",
+   "f_abs": 6.1543e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "27p",
+   "upper_J": "3/2",
+   "f_abs": 1.2306e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "28p",
+   "upper_J": "1/2",
+   "f_abs": 5.5187e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "28p",
+   "upper_J": "3/2",
+   "f_abs": 1.1035e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "29p",
+   "upper_J": "1/2",
+   "f_abs": 4.9676e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "29p",
+   "upper_J": "3/2",
+   "f_abs": 9.9334e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "30p",
+   "upper_J": "1/2",
+   "f_abs": 4.4875e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "30p",
+   "upper_J": "3/2",
+   "f_abs": 8.9734e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "31p",
+   "upper_J": "1/2",
+   "f_abs": 4.0673e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "31p",
+   "upper_J": "3/2",
+   "f_abs": 8.1332e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "32p",
+   "upper_J": "1/2",
+   "f_abs": 3.698e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "32p",
+   "upper_J": "3/2",
+   "f_abs": 7.3946e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "33p",
+   "upper_J": "1/2",
+   "f_abs": 3.372e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "33p",
+   "upper_J": "3/2",
+   "f_abs": 6.7427e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "34p",
+   "upper_J": "1/2",
+   "f_abs": 3.0832e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "34p",
+   "upper_J": "3/2",
+   "f_abs": 6.1653e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "35p",
+   "upper_J": "1/2",
+   "f_abs": 2.8265e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "35p",
+   "upper_J": "3/2",
+   "f_abs": 5.6519e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "36p",
+   "upper_J": "1/2",
+   "f_abs": 2.5975e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "36p",
+   "upper_J": "3/2",
+   "f_abs": 5.194e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "37p",
+   "upper_J": "1/2",
+   "f_abs": 2.3925e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "37p",
+   "upper_J": "3/2",
+   "f_abs": 4.7842e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "38p",
+   "upper_J": "1/2",
+   "f_abs": 2.2086e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "38p",
+   "upper_J": "3/2",
+   "f_abs": 4.4164e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "39p",
+   "upper_J": "1/2",
+   "f_abs": 2.043e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "39p",
+   "upper_J": "3/2",
+   "f_abs": 4.0853e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "40p",
+   "upper_J": "1/2",
+   "f_abs": 1.8936e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "40p",
+   "upper_J": "3/2",
+   "f_abs": 3.7865e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "41p",
+   "upper_J": "1/2",
+   "f_abs": 1.7584e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "41p",
+   "upper_J": "3/2",
+   "f_abs": 3.5161e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "42p",
+   "upper_J": "1/2",
+   "f_abs": 1.6358e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "42p",
+   "upper_J": "3/2",
+   "f_abs": 3.2709e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "43p",
+   "upper_J": "1/2",
+   "f_abs": 1.5243e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "43p",
+   "upper_J": "3/2",
+   "f_abs": 3.048e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "44p",
+   "upper_J": "1/2",
+   "f_abs": 1.4227e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "44p",
+   "upper_J": "3/2",
+   "f_abs": 2.8448e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "45p",
+   "upper_J": "1/2",
+   "f_abs": 1.3299e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "45p",
+   "upper_J": "3/2",
+   "f_abs": 2.6593e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "46p",
+   "upper_J": "1/2",
+   "f_abs": 1.245e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "46p",
+   "upper_J": "3/2",
+   "f_abs": 2.4896e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "47p",
+   "upper_J": "1/2",
+   "f_abs": 1.1672e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "47p",
+   "upper_J": "3/2",
+   "f_abs": 2.3341e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "48p",
+   "upper_J": "1/2",
+   "f_abs": 1.0958e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "48p",
+   "upper_J": "3/2",
+   "f_abs": 2.1912e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "49p",
+   "upper_J": "1/2",
+   "f_abs": 1.03e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "49p",
+   "upper_J": "3/2",
+   "f_abs": 2.0597e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "50p",
+   "upper_J": "1/2",
+   "f_abs": 9.6946e-07,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2s",
+   "upper": "50p",
+   "upper_J": "3/2",
+   "f_abs": 1.9386e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) absorption f, 2s->np high n; NIST lists no f for n>=14. Smooth f*n*^3 series (NIST/ARC = 1.0 for n<=9)"
+  },
+  {
+   "lower": "2p",
+   "upper": "9s",
+   "f_abs": 0.00046748,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "10s",
+   "f_abs": 0.00032778,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "11s",
+   "f_abs": 0.00023913,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "12s",
+   "f_abs": 0.00018001,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "13s",
+   "f_abs": 0.00013902,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "14s",
+   "f_abs": 0.00010966,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "15s",
+   "f_abs": 8.8058e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "16s",
+   "f_abs": 7.1807e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "17s",
+   "f_abs": 5.9338e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "18s",
+   "f_abs": 4.9608e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "19s",
+   "f_abs": 4.1901e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "20s",
+   "f_abs": 3.5717e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "21s",
+   "f_abs": 3.0696e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "22s",
+   "f_abs": 2.6576e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "23s",
+   "f_abs": 2.3164e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "24s",
+   "f_abs": 2.0313e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "25s",
+   "f_abs": 1.7912e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "26s",
+   "f_abs": 1.5876e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "27s",
+   "f_abs": 1.4138e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "28s",
+   "f_abs": 1.2645e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "29s",
+   "f_abs": 1.1355e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "30s",
+   "f_abs": 1.0235e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "31s",
+   "f_abs": 9.2581e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "32s",
+   "f_abs": 8.4017e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "33s",
+   "f_abs": 7.6479e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "34s",
+   "f_abs": 6.9818e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "35s",
+   "f_abs": 6.3909e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "36s",
+   "f_abs": 5.8649e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "37s",
+   "f_abs": 5.3951e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "38s",
+   "f_abs": 4.9743e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "39s",
+   "f_abs": 4.5961e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "40s",
+   "f_abs": 4.2554e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "41s",
+   "f_abs": 3.9476e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "42s",
+   "f_abs": 3.6687e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "43s",
+   "f_abs": 3.4156e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "44s",
+   "f_abs": 3.1852e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "45s",
+   "f_abs": 2.9751e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "46s",
+   "f_abs": 2.7831e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "47s",
+   "f_abs": 2.6073e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "48s",
+   "f_abs": 2.446e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "49s",
+   "f_abs": 2.2977e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "50s",
+   "f_abs": 2.1612e-06,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->ns; NIST lists no f for n>=9. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "10d",
+   "f_abs": 0.0040263,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "11d",
+   "f_abs": 0.0029649,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "12d",
+   "f_abs": 0.0022493,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "13d",
+   "f_abs": 0.0017484,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "14d",
+   "f_abs": 0.0013869,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "15d",
+   "f_abs": 0.0011191,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "16d",
+   "f_abs": 0.00091651,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "17d",
+   "f_abs": 0.00076023,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "18d",
+   "f_abs": 0.00063772,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "19d",
+   "f_abs": 0.00054029,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "20d",
+   "f_abs": 0.00046182,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "21d",
+   "f_abs": 0.00039788,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "22d",
+   "f_abs": 0.00034527,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "23d",
+   "f_abs": 0.00030156,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "24d",
+   "f_abs": 0.00026495,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "25d",
+   "f_abs": 0.00023405,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "26d",
+   "f_abs": 0.00020779,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "27d",
+   "f_abs": 0.00018532,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "28d",
+   "f_abs": 0.00016598,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "29d",
+   "f_abs": 0.00014925,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "30d",
+   "f_abs": 0.0001347,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "31d",
+   "f_abs": 0.00012198,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "32d",
+   "f_abs": 0.00011082,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "33d",
+   "f_abs": 0.00010098,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "34d",
+   "f_abs": 9.2276e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "35d",
+   "f_abs": 8.4544e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "36d",
+   "f_abs": 7.7653e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "37d",
+   "f_abs": 7.1492e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "38d",
+   "f_abs": 6.5967e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "39d",
+   "f_abs": 6.0997e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "40d",
+   "f_abs": 5.6515e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "41d",
+   "f_abs": 5.2462e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "42d",
+   "f_abs": 4.8788e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "43d",
+   "f_abs": 4.5449e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "44d",
+   "f_abs": 4.2409e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "45d",
+   "f_abs": 3.9634e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "46d",
+   "f_abs": 3.7096e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "47d",
+   "f_abs": 3.477e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "48d",
+   "f_abs": 3.2635e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "49d",
+   "f_abs": 3.0671e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  },
+  {
+   "lower": "2p",
+   "upper": "50d",
+   "f_abs": 2.8862e-05,
+   "acc": "C+",
+   "ref": "ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marinescu 1994) multiplet-averaged absorption f, 2p->nd; NIST lists no f for n>=10. Smooth series; NIST/ARC = 0.95-1.05 where both exist. Fills the channels the n*<=2.5 Coulomb gate would otherwise drop"
+  }
+ ],
+ "nist_series_caveats": [
+  {
+   "lower": "2s",
+   "upper_l": "p",
+   "n_min": 10,
+   "rel_unc": 0.5,
+   "ref": "NIST 2s->np f*n*^3 jumps by 48% between n=9 and n=10 (0.233 -> 0.344) while the ARC model-potential series is smooth (0.2326 -> 0.2345); NIST/ARC = 1.46-1.63 at n=10-13, 0.97-1.05 at n<=9 (this repository's NIST/ARC comparison)"
+  }
+ ],
+ "generated_with": {
+  "tool": "tools/make_arc_fvalues.py",
+  "arc_version": "3.10.2",
+  "note": "rows whose ref starts with \"ARC \" are regenerated by the tool; all other rows, the note and existing caveats are never modified by it"
+ },
+ "note": "Curated absorption oscillator strengths preferred over Coulomb/Numerov where NIST lists no f. Rows citing 'ARC' are independent model-potential calculations used only where NIST lists no f; NIST values are never overwritten. The 'literature' tier mixes published values (NIST-ASD-cited or lifetime-derived rows) with independent ARC model-potential calculations; ARC rows carry a ref starting 'ARC ' and are computed estimates, not measurements."
+}

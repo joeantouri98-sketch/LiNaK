@@ -76,9 +76,7 @@ from constants import (
     nuclide_plain,
 )
 
-# ============================================================================
 # ARGPARSE
-# ============================================================================
 
 parser = argparse.ArgumentParser(
     description='Magnetic Feshbach resonances (scattering length vs B)')
@@ -101,9 +99,9 @@ parser.add_argument('--kT-uK', type=float, default=1.0,
 parser.add_argument('--isotope', type=int, default=None,
                     help='Mass number A (default: from feshbach JSON)')
 
-# ============================================================================
+
 # DATA LOADING
-# ============================================================================
+
 
 def get_available_elements(data_dir='data_json'):
     """Neutrals that have a literature feshbach parameter file (ions excluded)."""
@@ -306,7 +304,7 @@ def multi_resonance_a(B, resonances, a_bg_default):
     overall scale (standard when all share one open channel).
     """
     B = np.asarray(B, dtype=float)
-    # Use the first resonance's a_bg (or default) as overall scale —
+    # Use the first resonance's a_bg (or default) as overall scale
     # all Na |1,1> resonances share the same a_bg.
     a_bg = float(resonances[0].get('a_bg_a0', a_bg_default))
     factor = np.ones_like(B, dtype=float)
@@ -320,9 +318,9 @@ def multi_resonance_a(B, resonances, a_bg_default):
         factor = factor * f
     return a_bg * factor
 
-# ============================================================================
+
 # COMPUTE
-# ============================================================================
+
 
 def compute_element(element, data_dir='data_json', isotope_A=None,
                     B_max=None, B_points=2000, kT_uK=1.0, channel=None):
@@ -430,9 +428,8 @@ def compute_element(element, data_dir='data_json', isotope_A=None,
         'params_note': params.get('note', ''),
     }
 
-# ============================================================================
+
 # PLOTTING
-# ============================================================================
 
 def plot_feshbach(result, output_dir):
     el = result['element']
@@ -582,9 +579,8 @@ def plot_feshbach(result, output_dir):
     print(f'  Plot -> {out_path}')
     return out_path
 
-# ============================================================================
+
 # JSON OUTPUT
-# ============================================================================
 
 def write_output_json(result, data_dir='data_json'):
     el = result['element']
@@ -645,9 +641,8 @@ def write_output_json(result, data_dir='data_json'):
     print(f'  JSON -> {path}')
     return path
 
-# ============================================================================
+
 # MAIN
-# ============================================================================
 
 def run_one(element, args):
     print('=' * 60)

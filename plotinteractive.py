@@ -479,6 +479,18 @@ ground_state_energy = 0 + energy_shift
 # FILTER LEVELS ABOVE IONIZATION THRESHOLD
 # ============================================================================
 
+def ionization_energy_eV(rd):
+    """Ionization energy from the rydberg JSON. ONE fallback for every plot when it is missing
+    (0.0 eV, with a warning): the old per-plot defaults (0.0 / 5.139 / 5.0 eV) were inconsistent,
+    and 5.139 eV is sodium's value, wrong for every other species."""
+    ie = rd.get('ionization_energy_eV') if rd else None
+    if ie is None:
+        print("  WARNING: no ionization_energy_eV in the rydberg data; using 0.0 eV "
+              "(level positions in the diagrams are then relative, not absolute).")
+        return 0.0
+    return float(ie)
+
+
 IE_for_filter = rydberg_data.get('ionization_energy_eV') if rydberg_data else None
 
 # In absolute mode the user already entered the ground state energy.
@@ -526,7 +538,7 @@ sorted_rydberg              = []
 
 if rydberg_excitations:
     use_rydberg = True   # show Rydberg levels regardless of energy mode
-    IE_ryd = rydberg_data.get('ionization_energy_eV', 0.0) if rydberg_data else 0.0
+    IE_ryd = ionization_energy_eV(rydberg_data)
     for ex in rydberg_excitations:
         ryd_e_raw = ex.get('energy_eV', 0)
         lbl       = ex.get('label', '')
@@ -709,9 +721,7 @@ if _all_orca:
 
 print("="*70)
 
-# ============================================================================
 # HELPERS
-# ============================================================================
 
 colors = px.colors.sequential.Viridis
 n_colors = len(colors)
@@ -1008,7 +1018,7 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
     if not transitions:
         return 0
 
-    # --- Per-region proportional sampling ---
+    # Per-region proportional sampling
     # Group by region, sample proportionally so every region is always visible.
     # Legend labels show the TRUE total count, not the sampled count.
     _REGION_ORDER = ['X-ray', 'Vacuum UV', 'UV', 'Visible',
@@ -1093,7 +1103,7 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
     # Use TRUE counts for legend labels (not sampled subset counts)
     region_counts = true_region_counts
 
-    # ── fosc-based width scaling ─────────────────────────────────────────────
+    # fosc-based width scaling 
     # Collect all fosc values in the shown set to build a log-normalised scale.
     # Width range: 0.6 (no fosc data) to 4.5 (strongest line).
     # Log scale because fosc spans many orders of magnitude (1e-5 to ~1).
@@ -1307,7 +1317,7 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
     added_legend = set()
     np.random.seed(99)
 
-    # ── Stratified x positions ────────────────────────────────────────────────
+    #  Stratified x positions 
     # Pure uniform draws cluster badly with few arrows. Instead: one slot per
     # drawn arrow across [x_center-x_spread, x_center+x_spread], shuffled so
     # position doesn't correlate with energy, jittered inside the middle 70%
@@ -1390,23 +1400,21 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
             ))
 
 
-# ============================================================================
 # OUTPUT DIRECTORY
-# ============================================================================
+
 
 output_dir = f"plots/{element}"
 os.makedirs(output_dir, exist_ok=True)
 
-# ============================================================================
+
 # PLOT 1: GROTRIAN DIAGRAM
 # Energy levels + transition arrows + ORCA overlay
-# ============================================================================
 
-print("\n📊 Creating Grotrian diagram (energy levels + transitions)...")
+print("\n Creating Grotrian diagram (energy levels + transitions)...")
 
 fig1 = go.Figure()
 
-# --- NIST/Rydberg levels (ground state reference) ---
+# NIST/Rydberg levels (ground state reference) 
 # These use Rydberg absolute energies (negative, relative to ionization)
 # Only shown when use_rydberg is True
 if use_rydberg and sorted_rydberg:
@@ -1420,7 +1428,7 @@ if use_rydberg and sorted_rydberg:
                        x_range=(_GROT_LINE_X0, _GROT_LINE_X1),
                        show_below_eV=_ryd_show_below)
 
-# --- Transitions ---
+#  Transitions 
 if use_transitions and visible_transitions:
     _grot_initial_count = add_transition_traces(
         fig1, visible_transitions, energy_shift=energy_shift,
@@ -1430,7 +1438,7 @@ if use_transitions and visible_transitions:
 else:
     _grot_initial_count = 0
 
-# --- ORCA levels ---
+#  ORCA levels 
 fig1.add_trace(go.Scatter(
     x=[_GROT_LINE_X0, _GROT_LINE_X1], y=[ground_state_energy, ground_state_energy],
     mode='lines', line=dict(color='black', width=4),
@@ -1461,7 +1469,7 @@ for i, (orig_e, sh_e) in enumerate(zip(sorted_energies, shifted_energies)):
         customdata=[[label]],   # ASCII key for exact string match in JS filter
     ))
 
-# --- ORCA SOC level overlay (when both TD-DFT and SOC data exist) ---
+#  ORCA SOC level overlay (when both TD-DFT and SOC data exist) 
 SOC_LINE_COLOR = '#E65100'
 if has_soc_overlay:
     _soc_legend_added = False
@@ -1487,7 +1495,7 @@ if has_soc_overlay:
         ))
         _soc_legend_added = True
 
-# --- ORCA transition arrows ---
+#  ORCA transition arrows 
 # Bands: split the plot width when TD-DFT and SOC arrows coexist; otherwise
 # give the single dataset (whichever it is) the full width to spread out.
 if visible_orca_tddft and visible_orca_soc:
@@ -1621,10 +1629,10 @@ fig1.update_layout(
 html_file1 = f"{output_dir}/{element}_grotrian.html"
 fig1.write_html(html_file1)
 
-# ── Inject interactive filter panel ──────────────────────────────────────────
+# Inject interactive filter panel 
 # Build the full transition dataset as JSON for the JS panel to use
 _all_transitions_for_panel = []
-_ie_panel = rydberg_data.get('ionization_energy_eV', 0.0) if rydberg_data else 0.0
+_ie_panel = ionization_energy_eV(rydberg_data)
 
 def _diagram_y_panel(e_abs):
     """Convert ionization-relative energy to diagram y (matches add_transition_traces)."""
@@ -2813,7 +2821,8 @@ def _doppler_sigma_nm(wl_nm, T_K=300.0):
     """Gaussian σ (standard deviation, NOT FWHM) in nm from Doppler broadening.
     FWHM = 2√(2ln2)·σ ≈ 2.355·σ. Used directly in exp(-0.5*(x/σ)²)."""
     E_eV     = HC_EV_NM / wl_nm
-    sigma_eV = E_eV * np.sqrt(8 * KB_EV * T_K * np.log(2) / _mc2_sp)
+    # Doppler standard deviation: sigma_nu/nu = sqrt(kT/mc^2)  (FWHM = 2 sqrt(2 ln2) sigma = nu sqrt(8 kT ln2/mc^2))
+    sigma_eV = E_eV * np.sqrt(KB_EV * T_K / _mc2_sp)
     return wl_nm**2 / HC_EV_NM * sigma_eV   # convert ΔE → Δλ
 
 def _natural_gamma_nm(state_label, wl_nm):
@@ -3249,14 +3258,19 @@ fig2.write_html(html_file2)
 # Build line data for the JS filter panel
 # Compute natural linewidth in nm for each line (for JS Lorentzian natural broadening)
 def _gamma_nm_for(r):
-    """Convert natural linewidth from Hz (A coefficient) to nm."""
+    """Natural linewidth (Lorentzian FWHM) in nm for the JS panel.
+
+    Same quantity as the pre-rendered 'natural' trace: hbar / tau_total of the UPPER state
+    (all decay channels), via _natural_gamma_nm. Only when the state has no lifetime entry does
+    it fall back to the single line's A coefficient (a lower bound on the total rate)."""
+    g = _natural_gamma_nm(r.get('ul'), r.get('wl', 500.0))
+    if g:
+        return g
     _A  = r.get('A', 0)
     _wl = r.get('wl', 500.0)
-    if _A <= 0: return 0.0
-    # gamma_Hz = A (total decay rate for upper state, approx by dominant A)
-    # delta_lambda = lambda^2 / c * delta_nu = lambda^2 / c * gamma / (2*pi)
-    _gamma_Hz = _A   # A coefficient approximates natural linewidth
-    return (_wl * 1e-9)**2 / (2 * 3.14159265 * 3e8) * _gamma_Hz * 1e9  # nm
+    if not _A or _A <= 0:
+        return 0.0
+    return (_wl * 1e-9)**2 / (2 * np.pi * C_SI) * _A * 1e9   # nm
 
 _spec_lines_js = [
     dict(wl=r['wl'], dE=round(r['dE']*1000, 3), fosc=round(r['fosc'], 6),
@@ -3413,7 +3427,7 @@ _SPEC_PANEL_JS = f"""
 (function() {{
   const ALL_LINES  = {_spec_lines_js};
   const MASS_AMU   = {_mass_amu};
-  const kB         = 8.617333e-5;   // eV/K
+  const kB         = {KB_EV!r};   // eV/K (Python KB_EV, single source)
   const SRC_COLORS = {_SRC_COLORS_JS};
 
   // ── Source checkboxes ───────────────────────────────────────────────────
@@ -3453,10 +3467,8 @@ _SPEC_PANEL_JS = f"""
   function dopplerSigmaNm(wl_nm, T_K) {{
     const mc2 = MASS_AMU * 931.494e6;   // eV
     const E_eV = 1239.84 / wl_nm;
-    const sigmaE = E_eV * Math.sqrt(8 * kB * T_K * Math.log(2) / mc2);
-    // sigmaE is FWHM in eV; convert to σ_nm:
-    // σ_eV = FWHM / (2√(2ln2)); then σ_nm = wl²/hc * σ_eV
-    // But the Python code uses FWHM directly as σ in the Gaussian — match that.
+    const sigmaE = E_eV * Math.sqrt(kB * T_K / mc2);   // σ_E = E sqrt(kT/mc²)
+    // σ_nm = wl²/hc · σ_E (same as the Python _doppler_sigma_nm)
     return wl_nm * wl_nm / 1239.84 * sigmaE;
   }}
 
@@ -3733,7 +3745,7 @@ print("\n Creating excited→excited Grotrian (l-column layout)...")
 if not rydberg_data:
     print("  ⚠  No Rydberg/NIST data — skipping Plot 3")
 else:
-    IE_ryd = rydberg_data.get('ionization_energy_eV', 5.139)
+    IE_ryd = ionization_energy_eV(rydberg_data)
 
     _L_ORDER  = ['s', 'p', 'd', 'f', 'g']
     _L_LABELS = {'s': 's  (l=0)', 'p': 'p  (l=1)', 'd': 'd  (l=2)',
@@ -3829,6 +3841,8 @@ else:
     _ee_num    = [t for t in _ee_all if t.get('fosc_source') == 'Numerov']
     _ee_coul   = [t for t in _ee_all if t.get('fosc_source') == 'Coulomb']
     _ee_coul_a = [t for t in _ee_all if t.get('fosc_source') == 'Coulomb(approx)']
+    _ee_nxt    = [t for t in _ee_all if t.get('fosc_source') == 'NIST-extrap']
+    _ee_unc    = [t for t in _ee_all if t.get('fosc_source') == 'unclassified']
     _gs_nist   = [t for t in _ee_nist if t.get('lower_label') == _gs_label_sp]
     _ee_only   = [t for t in _ee_nist if t.get('lower_label') != _gs_label_sp]
 
@@ -3838,6 +3852,7 @@ else:
     print(f"  NIST gs→X transitions:        {len(_gs_nist)}")
     print(f"  NIST ee transitions:          {len(_ee_only)}")
     print(f"  literature:                   {len(_ee_lit)}")
+    print(f"  NIST-extrap:                  {len(_ee_nxt)}")
     print(f"  Numerov ee/gs:                {len(_ee_num)}")
     print(f"  Coulomb(approx) ee:           {len(_ee_coul_a)}")
     print(f"  Coulomb ee:                   {len(_ee_coul)}")
@@ -3853,14 +3868,14 @@ else:
 
     if _ee_choice == "2":
         _theo_pick = [t for t in _ee_num if _ee_n_ok(t, 8)]
-        visible_ee = _ee_nist + _ee_lit + _theo_pick
+        visible_ee = _ee_nist + _ee_lit + _ee_nxt + _theo_pick
     elif _ee_choice == "3":
         _theo_pick = [t for t in _ee_num if _ee_n_ok(t, 12)]
-        visible_ee = _ee_nist + _ee_lit + _theo_pick
+        visible_ee = _ee_nist + _ee_lit + _ee_nxt + _theo_pick
     elif _ee_choice == "4":
         _theo_all = sorted(_ee_num + _ee_coul + _ee_coul_a,
                            key=lambda t: t.get('fosc', 0), reverse=True)
-        visible_ee = _ee_nist + _ee_lit + _theo_all[:300]
+        visible_ee = _ee_nist + _ee_lit + _ee_nxt + _ee_unc + _theo_all[:300]
     else:
         visible_ee = list(_ee_nist) + list(_ee_lit)
 
@@ -3923,7 +3938,7 @@ else:
     _EE_SRC_DASH = {
         'NIST': 'solid', 'precision': 'solid', 'literature': 'solid',
         'ORCA': 'solid', 'EOM-CCSD': 'solid',
-        'Numerov': 'dash',
+        'Numerov': 'dash', 'NIST-extrap': 'dash', 'unclassified': 'dot',
         'Coulomb': 'dash', 'Coulomb(approx)': 'dot', 'topology': 'dot',
     }
 
@@ -4134,7 +4149,7 @@ else:
     _EE_SRC_COLORS_JS = _json3.dumps({
         'NIST': '#1a6eb5', 'precision': '#1a6eb5', 'literature': '#c47a00',
         'ORCA': '#c0392b', 'EOM-CCSD': '#c0392b',
-        'Numerov': '#0e7c6b',
+        'Numerov': '#0e7c6b', 'NIST-extrap': '#5b9bd5', 'unclassified': '#7f8c8d',
         'Coulomb': '#27ae60', 'Coulomb(approx)': '#52be80',
         'topology': '#888888',
     })
@@ -4693,15 +4708,7 @@ import math as _math4
 _L_ORDER4  = ['s', 'p', 'd', 'f', 'g']
 _L_INT4    = {l: i for i, l in enumerate(_L_ORDER4)}
 
-_REGION_COLORS4 = {
-    'X-ray':      '#9400D3',
-    'Vacuum UV':  '#7B00FF',
-    'UV':         "#3a0ca3",
-    'Visible':    '#f77f00',
-    'Near-IR':    '#d62828',
-    'Mid/Far-IR': '#9aa4b8',   
-    'Microwave':  '#c8d0e0',   
-}
+_REGION_COLORS4 = REGION_COLORS   # one palette for the 2-D arrows and the 3-D diagram (P19)
 _SRC_COLORS4 = {'NIST': '#2196F3', 'QDT model': '#FF9800'}
 
 def _parse_j4(j_str):
@@ -4724,7 +4731,7 @@ def _j_offset4(j_float):
     return offsets.get(round(j_float * 2) / 2, (j_float - 1.0) * 0.12)
 
 # IE for the 3D plot 
-_IE4 = rydberg_data.get('ionization_energy_eV', 5.0) if rydberg_data else 5.0
+_IE4 = ionization_energy_eV(rydberg_data)
 _gs_n4 = rydberg_data.get('n_start', 2) if rydberg_data else 2
 _n_max4 = max((ex.get('n', 0) for ex in rydberg_excitations), default=20)
 

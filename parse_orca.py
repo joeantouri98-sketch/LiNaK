@@ -7,16 +7,6 @@ ORCA output structure (critical to understand):
   - STATE blocks contain: excitation energy (eV) + orbital coefficients
   - Oscillator strengths live in a SEPARATE absorption spectrum table
   - The two sections must be parsed independently and joined on state number
-
-Original parse_orca.py bugs (all three caused empty/wrong output):
-  Bug 1: regex r'E=\s*([\d.]+)\s+eV' fails on 'E=   0.057766 au      1.572 eV'
-         because the number before 'eV' is not directly after 'E='
-         -> all states skipped, returns []
-  Bug 2: searched for 'oscillator strength' inside STATE blocks
-         -> ORCA never puts fosc there, always returns f=0.0
-  Bug 3: orbital regex looked for % signs ('[\d.]+%')
-         -> ORCA writes decimals (0.937327), never percentages
-         -> orbital_contributions always empty
 r"""
 
 import re
@@ -46,7 +36,7 @@ def parse_excitations(text, ground_mult=2):
       spin_forbidden, from, to, dominant_coeff, raw_transition
     """
 
-    # ── Step 1: Absorption spectrum table ────────────────────────────────────
+    # Step 1: Absorption spectrum table 
     # Location: between the two dashed lines after
     #   'ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS'
     # Format of each row:
@@ -72,7 +62,7 @@ def parse_excitations(text, ground_mult=2):
             fosc    = float(m.group(3))
             fosc_by_state[state_n] = {'energy_eV': e_ev, 'oscillator_strength': fosc}
 
-    # ── Step 2: STATE blocks ─────────────────────────────────────────────────
+    # Step 2: STATE blocks 
     # ORCA format:
     #   STATE  1:  E=   0.057766 au      1.572 eV ... <S**2> = 0.750056 Mult 2
     #        9a ->  10a  :     0.937327 (c=  0.96815660)
@@ -123,7 +113,7 @@ def parse_excitations(text, ground_mult=2):
             'dominant':       dominant,
         }
 
-    # ── Fallback: if no absorption table, use STATE block energies ────────────
+    # Fallback: if no absorption table, use STATE block energies 
     if not fosc_by_state and state_data:
         for m in re.finditer(
             r'STATE\s+(\d+):\s+E=\s*[\d.]+\s+au\s+([\d.]+)\s+eV',
@@ -133,7 +123,7 @@ def parse_excitations(text, ground_mult=2):
             e_ev = float(m.group(2))
             fosc_by_state[n] = {'energy_eV': e_ev, 'oscillator_strength': 0.0}
 
-    # ── Step 3: Merge ────────────────────────────────────────────────────────
+    # Step 3: Merge 
     excitations = []
     for n in sorted(fosc_by_state.keys()):
         entry = {

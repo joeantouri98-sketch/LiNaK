@@ -6,7 +6,7 @@ ATOMIC_NUMBERS = {sym: z for z, (sym, _c, _m) in _ELEMENTS_TABLE.items()}
 
 ALKALI_NEUTRAL_DOUBLET = {"Li", "Na", "K", "Rb", "Cs", "Fr"}
 
-# ── Element classes for SOC (extend by adding to SOC_IMPLEMENTED_CLASSES) ─────
+# Element classes for SOC (extend by adding to SOC_IMPLEMENTED_CLASSES) 
 class ElementClass:
     ALKALI_VALENCE   = "ALKALI_VALENCE"
     HALOGEN          = "HALOGEN"
@@ -33,7 +33,7 @@ TRANSITION_METAL_3D    = {
     "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn",
 }
 
-# Per-element CAS spatial orbital count — recipe-dependent defaults
+# Per-element CAS spatial orbital count; recipe-dependent defaults
 _ALKALI_SOC_NORB_NEVPT2 = {
     "Li": 6, "Na": 8, "K": 10, "Rb": 10, "Cs": 12, "Fr": 12,
 }
@@ -279,16 +279,21 @@ def _build_basis_block(symbol: str, z: int, basis_name: str = 'ANO-RCC-VTZP') ->
             "basis_set_exchange is required for Z>=87 elements.\n"
             "Install with: pip install basis-set-exchange"
         )
-    L_NAMES = {0: 'S', 1: 'P', 2: 'D', 3: 'F', 4: 'G', 5: 'H'}
+    L_NAMES = {0: 'S', 1: 'P', 2: 'D', 3: 'F', 4: 'G', 5: 'H', 6: 'I'}
     raw    = bse.get_basis(basis_name, elements=[z])
     shells = raw['elements'][str(z)]['electron_shells']
     lines  = ['%basis', f'  NewGTO {symbol}']
     for shell in shells:
-        am    = shell['angular_momentum'][0]
+        ams   = shell['angular_momentum']
         exps  = shell['exponents']
         coefs = shell['coefficients']
-        lname = L_NAMES.get(am, 'S')
-        for coef_set in coefs:
+        for k, coef_set in enumerate(coefs):
+            # A combined SP shell lists angular_momentum [0, 1] with one coefficient set per l;
+            # otherwise (general contraction) every set shares ams[0]. Never fall back to S silently.
+            am = ams[k] if len(ams) == len(coefs) else ams[0]
+            if am not in L_NAMES:
+                raise ValueError(f"BSE basis {basis_name}: angular momentum l={am} not supported")
+            lname = L_NAMES[am]
             # Keep only primitives with nonzero coefficients for this contraction
             nonzero = [(float(exps[i]), float(coef_set[i]))
                        for i in range(len(exps))
@@ -372,10 +377,10 @@ def _basis_block_from_gamess(text: str, symbol: str) -> str:
 
     # Skip title / element-name lines until first shell header (S/P/D/...)
     shell_hdr = re.compile(
-        r'^\s*([SPDFGHIRspdfghir])\s+(\d+)\s*$')
-    prim_line = re.compile(
-        r'^\s*(\d+)\s+([+-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+-]?\d+)?)\s+'
-        r'([+-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+-]?\d+)?)\s*$')
+        r'^\s*([SPDFGHILspdfghil])\s+(\d+)\s*$')
+    _num = r'[+-]?(?:\d+\.?\d*|\.\d+)(?:[DdEe][+-]?\d+)?'
+    # index, exponent, coefficient [, second coefficient for an L (SP) shell]
+    prim_line = re.compile(rf'^\s*(\d+)\s+({_num})\s+({_num})(?:\s+({_num}))?\s*$')
 
     i = start
     # consume non-shell preamble (e.g. LITHIUM)
@@ -400,17 +405,31 @@ def _basis_block_from_gamess(text: str, symbol: str) -> str:
             pm = prim_line.match(lines[i])
             if not pm:
                 break
-            prims.append((float(pm.group(2)), float(pm.group(3))))
+            _f = lambda x: float(x.replace('D', 'E').replace('d', 'e'))
+            prims.append((_f(pm.group(2)), _f(pm.group(3)),
+                          _f(pm.group(4)) if pm.group(4) else None))
             i += 1
         if len(prims) != nprim:
             raise ValueError(
                 f"GAMESS basis: shell {lname} expected {nprim} primitives, "
                 f"got {len(prims)}"
             )
-        out.append(f'  {lname} {len(prims)}')
-        for rank, (exp, coef) in enumerate(prims, 1):
-            out.append(f'    {rank}  {exp:>20.8f}  {coef:>18.10f}')
-        n_shells += 1
+        if lname == 'L':
+            # GAMESS SP shell: columns exponent, s-coefficient, p-coefficient -> an S and a P shell
+            if any(p[2] is None for p in prims):
+                raise ValueError("GAMESS basis: L shell needs two coefficient columns")
+            for lab, col in (('S', 1), ('P', 2)):
+                out.append(f'  {lab} {len(prims)}')
+                for rank, p in enumerate(prims, 1):
+                    out.append(f'    {rank}  {p[0]:>20.8f}  {p[col] if col == 2 else p[1]:>18.10f}')
+                n_shells += 1
+        else:
+            if any(p[2] is not None for p in prims):
+                raise ValueError(f"GAMESS basis: shell {lname} has an unexpected extra column")
+            out.append(f'  {lname} {len(prims)}')
+            for rank, p in enumerate(prims, 1):
+                out.append(f'    {rank}  {p[0]:>20.8f}  {p[1]:>18.10f}')
+            n_shells += 1
 
     if n_shells == 0:
         raise ValueError("GAMESS basis file: no shells found inside $DATA")
@@ -435,7 +454,7 @@ IC_NUMBERS = {
 ALKALI_NEUTRAL_DOUBLET = {"Li", "Na", "K", "Rb", "Cs", "Fr"}
 
 
-# ANO-RCC-VTZP for Fr (Z=87) — embedded inline, no internal ORCA 6.1.1 basis covers Z>=87
+# ANO-RCC-VTZP for Fr (Z=87) ; embedded inline, no internal ORCA 6.1.1 basis covers Z>=87
 _ANO_RCC_Fr = """%basis
   NewGTO Fr
   S 28

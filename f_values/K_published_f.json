@@ -1,0 +1,571 @@
+{
+ "element": "K",
+ "note": "Published absorption oscillator strengths (J-resolved) transcribed from the cited table; used by tools/make_arc_fvalues.py to write PUBLISHED rows where NIST lists no f. Edit/add rows here when new values appear.",
+ "ref": "PUBLISHED: Theodosiou, arXiv:2211.12664 (2022), Table IV (central-potential calculation with core polarization and spin-orbit; stated goal <5 %, no per-row error bars; agrees with all-order values at n<=8 within ~10 %, differs from other theories by up to 40 % at n>=10). Absorption f, 4s->np; NIST lists no f for this n",
+ "transitions": [
+  {
+   "lower": "4s",
+   "upper": "4p",
+   "upper_J": "1/2",
+   "f_abs": 0.326
+  },
+  {
+   "lower": "4s",
+   "upper": "4p",
+   "upper_J": "3/2",
+   "f_abs": 0.6545000000000001
+  },
+  {
+   "lower": "4s",
+   "upper": "5p",
+   "upper_J": "1/2",
+   "f_abs": 0.0025960000000000002
+  },
+  {
+   "lower": "4s",
+   "upper": "5p",
+   "upper_J": "3/2",
+   "f_abs": 0.0057480000000000005
+  },
+  {
+   "lower": "4s",
+   "upper": "6p",
+   "upper_J": "1/2",
+   "f_abs": 0.000259
+  },
+  {
+   "lower": "4s",
+   "upper": "6p",
+   "upper_J": "3/2",
+   "f_abs": 0.0006268000000000001
+  },
+  {
+   "lower": "4s",
+   "upper": "7p",
+   "upper_J": "1/2",
+   "f_abs": 5.56e-05
+  },
+  {
+   "lower": "4s",
+   "upper": "7p",
+   "upper_J": "3/2",
+   "f_abs": 0.00014680000000000002
+  },
+  {
+   "lower": "4s",
+   "upper": "8p",
+   "upper_J": "1/2",
+   "f_abs": 1.7740000000000003e-05
+  },
+  {
+   "lower": "4s",
+   "upper": "8p",
+   "upper_J": "3/2",
+   "f_abs": 5.0860000000000004e-05
+  },
+  {
+   "lower": "4s",
+   "upper": "9p",
+   "upper_J": "1/2",
+   "f_abs": 7.246e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "9p",
+   "upper_J": "3/2",
+   "f_abs": 2.2380000000000003e-05
+  },
+  {
+   "lower": "4s",
+   "upper": "10p",
+   "upper_J": "1/2",
+   "f_abs": 3.5019999999999997e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "10p",
+   "upper_J": "3/2",
+   "f_abs": 1.1550000000000001e-05
+  },
+  {
+   "lower": "4s",
+   "upper": "11p",
+   "upper_J": "1/2",
+   "f_abs": 1.911e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "11p",
+   "upper_J": "3/2",
+   "f_abs": 6.674e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "12p",
+   "upper_J": "1/2",
+   "f_abs": 1.143e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "12p",
+   "upper_J": "3/2",
+   "f_abs": 4.1900000000000005e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "13p",
+   "upper_J": "1/2",
+   "f_abs": 7.324e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "13p",
+   "upper_J": "3/2",
+   "f_abs": 2.802e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "14p",
+   "upper_J": "1/2",
+   "f_abs": 4.961e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "14p",
+   "upper_J": "3/2",
+   "f_abs": 1.968e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "15p",
+   "upper_J": "1/2",
+   "f_abs": 3.5119999999999997e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "15p",
+   "upper_J": "3/2",
+   "f_abs": 1.437e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "16p",
+   "upper_J": "1/2",
+   "f_abs": 2.578e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "16p",
+   "upper_J": "3/2",
+   "f_abs": 1.0829999999999998e-06
+  },
+  {
+   "lower": "4s",
+   "upper": "17p",
+   "upper_J": "1/2",
+   "f_abs": 1.949e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "17p",
+   "upper_J": "3/2",
+   "f_abs": 8.377e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "18p",
+   "upper_J": "1/2",
+   "f_abs": 1.51e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "18p",
+   "upper_J": "3/2",
+   "f_abs": 6.622e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "19p",
+   "upper_J": "1/2",
+   "f_abs": 1.195e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "19p",
+   "upper_J": "3/2",
+   "f_abs": 5.331999999999999e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "20p",
+   "upper_J": "1/2",
+   "f_abs": 9.631000000000001e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "20p",
+   "upper_J": "3/2",
+   "f_abs": 4.3609999999999994e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "21p",
+   "upper_J": "1/2",
+   "f_abs": 7.882e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "21p",
+   "upper_J": "3/2",
+   "f_abs": 3.616e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "22p",
+   "upper_J": "1/2",
+   "f_abs": 6.538000000000001e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "22p",
+   "upper_J": "3/2",
+   "f_abs": 3.034e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "23p",
+   "upper_J": "1/2",
+   "f_abs": 5.487e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "23p",
+   "upper_J": "3/2",
+   "f_abs": 2.573e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "24p",
+   "upper_J": "1/2",
+   "f_abs": 4.6529999999999994e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "24p",
+   "upper_J": "3/2",
+   "f_abs": 2.2019999999999997e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "25p",
+   "upper_J": "1/2",
+   "f_abs": 3.983e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "25p",
+   "upper_J": "3/2",
+   "f_abs": 1.8999999999999998e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "26p",
+   "upper_J": "1/2",
+   "f_abs": 3.4369999999999996e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "26p",
+   "upper_J": "3/2",
+   "f_abs": 1.651e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "27p",
+   "upper_J": "1/2",
+   "f_abs": 2.989e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "27p",
+   "upper_J": "3/2",
+   "f_abs": 1.445e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "28p",
+   "upper_J": "1/2",
+   "f_abs": 2.616e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "28p",
+   "upper_J": "3/2",
+   "f_abs": 1.272e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "29p",
+   "upper_J": "1/2",
+   "f_abs": 2.304e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "29p",
+   "upper_J": "3/2",
+   "f_abs": 1.126e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "30p",
+   "upper_J": "1/2",
+   "f_abs": 2.04e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "30p",
+   "upper_J": "3/2",
+   "f_abs": 1.002e-07
+  },
+  {
+   "lower": "4s",
+   "upper": "31p",
+   "upper_J": "1/2",
+   "f_abs": 1.8160000000000002e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "31p",
+   "upper_J": "3/2",
+   "f_abs": 8.957000000000001e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "32p",
+   "upper_J": "1/2",
+   "f_abs": 1.6240000000000002e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "32p",
+   "upper_J": "3/2",
+   "f_abs": 8.041e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "33p",
+   "upper_J": "1/2",
+   "f_abs": 1.458e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "33p",
+   "upper_J": "3/2",
+   "f_abs": 7.247e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "34p",
+   "upper_J": "1/2",
+   "f_abs": 1.315e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "34p",
+   "upper_J": "3/2",
+   "f_abs": 6.555e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "35p",
+   "upper_J": "1/2",
+   "f_abs": 1.1899999999999999e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "35p",
+   "upper_J": "3/2",
+   "f_abs": 5.949e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "36p",
+   "upper_J": "1/2",
+   "f_abs": 1.081e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "36p",
+   "upper_J": "3/2",
+   "f_abs": 5.417e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "37p",
+   "upper_J": "1/2",
+   "f_abs": 9.844e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "37p",
+   "upper_J": "3/2",
+   "f_abs": 4.947e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "38p",
+   "upper_J": "1/2",
+   "f_abs": 8.995e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "38p",
+   "upper_J": "3/2",
+   "f_abs": 4.53e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "39p",
+   "upper_J": "1/2",
+   "f_abs": 8.241e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "39p",
+   "upper_J": "3/2",
+   "f_abs": 4.16e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "40p",
+   "upper_J": "1/2",
+   "f_abs": 7.570000000000001e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "40p",
+   "upper_J": "3/2",
+   "f_abs": 3.8279999999999996e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "41p",
+   "upper_J": "1/2",
+   "f_abs": 6.971000000000001e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "41p",
+   "upper_J": "3/2",
+   "f_abs": 3.532e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "42p",
+   "upper_J": "1/2",
+   "f_abs": 6.435e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "42p",
+   "upper_J": "3/2",
+   "f_abs": 3.266e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "43p",
+   "upper_J": "1/2",
+   "f_abs": 5.952e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "43p",
+   "upper_J": "3/2",
+   "f_abs": 3.025e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "44p",
+   "upper_J": "1/2",
+   "f_abs": 5.518e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "44p",
+   "upper_J": "3/2",
+   "f_abs": 2.8090000000000002e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "45p",
+   "upper_J": "1/2",
+   "f_abs": 5.125e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "45p",
+   "upper_J": "3/2",
+   "f_abs": 2.612e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "46p",
+   "upper_J": "1/2",
+   "f_abs": 4.768e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "46p",
+   "upper_J": "3/2",
+   "f_abs": 2.434e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "47p",
+   "upper_J": "1/2",
+   "f_abs": 4.445e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "47p",
+   "upper_J": "3/2",
+   "f_abs": 2.271e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "48p",
+   "upper_J": "1/2",
+   "f_abs": 4.150000000000001e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "48p",
+   "upper_J": "3/2",
+   "f_abs": 2.1230000000000002e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "49p",
+   "upper_J": "1/2",
+   "f_abs": 3.881e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "49p",
+   "upper_J": "3/2",
+   "f_abs": 1.9870000000000002e-08
+  },
+  {
+   "lower": "4s",
+   "upper": "50p",
+   "upper_J": "1/2",
+   "f_abs": 3.635e-09
+  },
+  {
+   "lower": "4s",
+   "upper": "50p",
+   "upper_J": "3/2",
+   "f_abs": 1.863e-08
+  }
+ ]
+}

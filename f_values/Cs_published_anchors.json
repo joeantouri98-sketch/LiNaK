@@ -1,0 +1,97 @@
+{
+ "element": "Cs",
+ "note": "Published reduced electric-dipole matrix elements |D| (a.u.) between the first excited np level and ns/nd levels, transcribed from the cited tables. Used by tools/make_arc_fvalues.py to write PUBLISHED literature rows and to scale the ARC model-potential tail. Edit/add rows here when new values appear.",
+ "transitions": [
+  {
+   "lower": "6p1/2",
+   "upper": "5d3/2",
+   "D": 7.1,
+   "D_unc": 0.1,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "5d3/2",
+   "D": 3.19,
+   "D_unc": 0.07,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "5d5/2",
+   "D": 9.7,
+   "D_unc": 0.2,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p1/2",
+   "upper": "6d3/2",
+   "D": 4.23,
+   "D_unc": 0.07,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "6d3/2",
+   "D": 2.09,
+   "D_unc": 0.03,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "6d5/2",
+   "D": 6.13,
+   "D_unc": 0.09,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p1/2",
+   "upper": "7d3/2",
+   "D": 2.05,
+   "D_unc": 0.02,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "7d3/2",
+   "D": 0.976,
+   "D_unc": 0.0,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "7d5/2",
+   "D": 2.89,
+   "D_unc": 0.03,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "10d5/2",
+   "D": 0.979,
+   "D_unc": 0.006,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "11d5/2",
+   "D": 0.782,
+   "D_unc": 0.005,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p1/2",
+   "upper": "7s",
+   "D": 4.24,
+   "D_unc": 0.01,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  },
+  {
+   "lower": "6p3/2",
+   "upper": "7s",
+   "D": 6.48,
+   "D_unc": 0.02,
+   "ref": "Safronova, Safronova & Clark, Phys. Rev. A 94, 012505 (2016), Table I (recommended)"
+  }
+ ]
+}

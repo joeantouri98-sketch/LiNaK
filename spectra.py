@@ -40,9 +40,8 @@ except ImportError:
     print("Plotly not installed.  Run: pip install plotly")
     sys.exit(1)
 
-# ─────────────────────────────────────────────────────────────────────────────
+
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 parser = argparse.ArgumentParser(description="Absorption + emission spectral bar viewer")
 parser.add_argument("element",    nargs="?", default=None,
@@ -52,9 +51,7 @@ parser.add_argument("--wl-min",   type=float, default=200.0)
 parser.add_argument("--wl-max",   type=float, default=900.0)
 args = parser.parse_args()
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS
-# ─────────────────────────────────────────────────────────────────────────────
 
 from constants import HC_EV_NM as HC_NM
 from rydberg import label_to_pretty
@@ -73,9 +70,7 @@ SRC_COLORS = {
     "transitions": "#888", "?": "#aaa",
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ELEMENT SELECTION
-# ─────────────────────────────────────────────────────────────────────────────
 
 element = args.element
 if element is None:
@@ -105,9 +100,8 @@ except ValueError:
 out_dir = os.path.join("plots", element)
 os.makedirs(out_dir, exist_ok=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
 # DATA LOADING
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 def _fmt_trans_label(upper, lower):
     """Readable full-size labels: '3s 3P° J=1 → 2p'."""
@@ -197,7 +191,7 @@ def load_transitions(element, data_dir):
             print(f"  {len(lines)} ORCA excitations from {orca_file}")
             return lines
 
-    # Fallback — neutrals only (never invent Na D-lines for ions)
+    # Fallback
     if not is_ion and element in DLINES_FALLBACK:
         print(f"  Using hardcoded D-line fallback for {element}")
         return DLINES_FALLBACK[element]
@@ -210,7 +204,7 @@ if not lines_all:
     print(f"No spectral data found for {element}. Exiting.")
     sys.exit(1)
 
-# Apply wavelength window (ions often need EUV; do not clamp min to 100 nm)
+# Apply wavelength window 
 lines = [l for l in lines_all if args.wl_min <= l["wl"] <= args.wl_max]
 if not lines:
     wls = [l["wl"] for l in lines_all]
@@ -232,9 +226,7 @@ WL_MIN = args.wl_min
 WL_MAX = args.wl_max
 print(f"  Plotting {len(lines)} lines in {WL_MIN:.0f}–{WL_MAX:.0f} nm")
 
-# ─────────────────────────────────────────────────────────────────────────────
 # WAVELENGTH → RGB
-# ─────────────────────────────────────────────────────────────────────────────
 
 def wl_to_rgb(wl):
     if wl < 380:
@@ -274,9 +266,7 @@ def rgb_str(wl):
     r, g, b = wl_to_rgb(wl)
     return f"rgb({r},{g},{b})"
 
-# ─────────────────────────────────────────────────────────────────────────────
 # BUILD FIGURE — 2 rows only
-# ─────────────────────────────────────────────────────────────────────────────
 
 _title_sp = species_label if is_ion else element
 fig = make_subplots(
@@ -348,9 +338,8 @@ for ln in lines:
         hovertemplate=hover,
     ), row=2, col=1)
 
-# ─────────────────────────────────────────────────────────────────────────────
 # LAYOUT
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 src_counts = {}
 for l in lines:
@@ -427,9 +416,8 @@ for row_i in (1, 2):
         row=row_i, col=1,
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+
 # SAVE + INJECT CONTROL PANEL
-# ─────────────────────────────────────────────────────────────────────────────
 
 import json as _json
 

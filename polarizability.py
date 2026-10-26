@@ -138,9 +138,9 @@ from constants import (
     default_isotope_A,
 )
 
-# ============================================================================
+
 # AC STARK / TRAP (derived)
-# ============================================================================
+
 # U = -(2*pi*a0^3/c) * alpha_au * I   [J], I in W/m^2
 # (Grimm et al., Adv. At. Mol. Opt. Phys. 42, 95 (2000))
 
@@ -273,9 +273,8 @@ def C6_combining_rule(C6_A, C6_B, alpha0_A, alpha0_B):
         return 0.0
     return 2.0 * alpha0_A * alpha0_B * C6_A * C6_B / denom
 
-# ============================================================================
+
 # MAGIC WAVELENGTH FINDER
-# ============================================================================
 
 def find_magic_wavelengths(trans_ground, trans_excited,
                             wl_min_nm, wl_max_nm, n_scan=5000):
@@ -384,9 +383,9 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 
     return deduped
 
-# ============================================================================
+
 # MAIN COMPUTATION PER ELEMENT
-# ============================================================================
+
 
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
@@ -407,7 +406,7 @@ def run_element(element, excited_label=None,
     all_transitions = data['transitions']
     gs_label        = data['gs_label']
 
-    # ── Ground state transitions ────────────────────────────────────────────
+    # Ground state transitions 
     trans_gs = build_transitions_for_state(gs_label, data, all_transitions)
     print(f"  Ground state {gs_label}: {len(trans_gs)} transitions with f>0")
 
@@ -417,7 +416,7 @@ def run_element(element, excited_label=None,
     _prec = f"  (precision D-lines: {n_prec})" if n_prec else ""
     print(f"    NIST: {n_nist}{_prec}   Coulomb: {n_coulomb}")
 
-    # ── Static polarizability ───────────────────────────────────────────────
+    # Static polarizability 
     alpha0 = alpha_real(0.0, trans_gs)
     alpha0_expt = ALPHA0_EXPT.get(element)
 
@@ -429,7 +428,7 @@ def run_element(element, excited_label=None,
     else:
         print(f"  α(0) = {alpha0:.2f} au   (no experimental reference)")
 
-    # ── C₆ coefficient ──────────────────────────────────────────────────────
+    #  C₆ coefficient 
     print(f"  Computing C₆ (Casimir-Polder integral)...")
     C6 = compute_C6(trans_gs)
     alpha0_sigma = alpha_sigma(0.0, trans_gs)
@@ -447,7 +446,7 @@ def run_element(element, excited_label=None,
     else:
         print(f"  C₆   = {C6:.1f} au   (no experimental reference)")
 
-    # ── Excited state transitions & magic wavelengths ──────────────────────
+    # Excited state transitions & magic wavelengths
     magic_results = []
     excited_used  = None
     trans_ex      = []
@@ -487,7 +486,7 @@ def run_element(element, excited_label=None,
                   f"slope = {slope_str} au/nm   [{m['robustness']}]   "
                   f"near {m['nearby_resonance_label']}")
 
-    # ── Compute α(ω) spectra ────────────────────────────────────────────────
+    # Compute α(ω) spectra 
     print(f"  Computing α(ω) spectrum ({n_grid} points)...")
     wl_gs, alpha_gs = compute_alpha_spectrum(trans_gs, wl_min, wl_max, n_grid)
     if trans_ex:
@@ -495,10 +494,10 @@ def run_element(element, excited_label=None,
     else:
         wl_ex, alpha_ex = wl_gs, None
 
-    # ── AC Stark shift / trap depth ─────────────────────────────────────────
+    # AC Stark shift / trap depth 
     # Reuses trans_gs/trans_ex directly — no JSON round-trip, since this used
     # to be a separate script (acstark.py) that re-loaded polarizability.py's
-    # saved output. Merged into one process: same physics, one fewer file.
+    # saved output. Merged into one process.
     I_ref_Wm2 = kWcm2_to_Wm2(I_ref_kWcm2)
     # Trap frequencies need the mass of the ISOTOPE actually trapped (default: most abundant
     # natural isotope; --isotope overrides), not the IUPAC average atomic weight.
@@ -556,7 +555,7 @@ def run_element(element, excited_label=None,
                 point_result['trap_excited'] = dict(
                     omega_r_Hz=fr, omega_z_Hz=fz, zR_um=zR * 1e6, waist_um=waist_um)
 
-    # ── Assemble result dict ────────────────────────────────────────────────
+    # Assemble result dict 
     result = dict(
         element          = element,
         gs_label         = gs_label,
@@ -584,9 +583,9 @@ def run_element(element, excited_label=None,
     )
     return result
 
-# ============================================================================
+
 # PLOTTING — INDIVIDUAL ELEMENT
-# ============================================================================
+
 
 ELEM_COLORS = {
     'Li':'#4df0b0', 'Na':'#f0c54d', 'K':'#4d9ff0',
@@ -676,7 +675,7 @@ def plot_polarizability(result, out_dir):
     fig.add_hline(y=0, line_dash='dot', line_color='rgba(255,255,255,0.15)',
                   line_width=1, row=1, col=1)
 
-    # ── Resonance vertical lines (top 8 by fosc, deduplicated) ─────────────
+    # Resonance vertical lines (top 8 by fosc, deduplicated) 
     res_wls, res_seen = [], set()
     for tr in sorted(trans_gs, key=lambda t: t['fosc'], reverse=True):
         dE = abs(tr['delta_E_au'])
@@ -701,7 +700,7 @@ def plot_polarizability(result, out_dir):
                 borderpad=2, row=1, col=1,
             )
 
-    # ── Magic wavelength markers (top panel) ────────────────────────────────
+    # Magic wavelength markers (top panel) 
     label_positions = []
     for m in magic:
         wl_m = m['wl_nm']
@@ -732,7 +731,7 @@ def plot_polarizability(result, out_dir):
             showlegend=True,
         ), row=1, col=1)
 
-    # ── Bottom panel: Δα ─────────────────────────────────────────────────────
+    # Bottom panel: Δα 
     if has_excited:
         alpha_ex_interp = np.interp(wl_gs, wl_ex, alpha_ex,
                                      left=float('nan'), right=float('nan'))
@@ -760,7 +759,7 @@ def plot_polarizability(result, out_dir):
                 hovertemplate=f'Magic λ = {wl_m:.3f} nm [{rob}]<extra></extra>',
             ), row=2, col=1)
 
-    # ── Layout ──────────────────────────────────────────────────────────────
+    # Layout 
     c6_str = f"C₆ = {C6:.0f} au" if C6 is not None else ""
     if C6 is not None and C6_ex:
         err = (C6 - C6_ex) / C6_ex * 100
@@ -821,14 +820,14 @@ def plot_polarizability(result, out_dir):
             ann.font.color = '#8a9ac0'
             ann.font.size = 12
 
-    # ── Secondary uK axis (right side), row 1 only — a pure linear rescale of
-    #    the alpha axis, so it needs no VISIBLE traces: only its own tick range
-    #    is a function of I, updated live by the slider via Plotly.relayout.
-    #    BUT Plotly.js never draws an axis that has zero traces referencing
-    #    it — the axis object exists in the layout spec and responds to
-    #    relayout, but is invisible in the DOM. A single invisible anchor
-    #    trace forces Plotly to actually render (and keep responsive) the
-    #    axis line, ticks, and title. ──────────────────────────────────────
+    # Secondary uK axis (right side), row 1 only — a pure linear rescale of
+    # the alpha axis, so it needs no VISIBLE traces: only its own tick range
+    # is a function of I, updated live by the slider via Plotly.relayout.
+    # BUT Plotly.js never draws an axis that has zero traces referencing
+    # it — the axis object exists in the layout spec and responds to
+    # relayout, but is invisible in the DOM. A single invisible anchor
+    # trace forces Plotly to actually render (and keep responsive) the
+    # axis line, ticks, and title.
     factor0 = alpha_to_uK_factor(I_ref)   # uK per unit alpha, at I_ref
     fig.add_trace(go.Scatter(
         x=[wl_min, wl_max], y=[y_clip * factor0, -y_clip * factor0],
@@ -1030,9 +1029,9 @@ def _inject_control_panel(raw_html, result, factor0):
     raw_html = raw_html.replace('</body>', html + js + '</body>', 1)
     return raw_html
 
-# ============================================================================
-# SAVE JSON  (small side file — does not touch <el>_polarizability.json)
-# ============================================================================
+
+# SAVE JSON  (small side file ; does not touch <el>_polarizability.json)
+
 
 
 def plot_magic_wavelengths(result, out_dir):
@@ -1175,9 +1174,9 @@ def plot_magic_wavelengths(result, out_dir):
     print(f"  ✓ {out_file}")
     return out_file
 
-# ============================================================================
-# PLOTTING — CROSS-ELEMENT (saved to plots/ directly)
-# ============================================================================
+
+# PLOTTING ; CROSS-ELEMENT (saved to plots)
+
 
 def plot_alpha_validation(results, out_dir):
     """
@@ -1355,9 +1354,7 @@ def plot_C6_matrix(results, out_dir, heteronuclear=False):
     print(f"  ✓ {out_file}")
     return out_file
 
-# ============================================================================
 # SAVE JSON
-# ============================================================================
 
 def _trim_transitions(trans_list):
     """
@@ -1372,11 +1369,7 @@ def _trim_transitions(trans_list):
         for t in trans_list
     ]
 
-
-
-# ============================================================================
 # MAIN
-# ============================================================================
 
 def save_json(result, data_dir='data_json'):
     """Save polarizability results to data_json/<element>_polarizability.json."""

@@ -1,0 +1,1795 @@
+{
+  "element": "Rb",
+  "gs_label": "5s",
+  "excited_label": "5p1/2",
+  "alpha0_au": 318.6836,
+  "alpha0_expt_au": 318.8,
+  "alpha0_sigma_au": 0.6905,
+  "C6_au": 4783.26,
+  "C6_sigma_au": 19.79,
+  "C6_expt_au": 4691.0,
+  "magic_wavelengths": [
+    {
+      "wl_nm": 421.0416,
+      "alpha_au": -2.6976,
+      "delta_alpha_slope_au_per_nm": -485.9132,
+      "nearby_resonance_nm": 421.673,
+      "nearby_resonance_label": "6p1/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 423.0655,
+      "alpha_au": -3.1485,
+      "delta_alpha_slope_au_per_nm": -59.7445,
+      "nearby_resonance_nm": 421.673,
+      "nearby_resonance_label": "6p1/2",
+      "robustness": "sensitive"
+    },
+    {
+      "wl_nm": 508.2694,
+      "alpha_au": -209.3956,
+      "delta_alpha_slope_au_per_nm": 380.8312,
+      "nearby_resonance_nm": 508.941,
+      "nearby_resonance_label": "10d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 518.7414,
+      "alpha_au": -226.1464,
+      "delta_alpha_slope_au_per_nm": 302.2068,
+      "nearby_resonance_nm": 519.672,
+      "nearby_resonance_label": "9d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 535.077,
+      "alpha_au": -255.0705,
+      "delta_alpha_slope_au_per_nm": 242.2554,
+      "nearby_resonance_nm": 536.409,
+      "nearby_resonance_label": "8d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 562.9621,
+      "alpha_au": -314.4306,
+      "delta_alpha_slope_au_per_nm": 204.8255,
+      "nearby_resonance_nm": 564.935,
+      "nearby_resonance_label": "7d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 606.4626,
+      "alpha_au": -444.9471,
+      "delta_alpha_slope_au_per_nm": 556.4062,
+      "nearby_resonance_nm": 607.243,
+      "nearby_resonance_label": "8s",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 617.7564,
+      "alpha_au": -490.1676,
+      "delta_alpha_slope_au_per_nm": 210.0853,
+      "nearby_resonance_nm": 620.803,
+      "nearby_resonance_label": "6d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 727.4214,
+      "alpha_au": -1880.9699,
+      "delta_alpha_slope_au_per_nm": 2835.162,
+      "nearby_resonance_nm": 728.2,
+      "nearby_resonance_label": "7s",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 761.1448,
+      "alpha_au": -5151.8351,
+      "delta_alpha_slope_au_per_nm": 6320.0155,
+      "nearby_resonance_nm": 762.103,
+      "nearby_resonance_label": "5d3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 787.49,
+      "alpha_au": 5691.1286,
+      "delta_alpha_slope_au_per_nm": -2982.0629,
+      "nearby_resonance_nm": 780.241,
+      "nearby_resonance_label": "5p3/2",
+      "robustness": "very sensitive"
+    },
+    {
+      "wl_nm": 1634.7069,
+      "alpha_au": 411.259,
+      "delta_alpha_slope_au_per_nm": 0.9636,
+      "nearby_resonance_nm": 1323.879,
+      "nearby_resonance_label": "6s",
+      "robustness": "robust"
+    }
+  ],
+  "n_gs_transitions": 93,
+  "n_ex_transitions": 93,
+  "wl_range_nm": [
+    200.0,
+    2000.0
+  ],
+  "I_ref_kWcm2": 10.0,
+  "point_result": null,
+  "transitions_gs": [
+    {
+      "delta_E_au": 0.05731391579618417,
+      "fosc": 0.3424,
+      "sign": 1,
+      "other_label": "5p1/2",
+      "source": "NIST",
+      "wl_nm": 794.9776,
+      "sigma_f": 0.0010272
+    },
+    {
+      "delta_E_au": 0.058396477328834615,
+      "fosc": 0.6958,
+      "sign": 1,
+      "other_label": "5p3/2",
+      "source": "NIST",
+      "wl_nm": 780.2402,
+      "sigma_f": 0.0020874
+    },
+    {
+      "delta_E_au": 0.10805385192139971,
+      "fosc": 0.004,
+      "sign": 1,
+      "other_label": "6p1/2",
+      "source": "NIST",
+      "wl_nm": 421.672,
+      "sigma_f": 0.0004
+    },
+    {
+      "delta_E_au": 0.10840701290750776,
+      "fosc": 0.00937,
+      "sign": 1,
+      "other_label": "6p3/2",
+      "source": "NIST",
+      "wl_nm": 420.2983,
+      "sigma_f": 0.0006559000000000001
+    },
+    {
+      "delta_E_au": 0.12682569968330168,
+      "fosc": 0.00056,
+      "sign": 1,
+      "other_label": "7p1/2",
+      "source": "NIST",
+      "wl_nm": 359.259,
+      "sigma_f": 5.6e-05
+    },
+    {
+      "delta_E_au": 0.1269855592347658,
+      "fosc": 0.00153,
+      "sign": 1,
+      "other_label": "7p3/2",
+      "source": "NIST",
+      "wl_nm": 358.8068,
+      "sigma_f": 0.0001071
+    },
+    {
+      "delta_E_au": 0.13593798811133276,
+      "fosc": 0.00015,
+      "sign": 1,
+      "other_label": "8p1/2",
+      "source": "NIST",
+      "wl_nm": 335.1769,
+      "sigma_f": 2.6999999999999996e-05
+    },
+    {
+      "delta_E_au": 0.13602387127725726,
+      "fosc": 0.00046,
+      "sign": 1,
+      "other_label": "8p3/2",
+      "source": "NIST",
+      "wl_nm": 334.9653,
+      "sigma_f": 4.600000000000001e-05
+    },
+    {
+      "delta_E_au": 0.14105915315379897,
+      "fosc": 6e-05,
+      "sign": 1,
+      "other_label": "9p1/2",
+      "source": "NIST",
+      "wl_nm": 323.0083,
+      "sigma_f": 1.08e-05
+    },
+    {
+      "delta_E_au": 0.14111056545552272,
+      "fosc": 0.0002,
+      "sign": 1,
+      "other_label": "9p3/2",
+      "source": "NIST",
+      "wl_nm": 322.8906,
+      "sigma_f": 3.6e-05
+    },
+    {
+      "delta_E_au": 0.14422554825109776,
+      "fosc": 3e-05,
+      "sign": 1,
+      "other_label": "10p1/2",
+      "source": "NIST",
+      "wl_nm": 315.9168,
+      "sigma_f": 3e-06
+    },
+    {
+      "delta_E_au": 0.14425884313698892,
+      "fosc": 0.000101,
+      "sign": 1,
+      "other_label": "10p3/2",
+      "source": "NIST",
+      "wl_nm": 315.8439,
+      "sigma_f": 1.0100000000000002e-05
+    },
+    {
+      "delta_E_au": 0.1463201126178214,
+      "fosc": 1.85e-05,
+      "sign": 1,
+      "other_label": "11p1/2",
+      "source": "NIST",
+      "wl_nm": 311.3945,
+      "sigma_f": 1.85e-06
+    },
+    {
+      "delta_E_au": 0.1463427502002816,
+      "fosc": 7.3e-05,
+      "sign": 1,
+      "other_label": "11p3/2",
+      "source": "NIST",
+      "wl_nm": 311.3463,
+      "sigma_f": 7.3e-06
+    },
+    {
+      "delta_E_au": 0.1477778847298853,
+      "fosc": 9.95e-06,
+      "sign": 1,
+      "other_label": "12p1/2",
+      "source": "NIST",
+      "wl_nm": 308.3227,
+      "sigma_f": 9.95e-07
+    },
+    {
+      "delta_E_au": 0.1477940176823204,
+      "fosc": 4.25e-05,
+      "sign": 1,
+      "other_label": "12p3/2",
+      "source": "NIST",
+      "wl_nm": 308.2891,
+      "sigma_f": 2.9750000000000003e-06
+    },
+    {
+      "delta_E_au": 0.1488328475215818,
+      "fosc": 6.34e-06,
+      "sign": 1,
+      "other_label": "13p1/2",
+      "source": "NIST",
+      "wl_nm": 306.1373,
+      "sigma_f": 6.340000000000001e-07
+    },
+    {
+      "delta_E_au": 0.14884468080332236,
+      "fosc": 2.95e-05,
+      "sign": 1,
+      "other_label": "13p3/2",
+      "source": "NIST",
+      "wl_nm": 306.1129,
+      "sigma_f": 2.065e-06
+    },
+    {
+      "delta_E_au": 0.14962104698360526,
+      "fosc": 5.17e-06,
+      "sign": 1,
+      "other_label": "14p1/2",
+      "source": "NIST",
+      "wl_nm": 304.5245,
+      "sigma_f": 3.6190000000000003e-07
+    },
+    {
+      "delta_E_au": 0.14963016081550481,
+      "fosc": 2.28e-05,
+      "sign": 1,
+      "other_label": "14p3/2",
+      "source": "NIST",
+      "wl_nm": 304.506,
+      "sigma_f": 2.2799999999999998e-06
+    },
+    {
+      "delta_E_au": 0.1502253895867839,
+      "fosc": 3.43e-06,
+      "sign": 1,
+      "other_label": "15p1/2",
+      "source": "NIST",
+      "wl_nm": 303.2995,
+      "sigma_f": 2.4010000000000004e-07
+    },
+    {
+      "delta_E_au": 0.15023237195799727,
+      "fosc": 1.36e-05,
+      "sign": 1,
+      "other_label": "15p3/2",
+      "source": "NIST",
+      "wl_nm": 303.2854,
+      "sigma_f": 9.520000000000001e-07
+    },
+    {
+      "delta_E_au": 0.15069894135233938,
+      "fosc": 2.42e-06,
+      "sign": 1,
+      "other_label": "16p1/2",
+      "source": "NIST",
+      "wl_nm": 302.3464,
+      "sigma_f": 2.42e-07
+    },
+    {
+      "delta_E_au": 0.15070456399863227,
+      "fosc": 1.13e-05,
+      "sign": 1,
+      "other_label": "16p3/2",
+      "source": "NIST",
+      "wl_nm": 302.3351,
+      "sigma_f": 1.13e-06
+    },
+    {
+      "delta_E_au": 0.1510768713815938,
+      "fosc": 1.89e-06,
+      "sign": 1,
+      "other_label": "17p1/2",
+      "source": "NIST",
+      "wl_nm": 301.59,
+      "sigma_f": 3.402e-07
+    },
+    {
+      "delta_E_au": 0.15108142829754362,
+      "fosc": 8.89e-06,
+      "sign": 1,
+      "other_label": "17p3/2",
+      "source": "NIST",
+      "wl_nm": 301.5809,
+      "sigma_f": 8.89e-07
+    },
+    {
+      "delta_E_au": 0.1513834709765053,
+      "fosc": 1.43e-06,
+      "sign": 1,
+      "other_label": "18p1/2",
+      "source": "NIST",
+      "wl_nm": 300.9792,
+      "sigma_f": 2.574e-07
+    },
+    {
+      "delta_E_au": 0.15138729290601158,
+      "fosc": 7.2e-06,
+      "sign": 1,
+      "other_label": "18p3/2",
+      "source": "NIST",
+      "wl_nm": 300.9716,
+      "sigma_f": 1.296e-06
+    },
+    {
+      "delta_E_au": 0.1516354243293416,
+      "fosc": 1.18e-06,
+      "sign": 1,
+      "other_label": "19p1/2",
+      "source": "NIST",
+      "wl_nm": 300.4791,
+      "sigma_f": 2.1239999999999997e-07
+    },
+    {
+      "delta_E_au": 0.15163854802172655,
+      "fosc": 5.56e-06,
+      "sign": 1,
+      "other_label": "19p3/2",
+      "source": "NIST",
+      "wl_nm": 300.4729,
+      "sigma_f": 5.560000000000001e-07
+    },
+    {
+      "delta_E_au": 0.15184504246303154,
+      "fosc": 7.7e-07,
+      "sign": 1,
+      "other_label": "20p1/2",
+      "source": "NIST",
+      "wl_nm": 300.0643,
+      "sigma_f": 2.6949999999999997e-07
+    },
+    {
+      "delta_E_au": 0.15184761491558385,
+      "fosc": 5.133333333333332e-07,
+      "sign": 1,
+      "other_label": "20p3/2",
+      "source": "NIST",
+      "wl_nm": 300.0592,
+      "sigma_f": 1.7966666666666662e-07
+    },
+    {
+      "delta_E_au": 0.1520212554628638,
+      "fosc": 5.767202617987253e-07,
+      "sign": 1,
+      "other_label": "21p1/2",
+      "source": "Numerov",
+      "wl_nm": 299.7165,
+      "sigma_f": 1.1534405235974506e-07
+    },
+    {
+      "delta_E_au": 0.15202346042219433,
+      "fosc": 1.15344052359745e-06,
+      "sign": 1,
+      "other_label": "21p3/2",
+      "source": "Numerov",
+      "wl_nm": 299.7122,
+      "sigma_f": 2.3068810471949002e-07
+    },
+    {
+      "delta_E_au": 0.15217093545208524,
+      "fosc": 4.802971915083421e-07,
+      "sign": 1,
+      "other_label": "22p1/2",
+      "source": "Numerov",
+      "wl_nm": 299.4217,
+      "sigma_f": 9.605943830166843e-08
+    },
+    {
+      "delta_E_au": 0.15217288316616057,
+      "fosc": 9.605943830166836e-07,
+      "sign": 1,
+      "other_label": "22p3/2",
+      "source": "Numerov",
+      "wl_nm": 299.4179,
+      "sigma_f": 1.9211887660333673e-07
+    },
+    {
+      "delta_E_au": 0.15229897009054524,
+      "fosc": 4.045317555603679e-07,
+      "sign": 1,
+      "other_label": "23p1/2",
+      "source": "Numerov",
+      "wl_nm": 299.17,
+      "sigma_f": 8.090635111207358e-08
+    },
+    {
+      "delta_E_au": 0.15230073405800967,
+      "fosc": 8.090635111207353e-07,
+      "sign": 1,
+      "other_label": "23p3/2",
+      "source": "Numerov",
+      "wl_nm": 299.1665,
+      "sigma_f": 1.6181270222414707e-07
+    },
+    {
+      "delta_E_au": 0.15240954880097177,
+      "fosc": 3.4412315853694764e-07,
+      "sign": 1,
+      "other_label": "24p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.9529,
+      "sigma_f": 6.882463170738953e-08
+    },
+    {
+      "delta_E_au": 0.1524111657711475,
+      "fosc": 6.882463170738949e-07,
+      "sign": 1,
+      "other_label": "24p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.9497,
+      "sigma_f": 1.3764926341477898e-07
+    },
+    {
+      "delta_E_au": 0.15250561152913894,
+      "fosc": 2.9533241674284934e-07,
+      "sign": 1,
+      "other_label": "25p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.7646,
+      "sigma_f": 5.906648334856987e-08
+    },
+    {
+      "delta_E_au": 0.1525070447527038,
+      "fosc": 5.906648334856984e-07,
+      "sign": 1,
+      "other_label": "25p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.7618,
+      "sigma_f": 1.1813296669713968e-07
+    },
+    {
+      "delta_E_au": 0.15258954698098814,
+      "fosc": 2.5546395851291545e-07,
+      "sign": 1,
+      "other_label": "26p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.6003,
+      "sigma_f": 5.1092791702583094e-08
+    },
+    {
+      "delta_E_au": 0.15259072295929776,
+      "fosc": 5.109279170258306e-07,
+      "sign": 1,
+      "other_label": "26p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.598,
+      "sigma_f": 1.0218558340516612e-07
+    },
+    {
+      "delta_E_au": 0.15266422160364906,
+      "fosc": 2.225571150640957e-07,
+      "sign": 1,
+      "other_label": "27p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.4542,
+      "sigma_f": 4.451142301281914e-08
+    },
+    {
+      "delta_E_au": 0.15266422160364906,
+      "fosc": 4.451142301281911e-07,
+      "sign": 1,
+      "other_label": "27p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.4542,
+      "sigma_f": 8.902284602563823e-08
+    },
+    {
+      "delta_E_au": 0.1527293781518665,
+      "fosc": 1.9513815735286844e-07,
+      "sign": 1,
+      "other_label": "28p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.3269,
+      "sigma_f": 3.902763147057369e-08
+    },
+    {
+      "delta_E_au": 0.1527293781518665,
+      "fosc": 3.902763147057367e-07,
+      "sign": 1,
+      "other_label": "28p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.3269,
+      "sigma_f": 7.805526294114734e-08
+    },
+    {
+      "delta_E_au": 0.15278718483564882,
+      "fosc": 1.720984695339121e-07,
+      "sign": 1,
+      "other_label": "29p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.214,
+      "sigma_f": 3.441969390678242e-08
+    },
+    {
+      "delta_E_au": 0.15278718483564882,
+      "fosc": 3.44196939067824e-07,
+      "sign": 1,
+      "other_label": "29p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.214,
+      "sigma_f": 6.88393878135648e-08
+    },
+    {
+      "delta_E_au": 0.15283889113194996,
+      "fosc": 1.5258736093792614e-07,
+      "sign": 1,
+      "other_label": "30p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.1131,
+      "sigma_f": 3.051747218758523e-08
+    },
+    {
+      "delta_E_au": 0.15283889113194996,
+      "fosc": 3.051747218758521e-07,
+      "sign": 1,
+      "other_label": "30p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.1131,
+      "sigma_f": 6.103494437517041e-08
+    },
+    {
+      "delta_E_au": 0.15288541577382433,
+      "fosc": 1.3595223244201842e-07,
+      "sign": 1,
+      "other_label": "31p1/2",
+      "source": "Numerov",
+      "wl_nm": 298.0224,
+      "sigma_f": 2.7190446488403685e-08
+    },
+    {
+      "delta_E_au": 0.15288541577382433,
+      "fosc": 2.719044648840367e-07,
+      "sign": 1,
+      "other_label": "31p3/2",
+      "source": "Numerov",
+      "wl_nm": 298.0224,
+      "sigma_f": 5.4380892976807336e-08
+    },
+    {
+      "delta_E_au": 0.15292686900923846,
+      "fosc": 1.216757189810979e-07,
+      "sign": 1,
+      "other_label": "32p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.9416,
+      "sigma_f": 2.433514379621958e-08
+    },
+    {
+      "delta_E_au": 0.15292686900923846,
+      "fosc": 2.4335143796219564e-07,
+      "sign": 1,
+      "other_label": "32p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.9416,
+      "sigma_f": 4.867028759243913e-08
+    },
+    {
+      "delta_E_au": 0.15296461056311286,
+      "fosc": 1.0935063574148078e-07,
+      "sign": 1,
+      "other_label": "33p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.8681,
+      "sigma_f": 2.1870127148296157e-08
+    },
+    {
+      "delta_E_au": 0.15296461056311286,
+      "fosc": 2.1870127148296143e-07,
+      "sign": 1,
+      "other_label": "33p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.8681,
+      "sigma_f": 4.374025429659229e-08
+    },
+    {
+      "delta_E_au": 0.15299875068341406,
+      "fosc": 9.865188285680637e-08,
+      "sign": 1,
+      "other_label": "34p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.8016,
+      "sigma_f": 1.9730376571361276e-08
+    },
+    {
+      "delta_E_au": 0.15299875068341406,
+      "fosc": 1.9730376571361263e-07,
+      "sign": 1,
+      "other_label": "34p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.8016,
+      "sigma_f": 3.9460753142722526e-08
+    },
+    {
+      "delta_E_au": 0.15302958336471942,
+      "fosc": 8.931675844620348e-08,
+      "sign": 1,
+      "other_label": "35p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.7416,
+      "sigma_f": 1.7863351689240697e-08
+    },
+    {
+      "delta_E_au": 0.15302958336471942,
+      "fosc": 1.7863351689240686e-07,
+      "sign": 1,
+      "other_label": "35p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.7416,
+      "sigma_f": 3.5726703378481374e-08
+    },
+    {
+      "delta_E_au": 0.15305784359347252,
+      "fosc": 8.113474366444232e-08,
+      "sign": 1,
+      "other_label": "36p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.6867,
+      "sigma_f": 1.6226948732888465e-08
+    },
+    {
+      "delta_E_au": 0.15305784359347252,
+      "fosc": 1.6226948732888453e-07,
+      "sign": 1,
+      "other_label": "36p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.6867,
+      "sigma_f": 3.2453897465776904e-08
+    },
+    {
+      "delta_E_au": 0.15308356811899546,
+      "fosc": 7.393103498684715e-08,
+      "sign": 1,
+      "other_label": "37p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.6366,
+      "sigma_f": 1.478620699736943e-08
+    },
+    {
+      "delta_E_au": 0.15308356811899546,
+      "fosc": 1.4786206997369422e-07,
+      "sign": 1,
+      "other_label": "37p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.6366,
+      "sigma_f": 2.9572413994738845e-08
+    },
+    {
+      "delta_E_au": 0.15310716118383225,
+      "fosc": 6.756261295814367e-08,
+      "sign": 1,
+      "other_label": "38p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.5908,
+      "sigma_f": 1.3512522591628735e-08
+    },
+    {
+      "delta_E_au": 0.15310716118383225,
+      "fosc": 1.3512522591628727e-07,
+      "sign": 1,
+      "other_label": "38p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.5908,
+      "sigma_f": 2.7025045183257454e-08
+    },
+    {
+      "delta_E_au": 0.15312913727849328,
+      "fosc": 6.191098282797226e-08,
+      "sign": 1,
+      "other_label": "39p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.5481,
+      "sigma_f": 1.2382196565594453e-08
+    },
+    {
+      "delta_E_au": 0.15312913727849328,
+      "fosc": 1.2382196565594445e-07,
+      "sign": 1,
+      "other_label": "39p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.5481,
+      "sigma_f": 2.4764393131188892e-08
+    },
+    {
+      "delta_E_au": 0.15314909216043465,
+      "fosc": 5.6876941662990136e-08,
+      "sign": 1,
+      "other_label": "40p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.5093,
+      "sigma_f": 1.1375388332598027e-08
+    },
+    {
+      "delta_E_au": 0.15314909216043465,
+      "fosc": 1.137538833259802e-07,
+      "sign": 1,
+      "other_label": "40p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.5093,
+      "sigma_f": 2.275077666519604e-08
+    },
+    {
+      "delta_E_au": 0.15316750357084466,
+      "fosc": 5.237864522572188e-08,
+      "sign": 1,
+      "other_label": "41p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.4735,
+      "sigma_f": 1.0475729045144376e-08
+    },
+    {
+      "delta_E_au": 0.15316750357084466,
+      "fosc": 1.0475729045144369e-07,
+      "sign": 1,
+      "other_label": "41p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.4735,
+      "sigma_f": 2.095145809028874e-08
+    },
+    {
+      "delta_E_au": 0.15318466550430068,
+      "fosc": 4.834584001087842e-08,
+      "sign": 1,
+      "other_label": "42p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.4402,
+      "sigma_f": 9.669168002175685e-09
+    },
+    {
+      "delta_E_au": 0.15318466550430068,
+      "fosc": 9.669168002175679e-08,
+      "sign": 1,
+      "other_label": "42p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.4402,
+      "sigma_f": 1.933833600435136e-08
+    },
+    {
+      "delta_E_au": 0.15320043096351404,
+      "fosc": 4.4719466459285386e-08,
+      "sign": 1,
+      "other_label": "43p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.4096,
+      "sigma_f": 8.943893291857078e-09
+    },
+    {
+      "delta_E_au": 0.15320043096351404,
+      "fosc": 8.943893291857072e-08,
+      "sign": 1,
+      "other_label": "43p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.4096,
+      "sigma_f": 1.7887786583714146e-08
+    },
+    {
+      "delta_E_au": 0.15321513069238432,
+      "fosc": 4.144928123121946e-08,
+      "sign": 1,
+      "other_label": "44p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.3811,
+      "sigma_f": 8.289856246243892e-09
+    },
+    {
+      "delta_E_au": 0.15321513069238432,
+      "fosc": 8.289856246243886e-08,
+      "sign": 1,
+      "other_label": "44p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.3811,
+      "sigma_f": 1.6579712492487774e-08
+    },
+    {
+      "delta_E_au": 0.15322865444294495,
+      "fosc": 3.84921196035822e-08,
+      "sign": 1,
+      "other_label": "45p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.3548,
+      "sigma_f": 7.69842392071644e-09
+    },
+    {
+      "delta_E_au": 0.15322865444294495,
+      "fosc": 7.698423920716434e-08,
+      "sign": 1,
+      "other_label": "45p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.3548,
+      "sigma_f": 1.5396847841432868e-08
+    },
+    {
+      "delta_E_au": 0.15323868700789892,
+      "fosc": 3.581163475808059e-08,
+      "sign": 1,
+      "other_label": "46p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.3354,
+      "sigma_f": 7.162326951616118e-09
+    },
+    {
+      "delta_E_au": 0.15323868700789892,
+      "fosc": 7.162326951616114e-08,
+      "sign": 1,
+      "other_label": "46p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.3354,
+      "sigma_f": 1.432465390323223e-08
+    },
+    {
+      "delta_E_au": 0.15325331323812483,
+      "fosc": 3.3375830027818646e-08,
+      "sign": 1,
+      "other_label": "47p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.307,
+      "sigma_f": 6.6751660055637295e-09
+    },
+    {
+      "delta_E_au": 0.15325331323812483,
+      "fosc": 6.675166005563725e-08,
+      "sign": 1,
+      "other_label": "47p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.307,
+      "sigma_f": 1.335033201112745e-08
+    },
+    {
+      "delta_E_au": 0.15326433803477751,
+      "fosc": 3.115726579028561e-08,
+      "sign": 1,
+      "other_label": "48p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.2856,
+      "sigma_f": 6.231453158057122e-09
+    },
+    {
+      "delta_E_au": 0.15326433803477751,
+      "fosc": 6.231453158057118e-08,
+      "sign": 1,
+      "other_label": "48p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.2856,
+      "sigma_f": 1.2462906316114238e-08
+    },
+    {
+      "delta_E_au": 0.1532746278449867,
+      "fosc": 2.9132130872712797e-08,
+      "sign": 1,
+      "other_label": "49p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.2656,
+      "sigma_f": 5.826426174542559e-09
+    },
+    {
+      "delta_E_au": 0.1532746278449867,
+      "fosc": 5.826426174542556e-08,
+      "sign": 1,
+      "other_label": "49p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.2656,
+      "sigma_f": 1.1652852349085112e-08
+    },
+    {
+      "delta_E_au": 0.15328429291671888,
+      "fosc": 2.72795601997073e-08,
+      "sign": 1,
+      "other_label": "50p1/2",
+      "source": "Numerov",
+      "wl_nm": 297.2469,
+      "sigma_f": 5.45591203994146e-09
+    },
+    {
+      "delta_E_au": 0.15328429291671888,
+      "fosc": 5.4559120399414566e-08,
+      "sign": 1,
+      "other_label": "50p3/2",
+      "source": "Numerov",
+      "wl_nm": 297.2469,
+      "sigma_f": 1.0911824079882913e-08
+    },
+    {
+      "delta_E_au": 1.991608663445716,
+      "fosc": 36.0,
+      "sign": 1,
+      "other_label": "core",
+      "source": "core",
+      "wl_nm": 22.87766208104863,
+      "sigma_f": 0.0
+    }
+  ],
+  "transitions_ex": [
+    {
+      "delta_E_au": -0.05731391579618417,
+      "fosc": 0.3424,
+      "sign": -1,
+      "other_label": "5s",
+      "source": "NIST",
+      "wl_nm": 794.9776,
+      "sigma_f": 0.0010272
+    },
+    {
+      "delta_E_au": 0.03441654870258876,
+      "fosc": 0.20112999999999998,
+      "sign": 1,
+      "other_label": "6s",
+      "source": "literature",
+      "wl_nm": 1323.8771,
+      "sigma_f": 0.020113
+    },
+    {
+      "delta_E_au": 0.05978633301858566,
+      "fosc": 0.05692799999999997,
+      "sign": 1,
+      "other_label": "5d3/2",
+      "source": "literature",
+      "wl_nm": 762.1019,
+      "sigma_f": 0.005692799999999998
+    },
+    {
+      "delta_E_au": 0.06256980017881411,
+      "fosc": 0.018764999999999997,
+      "sign": 1,
+      "other_label": "7s",
+      "source": "literature",
+      "wl_nm": 728.1992,
+      "sigma_f": 0.0018764999999999997
+    },
+    {
+      "delta_E_au": 0.07339423952700895,
+      "fosc": 0.03407,
+      "sign": 1,
+      "other_label": "6d3/2",
+      "source": "NIST",
+      "wl_nm": 620.8018,
+      "sigma_f": 0.0034070000000000003
+    },
+    {
+      "delta_E_au": 0.07503311229875445,
+      "fosc": 0.0062199,
+      "sign": 1,
+      "other_label": "8s",
+      "source": "literature",
+      "wl_nm": 607.2423,
+      "sigma_f": 0.0006219900000000001
+    },
+    {
+      "delta_E_au": 0.08065241440331168,
+      "fosc": 0.017994999999999994,
+      "sign": 1,
+      "other_label": "7d3/2",
+      "source": "literature",
+      "wl_nm": 564.9339,
+      "sigma_f": 0.0017994999999999995
+    },
+    {
+      "delta_E_au": 0.08164990125512549,
+      "fosc": 0.0029398999999999996,
+      "sign": 1,
+      "other_label": "9s",
+      "source": "literature",
+      "wl_nm": 558.0323,
+      "sigma_f": 0.00029399
+    },
+    {
+      "delta_E_au": 0.08494142779443238,
+      "fosc": 0.011119999999999994,
+      "sign": 1,
+      "other_label": "8d3/2",
+      "source": "literature",
+      "wl_nm": 536.4082,
+      "sigma_f": 0.0011119999999999995
+    },
+    {
+      "delta_E_au": 0.08558336495419672,
+      "fosc": 0.0016531999999999999,
+      "sign": 1,
+      "other_label": "10s",
+      "source": "literature",
+      "wl_nm": 532.3848,
+      "sigma_f": 0.00016532
+    },
+    {
+      "delta_E_au": 0.08767712083583248,
+      "fosc": 0.007330699999999996,
+      "sign": 1,
+      "other_label": "9d3/2",
+      "source": "literature",
+      "wl_nm": 519.6713,
+      "sigma_f": 0.0007330699999999997
+    },
+    {
+      "delta_E_au": 0.08811164482123743,
+      "fosc": 0.0010319,
+      "sign": 1,
+      "other_label": "11s",
+      "source": "literature",
+      "wl_nm": 517.1085,
+      "sigma_f": 0.00010319000000000002
+    },
+    {
+      "delta_E_au": 0.08952586898652316,
+      "fosc": 0.005051599999999997,
+      "sign": 1,
+      "other_label": "10d3/2",
+      "source": "literature",
+      "wl_nm": 508.9398,
+      "sigma_f": 0.0005051599999999997
+    },
+    {
+      "delta_E_au": 0.089832542080079,
+      "fosc": 0.00069112,
+      "sign": 1,
+      "other_label": "12s",
+      "source": "literature",
+      "wl_nm": 507.2024,
+      "sigma_f": 6.911200000000001e-05
+    },
+    {
+      "delta_E_au": 0.09085968563488857,
+      "fosc": 0.003624499999999999,
+      "sign": 1,
+      "other_label": "11d",
+      "source": "literature",
+      "wl_nm": 501.4686,
+      "sigma_f": 0.0003624499999999999
+    },
+    {
+      "delta_E_au": 0.09104567395441955,
+      "fosc": 0.00048713999999999995,
+      "sign": 1,
+      "other_label": "13s",
+      "source": "literature",
+      "wl_nm": 500.4442,
+      "sigma_f": 4.8713999999999995e-05
+    },
+    {
+      "delta_E_au": 0.09181138283127149,
+      "fosc": 0.0026874999999999985,
+      "sign": 1,
+      "other_label": "12d",
+      "source": "literature",
+      "wl_nm": 496.2705,
+      "sigma_f": 0.00026874999999999984
+    },
+    {
+      "delta_E_au": 0.09195022177045112,
+      "fosc": 0.00035700999999999994,
+      "sign": 1,
+      "other_label": "14s",
+      "source": "literature",
+      "wl_nm": 495.5211,
+      "sigma_f": 3.5700999999999996e-05
+    },
+    {
+      "delta_E_au": 0.09252935433861727,
+      "fosc": 0.002047399999999999,
+      "sign": 1,
+      "other_label": "13d",
+      "source": "literature",
+      "wl_nm": 492.4197,
+      "sigma_f": 0.0002047399999999999
+    },
+    {
+      "delta_E_au": 0.09263570687699361,
+      "fosc": 0.00026983,
+      "sign": 1,
+      "other_label": "15s",
+      "source": "literature",
+      "wl_nm": 491.8544,
+      "sigma_f": 2.6983e-05
+    },
+    {
+      "delta_E_au": 0.09308426910346966,
+      "fosc": 0.0015954999999999993,
+      "sign": 1,
+      "other_label": "14d",
+      "source": "literature",
+      "wl_nm": 489.4842,
+      "sigma_f": 0.00015954999999999995
+    },
+    {
+      "delta_E_au": 0.09316754306751969,
+      "fosc": 0.00020911999999999998,
+      "sign": 1,
+      "other_label": "16s",
+      "source": "literature",
+      "wl_nm": 489.0467,
+      "sigma_f": 2.0912e-05
+    },
+    {
+      "delta_E_au": 0.09352202702922606,
+      "fosc": 0.0012674999999999993,
+      "sign": 1,
+      "other_label": "15d",
+      "source": "literature",
+      "wl_nm": 487.193,
+      "sigma_f": 0.00012674999999999994
+    },
+    {
+      "delta_E_au": 0.09358843305439747,
+      "fosc": 0.00016546999999999997,
+      "sign": 1,
+      "other_label": "17s",
+      "source": "literature",
+      "wl_nm": 486.8473,
+      "sigma_f": 1.6547e-05
+    },
+    {
+      "delta_E_au": 0.09387342404786968,
+      "fosc": 0.0010235999999999995,
+      "sign": 1,
+      "other_label": "16d",
+      "source": "literature",
+      "wl_nm": 485.3693,
+      "sigma_f": 0.00010235999999999996
+    },
+    {
+      "delta_E_au": 0.09392726180485701,
+      "fosc": 0.00013325,
+      "sign": 1,
+      "other_label": "18s",
+      "source": "literature",
+      "wl_nm": 485.0911,
+      "sigma_f": 1.3325000000000002e-05
+    },
+    {
+      "delta_E_au": 0.09415977476626237,
+      "fosc": 0.0008385199999999996,
+      "sign": 1,
+      "other_label": "17d",
+      "source": "literature",
+      "wl_nm": 483.8933,
+      "sigma_f": 8.385199999999997e-05
+    },
+    {
+      "delta_E_au": 0.0942039842008397,
+      "fosc": 0.00010892999999999999,
+      "sign": 1,
+      "other_label": "19s",
+      "source": "literature",
+      "wl_nm": 483.6662,
+      "sigma_f": 1.0892999999999999e-05
+    },
+    {
+      "delta_E_au": 0.09439618315581837,
+      "fosc": 0.0006955399999999997,
+      "sign": 1,
+      "other_label": "18d",
+      "source": "literature",
+      "wl_nm": 482.6814,
+      "sigma_f": 6.955399999999998e-05
+    },
+    {
+      "delta_E_au": 0.0944329692273162,
+      "fosc": 9.021299999999998e-05,
+      "sign": 1,
+      "other_label": "20s",
+      "source": "literature",
+      "wl_nm": 482.4933,
+      "sigma_f": 9.0213e-06
+    },
+    {
+      "delta_E_au": 0.09459363726386816,
+      "fosc": 0.0005833199999999998,
+      "sign": 1,
+      "other_label": "19d",
+      "source": "literature",
+      "wl_nm": 481.6738,
+      "sigma_f": 5.833199999999998e-05
+    },
+    {
+      "delta_E_au": 0.09462454344381789,
+      "fosc": 7.5573e-05,
+      "sign": 1,
+      "other_label": "21s",
+      "source": "literature",
+      "wl_nm": 481.5165,
+      "sigma_f": 7.5573000000000005e-06
+    },
+    {
+      "delta_E_au": 0.09476022194129041,
+      "fosc": 0.0004940199999999997,
+      "sign": 1,
+      "other_label": "20d",
+      "source": "literature",
+      "wl_nm": 480.8271,
+      "sigma_f": 4.940199999999998e-05
+    },
+    {
+      "delta_E_au": 0.09478646095732382,
+      "fosc": 6.394999999999998e-05,
+      "sign": 1,
+      "other_label": "22s",
+      "source": "literature",
+      "wl_nm": 480.694,
+      "sigma_f": 6.394999999999999e-06
+    },
+    {
+      "delta_E_au": 0.09490211107421061,
+      "fosc": 0.00042206999999999976,
+      "sign": 1,
+      "other_label": "21d",
+      "source": "literature",
+      "wl_nm": 480.1082,
+      "sigma_f": 4.220699999999998e-05
+    },
+    {
+      "delta_E_au": 0.09492452816073776,
+      "fosc": 5.4603e-05,
+      "sign": 1,
+      "other_label": "23s",
+      "source": "literature",
+      "wl_nm": 479.9948,
+      "sigma_f": 5.4603e-06
+    },
+    {
+      "delta_E_au": 0.09502386157857856,
+      "fosc": 0.00036343999999999976,
+      "sign": 1,
+      "other_label": "22d",
+      "source": "literature",
+      "wl_nm": 479.493,
+      "sigma_f": 3.6343999999999976e-05
+    },
+    {
+      "delta_E_au": 0.09504322847136512,
+      "fosc": 4.6999e-05,
+      "sign": 1,
+      "other_label": "24s",
+      "source": "literature",
+      "wl_nm": 479.3953,
+      "sigma_f": 4.6999000000000005e-06
+    },
+    {
+      "delta_E_au": 0.09512922188525616,
+      "fosc": 0.00031519999999999986,
+      "sign": 1,
+      "other_label": "23d",
+      "source": "literature",
+      "wl_nm": 478.962,
+      "sigma_f": 3.151999999999999e-05
+    },
+    {
+      "delta_E_au": 0.09514601632549044,
+      "fosc": 4.074799999999999e-05,
+      "sign": 1,
+      "other_label": "25s",
+      "source": "literature",
+      "wl_nm": 478.8774,
+      "sigma_f": 4.0747999999999995e-06
+    },
+    {
+      "delta_E_au": 0.09522091144408441,
+      "fosc": 0.00027513999999999984,
+      "sign": 1,
+      "other_label": "24d",
+      "source": "literature",
+      "wl_nm": 478.5008,
+      "sigma_f": 2.7513999999999984e-05
+    },
+    {
+      "delta_E_au": 0.09523561117295468,
+      "fosc": 3.5562e-05,
+      "sign": 1,
+      "other_label": "26s",
+      "source": "literature",
+      "wl_nm": 478.4269,
+      "sigma_f": 3.5562000000000004e-06
+    },
+    {
+      "delta_E_au": 0.0953012454623604,
+      "fosc": 0.0002415899999999999,
+      "sign": 1,
+      "other_label": "25d",
+      "source": "literature",
+      "wl_nm": 478.0974,
+      "sigma_f": 2.415899999999999e-05
+    },
+    {
+      "delta_E_au": 0.09531414447444406,
+      "fosc": 3.1222999999999996e-05,
+      "sign": 1,
+      "other_label": "27s",
+      "source": "literature",
+      "wl_nm": 478.0327,
+      "sigma_f": 3.1222999999999997e-06
+    },
+    {
+      "delta_E_au": 0.09537202465687071,
+      "fosc": 0.00021328999999999993,
+      "sign": 1,
+      "other_label": "26d",
+      "source": "literature",
+      "wl_nm": 477.7426,
+      "sigma_f": 2.1328999999999995e-05
+    },
+    {
+      "delta_E_au": 0.09538341694674517,
+      "fosc": 2.7562999999999997e-05,
+      "sign": 1,
+      "other_label": "28s",
+      "source": "literature",
+      "wl_nm": 477.6855,
+      "sigma_f": 2.7562999999999998e-06
+    },
+    {
+      "delta_E_au": 0.09543468225118021,
+      "fosc": 0.0001892399999999999,
+      "sign": 1,
+      "other_label": "27d",
+      "source": "literature",
+      "wl_nm": 477.4289,
+      "sigma_f": 1.892399999999999e-05
+    },
+    {
+      "delta_E_au": 0.09544482506410068,
+      "fosc": 2.4455e-05,
+      "sign": 1,
+      "other_label": "29s",
+      "source": "literature",
+      "wl_nm": 477.3782,
+      "sigma_f": 2.4455e-06
+    },
+    {
+      "delta_E_au": 0.09549043097292068,
+      "fosc": 0.00016867999999999988,
+      "sign": 1,
+      "other_label": "28d",
+      "source": "literature",
+      "wl_nm": 477.1502,
+      "sigma_f": 1.6867999999999988e-05
+    },
+    {
+      "delta_E_au": 0.09549947130617588,
+      "fosc": 2.1799e-05,
+      "sign": 1,
+      "other_label": "30s",
+      "source": "literature",
+      "wl_nm": 477.105,
+      "sigma_f": 2.1799e-06
+    },
+    {
+      "delta_E_au": 0.09554026305379086,
+      "fosc": 0.0001509899999999999,
+      "sign": 1,
+      "other_label": "29d",
+      "source": "literature",
+      "wl_nm": 476.9013,
+      "sigma_f": 1.5098999999999992e-05
+    },
+    {
+      "delta_E_au": 0.0955483479046695,
+      "fosc": 1.9513999999999996e-05,
+      "sign": 1,
+      "other_label": "31s",
+      "source": "literature",
+      "wl_nm": 476.861,
+      "sigma_f": 1.9513999999999996e-06
+    },
+    {
+      "delta_E_au": 0.09558495022955646,
+      "fosc": 0.00013568999999999994,
+      "sign": 1,
+      "other_label": "30d",
+      "source": "literature",
+      "wl_nm": 476.6784,
+      "sigma_f": 1.3568999999999995e-05
+    },
+    {
+      "delta_E_au": 0.09559222659534723,
+      "fosc": 1.7539e-05,
+      "sign": 1,
+      "other_label": "32s",
+      "source": "literature",
+      "wl_nm": 476.6421,
+      "sigma_f": 1.7539e-06
+    },
+    {
+      "delta_E_au": 0.09562522748666097,
+      "fosc": 0.00012238999999999994,
+      "sign": 1,
+      "other_label": "31d",
+      "source": "literature",
+      "wl_nm": 476.4776,
+      "sigma_f": 1.2238999999999996e-05
+    },
+    {
+      "delta_E_au": 0.09563180561533041,
+      "fosc": 1.5822e-05,
+      "sign": 1,
+      "other_label": "33s",
+      "source": "literature",
+      "wl_nm": 476.4448,
+      "sigma_f": 1.5821999999999999e-06
+    },
+    {
+      "delta_E_au": 0.09566160931561488,
+      "fosc": 0.00011077999999999995,
+      "sign": 1,
+      "other_label": "32d",
+      "source": "literature",
+      "wl_nm": 476.2964,
+      "sigma_f": 1.1077999999999996e-05
+    },
+    {
+      "delta_E_au": 0.09566756270580733,
+      "fosc": 1.4321999999999998e-05,
+      "sign": 1,
+      "other_label": "34s",
+      "source": "literature",
+      "wl_nm": 476.2668,
+      "sigma_f": 1.4321999999999998e-06
+    },
+    {
+      "delta_E_au": 0.09569461020692861,
+      "fosc": 0.00010058999999999994,
+      "sign": 1,
+      "other_label": "33d",
+      "source": "literature",
+      "wl_nm": 476.1321,
+      "sigma_f": 1.0058999999999995e-05
+    },
+    {
+      "delta_E_au": 0.09570001235728844,
+      "fosc": 1.3005999999999999e-05,
+      "sign": 1,
+      "other_label": "35s",
+      "source": "literature",
+      "wl_nm": 476.1053,
+      "sigma_f": 1.3005999999999999e-06
+    },
+    {
+      "delta_E_au": 0.09572463440314612,
+      "fosc": 9.161199999999995e-05,
+      "sign": 1,
+      "other_label": "34d",
+      "source": "literature",
+      "wl_nm": 475.9828,
+      "sigma_f": 9.161199999999996e-06
+    },
+    {
+      "delta_E_au": 0.09572955881231766,
+      "fosc": 1.1847e-05,
+      "sign": 1,
+      "other_label": "36s",
+      "source": "literature",
+      "wl_nm": 475.9583,
+      "sigma_f": 1.1847e-06
+    },
+    {
+      "delta_E_au": 0.09575201264816699,
+      "fosc": 8.367199999999995e-05,
+      "sign": 1,
+      "other_label": "35d",
+      "source": "literature",
+      "wl_nm": 475.8467,
+      "sigma_f": 8.367199999999995e-06
+    },
+    {
+      "delta_E_au": 0.09575649606547242,
+      "fosc": 1.0822e-05,
+      "sign": 1,
+      "other_label": "37s",
+      "source": "literature",
+      "wl_nm": 475.8244,
+      "sigma_f": 1.0822000000000002e-06
+    },
+    {
+      "delta_E_au": 0.09577703893656861,
+      "fosc": 7.662499999999998e-05,
+      "sign": 1,
+      "other_label": "36d",
+      "source": "literature",
+      "wl_nm": 475.7224,
+      "sigma_f": 7.662499999999998e-06
+    },
+    {
+      "delta_E_au": 0.09578115486065228,
+      "fosc": 9.9121e-06,
+      "sign": 1,
+      "other_label": "38s",
+      "source": "literature",
+      "wl_nm": 475.7019,
+      "sigma_f": 9.9121e-07
+    },
+    {
+      "delta_E_au": 0.09579993376428404,
+      "fosc": 7.034699999999996e-05,
+      "sign": 1,
+      "other_label": "37d3/2",
+      "source": "literature",
+      "wl_nm": 475.6087,
+      "sigma_f": 7.0346999999999955e-06
+    },
+    {
+      "delta_E_au": 0.09580507866938863,
+      "fosc": 9.1014e-06,
+      "sign": 1,
+      "other_label": "39s",
+      "source": "literature",
+      "wl_nm": 475.5831,
+      "sigma_f": 9.101400000000001e-07
+    },
+    {
+      "delta_E_au": 0.09582235085081119,
+      "fosc": 6.473699999999997e-05,
+      "sign": 1,
+      "other_label": "38d3/2",
+      "source": "literature",
+      "wl_nm": 475.4974,
+      "sigma_f": 6.473699999999998e-06
+    },
+    {
+      "delta_E_au": 0.0958263932762505,
+      "fosc": 8.3769e-06,
+      "sign": 1,
+      "other_label": "40s",
+      "source": "literature",
+      "wl_nm": 475.4774,
+      "sigma_f": 8.3769e-07
+    },
+    {
+      "delta_E_au": 0.09584146049834252,
+      "fosc": 5.970899999999998e-05,
+      "sign": 1,
+      "other_label": "39d3/2",
+      "source": "literature",
+      "wl_nm": 475.4026,
+      "sigma_f": 5.970899999999998e-06
+    },
+    {
+      "delta_E_au": 0.0958451354305601,
+      "fosc": 7.7274e-06,
+      "sign": 1,
+      "other_label": "41s",
+      "source": "literature",
+      "wl_nm": 475.3844,
+      "sigma_f": 7.727400000000001e-07
+    },
+    {
+      "delta_E_au": 0.09585873267976508,
+      "fosc": 5.5187999999999974e-05,
+      "sign": 1,
+      "other_label": "40d3/2",
+      "source": "literature",
+      "wl_nm": 475.3169,
+      "sigma_f": 5.518799999999998e-06
+    },
+    {
+      "delta_E_au": 0.09586277510520441,
+      "fosc": 7.1434e-06,
+      "sign": 1,
+      "other_label": "42s",
+      "source": "literature",
+      "wl_nm": 475.2969,
+      "sigma_f": 7.1434e-07
+    },
+    {
+      "delta_E_au": 0.09587600486118765,
+      "fosc": 5.111199999999998e-05,
+      "sign": 1,
+      "other_label": "41d3/2",
+      "source": "literature",
+      "wl_nm": 475.2313,
+      "sigma_f": 5.111199999999999e-06
+    },
+    {
+      "delta_E_au": 0.09587857731373994,
+      "fosc": 6.616799999999999e-06,
+      "sign": 1,
+      "other_label": "43s",
+      "source": "literature",
+      "wl_nm": 475.2186,
+      "sigma_f": 6.616799999999999e-07
+    },
+    {
+      "delta_E_au": 0.09589070459005791,
+      "fosc": 4.742799999999998e-05,
+      "sign": 1,
+      "other_label": "42d3/2",
+      "source": "literature",
+      "wl_nm": 475.1585,
+      "sigma_f": 4.742799999999998e-06
+    },
+    {
+      "delta_E_au": 0.09589474701549723,
+      "fosc": 6.140899999999999e-06,
+      "sign": 1,
+      "other_label": "44s",
+      "source": "literature",
+      "wl_nm": 475.1384,
+      "sigma_f": 6.140899999999999e-07
+    },
+    {
+      "delta_E_au": 0.0959050368257064,
+      "fosc": 4.408999999999998e-05,
+      "sign": 1,
+      "other_label": "43d3/2",
+      "source": "literature",
+      "wl_nm": 475.0875,
+      "sigma_f": 4.408999999999998e-06
+    },
+    {
+      "delta_E_au": 0.09590834426470222,
+      "fosc": 5.7095e-06,
+      "sign": 1,
+      "other_label": "45s",
+      "source": "literature",
+      "wl_nm": 475.0711,
+      "sigma_f": 5.7095e-07
+    },
+    {
+      "delta_E_au": 0.09591789908846789,
+      "fosc": 4.105799999999997e-05,
+      "sign": 1,
+      "other_label": "44d3/2",
+      "source": "literature",
+      "wl_nm": 475.0237,
+      "sigma_f": 4.105799999999997e-06
+    },
+    {
+      "delta_E_au": 0.09592157402068546,
+      "fosc": 5.3176e-06,
+      "sign": 1,
+      "other_label": "46s",
+      "source": "literature",
+      "wl_nm": 475.0055,
+      "sigma_f": 5.3176e-07
+    },
+    {
+      "delta_E_au": 0.09593149633767288,
+      "fosc": 3.829699999999999e-05,
+      "sign": 1,
+      "other_label": "45d3/2",
+      "source": "literature",
+      "wl_nm": 474.9564,
+      "sigma_f": 3.829699999999999e-06
+    },
+    {
+      "delta_E_au": 0.09593333380378166,
+      "fosc": 4.9609e-06,
+      "sign": 1,
+      "other_label": "47s",
+      "source": "literature",
+      "wl_nm": 474.9473,
+      "sigma_f": 4.9609e-07
+    },
+    {
+      "delta_E_au": 0.09594252113432558,
+      "fosc": 3.577899999999998e-05,
+      "sign": 1,
+      "other_label": "46d3/2",
+      "source": "literature",
+      "wl_nm": 474.9018,
+      "sigma_f": 3.577899999999998e-06
+    },
+    {
+      "delta_E_au": 0.09594472609365612,
+      "fosc": 4.6354e-06,
+      "sign": 1,
+      "other_label": "48s",
+      "source": "literature",
+      "wl_nm": 474.8909,
+      "sigma_f": 4.6354e-07
+    },
+    {
+      "delta_E_au": 0.09595354593097828,
+      "fosc": 3.3476999999999985e-05,
+      "sign": 1,
+      "other_label": "47d3/2",
+      "source": "literature",
+      "wl_nm": 474.8473,
+      "sigma_f": 3.3476999999999985e-06
+    },
+    {
+      "delta_E_au": 0.09595575089030882,
+      "fosc": 4.337699999999999e-06,
+      "sign": 1,
+      "other_label": "49s",
+      "source": "literature",
+      "wl_nm": 474.8364,
+      "sigma_f": 4.3376999999999995e-07
+    },
+    {
+      "delta_E_au": 0.09596457072763097,
+      "fosc": 3.136799999999999e-05,
+      "sign": 1,
+      "other_label": "48d3/2",
+      "source": "literature",
+      "wl_nm": 474.7927,
+      "sigma_f": 3.136799999999999e-06
+    },
+    {
+      "delta_E_au": 0.09596567320729624,
+      "fosc": 4.0651e-06,
+      "sign": 1,
+      "other_label": "50s",
+      "source": "literature",
+      "wl_nm": 474.7873,
+      "sigma_f": 4.0651000000000006e-07
+    },
+    {
+      "delta_E_au": 0.09597265557850962,
+      "fosc": 2.9432999999999984e-05,
+      "sign": 1,
+      "other_label": "49d3/2",
+      "source": "literature",
+      "wl_nm": 474.7527,
+      "sigma_f": 2.9432999999999986e-06
+    },
+    {
+      "delta_E_au": 0.09598257789549704,
+      "fosc": 2.7653999999999986e-05,
+      "sign": 1,
+      "other_label": "50d3/2",
+      "source": "literature",
+      "wl_nm": 474.7036,
+      "sigma_f": 2.765399999999999e-06
+    },
+    {
+      "delta_E_au": 1.991608663445716,
+      "fosc": 36.0,
+      "sign": 1,
+      "other_label": "core",
+      "source": "core",
+      "wl_nm": 22.87766208104863,
+      "sigma_f": 0.0
+    }
+  ]
+}

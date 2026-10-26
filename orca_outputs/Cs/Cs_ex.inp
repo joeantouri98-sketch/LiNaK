@@ -1,0 +1,19 @@
+! UKS CAM-B3LYP DKH VeryTightSCF
+%scf
+  MaxIter 500
+end
+%moinp "Cs_gs.gbw"
+%rel
+  FiniteNuc true
+end
+%basis
+  NewGTO Cs "SARC-DKH-TZVP" end
+end
+%tddft
+  nroots 30
+  maxdim 150
+  tda true
+end
+* xyz 0 2
+Cs 0.0 0.0 0.0
+*

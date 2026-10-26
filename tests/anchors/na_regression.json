@@ -67,25 +67,25 @@
     "mix": true,
     "states": {
       "10s": {
-        "Gamma_PI_s": 4.603494,
-        "Gamma_SFI_s": 1.575633,
-        "Gamma_mix_PI_s": 9.95461,
-        "Gamma_mix_SFI_s": 3.411914,
-        "Gamma_ion_s": 19.545651
+        "Gamma_PI_s": 4.602995,
+        "Gamma_SFI_s": 1.575462,
+        "Gamma_mix_PI_s": 9.951245,
+        "Gamma_mix_SFI_s": 3.41076,
+        "Gamma_ion_s": 19.540463
       },
       "20s": {
-        "Gamma_PI_s": 216.377096,
-        "Gamma_SFI_s": 88.373351,
-        "Gamma_mix_PI_s": 66.108384,
-        "Gamma_mix_SFI_s": 27.003173,
-        "Gamma_ion_s": 397.862003
+        "Gamma_PI_s": 216.376074,
+        "Gamma_SFI_s": 88.372688,
+        "Gamma_mix_PI_s": 66.102836,
+        "Gamma_mix_SFI_s": 27.000832,
+        "Gamma_ion_s": 397.852431
       },
       "25s": {
-        "Gamma_PI_s": 247.249239,
-        "Gamma_SFI_s": 123.489905,
-        "Gamma_mix_PI_s": 46.244148,
-        "Gamma_mix_SFI_s": 23.082684,
-        "Gamma_ion_s": 440.065975
+        "Gamma_PI_s": 247.249154,
+        "Gamma_SFI_s": 123.489418,
+        "Gamma_mix_PI_s": 46.24281,
+        "Gamma_mix_SFI_s": 23.081954,
+        "Gamma_ion_s": 440.063336
       }
     },
     "tol_rel": 1e-05

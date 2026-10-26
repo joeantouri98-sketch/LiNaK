@@ -7,7 +7,27 @@ import sys
 import argparse
 import numpy as np
 
-Ry = 13.6057  # eV
+from constants import (HARTREE_TO_EV, ATOMIC_MASS_AMU, ISOTOPE_MASS_AMU, default_isotope_A)
+
+Ry = HARTREE_TO_EV / 2.0   # eV, Rydberg constant for infinite nuclear mass, R_inf (CODATA)
+M_E_AMU = 5.48579909065e-4  # electron mass in u
+
+
+def rydberg_constant_eV(element, isotope_A=None):
+    """
+    Reduced-mass Rydberg constant R_M = R_inf (1 - m_e / M_atom) in eV for a Rydberg electron
+    orbiting the ion core of `element` (core mass = atom mass - m_e). Uses the mass of the
+    chosen isotope (default: most abundant natural isotope), else the elemental weight, else
+    R_inf. The correction is -2.4e-5 (relative) for Na, i.e. ~9 GHz at n = 13.
+    """
+    A = isotope_A if isotope_A is not None else default_isotope_A(element)
+    M = ISOTOPE_MASS_AMU.get((element, A)) if A is not None else None
+    if M is None:
+        M = ATOMIC_MASS_AMU.get(element)
+    if not M:
+        return Ry
+    return Ry * (1.0 - M_E_AMU / M)
+
 MAX_OCC = {'s': 2, 'p': 6, 'd': 10, 'f': 14, 'g': 18, 'h': 22}
 # Project-relative path so the script works on any machine / cwd
 _ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -1270,10 +1290,16 @@ def main():
         return
 
     # Residual ionic charge seen by a Rydberg electron (Na+ -> Na2+ => Z=2).
-    z_core = abs(sp["charge"]) + 1
-    ry_eff = Ry * (z_core ** 2)
-    if z_core != 1:
-        print(f"Using Z={z_core} Rydberg scale: Ry_eff = {ry_eff:.4f} eV")
+    # The electron sees charge (species charge + 1): neutral 1, singly charged ion 2, ...; an
+    # anion has no Rydberg series (the outer electron is not bound by a Coulomb tail).
+    z_core = int(sp["charge"]) + 1
+    if z_core < 1:
+        print(f"Error: {element} (charge {sp['charge']:+d}) has no Rydberg series "
+              f"(residual ionic charge {z_core}). Use --nist-only for its tabulated levels.")
+        sys.exit(1)
+    ry_eff = rydberg_constant_eV(sp["symbol"]) * (z_core ** 2)
+    print(f"Rydberg constant (reduced-mass, {sp['symbol']}): R_M = {rydberg_constant_eV(sp['symbol']):.6f} eV"
+          f"{'' if z_core == 1 else f'; Z={z_core} scale: Ry_eff = {ry_eff:.4f} eV'}")
 
     print(f"\nComputing quantum defects (averaged over all n,J per orbital):")
     quantum_defects = compute_quantum_defects(

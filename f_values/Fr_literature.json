@@ -1,0 +1,2 @@
+{"note":"Fr: curated NIST fit exclusions only (no literature rows yet).","nist_fit_exclusions":[
+{"lower":"7p3/2","upper_l":"d","J":"5/2","n":[13,14,18],"ref":"NIST 7p3/2->nd5/2 f*n*^3 = 14.8, 14.3, 13.7 at n=13, 14, 18 versus 4.6-5.1 at all other n=12-20 (factor ~3 outliers); points left out of the extrapolation fit only"}]}

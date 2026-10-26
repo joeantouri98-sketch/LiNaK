@@ -1,0 +1,216 @@
+{
+ "element": "K",
+ "note": "Published reduced electric-dipole matrix elements |D| (a.u.) between the first excited np level and ns/nd levels, transcribed from the cited tables. Used by tools/make_arc_fvalues.py to write PUBLISHED literature rows and to scale the ARC model-potential tail. Edit/add rows here when new values appear.",
+ "transitions": [
+  {
+   "lower": "4p1/2",
+   "upper": "3d3/2",
+   "D": 7.96869,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "3d3/2",
+   "D": 3.57771,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "3d5/2",
+   "D": 10.72381,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "4d3/2",
+   "D": 0.11225,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "4d3/2",
+   "D": 0.04,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "4d5/2",
+   "D": 0.11705,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "5d3/2",
+   "D": 0.33317,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "5d3/2",
+   "D": 0.15492,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "5d5/2",
+   "D": 0.4669,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "6d3/2",
+   "D": 0.34059,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "6d3/2",
+   "D": 0.15652,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "6d5/2",
+   "D": 0.47117,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "7d3/2",
+   "D": 0.29783,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "7d3/2",
+   "D": 0.13601,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "7d5/2",
+   "D": 0.40866,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "8d3/2",
+   "D": 0.25865,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "8d3/2",
+   "D": 0.1179,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "8d5/2",
+   "D": 0.35496,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "5s",
+   "D": 3.88587,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "5s",
+   "D": 5.53173,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "6s",
+   "D": 0.90333,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "6s",
+   "D": 1.27671,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "7s",
+   "D": 0.47645,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "7s",
+   "D": 0.67305,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "8s",
+   "D": 0.31464,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "8s",
+   "D": 0.44497,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "9s",
+   "D": 0.23043,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "9s",
+   "D": 0.32558,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p1/2",
+   "upper": "10s",
+   "D": 0.17944,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  },
+  {
+   "lower": "4p3/2",
+   "upper": "10s",
+   "D": 0.25357,
+   "D_unc": null,
+   "ref": "Safronova & Safronova, Phys. Rev. A 78, 052504 (2008), Table IV (all-order, line strength S = |D|^2)"
+  }
+ ]
+}

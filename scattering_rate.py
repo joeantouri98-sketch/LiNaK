@@ -37,9 +37,7 @@ except ImportError:
     print("Plotly not installed. Run: pip install plotly")
     sys.exit(1)
 
-# ============================================================================
 # ARGUMENT PARSING
-# ============================================================================
 
 parser = argparse.ArgumentParser(description='Generate scattering rate widget')
 parser.add_argument('--element',    default=None, help='Default element (Li/Na/K/Rb/Cs/Fr)')
@@ -58,9 +56,8 @@ from constants import (
 )
 pi = np.pi
 
-# ============================================================================
+
 # ELEMENT DATA
-# ============================================================================
 
 # Fallback hardcoded data (used if comparison_table.json not found)
 FALLBACK = {
@@ -128,9 +125,8 @@ EL_COLORS = {
     'Rb':'#f05a4d', 'Cs':'#c54df0', 'Fr':'#f04d9f'
 }
 
-# ============================================================================
+
 # PHYSICS FUNCTIONS
-# ============================================================================
 
 def params(el, line):
     """Return (Gamma, k, Isat, mass_kg) for an element/line."""
@@ -163,12 +159,12 @@ def recoil_vel(el, line):
     """Single-photon recoil velocity in cm/s (as stored in ELEMENTS[...]['vrec'])."""
     return ELEMENTS[el][line]['vrec']
 
-# ============================================================================
+
 # BUILD ALL TRACES FOR EACH ELEMENT × LINE COMBINATION
-# ============================================================================
+
 # Strategy: pre-compute ALL traces for all elements and I-values, then
 # use Plotly updatemenus + sliders to show/hide the right ones.
-# This makes the final HTML fully interactive without any server.
+# This makes the final HTML fully interactive.
 
 print("Computing traces...")
 
@@ -184,9 +180,8 @@ I_colors = ['#1a6eb5','#2980b9','#4df0b0','#f0c54d','#f05a4d','#c54df0']
 # Velocity axis: ±4×v_capture (element-dependent, we use Rb as reference width)
 N_vel = 400
 
-# ============================================================================
+
 # BUILD FIGURE
-# ============================================================================
 
 fig = make_subplots(
     rows=2, cols=3,
@@ -206,10 +201,10 @@ fig = make_subplots(
     horizontal_spacing=0.08,
 )
 
-# ── Colour palette per I-value ────────────────────────────────────────────
+# Colour palette per I-value 
 I_palette = pc.sample_colorscale('Plasma', len(I_vals))  # always exactly len(I_vals) colors
 
-# ── Plot 1: R_scatt vs detuning, multi-I curves ──────────────────────────
+# Plot 1: R_scatt vs detuning, multi-I curves 
 # One set of traces per (element, line) combo, hidden by default except default
 for el in EL_NAMES:
     for line in ['D1', 'D2']:
@@ -248,7 +243,7 @@ for el in EL_NAMES:
             hoverinfo='skip',
         ), row=1, col=1)
 
-# ── Plot 2: R_scatt vs I/Isat (saturation curve) ─────────────────────────
+# Plot 2: R_scatt vs I/Isat (saturation curve) 
 I_log = np.logspace(-2, 2, 400)  # 0.01 to 100 × Isat
 det_values = [0, -0.5, -1.0, -2.0]
 det_colors = ['#4df0b0','#4d9ff0','#f0c54d','#f05a4d']
@@ -283,7 +278,7 @@ for el in EL_NAMES:
             showlegend=False, visible=visible, hoverinfo='skip',
         ), row=1, col=2)
 
-# ── Plot 3: Net force vs velocity (counter-propagating beams) ─────────────
+# Plot 3: Net force vs velocity (counter-propagating beams) 
 for el in EL_NAMES:
     for line in ['D1','D2']:
         if line not in ELEMENTS[el]:
@@ -328,7 +323,7 @@ for el in EL_NAMES:
                 showlegend=False, visible=visible, hoverinfo='skip',
             ), row=1, col=3)
 
-# ── Plot 4: Doppler cooling force profile (Δ fixed at -Γ/2) ──────────────
+# Plot 4: Doppler cooling force profile (Δ fixed at -Γ/2) ──────────────
 for el in EL_NAMES:
     for line in ['D1','D2']:
         if line not in ELEMENTS[el]:
@@ -362,7 +357,7 @@ for el in EL_NAMES:
             showlegend=False, visible=visible, hoverinfo='skip',
         ), row=2, col=1)
 
-# ── Plot 5: Bar chart — all elements @ Δ=-Γ/2, I=Isat ───────────────────
+# Plot 5: Bar chart — all elements @ Δ=-Γ/2, I=Isat ───────────────────
 for line in ['D1','D2']:
     el_labels, R_vals, F_vals, Td_vals, vc_vals, colors_bar = [], [], [], [], [], []
     for el in EL_NAMES:
@@ -393,7 +388,7 @@ for line in ['D1','D2']:
         hovertemplate='<b>%{x}</b><br>R_scatt=%{y:.3f} Mphot/s<extra></extra>',
     ), row=2, col=2)
 
-# ── Plot 6: Summary table ─────────────────────────────────────────────────
+# Plot 6: Summary table ─────────────────────────────────────────────────
 for line in ['D1','D2']:
     el_col, wl_col, G_col, Is_col, Rmax_col, Fmax_col, Td_col, vc_col, vr_col, Er_col = \
         [], [], [], [], [], [], [], [], [], []
@@ -439,9 +434,8 @@ for line in ['D1','D2']:
         visible=visible,
     ), row=2, col=3)
 
-# ============================================================================
+
 # AXIS LABELS
-# ============================================================================
 
 fig.update_xaxes(title_text='Detuning Δ (Γ units)',      row=1, col=1, gridcolor='#1a2540', zerolinecolor='#2a3555')
 fig.update_yaxes(title_text='R<sub>scatt</sub> (10⁶/s)', row=1, col=1, gridcolor='#1a2540')
@@ -454,9 +448,8 @@ fig.update_yaxes(title_text='F<sub>net</sub> (aN)',        row=2, col=1, gridcol
 fig.update_xaxes(title_text='Element',                     row=2, col=2, gridcolor='#1a2540')
 fig.update_yaxes(title_text='R<sub>scatt</sub> (10⁶/s)',  row=2, col=2, gridcolor='#1a2540')
 
-# ============================================================================
+
 # DROPDOWN MENUS: element + line selector
-# ============================================================================
 
 # Build visibility masks
 # Trace order per (el, line) per subplot:
@@ -540,9 +533,8 @@ for el in EL_NAMES:
               {'title': {'text': f'<b>{el} D₂ Line — Scattering Rate & Radiation Pressure</b>'}}]
     ))
 
-# ============================================================================
+
 # LAYOUT
-# ============================================================================
 
 # Print per-element key metrics for the title annotation
 def metrics_str(el, line):
@@ -599,9 +591,9 @@ fig.update_xaxes(gridcolor='#1a2540', zerolinecolor='#2a3555',
 fig.update_yaxes(gridcolor='#1a2540', zerolinecolor='#2a3555',
                  tickfont=dict(color='#6b7a99'))
 
-# ============================================================================
+
 # ANNOTATIONS: formula box
-# ============================================================================
+
 fig.add_annotation(
     x=0.5, y=1.08,
     xref='paper', yref='paper',
@@ -619,9 +611,9 @@ fig.add_annotation(
     borderpad=6,
 )
 
-# ============================================================================
+
 # PRINT SUMMARY
-# ============================================================================
+
 print(f"\n{'='*65}")
 print(f"  Scattering Rate Widget — Key Parameters")
 print(f"{'='*65}")
@@ -639,9 +631,9 @@ for el in EL_NAMES:
         print(f"  {el:>4}  {line:>4}  {d['wl']:>8.3f}  {G/(2*pi)/1e6:>10.3f}  "
               f"{Is:>7.3f}  {Td:>10.1f}  {vc:>11.2f}")
 
-# ============================================================================
+
 # SAVE
-# ============================================================================
+
 out_file = os.path.join(args.output_dir, 'scattering_rate.html')
 _raw_html = fig.to_html(include_plotlyjs='cdn', full_html=True)
 _fs_css = ('<style>html,body{margin:0;padding:0;width:100%;height:100%;'

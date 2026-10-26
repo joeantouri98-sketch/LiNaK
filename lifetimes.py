@@ -29,7 +29,6 @@ import argparse
 import math
 from collections import defaultdict
 
-# Windows consoles often default to cp1252; keep UTF-8 for box-drawing / Greek.
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -554,15 +553,36 @@ for t in transitions:
                     g_upper = _gJ_u
                 if _gJ_l:
                     g_lower = _gJ_l
+        if fosc is None and not _J_up and literature_fosc_j and ll_int == 0 and not _is_ion:
+            # unresolved upper level from an s lower level (single lower J): the multiplet f is the sum
+            # of the J-resolved absorption f over the upper J, so the curated rows still apply
+            _fs = [v for k, v in literature_fosc_j.items() if k[0] == _ll_nl and k[1] == _ul_nl]
+            if _fs and sum(_fs) > 0:
+                fosc        = float(sum(_fs))
+                fosc_source = 'literature'
+                _accs = {literature_acc_j.get(k, 'literature') for k in literature_fosc_j
+                         if k[0] == _ll_nl and k[1] == _ul_nl}
+                fosc_acc    = _accs.pop() if len(_accs) == 1 else 'literature'
+                fosc_delta  = ACC_UNCERTAINTY.get(fosc_acc, 0.20)
         if fosc is None and literature_fosc:
             _key  = (_ll_nl, _ul_nl)
             _key2 = (_ul_nl, _ll_nl)
             _f    = literature_fosc.get(_key) or literature_fosc.get(_key2)
+            _res_lit = None
+            if _f and _f > 0 and not _is_ion and lu >= 0 and ll_int >= 0:
+                # multiplet-averaged f: split over the fine-structure lines (g-weights) exactly as the
+                # NIST multiplet path does, otherwise each J_lo sub-level would carry the full multiplet f
+                _res_lit = resolve_multiplet_f(_f, lu, ll_int, _J_up, _J_lo, wl)
+                if _res_lit is None:
+                    _f = None
+                    _drop_reason = 'forbidden_dJ (|J_u-J_l|>1 within the LS multiplet)'
             if _f and _f > 0:
                 fosc        = _f
                 fosc_source = 'literature'
                 fosc_acc    = 'literature'
                 fosc_delta  = 0.20
+                if _res_lit is not None:
+                    fosc, g_upper, g_lower = _res_lit
 
     # Priority 2: ORCA TD-DFT for ground state transitions
     # Match ONLY when a TD-DFT root lies close in energy to the spectroscopic level. 
@@ -702,11 +722,10 @@ for t in transitions:
     })
 
 # ---------------------------------------------------------------------------
-# NIST EXTRAPOLATION (fix B, generalised)
+# NIST EXTRAPOLATION
 # Oscillator strengths of a Rydberg series satisfy (Seaton) f n*^3 = 2 Ry df/dE, a
 # smooth function of energy, so for a series of NIST points
-#       y(n*) = f n*^3  =  a + b / n*^2                  (first two terms of an
-#       expansion in 1/n*^2 = -E/Ry)
+#       y(n*) = f n*^3  =  a + b / n*^2                  (first two terms of an expansion in 1/n*^2 = -E/Ry)
 # is fitted per J-resolved series (lower level, upper l, upper J) on the last K NIST
 # points. It is used ONLY for channels that have no NIST/literature/ORCA f:
 #   (1) channels that used to be dropped (lower level below the Numerov gate, e.g. 3s/3p),
@@ -838,9 +857,13 @@ def _extrap_channel(tt, fits):
 
 _gate_drops = [(tt, r) for tt, r in dropped_log if r.startswith('below_numerov_gate')]
 _model_rows = [tt for tt in transition_table if tt['fosc_source'] in ('Numerov', 'Coulomb')]
-if (_gate_drops or _model_rows) and not _is_metal:
+_lit_rows = [tt for tt in transition_table if tt['fosc_source'] == 'literature']
+if (_gate_drops or _model_rows or _lit_rows) and not _is_metal:
+    # fits are also built for the lower levels fed by the curated tier: they are not used there (literature
+    # outranks extrapolation) but document the NIST series the literature continues
     _lowers = ({tt['lower_label'] for tt, _ in _gate_drops}
-               | {tt['lower_label'] for tt in _model_rows})
+               | {tt['lower_label'] for tt in _model_rows}
+               | {tt['lower_label'] for tt in _lit_rows})
     _fits = _build_extrap_fits(_lowers)
     _recovered = set()
     for idx, (tt, r) in enumerate(dropped_log):
@@ -1004,7 +1027,7 @@ if os.path.exists(_cav_path):
             print(f"  NIST series caveat {_cv['lower']}->n{_cv['upper_l']} n>={_cv['n_min']}: "
                   f"{_n_hit} rows, uncertainty >= {float(_cv['rel_unc']):.0%} (values unchanged)")
 
-# Dropped-transition log (fix C)
+# Dropped-transition log
 _drop_counts = defaultdict(int)
 for _t, _r in dropped_log:
     _drop_counts[_r] += 1
@@ -1110,9 +1133,8 @@ for state_label, tlist in sorted(A_by_upper.items(),
     # Peak cross-section with Doppler broadening (CompTable / compare_elements):
     #   σ_peak_dop = σ_peak_nat · (Δν_nat / Δν_D) · √(π·ln2)
     # Derivation: σ(ν) = σ₀·(πΔν_nat/2)·φ(ν) with φ normalised; Lorentzian φ(0)=2/(πΔν_nat) gives σ₀,
-    # Gaussian φ(0)=2√(ln2/π)/Δν_D gives σ₀·(Δν_nat/Δν_D)·√(π ln2). (The previous √(ln2/π) was
-    # short by π; together with the π/2 error in σ_nat it made σ_dop 2x too small.)
-    #
+    # Gaussian φ(0)=2√(ln2/π)/Δν_D gives σ₀·(Δν_nat/Δν_D)·√(π ln2). 
+
     # Saturation intensity with Doppler broadening (same formula, different σ):
     #   I_sat_dop = hν / (2 · σ_peak_dop · τ)
     # This is always LARGER than I_sat_nat because σ_peak_dop < σ_peak_nat.
@@ -1367,7 +1389,6 @@ for lt in lifetime_table:
                   f"{ch['wavelength_nm']:>8.1f} nm  "
                   f"A={ch['A_s']:.3e}  [{ch['fosc_source']}]")
 
-# (JSON already written above)
 
 # Highlight known benchmarks
 if known:

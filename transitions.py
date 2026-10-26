@@ -42,9 +42,9 @@ import argparse
 import numpy as np
 from collections import defaultdict
 
-# ============================================================================
+
 # ARGUMENT PARSING
-# ============================================================================
+
 
 parser = argparse.ArgumentParser(description='Generate allowed E1 transitions.')
 parser.add_argument('element',
@@ -81,9 +81,8 @@ wl_min = args.wl_min
 wl_max = args.wl_max
 n_max  = args.n_max
 
-# ============================================================================
+
 # HELPERS
-# ============================================================================
 
 l_char_to_int = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
 
@@ -129,9 +128,9 @@ def j_selection_rule(j_upper, j_lower):
         return False  # J=0 → J=0 forbidden
     return True
 
-# ============================================================================
+
 # LOAD DATA
-# ============================================================================
+
 
 rydberg_file = f"data_json/{element}_rydberg.json"
 
@@ -177,9 +176,9 @@ def _spectral_region(wavelength):
     return 'Microwave'
 
 
-# ============================================================================
+
 # METAL PATH: transitions = ASD line list (no Δl invention)
-# ============================================================================
+
 if _is_metal:
     _gs_meta = nist_data.get('ground_state') or {}
     gs_label = _gs_meta.get('label')
@@ -389,14 +388,14 @@ if _is_metal:
     print(f"{'='*60}\n")
     sys.exit(0)
 
-# ============================================================================
+
 # BUILD STATE LIST (alkali / ion QDT path)
-# ============================================================================
+
 
 states = []
 seen   = {}   # (n, l_char, J_str, term_or_label) -> True
 
-# ── Ground state injection ────────────────────────────────────────────────────
+# Ground state injection 
 # Read from the 'ground_state' block written by rydberg.py (present for any
 # element).  Fall back gracefully for old JSONs that only have 'n_start'
 # (alkali-only format): assume l='s', J='1/2' so existing data keeps working.
@@ -485,11 +484,10 @@ for src, cnt in src_counts.items():
 
 states.sort(key=lambda s: s['energy'])
 
-# ============================================================================
 # APPLY SELECTION RULES
 # Δl = ±1  AND  ΔJ = 0,±1 (J=0→J=0 forbidden)
 # ΔJ enforced only when both states have a known J.
-# ============================================================================
+
 
 print("\nApplying E1 selection rules (dl=+/-1, dJ=0,+/-1, no J=0->0)...")
 
@@ -554,9 +552,7 @@ for i in range(len(states)):
 
 print(f"Allowed transitions found: {len(transitions)}")
 
-# ============================================================================
 # SUMMARY
-# ============================================================================
 
 region_counts = defaultdict(int)
 for t in transitions:
@@ -587,9 +583,8 @@ for t in sorted(transitions, key=lambda x: x['wavelength_nm']):
           f"[{j_up} -> {j_lo}]  "
           f"[{t['upper_source']}/{t['lower_source']}]")
 
-# ============================================================================
+
 # SAVE
-# ============================================================================
 
 os.makedirs('data_json', exist_ok=True)
 out_file = f"data_json/{element}_transitions.json"

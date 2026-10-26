@@ -1,0 +1,13 @@
+! UKS CAM-B3LYP def2-TZVPD VeryTightSCF
+%scf
+  MaxIter 500
+end
+%moinp "Rb_gs.gbw"
+%tddft
+  nroots 30
+  maxdim 150
+  tda true
+end
+* xyz 0 2
+Rb 0.0 0.0 0.0
+*

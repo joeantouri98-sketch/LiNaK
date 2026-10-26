@@ -49,7 +49,7 @@ import argparse, json, os, sys
 from rydberg import label_to_unicode
 from species import resolve_species
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
+#  CLI 
 p = argparse.ArgumentParser()
 p.add_argument("element",    nargs="?", default=None)
 p.add_argument("--data-dir", default="data_json")
@@ -82,7 +82,7 @@ def _plotly_cdn_tag():
         pass
     return f'<script src="https://cdn.plot.ly/plotly-{ver}.min.js" charset="utf-8"></script>'
 
-# ── Element ───────────────────────────────────────────────────────────────────
+#  Element 
 element = args.element
 if element is None:
     avail = sorted(f.replace("_rydberg.json","")
@@ -96,7 +96,7 @@ species_label = _species["label"]
 out_dir = os.path.join("plots", element)
 os.makedirs(out_dir, exist_ok=True)
 
-# ── Load ──────────────────────────────────────────────────────────────────────
+# Load 
 ryd_file = os.path.join(args.data_dir, f"{element}_rydberg.json")
 if not os.path.exists(ryd_file):
     print(f"Error: {ryd_file} not found."); sys.exit(1)
@@ -119,7 +119,7 @@ if os.path.exists(lt_file):
 print(f"\n  {element}  IE={IE:.4f} eV  n_max={args.n_max}")
 print(f"  QD: { {k:round(v,4) for k,v in qd.items()} }")
 
-# ── Nodes (states) ─────────────────────────────────────────────────────────────
+# Nodes (states) 
 L_ORDER = ["s","p","d","f","g"]
 L_INT   = {l:i for i,l in enumerate(L_ORDER)}
 SRC_COL = {"NIST":"#2196F3","QDT model":"#FF9800"}
@@ -192,10 +192,9 @@ def _state_row_html(i, nd):
 
 _STATE_ROWS = "\n".join(_state_row_html(i, nd) for i, nd in enumerate(nodes))
 
-# ============================================================================
+
 # HTML TEMPLATE — one plain raw string with __TOKEN__ placeholders, filled by
 # str.replace() so every '{' '}' in the CSS/JS/GLSL stays literal.
-# ============================================================================
 
 _HTML_TEMPLATE = r"""<!DOCTYPE html>
 <html style="width:100%;height:100%;margin:0;padding:0;">
@@ -319,7 +318,7 @@ __STATE_ROWS__
 </div>
 
 <div id="op">
-  <h3 onclick="togOP()">🌐 Orbital Viewer <span class="tog" id="op-tog">▲</span></h3>
+  <h3 onclick="togOP()"> Orbital Viewer <span class="tog" id="op-tog">▲</span></h3>
   <div style="font-size:10px;color:#556a9a;line-height:1.6;margin-bottom:8px;padding:5px 7px;
     background:rgba(30,30,60,0.5);border-radius:5px;border:1px solid #2a2a4a;">
     Coulomb (Whittaker) radial function at n* = n−δₗ (QDT), exact outside the ionic core.<br>
@@ -394,7 +393,7 @@ __RENDER_CONTROLS__
       if(curBtn && curBtn.disabled) document.querySelector('#chan-row button[data-mode="0"]').click();
     }
 
-    // ── WebGL2 ────────────────────────────────────────────────────────────────
+    //  WebGL2 
     const canvas = document.getElementById('glcanvas');
     const ov = document.getElementById('overlay'), ctx = ov.getContext('2d');
     const gl = canvas.getContext('webgl2', {antialias:false, alpha:false});
@@ -677,7 +676,7 @@ __RENDER_CONTROLS__
       gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA16F, N, N, N, 0, gl.RGBA, gl.FLOAT, data);
     }
 
-    // ── Orbit camera: z is up (quantisation axis) ─────────────────────────────
+    //  Orbit camera: z is up (quantisation axis) 
     const cam = {theta: 0.8, phi: 1.15, radius: 16};     // phi = polar angle from +z
     function resetCameraAngles(){ cam.theta = 0.8; cam.phi = 1.15; }
     window.resetCamera = function(){ resetCameraAngles(); cam.radius = currentHalfExtent * 2.6; };
@@ -750,7 +749,7 @@ __RENDER_CONTROLS__
       return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p10;
     }
 
-    // ── Axes overlay (Å) ─────────────────────────────────────────────────────
+    //  Axes overlay (Å)
     function drawOverlay(view, proj){
       const W=ov.width, H=ov.height;
       ctx.clearRect(0,0,W,H);
@@ -782,7 +781,7 @@ __RENDER_CONTROLS__
       });
     }
 
-    // ── Legend: states exactly what the colours mean ──────────────────────────
+    // Legend: states exactly what the colours mean 
     const STOPS = {
       hwave:[[0,[.086,.043,.224]],[.12,[.271,.039,.412]],[.25,[.459,.106,.427]],[.38,[.643,.173,.376]],
              [.5,[.8,.255,.282]],[.62,[.922,.396,.153]],[.75,[.984,.6,.024]],[.88,[.965,.827,.247]],[1,[1,1,1]]],
@@ -902,7 +901,7 @@ __RENDER_CONTROLS__
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // ISOSURFACE renderer (the original LiNaK look): nested translucent level
+  // ISOSURFACE renderer: nested translucent level
   // sets of the normalised density, drawn by Plotly (WebGL). Uses the SAME
   // corrected wavefunction data as the volume renderer.
   // ══════════════════════════════════════════════════════════════════════════

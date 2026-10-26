@@ -1,0 +1,79 @@
+{
+  "element": "Fr",
+  "gs_label": "7s",
+  "mass_amu": 223.0,
+  "n_transitions": 68,
+  "n_with_gamma": 68,
+  "I_ref_kWcm2": 50.0,
+  "waist_um": 1.0,
+  "wl_range_nm": [
+    400.0,
+    1600.0
+  ],
+  "point": {
+    "wl_nm": 1064.0,
+    "I_kWcm2": 50.0,
+    "I_Wm2": 500000000.0,
+    "waist_um": 1.0,
+    "mass_amu": 223.0,
+    "alpha_re_au": 605.2855881912767,
+    "alpha_im_au": 7.780022954728086e-06,
+    "U_J": -9.399243531013695e-28,
+    "U_uK": -68.07844376821113,
+    "U_kHz_h": -1418.5246033070894,
+    "R_sc_Hz": 0.2291222586574564,
+    "R_sc_per_s": 0.2291222586574564,
+    "E_r_J": 5.236545081934338e-31,
+    "E_r_nK": 37.92814163436425,
+    "heating_J_s": 2.399618073468781e-31,
+    "heating_uK_s": 0.017380362955890894,
+    "tau_heat_s": 3916.974803172143,
+    "tau_scatter_s": 4.364482114743053,
+    "nu_r_Hz": 16036.869610127407,
+    "nu_z_Hz": 3840.575928441747,
+    "zR_um": 2.952624674426497,
+    "top_channels": [
+      {
+        "label": "7p1/2",
+        "wl_nm": 817.1653,
+        "fosc": 0.34,
+        "Gamma_s": 33962875.33214113,
+        "R_sc_Hz": 0.12778521649182045,
+        "source": "precision"
+      },
+      {
+        "label": "7p3/2",
+        "wl_nm": 718.1832,
+        "fosc": 0.7357,
+        "Gamma_s": 47571368.36723573,
+        "R_sc_Hz": 0.1013126713466959,
+        "source": "precision"
+      },
+      {
+        "label": "8p3/2",
+        "wl_nm": 422.6839,
+        "fosc": 0.0151,
+        "Gamma_s": 21364671.113959603,
+        "R_sc_Hz": 1.6217590759551094e-05,
+        "source": "NIST"
+      },
+      {
+        "label": "8p1/2",
+        "wl_nm": 432.657,
+        "fosc": 0.00741,
+        "Gamma_s": 16383218.696291722,
+        "R_sc_Hz": 7.14669270433272e-06,
+        "source": "NIST"
+      },
+      {
+        "label": "9p3/2",
+        "wl_nm": 365.4137,
+        "fosc": 0.00301,
+        "Gamma_s": 10309936.016499404,
+        "R_sc_Hz": 5.937124859826265e-07,
+        "source": "NIST"
+      }
+    ]
+  },
+  "note": "R_sc from Im[alpha(omega)] with Gamma = A_total from lifetimes.json, scaled as Gamma(omega/omega_k)^2 per channel (Grimm et al. 2000, Eq. 10). Heating uses 2 E_r(lambda_trap) per scatter. tau_heat = |U|/E_dot is an order-of-magnitude trap lifetime. Conservative depth/freqs also in polarizability.py AC Stark panel."
+}

@@ -457,6 +457,14 @@ def _gap_profile(vals, scale_lo, scale_hi):
     if (len(near) >= GAP_MIN_BIN and len(far) >= GAP_MIN_BIN
             and abs(out["scale_far"] / out["scale_near"] - 1.0) > GAP_MIN_CONTRAST):
         out["gap_dependent"] = True
+    elif (not near and len(far) >= GAP_MIN_BIN
+          and abs(out["scale_far"] - 1.0) > GAP_MIN_CONTRAST):
+        # only far-from-diagonal NIST pairs exist (e.g. Fr 8s -> np): the unscaled radial integral is
+        # accurate near the diagonal (Na near 1.00; Cs published s->p, same-n 1.03, 1.03, 1.04), so
+        # the near scale is 1.0 and the fitted far scale is not carried over to near-diagonal pairs
+        out["scale_near"] = 1.0
+        out["gap_dependent"] = True
+        out["near_assumed"] = True
     return out
 
 
@@ -535,6 +543,13 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
         info["source"] = "type" if info["applied"] else "global_fallback"
         if not info["applied"]:
             info["scale"] = glob["scale"]
+            own = np.asarray([x[0] if isinstance(x, tuple) else x for x in v], dtype=float)
+            if own.size >= min_pairs and not ((np.median(own) >= scale_lo) and (np.median(own) <= scale_hi)):
+                # the type's own NIST/Numerov ratios are systematically outside the accepted window
+                # (Fr 6d -> np: 0.2): inheriting another type's pooled scale would be wrong
+                info["scale"] = 1.0
+                info["source"] = "type_outside_window"
+                info["own_median"] = float(np.median(own))
         info.update(_gap_profile(v, scale_lo, scale_hi))
         types[k] = info
     return {"global": glob, "types": types, "gap_knots": list(GAP_KNOTS),
@@ -566,7 +581,10 @@ def numerov_scale_for(cal: dict, l_lower: str, l_upper: str, gap=None, n_star_up
             w = min(1.0, max(0.0, (abs(float(gap)) - g1) / (g2 - g1)))
             return float((1.0 - w) * t["scale_near"] + w * t["scale_far"])
         return float(t["scale"])
-    return float(cal.get("global", {}).get("scale", 1.0))
+    # a type with no NIST pair of its own is NOT calibrated: the pooled scale mixes other types (Fr: 8s -> np
+    # far pairs, 3.3) and is no evidence for it. The unscaled radial integral is within 10-35 % of published
+    # values for p->s, d->f (Cs, Table I of PRA 94, 012505), so 1.0 is used.
+    return 1.0
 
 
 def build_true_multiplet_f(fosc_jl: dict) -> dict:

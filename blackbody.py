@@ -90,18 +90,16 @@ from constants import (
     AU_TIME_S,
 )
 
-# ============================================================================
 # CONSTANTS (BBR-specific plot colours; α(ω) core in alpha_core)
-# ============================================================================
+
 
 ELEM_COLORS = {
     'Li': '#4df0b0', 'Na': '#f0c54d', 'K': '#4d9ff0',
     'Rb': '#f05a4d', 'Cs': '#c54df0', 'Fr': '#f04d9f',
 }
 
-# ============================================================================
+
 # BLACKBODY RADIATION SHIFT
-# ============================================================================
 
 def mean_E_squared_au(T_K):
     """
@@ -432,9 +430,8 @@ def complete_transitions_for_dyn(label, data, valence, n_tail_max=N_TAIL_DEFAULT
     return channels, meta
 
 
-# ============================================================================
+
 # BLACKBODY DEPOPULATION RATES (bound-bound)
-# ============================================================================
 
 def nbar_photon(omega_rad_s, T_K):
     """
@@ -697,7 +694,7 @@ def run_rates(element, T_K=300.0, n_min=None, data_dir='data_json'):
             dict(
                 state=r['state'], n=r['n'], l=r['l'],
                 # 12 significant digits, not round(x, 6): the PI-inclusive tau_eff / Gamma_quench /
-                # mixing rates are later built from these stored values (P46).
+                # mixing rates are later built from these stored values.
                 Gamma_rad_s=float(f"{r['Gamma_rad_s']:.12g}"),
                 Gamma_BBR_s=float(f"{r['Gamma_BBR_s']:.12g}"),
                 tau_rad_s=(None if r['tau_rad_s'] is None else round(r['tau_rad_s'], 8)),
@@ -710,9 +707,8 @@ def run_rates(element, T_K=300.0, n_min=None, data_dir='data_json'):
     )
 
 
-# ============================================================================
+
 # HIGH-n RYDBERG alpha(0) / STATIC BBR SHIFTS
-# ============================================================================
 
 def parse_nl_label(label):
     """Return (n, l_char) from a state label, or (None, None)."""
@@ -927,9 +923,8 @@ def run_rydberg_shifts(element, data, T_K=300.0, n_min=None, n_max=None,
     )
 
 
-# ============================================================================
+
 # CONTINUUM BBR PHOTOIONIZATION / QUENCHING
-# ============================================================================
 
 # Beterov et al., New J. Phys. 11, 013052 (2009):
 #   eq. (27) direct PI with quantum-defect phases + A_L (Table 2)
@@ -1482,10 +1477,7 @@ def run_continuum(element, data, T_K=300.0, n_min=None, rates=None,
         ],
     )
 
-
-# ============================================================================
 # MAIN COMPUTATION PER ELEMENT
-# ============================================================================
 
 def run_element(element, excited_label=None, T_K=300.0, data_dir='data_json',
                 do_rates=True, n_min=None,
@@ -1628,9 +1620,9 @@ def run_element(element, excited_label=None, T_K=300.0, data_dir='data_json',
         rydberg_shifts=rydberg_shifts,
     )
 
-# ============================================================================
+
 # PLOTTING
-# ============================================================================
+
 
 SERIES_COLORS = {
     's': '#4ea1ff', 'p': '#f0c54d', 'd': '#4df0b0',
@@ -2112,9 +2104,8 @@ def _inject_point_calculator(raw_html, result):
     raw_html = raw_html.replace('</body>', html + js + '</body>', 1)
     return raw_html
 
-# ============================================================================
+
 # SAVE JSON
-# ============================================================================
 
 def save_json(result, data_dir):
     el = result['element']
@@ -2153,9 +2144,9 @@ def save_json(result, data_dir):
         json.dump(out, f, indent=2)
     print(f"  Wrote {path}")
 
-# ============================================================================
+
 # MAIN
-# ============================================================================
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

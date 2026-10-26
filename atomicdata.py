@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atomic Data from Mendeleev and Astropy - FIXED VERSION
+Atomic Data from Mendeleev and Astropy 
 
 Shows how to extract atomic data with proper error handling.
 
@@ -245,7 +245,7 @@ def demo_astropy(element_symbol):
         print(f"\n  Astropy loaded successfully")
         print(f"\n Physical Constants Available:")
         
-        # Rydberg constant (FIXED conversion)
+        # Rydberg constant
         rydberg_hz = const.Ryd * const.c  # Convert to Hz
         rydberg_ev = (rydberg_hz * const.h).to(u.eV)
         print(f"  Rydberg constant: {rydberg_ev.value:.6f} eV")
