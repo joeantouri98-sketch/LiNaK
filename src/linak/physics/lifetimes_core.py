@@ -71,6 +71,7 @@ _EXTRAP_MAX_RMS = 0.05
 _EXTRAP_MODEL_AGREE = 0.10   # extrap and model within 10 %: window spread is not used
 _EXTRAP_MODEL_FLOOR = 0.10   # typical Numerov scale spread (s->p ~ 10-20 %), kept as an uncertainty floor
 _EXTRAP_BACKOFF = (0, 2, 4)
+_EXTRAP_MAX_DROP = 2         # at most this many outlying NIST points may be left out of a fit
 
 # NIST vs model consistency flags (flag only: NIST f-values are never replaced). For every
 # NIST multiplet pair inside the Numerov domain (n* > 2.5) the NIST f is compared with the
@@ -100,6 +101,9 @@ class FValueSources:
     # f_values/<El>_literature.json["nist_series_caveats"]: NIST series known to deviate
     # from the smooth physical curve beyond some n (uncertainty only; values unchanged)
     nist_series_caveats: Sequence[Mapping] = ()
+    # f_values/<El>_literature.json["nist_fit_exclusions"]: NIST points left out of the
+    # extrapolation fits (the table value itself is never altered)
+    nist_fit_exclusions: Sequence[Mapping] = ()
 
 
 @dataclass(frozen=True)
@@ -148,6 +152,7 @@ class SeriesFit:
     a: float
     b: float
     rms: float
+    excluded: tuple = ()   # NIST n left out of the fit by the robust retry
 
 
 @dataclass(frozen=True)
@@ -710,10 +715,22 @@ def _fit_y(ns_, ys_, xs_):
     return c, rms
 
 
-def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd):
+def _exclusion_index(exclusions: Sequence[Mapping]) -> dict:
+    """{(lower, upper_l, J or '*', n): ref} from the curated ``nist_fit_exclusions`` list."""
+    out: dict = {}
+    for e in exclusions or ():
+        for Jt in ([e['J']] if e.get('J') else None) or ['*']:
+            for n in e['n']:
+                out[(e['lower'], e['upper_l'], Jt, int(n))] = e.get('ref', '')
+    return out
+
+
+def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd,
+                       exclusions: Sequence[Mapping] = ()):
     """Fit y = f n*^3 = a + b/n*^2 for every (lower_label, upper_l, J_tag) NIST series,
     plus the same fit on windows ending 2 and 4 points earlier (``alts``)."""
     series: dict = defaultdict(dict)
+    excl = _exclusion_index(exclusions)
     for tt in transition_table:
         if tt.fosc_source not in ('NIST', 'precision') or tt.lower_label not in lowers:
             continue
@@ -721,6 +738,9 @@ def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd):
         if lc not in qd or tt.upper_n is None:
             continue
         Jt = _split_J_tag(tt.upper_label, tt.upper_n) if lc != 's' else ''
+        if ((tt.lower_label, lc, Jt, tt.upper_n) in excl
+                or (tt.lower_label, lc, '*', tt.upper_n) in excl):
+            continue
         series[(tt.lower_label, lc, Jt)][tt.upper_n] = (tt.fosc, tt.fosc_delta or 0.25)
     fits = {}
     for key, d in series.items():
@@ -731,6 +751,31 @@ def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd):
         x = _np.array([n - qd[key[1]] for n in sel])
         y = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in sel])
         c, rms = _fit_y(sel, y, x)
+        dropped_pts: list = []
+        if rms >= _EXTRAP_MAX_RMS and len(ns_all) >= _EXTRAP_K + 1:
+            # robust retry: take a wider tail and leave out at most _EXTRAP_MAX_DROP worst points
+            # (leave-one-out) so that one bad NIST entry does not disable a whole series.
+            # NIST values are never altered; left-out points are only absent from the fit.
+            pool = ns_all[-(_EXTRAP_K + _EXTRAP_MAX_DROP):]
+            for _ in range(_EXTRAP_MAX_DROP):
+                if len(pool) <= _EXTRAP_K:
+                    break
+                best = None
+                for n_drop in pool:
+                    cand = [n for n in pool if n != n_drop]
+                    xc = _np.array([n - qd[key[1]] for n in cand])
+                    yc = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in cand])
+                    cc, rc = _fit_y(cand, yc, xc)
+                    if best is None or rc < best[0]:
+                        best = (rc, n_drop, cand, cc)
+                pool = best[2]
+                dropped_pts.append(best[1])
+                if best[0] < _EXTRAP_MAX_RMS:
+                    break
+            sel = pool
+            x = _np.array([n - qd[key[1]] for n in sel])
+            y = _np.array([d[n][0] * (n - qd[key[1]])**3 for n in sel])
+            c, rms = _fit_y(sel, y, x)
         if rms >= _EXTRAP_MAX_RMS:
             continue
         alts = []
@@ -742,7 +787,7 @@ def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd):
                 c2, _ = _fit_y(s2, y2, x2)
                 alts.append(c2)
         fits[key] = dict(c=c, n_max=max(sel), rms=rms, delta=d[sel[-1]][1],
-                         n_pts=len(sel), alts=alts)
+                         n_pts=len(sel), alts=alts, excluded=sorted(dropped_pts))
     return fits
 
 
@@ -830,7 +875,8 @@ def _model_replacement(row: TransitionA, res) -> TransitionA:
                    fosc_model_source=row.fosc_source)
 
 
-def extrapolate_nist_series(rows: Sequence[TransitionA], dropped: Sequence[Dropped], qd):
+def extrapolate_nist_series(rows: Sequence[TransitionA], dropped: Sequence[Dropped], qd,
+                            exclusions: Sequence[Mapping] = ()):
     """Fill lines from the NIST series of their lower levels. Used ONLY for channels that have no
     NIST/literature/ORCA f:
       (1) lines dropped below the Numerov gate (recovered: appended as new rows),
@@ -848,7 +894,7 @@ def extrapolate_nist_series(rows: Sequence[TransitionA], dropped: Sequence[Dropp
     lowers = ({d.transition['lower_label'] for d in gate}
               | {rows[i].lower_label for i in model_rows}
               | {r.lower_label for r in lit_rows})
-    fits = _build_extrap_fits(lowers, rows, qd)
+    fits = _build_extrap_fits(lowers, rows, qd, exclusions)
     recovered, still_dropped = [], []
     for d in dropped:
         res = (_extrap_channel(d.transition, fits, qd)
@@ -875,7 +921,7 @@ def extrapolate_nist_series(rows: Sequence[TransitionA], dropped: Sequence[Dropp
         n_replaced += 1
     series = {f"{lo_}->{lc_}{Jc}": SeriesFit(n_fit_max=int(fit['n_max']), n_points=fit['n_pts'],
                                              a=float(fit['c'][0]), b=float(fit['c'][1]),
-                                             rms=fit['rms'])
+                                             rms=fit['rms'], excluded=tuple(fit.get('excluded', ())))
               for (lo_, lc_, Jc), fit in fits.items()}
     return out, recovered, still_dropped, series, n_replaced, dict(vs_model)
 
@@ -1142,7 +1188,7 @@ def compute(
     n_replaced, vs_model = 0, {}
     if not is_metal:
         rows, recovered, dropped, series, n_replaced, vs_model = extrapolate_nist_series(
-            rows, dropped, qd)
+            rows, dropped, qd, sources.nist_fit_exclusions)
         rows.extend(recovered)
     flag_pairs: dict[frozenset, float] = {}
     n_flagged = 0

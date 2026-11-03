@@ -173,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     nist = load_nist_fvalues(element, verbose=True)
     literature = load_literature_fvalues(element, verbose=True)
     caveats = _nist_series_caveats(element)
+    fit_excl = _nist_fit_exclusions(element)
     no_qdt = 'no QDT' in (rydberg_data.get('method') or '')
     is_metal = (
         is_transition_metal_species(element)
@@ -182,13 +183,14 @@ def main(argv: list[str] | None = None) -> int:
 
     # Metals: NIST lines only unless explicitly --orca-only
     orca_file = _orca_file(element, data_dir)
-    sources = FValueSources(nist=nist, literature=literature, nist_series_caveats=caveats)
+    sources = FValueSources(nist=nist, literature=literature, nist_series_caveats=caveats,
+                            nist_fit_exclusions=fit_excl)
     if os.path.exists(orca_file) and (args.orca_only or (
             not args.nist_only and not (is_transition_metal_species(element) or no_qdt))):
         orca_fosc, ee_fosc, excitations = _orca_fvalues(orca_file)
         sources = FValueSources(nist=nist, literature=literature, orca_fosc=orca_fosc,
                                 ee_fosc=ee_fosc, orca_excitations=excitations,
-                                nist_series_caveats=caveats)
+                                nist_series_caveats=caveats, nist_fit_exclusions=fit_excl)
 
     IE      = rydberg_data['ionization_energy_eV']
     n_start = rydberg_data.get('n_start', 2)
@@ -228,6 +230,19 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _nist_fit_exclusions(element) -> list:
+    """f_values/<El>_literature.json["nist_fit_exclusions"]: NIST points left out of the
+    extrapolation fits (the NIST rows themselves are never altered)."""
+    path = reference_path('f_values', f"{element}_literature.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding='utf-8') as fh:
+            return json.load(fh).get('nist_fit_exclusions', [])
+    except (OSError, ValueError):
+        return []
+
+
 def _nist_series_caveats(element) -> list:
     """f_values/<El>_literature.json["nist_series_caveats"]: NIST series known to deviate from
     the smooth physical curve beyond some n (they only raise the quoted uncertainty)."""
@@ -263,6 +278,15 @@ def _drop_counts(result: LifetimesResult) -> dict[str, int]:
     for d in result.dropped:
         counts[d.reason] = counts.get(d.reason, 0) + 1
     return counts
+
+
+def _drop_family_counts(result: LifetimesResult) -> dict[str, int]:
+    """Dropped transitions per (lower level -> upper l) family, sorted by name."""
+    counts: dict[str, int] = {}
+    for d in result.dropped:
+        k = f"{d.transition['lower_label']}->n{d.transition['upper_l']}"
+        counts[k] = counts.get(k, 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def _channel_json(ch: TransitionA, A_total) -> dict:
@@ -375,6 +399,7 @@ def output_json(sp, args, IE, n_start, result: LifetimesResult) -> dict:
         'dropped_transitions': {
             'n_total': sum(drop_counts.values()),
             'by_reason': drop_counts,
+            'by_family': _drop_family_counts(result),
             'examples': [{'upper': d.transition['upper_label'],
                           'lower': d.transition['lower_label'],
                           'wavelength_nm': d.transition['wavelength_nm'],

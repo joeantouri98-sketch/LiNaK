@@ -45,7 +45,7 @@ def test_files_are_the_species_own(ws):
     (ws.orca_outputs_dir / "Na").mkdir(parents=True)
 
     files = species_files(ws, "Na")
-    assert [p.name for p in files["data_json"]] == ["Na.json", "Na_lifetimes.json", "Na_rydberg.json"]
+    assert sorted(p.name for p in files["data_json"]) == ["Na.json", "Na_lifetimes.json", "Na_rydberg.json"]
     assert files["plots"] == [ws.plots_dir / "Na"]
     assert files["orca_outputs"] == [ws.orca_outputs_dir / "Na"]
 
