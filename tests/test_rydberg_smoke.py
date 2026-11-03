@@ -13,6 +13,8 @@ energy above the ground state is therefore IE + E(n).
 """
 from __future__ import annotations
 
+from itertools import pairwise
+
 import pytest
 
 from helpers import load_json, run_pipeline, write_result_summary
@@ -99,7 +101,7 @@ def test_rydberg_binding_energy_decreases_with_n(workspace, l_char):
     mean_energy_per_n = [sum(energy) / len(energy) for _, energy in sorted(by_n.items())]
     assert all(
         later > earlier
-        for earlier, later in zip(mean_energy_per_n, mean_energy_per_n[1:])
+        for earlier, later in pairwise(mean_energy_per_n)
     ), f"{l_char}-series energies are not monotonically increasing with n"
 
 

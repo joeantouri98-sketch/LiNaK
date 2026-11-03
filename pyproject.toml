@@ -3,7 +3,7 @@ name = "LiNak"
 dynamic = ["version"]
 description = "An integrated computational toolkit for alkali-atom AMO physics"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 authors = [
     { name = "Youssef Antoury", email = "Joeantouri98@gmail.com" },
 ]
@@ -68,7 +68,7 @@ web = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py312"
 extend-exclude = ["build", "dist", ".linak"]
 
 [tool.ruff.lint]
@@ -104,7 +104,7 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 files = ["src/linak/core", "src/linak/physics"]
 mypy_path = "src"
 ignore_missing_imports = true

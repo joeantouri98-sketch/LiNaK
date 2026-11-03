@@ -24,7 +24,7 @@ The pipeline has been exercised end-to-end for the alkalis and for Fe and Cr. **
 
 ## Requirements
 
-- Python 3.9+ recommended  
+- Python 3.12, 3.13 or 3.14  
 - Run commands through the packaged entry points; generated data goes to the output folder (see [Where outputs go](#where-outputs-go)) and the read-only reference data ships as `linak` package data under `src/linak/resources/`.
 - ORCA (optional; only for the ORCA pipeline stages)
 
@@ -148,7 +148,7 @@ The GUI provides:
 
 The GUI requires:
 
-- Python 3.9 or newer
+- Python 3.12 or newer
 - PySide6
 - The normal LiNaK dependencies installed by the package
 
