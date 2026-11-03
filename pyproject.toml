@@ -5,7 +5,7 @@ description = "An integrated computational toolkit for alkali-atom AMO physics"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "LiNaK contributors" },
+    { name = "Youssef Antoury", email = "Joeantouri98@gmail.com" },
 ]
 dependencies = [
     "numpy>=2.0",
