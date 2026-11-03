@@ -43,7 +43,7 @@ from PySide6.QtCore import (
     QUrl,
     Signal,
 )
-from PySide6.QtGui import QAction, QDesktopServices, QFont, QTextCursor
+from PySide6.QtGui import QAction, QDesktopServices, QFont, QKeySequence, QShortcut, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -58,6 +58,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
@@ -73,18 +74,26 @@ from PySide6.QtWidgets import (
 from linak.core.elements import expand_element_families
 from linak.core.paths import PROJECT_ROOT_ENV, is_frozen_app
 from linak.core.species import resolve_species
-from linak.core.workspace import Workspace, default_workspace, seed_bundled_data
+from linak.core.workspace import (
+    Workspace,
+    default_workspace,
+    mark_removed,
+    restore_species,
+    seed_bundled_data,
+    species_files,
+)
 
 from .dataset_editor import DatasetEditorDialog
 from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
 from .help_dialog import HelpDialog
 from .overview import SpeciesOverviewWidget
 from .plot_cache import local_plot_copy
+from .species_delete import DeleteSpeciesDialog, delete_permanently, move_to_trash
 from .project_io import (
     open_pipeline_overview_html,
-    rydberg_species,
     shared_outputs,
     species_outputs,
+    workspace_species,
 )
 from .stage_process import (
     cli_log_paths,
@@ -231,6 +240,10 @@ class MainWindow(QMainWindow):
             self._open_existing_dataset
         )
         edit_menu.addAction(open_existing_action)
+
+        delete_species_action = QAction("Delete species...", self)
+        delete_species_action.triggered.connect(lambda: self._delete_species())
+        edit_menu.addAction(delete_species_action)
 
         edit_menu.addSeparator()
 
@@ -472,6 +485,11 @@ class MainWindow(QMainWindow):
         self.species_list = QListWidget()
         self.species_list.setMaximumHeight(110)
         self.species_list.itemClicked.connect(lambda it: self._set_species(it.text()))
+        self.species_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.species_list.customContextMenuRequested.connect(self._species_context_menu)
+        delete_key = QShortcut(QKeySequence(QKeySequence.StandardKey.Delete), self.species_list)
+        delete_key.setContext(Qt.WidgetShortcut)
+        delete_key.activated.connect(self._delete_highlighted_species)
         sb.addWidget(self.species_list)
         row = QHBoxLayout()
         self.species_input = QLineEdit()
@@ -639,7 +657,91 @@ class MainWindow(QMainWindow):
 
     #species
     def _set_species_from_input(self):
-        self._set_species(self.species_input.text())
+        species = self.species_input.text().strip()
+        # Naming a removed species brings it back, with its bundled data.
+        if species and restore_species(Workspace(root=self.root), species):
+            self._seed_root()
+        self._set_species(species)
+
+    def _species_context_menu(self, position):
+        item = self.species_list.itemAt(position)
+        if item is None:
+            return
+        menu = QMenu(self.species_list)
+        delete_action = menu.addAction(f"Delete {item.text()}...")
+        if menu.exec(self.species_list.mapToGlobal(position)) is delete_action:
+            self._delete_species(item.text())
+
+    def _delete_highlighted_species(self):
+        item = self.species_list.currentItem()
+        if item is not None:
+            self._delete_species(item.text())
+
+    def _delete_species(self, species: str = ""):
+        """Take *species* off the list, optionally deleting its files."""
+        species = species or self.current_species
+        if not species:
+            QMessageBox.information(self, "Pick a species", "Select a species to delete first.")
+            return
+        if self.process is not None and self.process.state() != QProcess.NotRunning:
+            QMessageBox.information(self, "Busy", "Wait for the running stage to finish first.")
+            return
+        if self._seed_workers:
+            QMessageBox.information(
+                self, "Busy", "Wait for the bundled data to finish copying first.")
+            return
+
+        workspace = Workspace(root=self.root)
+        files = species_files(workspace, species)
+        dialog = DeleteSpeciesDialog(species, files, self)
+        if dialog.exec() != QDialog.Accepted:
+            return
+        trees = dialog.selected_trees()
+        kept: list[Path] = []
+        if trees:
+            kept = self._delete_paths([path for tree in trees for path in files[tree]])
+        # Only what is really gone stays out of seeding; a kept tree stays as it was.
+        gone = tuple(tree for tree in trees if not set(files[tree]) & set(kept))
+        try:
+            if not trees:
+                mark_removed(workspace, species, hide=True)
+            elif gone:
+                mark_removed(workspace, species, no_seed=gone)
+        except OSError as exc:
+            QMessageBox.warning(self, "Removal not remembered", f"{species}:\n\n{exc}")
+        if kept:
+            QMessageBox.warning(
+                self, "Some files were not deleted",
+                "\n".join(str(path) for path in kept))
+        self._drop_species_from_list(species)
+
+    def _delete_paths(self, paths: list[Path]) -> list[Path]:
+        """Delete *paths*, asking first if the Recycle Bin can't take them.
+
+        Returns the paths that still exist.
+        """
+        stuck = move_to_trash(paths)
+        if not stuck:
+            return []
+        answer = QMessageBox.question(
+            self, "Recycle Bin not available",
+            f"{len(stuck)} of {len(paths)} items can't go to the Recycle Bin, which "
+            "some drives don't have.\n\nDelete them permanently? This can't be undone.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        return delete_permanently(stuck) if answer == QMessageBox.Yes else stuck
+
+    def _drop_species_from_list(self, species: str) -> None:
+        """Refresh after a removal; a species with files left stays listed."""
+        for item in self.species_list.findItems(species, Qt.MatchExactly):
+            self.species_list.takeItem(self.species_list.row(item))
+        self._refresh_species_list()
+        if self.current_species == species and not self.species_list.findItems(
+                species, Qt.MatchExactly):
+            self.current_species = ""
+            self.species_input.clear()
+            self.species_label.setText("No species selected.")
+            self.viewer_stack.setCurrentIndex(3)
+        self._refresh_all()
 
     def _set_species(self, species: str):
         species = species.strip()
@@ -1166,7 +1268,7 @@ class MainWindow(QMainWindow):
             self.shared_outputs_list.addItem(item)
 
     def _refresh_species_list(self):
-        found = rydberg_species(self.root)
+        found = workspace_species(self.root)
         current_texts = {self.species_list.item(i).text() for i in range(self.species_list.count())}
         for sp in found:
             if sp not in current_texts:

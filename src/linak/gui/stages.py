@@ -32,9 +32,9 @@ def workspace_plots_dir(root: Path) -> str:
 
 PIPELINE = [
     dict(id="runorca", label="ORCA (TD-DFT / SOC)", symbol="ORCA", pipeline="runorca",
-         desc="Runs ORCA quantum chemistry (TD-DFT or CASSCF/NEVPT2+SOC) for this "
-              "species. Needs ORCA installed and callable as 'orca' on PATH. "
-              "TD-DFT and SOC are separate calculations, never one mixed job.",
+         desc="Runs ORCA quantum chemistry for this "
+              "species. Requires ORCA installed. "
+              "TD-DFT and SOC are separate calculations.",
          positional=lambda el: [el],
          flags=[
              dict(name="--mode", kind="choice", label="Calculation mode",

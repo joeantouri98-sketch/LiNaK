@@ -8,22 +8,42 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import QMessageBox
 
+from linak.core.errors import InvalidSpeciesError
 from linak.core.paths import reference_path
-from linak.core.species import is_ion_id
-from linak.core.workspace import Workspace
+from linak.core.species import parse_species_id
+from linak.core.workspace import Workspace, hidden_species, stem_belongs_to_species
 
 
-def rydberg_species(root: Path) -> list[str]:
-    """Return the species with a Rydberg dataset in the folder *root*."""
+def _is_species_name(name: str) -> bool:
+    """True if *name* is exactly a species id (``Fe``, ``Na_c1``)."""
+    try:
+        return parse_species_id(name)[0] == name
+    except InvalidSpeciesError:
+        return False
+
+
+def _subfolders(folder: Path) -> list[str]:
+    """Names of the folders directly inside *folder*; none if it is missing."""
+    if not folder.is_dir():
+        return []
+    return [path.name for path in folder.iterdir() if path.is_dir()]
+
+
+def workspace_species(root: Path) -> list[str]:
+    """Return every species with results in the folder *root*.
+
+    A species can have results at any point of the chain: an ORCA-only run
+    leaves ``data/<id>.json`` and ``orca_outputs/<id>/`` but no Rydberg
+    dataset, so the Rydberg file alone would miss it. Species the user took
+    off the list are left out.
+    """
     suffix = "_rydberg.json"
-    data_dir = Workspace(root=root).data_json_dir
-    return sorted(p.name[: -len(suffix)] for p in data_dir.glob(f"*{suffix}"))
-
-
-def _belongs_to_ion_of(species: str, stem: str) -> bool:
-    """True for ``Na_c1_lifetimes`` under ``Na``: the ion's file, not the atom's."""
-    first = stem[len(species) + 1:].split("_", 1)[0]
-    return is_ion_id(f"{species}_{first}")
+    ws = Workspace(root=root)
+    found = {p.name[: -len(suffix)] for p in ws.data_json_dir.glob(f"*{suffix}")}
+    candidates = [p.stem for p in ws.data_json_dir.glob("*.json")]
+    candidates += _subfolders(ws.orca_outputs_dir) + _subfolders(ws.plots_dir)
+    found.update(name for name in candidates if _is_species_name(name))
+    return sorted(found - hidden_species(ws))
 
 
 def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
@@ -39,7 +59,7 @@ def species_outputs(root: Path, species: str) -> list[tuple[Path, str]]:
         items.extend(
             (path, "JSON")
             for path in sorted(data_dir.glob(f"{species}_*.json"))
-            if not _belongs_to_ion_of(species, path.stem)
+            if stem_belongs_to_species(species, path.stem)
         )
         exact = data_dir / f"{species}.json"
         if exact.exists():

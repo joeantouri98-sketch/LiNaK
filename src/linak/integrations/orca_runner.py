@@ -262,6 +262,19 @@ def _set_cli_state(argv=None):
 
 
 
+# orca_scf is absent from ORCA 6.1 (SCF lives in orca_leanscf / orca_scfgrad),
+# so accept any of these. None of them ships with the GNOME screen reader.
+ORCA_MODULE_NAMES = ("orca_scf", "orca_leanscf", "orca_scfgrad", "orca_startup")
+
+
+def _has_orca_modules(folder):
+    """True if *folder* holds at least one of ORCA's own module programs."""
+    return any(
+        (folder / (name + suffix)).is_file()
+        for name in ORCA_MODULE_NAMES
+        for suffix in ("", ".exe"))
+
+
 def resolve_orca_executable():
     """
     Resolve ORCA executable from environment variable or system PATH.
@@ -285,10 +298,10 @@ def resolve_orca_executable():
         # ORCA ships its modules (orca_scf, ...) beside the driver; on Linux
         # desktops a bare "orca" on PATH is usually the GNOME screen reader.
         folder = Path(resolved).resolve().parent
-        if not any((folder / name).is_file() for name in ("orca_scf", "orca_scf.exe")):
+        if not _has_orca_modules(folder):
             raise RuntimeError(
                 f"'orca' on PATH ({resolved}) is not the ORCA quantum-chemistry program "
-                f"(no orca_scf next to it); set ORCA_EXE to the ORCA executable.")
+                f"(no ORCA modules next to it); set ORCA_EXE to the ORCA executable.")
         return resolved
     
     raise RuntimeError(
