@@ -30,14 +30,18 @@ New-Item -ItemType Directory -Force `
     (Join-Path $repoRoot "src/linak/deployment"),
     (Join-Path $repoRoot "dist/pyside6") | Out-Null
 
+# Nuitka 4.1.1 officially supports Python up to 3.13, so pin the build
+# interpreter instead of reusing whatever .venv exists.
+$python = "3.13"
+
 Write-Host "Syncing development environment..."
-uv sync --dev --locked
+uv sync --dev --locked --python $python
 if ($LASTEXITCODE -ne 0) {
     throw "uv sync failed with exit code $LASTEXITCODE."
 }
 
 Write-Host "Building with pyside6-deploy..."
-uv run pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
+uv run --python $python pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
 if ($LASTEXITCODE -ne 0) {
     throw "pyside6-deploy failed with exit code $LASTEXITCODE."
 }

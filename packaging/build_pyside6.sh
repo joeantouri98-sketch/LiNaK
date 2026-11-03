@@ -27,8 +27,12 @@ fi
 # creating the path, so the destination folder must exist too.
 mkdir -p src/linak/deployment dist/pyside6
 
-uv sync --dev --locked
-uv run pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
+# Nuitka 4.1.1 officially supports Python up to 3.13, so pin the build
+# interpreter instead of reusing whatever .venv exists.
+python="3.13"
+
+uv sync --dev --locked --python "$python"
+uv run --python "$python" pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
     output="dist/pyside6/LiNaK.app"
