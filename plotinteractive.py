@@ -721,7 +721,9 @@ if _all_orca:
 
 print("="*70)
 
+# ============================================================================
 # HELPERS
+# ============================================================================
 
 colors = px.colors.sequential.Viridis
 n_colors = len(colors)
@@ -1018,7 +1020,7 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
     if not transitions:
         return 0
 
-    # Per-region proportional sampling
+    # --- Per-region proportional sampling ---
     # Group by region, sample proportionally so every region is always visible.
     # Legend labels show the TRUE total count, not the sampled count.
     _REGION_ORDER = ['X-ray', 'Vacuum UV', 'UV', 'Visible',
@@ -1103,7 +1105,7 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
     # Use TRUE counts for legend labels (not sampled subset counts)
     region_counts = true_region_counts
 
-    # fosc-based width scaling 
+    # ── fosc-based width scaling ─────────────────────────────────────────────
     # Collect all fosc values in the shown set to build a log-normalised scale.
     # Width range: 0.6 (no fosc data) to 4.5 (strongest line).
     # Log scale because fosc spans many orders of magnitude (1e-5 to ~1).
@@ -1317,7 +1319,7 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
     added_legend = set()
     np.random.seed(99)
 
-    #  Stratified x positions 
+    # ── Stratified x positions ────────────────────────────────────────────────
     # Pure uniform draws cluster badly with few arrows. Instead: one slot per
     # drawn arrow across [x_center-x_spread, x_center+x_spread], shuffled so
     # position doesn't correlate with energy, jittered inside the middle 70%
@@ -1400,21 +1402,23 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
             ))
 
 
+# ============================================================================
 # OUTPUT DIRECTORY
-
+# ============================================================================
 
 output_dir = f"plots/{element}"
 os.makedirs(output_dir, exist_ok=True)
 
-
+# ============================================================================
 # PLOT 1: GROTRIAN DIAGRAM
 # Energy levels + transition arrows + ORCA overlay
+# ============================================================================
 
-print("\n Creating Grotrian diagram (energy levels + transitions)...")
+print("\n📊 Creating Grotrian diagram (energy levels + transitions)...")
 
 fig1 = go.Figure()
 
-# NIST/Rydberg levels (ground state reference) 
+# --- NIST/Rydberg levels (ground state reference) ---
 # These use Rydberg absolute energies (negative, relative to ionization)
 # Only shown when use_rydberg is True
 if use_rydberg and sorted_rydberg:
@@ -1428,7 +1432,7 @@ if use_rydberg and sorted_rydberg:
                        x_range=(_GROT_LINE_X0, _GROT_LINE_X1),
                        show_below_eV=_ryd_show_below)
 
-#  Transitions 
+# --- Transitions ---
 if use_transitions and visible_transitions:
     _grot_initial_count = add_transition_traces(
         fig1, visible_transitions, energy_shift=energy_shift,
@@ -1438,7 +1442,7 @@ if use_transitions and visible_transitions:
 else:
     _grot_initial_count = 0
 
-#  ORCA levels 
+# --- ORCA levels ---
 fig1.add_trace(go.Scatter(
     x=[_GROT_LINE_X0, _GROT_LINE_X1], y=[ground_state_energy, ground_state_energy],
     mode='lines', line=dict(color='black', width=4),
@@ -1469,7 +1473,7 @@ for i, (orig_e, sh_e) in enumerate(zip(sorted_energies, shifted_energies)):
         customdata=[[label]],   # ASCII key for exact string match in JS filter
     ))
 
-#  ORCA SOC level overlay (when both TD-DFT and SOC data exist) 
+# --- ORCA SOC level overlay (when both TD-DFT and SOC data exist) ---
 SOC_LINE_COLOR = '#E65100'
 if has_soc_overlay:
     _soc_legend_added = False
@@ -1495,7 +1499,7 @@ if has_soc_overlay:
         ))
         _soc_legend_added = True
 
-#  ORCA transition arrows 
+# --- ORCA transition arrows ---
 # Bands: split the plot width when TD-DFT and SOC arrows coexist; otherwise
 # give the single dataset (whichever it is) the full width to spread out.
 if visible_orca_tddft and visible_orca_soc:
@@ -1629,7 +1633,7 @@ fig1.update_layout(
 html_file1 = f"{output_dir}/{element}_grotrian.html"
 fig1.write_html(html_file1)
 
-# Inject interactive filter panel 
+# ── Inject interactive filter panel ──────────────────────────────────────────
 # Build the full transition dataset as JSON for the JS panel to use
 _all_transitions_for_panel = []
 _ie_panel = ionization_energy_eV(rydberg_data)
@@ -1771,14 +1775,17 @@ _PANEL_CSS = """
   border: 1px solid #ccc;
   border-radius: 3px;
 }
+/* The scroll box is the wrapper, not the table: a display:block table shrinks to its
+   content and leaves blank space on the right, a normal table fills the panel width. */
+#filter-panel .transition-scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
 #filter-panel .transition-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 10px;
-  margin-top: 4px;
-  max-height: 180px;
-  display: block;
-  overflow-y: auto;
 }
 #filter-panel .transition-table th {
   position: sticky; top: 0;
@@ -1873,10 +1880,6 @@ _PANEL_HTML = f"""
   </div>
 
   <div id="result-count"></div>
-  <div style="font-size:10px;color:#999;text-align:center;margin:-2px 0 6px;">
-    Up to {_grot_initial_count} transitions pre-rendered (balanced across regions).
-    Enable regions in the <b>legend</b>, then narrow with this panel or <b>Isolate</b>.
-  </div>
 
   <div class="btn-row">
     <button class="primary" onclick="applyFilter()">▶ Apply</button>
@@ -1896,6 +1899,12 @@ _PANEL_HTML = f"""
       <button onclick="isolateSelected()" style="flex:1;background:#1a4a80;color:#cce;border:1px solid #2a5aaa;border-radius:4px;padding:3px 6px;font-size:11px;cursor:pointer;">Isolate selected</button>
       <button onclick="clearSelection()" style="flex:1;border:1px solid #ccc;border-radius:4px;padding:3px 6px;font-size:11px;cursor:pointer;">✕ Clear selection</button>
     </div>
+    <div style="display:flex;gap:6px;align-items:center;margin:2px 0 4px;">
+      <input type="search" id="match-search" placeholder="Search matches (e.g. 7p, 459, Vis)"
+             autocomplete="off" spellcheck="false"
+             style="flex:1;min-width:0;padding:2px 6px;font-size:11px;border:1px solid #ccc;border-radius:4px;">
+      <span id="match-search-count" style="font-size:10px;color:#888;white-space:nowrap;"></span>
+    </div>
     <div id="sel-count" style="font-size:10px;color:#888;margin-bottom:3px;"></div>
     <div id="table-pager" style="display:none;font-size:11px;color:#666;margin:4px 0;display:flex;gap:6px;align-items:center;">
       <button onclick="tablePage(-1)" style="padding:1px 7px;font-size:11px;">◀</button>
@@ -1903,12 +1912,14 @@ _PANEL_HTML = f"""
       <button onclick="tablePage(1)"  style="padding:1px 7px;font-size:11px;">▶</button>
       <span style="margin-left:auto;font-size:10px;color:#aaa;">all matches</span>
     </div>
+    <div class="transition-scroll">
     <table class="transition-table" id="trans-table">
       <thead><tr>
         <th></th><th>Upper</th><th>Lower</th><th>λ (nm)</th><th>ΔE</th><th>Reg</th>
       </tr></thead>
       <tbody id="trans-tbody"></tbody>
     </table>
+    </div>
   </div>
 </div>
 """
@@ -2223,11 +2234,33 @@ _PANEL_JS = f"""
   // ── Pagination ───────────────────────────────────────────────────────────
   const PAGE_SIZE = 100;
   let _allMatched  = [];
+  let _viewMatched = [];     // _allMatched narrowed by the search box (what the table pages through)
+  let _matchQuery  = '';
   let _currentPage = 0;
+
+  const _REG_SHORT = {{'X-ray':'X','Vacuum UV':'VUV','UV':'UV','Visible':'Vis',
+                      'Near-IR':'NIR','Mid/Far-IR':'MIR','Microwave':'\u03bcW'}};
+
+  // Every whitespace-separated term must appear in the row text (upper, lower,
+  // wavelength, energy gap, region name or its short tag), case-insensitive.
+  function matchHaystack(t) {{
+    return (t.ul + ' ' + t.ll + ' ' + t.wl.toFixed(1) + ' ' + t.wl.toFixed(4) + ' '
+            + t.dE.toFixed(1) + ' ' + t.reg + ' ' + (_REG_SHORT[t.reg] || '')).toLowerCase();
+  }}
+
+  function refreshViewMatched() {{
+    const terms = _matchQuery.toLowerCase().split(/\\s+/).filter(Boolean);
+    _viewMatched = terms.length === 0
+      ? _allMatched
+      : _allMatched.filter(t => {{
+          const h = matchHaystack(t);
+          return terms.every(w => h.indexOf(w) !== -1);
+        }});
+  }}
 
   function tablePage(delta) {{
     _currentPage = Math.max(0,
-      Math.min(_currentPage + delta, Math.ceil(_allMatched.length / PAGE_SIZE) - 1));
+      Math.min(_currentPage + delta, Math.ceil(_viewMatched.length / PAGE_SIZE) - 1));
     renderTablePage();
   }}
   window.tablePage = tablePage;
@@ -2255,11 +2288,15 @@ _PANEL_JS = f"""
     const pgInfo = document.getElementById('page-info');
     if (!tbody) return;
 
-    const total  = _allMatched.length;
+    refreshViewMatched();
+    const total  = _viewMatched.length;
     const nPages = Math.ceil(total / PAGE_SIZE) || 1;
     _currentPage = Math.max(0, Math.min(_currentPage, nPages - 1));
     const start  = _currentPage * PAGE_SIZE;
-    const rows   = _allMatched.slice(start, start + PAGE_SIZE);
+    const rows   = _viewMatched.slice(start, start + PAGE_SIZE);
+    const qCount = document.getElementById('match-search-count');
+    if (qCount) qCount.textContent = _matchQuery.trim()
+      ? total + ' of ' + _allMatched.length : '';
 
     const SHORT = {{'X-ray':'X','Vacuum UV':'VUV','UV':'UV','Visible':'Vis',
                     'Near-IR':'NIR','Mid/Far-IR':'MIR','Microwave':'\u03bcW'}};
@@ -2320,7 +2357,7 @@ _PANEL_JS = f"""
           const lo = Math.min(_lastClickIdx, globalIdx);
           const hi = Math.max(_lastClickIdx, globalIdx);
           for (let i = lo; i <= hi; i++) {{
-            if (_allMatched[i]) _selectedKeys.add(selKey(_allMatched[i]));
+            if (_viewMatched[i]) _selectedKeys.add(selKey(_viewMatched[i]));
           }}
           _lastClickIdx = globalIdx;
           renderTablePage();
@@ -2356,6 +2393,19 @@ _PANEL_JS = f"""
     }}
     updateSelCount();
   }}
+
+  // ── Search box above the table ───────────────────────────────────────────
+  (function() {{
+    const box = document.getElementById('match-search');
+    if (!box) return;
+    box.addEventListener('input', () => {{
+      _matchQuery = box.value; _currentPage = 0; renderTablePage();
+    }});
+    box.addEventListener('keydown', e => {{
+      if (e.key === 'Escape') {{ box.value = ''; _matchQuery = ''; _currentPage = 0; renderTablePage(); }}
+      e.stopPropagation();   // typing must not trigger plot keyboard shortcuts
+    }});
+  }})();
 
   // ── Isolate selected (button) ────────────────────────────────────────────
   function isolateSelected() {{
@@ -2601,15 +2651,9 @@ _PANEL_JS = f"""
 
       relayoutArrowPositions(gd, _allMatched, direction);
 
-      const drawn = _allMatched.filter(t => onPlotKeys.has(selKey(t))).length;
-      const missing = _allMatched.length - drawn;
-      const injectHint = missing > 0
-        ? ` \u2014 ${{missing}} not on plot (Isolate to draw)`
-        : '';
-
       document.getElementById('result-count').textContent =
-        _allMatched.length + ' / ' + ALL_TRANS.length + ' transitions match'
-        + injectHint;
+        _allMatched.length + ' / ' + ALL_TRANS.length + ' transitions match, '
+        + GROT_INITIAL + ' pre-rendered';
 
       // ── Level lines (all sources) ─────────────────────────────────────
       // When hideNoArrows is on, hide every registered level that is not an
@@ -2684,7 +2728,7 @@ _PANEL_JS = f"""
       _selectedKeys.clear(); _lastClickIdx=null;
       document.getElementById('result-count').textContent =
         GROT_INITIAL + ' / ' + ALL_TRANS.length
-        + ' transitions pre-rendered \u2014 enable regions in legend or Isolate';
+        + ' transitions pre-rendered. Enable regions in the legend or use Isolate.';
       renderTablePage(); updateSelCount();
     }});
   }}
@@ -2754,7 +2798,7 @@ _PANEL_JS = f"""
       _allMatched = []; renderTablePage();
       document.getElementById('result-count').textContent =
         GROT_INITIAL + ' / ' + ALL_TRANS.length
-        + ' transitions pre-rendered \u2014 enable regions in legend or Isolate';
+        + ' transitions pre-rendered. Enable regions in the legend or use Isolate.';
     }};
     if (gd.data) setup();
     else gd.addEventListener('plotly_afterplot', setup, {{ once:true }});
