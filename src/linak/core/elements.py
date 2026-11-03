@@ -1,0 +1,194 @@
+from __future__ import annotations
+
+ELEMENTS = {
+    1:  ("H",  0, 2),
+    2:  ("He", 0, 1),
+    3:  ("Li", 0, 2),
+    4:  ("Be", 0, 1),
+    5:  ("B",  0, 2),
+    6:  ("C",  0, 3),
+    7:  ("N",  0, 4),
+    8:  ("O",  0, 3),
+    9:  ("F",  0, 2),
+    10: ("Ne", 0, 1),
+    11: ("Na", 0, 2),
+    12: ("Mg", 0, 1),
+    13: ("Al", 0, 2),
+    14: ("Si", 0, 3),
+    15: ("P",  0, 4),
+    16: ("S",  0, 3),
+    17: ("Cl", 0, 2),
+    18: ("Ar", 0, 1),
+    19: ("K",  0, 2),
+    20: ("Ca", 0, 1),
+    21: ("Sc", 0, 2),
+    22: ("Ti", 0, 3),
+    23: ("V",  0, 4),
+    24: ("Cr", 0, 7),
+    25: ("Mn", 0, 6),
+    26: ("Fe", 0, 5),
+    27: ("Co", 0, 4),
+    28: ("Ni", 0, 3),
+    29: ("Cu", 0, 2),
+    30: ("Zn", 0, 1),
+    31: ("Ga", 0, 2),
+    32: ("Ge", 0, 3),
+    33: ("As", 0, 4),
+    34: ("Se", 0, 3),
+    35: ("Br", 0, 2),
+    36: ("Kr", 0, 1),
+    37: ("Rb", 0, 2),
+    38: ("Sr", 0, 1),
+    39: ("Y",  0, 2),
+    40: ("Zr", 0, 3),
+    41: ("Nb", 0, 6),
+    42: ("Mo", 0, 7),
+    43: ("Tc", 0, 6),
+    44: ("Ru", 0, 5),
+    45: ("Rh", 0, 4),
+    46: ("Pd", 0, 1), 
+    47: ("Ag", 0, 2),
+    48: ("Cd", 0, 1),
+    49: ("In", 0, 2),
+    50: ("Sn", 0, 3),
+    51: ("Sb", 0, 4),
+    52: ("Te", 0, 3),
+    53: ("I",  0, 2),
+    54: ("Xe", 0, 1),
+    55: ("Cs", 0, 2),
+    56: ("Ba", 0, 1),
+    57: ("La", 0, 2),
+    58: ("Ce", 0, 1),
+    59: ("Pr", 0, 4),
+    60: ("Nd", 0, 5),
+    61: ("Pm", 0, 6),
+    62: ("Sm", 0, 7),
+    63: ("Eu", 0, 8), 
+    64: ("Gd", 0, 9), 
+    65: ("Tb", 0, 6),
+    66: ("Dy", 0, 5),
+    67: ("Ho", 0, 4),
+    68: ("Er", 0, 3),
+    69: ("Tm", 0, 2),
+    70: ("Yb", 0, 1),
+    71: ("Lu", 0, 2),
+    72: ("Hf", 0, 3),
+    73: ("Ta", 0, 4),
+    74: ("W",  0, 5),
+    75: ("Re", 0, 6),
+    76: ("Os", 0, 5),
+    77: ("Ir", 0, 4),
+    78: ("Pt", 0, 3),
+    79: ("Au", 0, 2),
+    80: ("Hg", 0, 1),
+    81: ("Tl", 0, 2),
+    82: ("Pb", 0, 3),
+    83: ("Bi", 0, 4),
+    84: ("Po", 0, 3),
+    85: ("At", 0, 2),
+    86: ("Rn", 0, 1),
+    87: ("Fr", 0, 2),
+    88: ("Ra", 0, 1),
+    89: ("Ac", 0, 2),
+    90: ("Th", 0, 3),
+    91: ("Pa", 0, 4),
+    92: ("U",  0, 5),
+    93: ("Np", 0, 6),
+    94: ("Pu", 0, 7),
+    95: ("Am", 0, 8),
+    96: ("Cm", 0, 9),
+    97: ("Bk", 0, 6),
+    98: ("Cf", 0, 5),
+    99: ("Es", 0, 4),
+    100: ("Fm", 0, 3),
+    101: ("Md", 0, 2),
+    102: ("No", 0, 1),
+    103: ("Lr", 0, 2),
+    104: ("Rf", 0, 3),
+    105: ("Db", 0, 4),
+    106: ("Sg", 0, 5),
+    107: ("Bh", 0, 6),
+    108: ("Hs", 0, 5),
+    109: ("Mt", 0, 4),
+    110: ("Ds", 0, 3),
+    111: ("Rg", 0, 2),
+    112: ("Cn", 0, 1),
+    113: ("Nh", 0, 2),
+    114: ("Fl", 0, 3),
+    115: ("Mc", 0, 4),
+    116: ("Lv", 0, 3),
+    117: ("Ts", 0, 2),
+    118: ("Og", 0, 1),
+}
+
+
+def atomic_number(symbol: str) -> int | None:
+    """Return the atomic number for an element symbol, case-insensitively.
+
+    Returns ``None`` when *symbol* is not a known element.
+    """
+    target = symbol.lower()
+    for z, record in ELEMENTS.items():
+        if record[0].lower() == target:
+            return z
+    return None
+
+
+# Element families accepted wherever a list of elements is typed (the GUI"s
+# compare stage): family name or alias -> symbols.
+_ALKALI = ("Li", "Na", "K", "Rb", "Cs", "Fr")
+_ALKALINE_EARTH = ("Be", "Mg", "Ca", "Sr", "Ba", "Ra")
+_HALOGEN = ("F", "Cl", "Br", "I", "At", "Ts")
+_NOBLE_GASES = ("He", "Ne", "Ar", "Kr", "Xe", "Rn", "Og")
+_CHALCOGENS = ("O", "S", "Se", "Te", "Po", "Lv")
+_PNICTOGENS = ("N", "P", "As", "Sb", "Bi", "Mc")
+_CARBON_GROUP = ("C", "Si", "Ge", "Sn", "Pb", "Fl")
+_BORON_GROUP = ("B", "Al", "Ga", "In", "Tl", "Nh")
+_TRANSITION = (
+    "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Y", "Zr", "Nb", "Mo",
+    "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au",
+    "Hg",
+)
+_LANTHANIDES = (
+    "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb",
+    "Lu",
+)
+_ACTINIDES = (
+    "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No",
+    "Lr",
+)
+ELEMENT_FAMILIES = {
+    "alkali": _ALKALI,
+    "alkalis": _ALKALI,
+    "alkaline_earth": _ALKALINE_EARTH,
+    "alkaline-earth": _ALKALINE_EARTH,
+    "halogen": _HALOGEN,
+    "halogens": _HALOGEN,
+    "noble_gases": _NOBLE_GASES,
+    "noblegases": _NOBLE_GASES,
+    "chalcogens": _CHALCOGENS,
+    "pnictogens": _PNICTOGENS,
+    "carbon_group": _CARBON_GROUP,
+    "boron_group": _BORON_GROUP,
+    "transition": _TRANSITION,
+    "transition_metals": _TRANSITION,
+    "lanthanides": _LANTHANIDES,
+    "actinides": _ACTINIDES,
+}
+
+
+def expand_element_families(raw: str) -> list[str]:
+    """Expand a comma-separated list of symbols and family names, in order.
+
+    ``"alkali, Mg"`` -> ``["Li", "Na", "K", "Rb", "Cs", "Fr", "Mg"]``;
+    duplicates are dropped, unknown tokens are passed through unchanged.
+    """
+    values: list[str] = []
+    for token in str(raw or "").split(","):
+        token = token.strip()
+        if not token:
+            continue
+        for value in ELEMENT_FAMILIES.get(token.lower().replace(" ", "_"), (token,)):
+            if value not in values:
+                values.append(value)
+    return values

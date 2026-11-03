@@ -1,0 +1,88 @@
+
+<div id="fp4">
+  <h3>⚛ Grotrian Filter <span class="tog" onclick="tog4()">▲</span></h3>
+
+  <div class="sec" style="background:rgba(255,120,30,0.08);border:1px solid #3a2a1a;
+       border-radius:6px;padding:7px 9px;margin-bottom:10px;">
+    <div style="font-size:11px;color:#c8a060;line-height:1.6;">
+      <b>Transitions are hidden by default.</b><br>
+      Select regions below and click <b>▶ Apply</b> to render them.
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="st">Spectral region</div>
+    <div id="rg4"></div>
+  </div>
+
+  <div class="sec">
+    <div class="st">Data source</div>
+    <label><input type="checkbox" class="sc4" data-v="NIST" checked>
+      <span class="dot4" style="background:#2196F3"></span>&nbsp;NIST</label>
+    <label><input type="checkbox" class="sc4" data-v="QDT model" checked>
+      <span class="dot4" style="background:#FF9800"></span>&nbsp;QDT model</label>
+  </div>
+
+  <div class="sec">
+    <div class="st">n range</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="number" id="nlo4" value="$!gs_n4_str" min="$!gs_n4_str"
+             max="$!n_max4_str" step="1" style="width:55px">
+      <span style="color:#7a8aaa">–</span>
+      <input type="number" id="nhi4" value="$!n_max4_str" min="$!gs_n4_str"
+             max="$!n_max4_str" step="1" style="width:55px">
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="st">Wavelength (nm)</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="number" id="wlo4" value="0"     min="0" step="10" style="width:68px" placeholder="min">
+      <span style="color:#7a8aaa">–</span>
+      <input type="number" id="whi4" value="99999" min="0" step="10" style="width:68px" placeholder="max">
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="st">Min fosc</div>
+    <input type="number" id="fmin4" value="0" min="0" max="1" step="0.0001" style="width:90px">
+  </div>
+
+  <div class="sec">
+    <div class="st">Label search</div>
+    <input type="text" id="ls4" placeholder="e.g. 3p, 5s, 4d …"
+      style="width:100%;box-sizing:border-box;">
+  </div>
+
+  <div id="mc4"></div>
+  <div style="display:flex;flex-wrap:wrap;margin-bottom:8px;">
+    <button class="pr" onclick="applyF4()">▶ Apply</button>
+    <button onclick="rstF4()">↺ Reset</button>
+    <button onclick="hideAll4()">Hide all</button>
+  </div>
+
+  <div class="sec">
+    <div class="st">Matched <span id="cnt4" class="bdg4">–</span></div>
+    <div style="display:flex;gap:4px;margin-bottom:5px;">
+      <button onclick="isolateSelected4()" class="pr" style="flex:1;font-size:10px;padding:3px 5px;">Isolate sel.</button>
+      <button onclick="clearSelection4()" style="flex:1;font-size:10px;padding:3px 5px;">✕ Clear</button>
+    </div>
+    <div id="sel-count4" style="font-size:10px;color:#8a9ad0;margin-bottom:3px;"></div>
+    <div id="pager4" style="display:none;font-size:10px;color:#8a9ad0;margin:3px 0;display:flex;gap:5px;align-items:center;">
+      <button onclick="tablePage4(-1)" style="padding:1px 6px;font-size:10px;">◀</button>
+      <span id="page-info4"></span>
+      <button onclick="tablePage4(1)"  style="padding:1px 6px;font-size:10px;">▶</button>
+    </div>
+    <table id="lt4">
+      <thead><tr><th></th><th>Upper</th><th>Lower</th><th>λ nm</th><th>fosc</th></tr></thead>
+      <tbody id="lb4"></tbody>
+    </table>
+  </div>
+
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:6px;margin-top:4px;">
+    <div style="font-size:10px;color:#8a9ad0;line-height:1.9;">
+      <b>Drag</b> rotate &nbsp;·&nbsp; <b>Scroll</b> zoom<br>
+      <b>Legend click</b> toggle &nbsp;·&nbsp; <b>dbl</b> isolate
+    </div>
+  </div>
+</div>

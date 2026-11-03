@@ -5,11 +5,10 @@ the Tier-1 lifetimes fixes (python lifetimes.py Na)."""
 from __future__ import annotations
 
 import json
-import math
 
 import pytest
 
-from qdt_radial import (
+from linak.physics.qdt_radial import (
     allowed_J2,
     build_true_multiplet_f,
     ls_group_branching,

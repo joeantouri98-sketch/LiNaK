@@ -7,8 +7,8 @@ import math
 import numpy as np
 import pytest
 
-import alpha_core as ac
-import polarizability as pz
+import linak.physics.polarizability_core as ac
+import linak.pipelines.polarizability as pz
 
 
 def _tr(dE, f, sign=1, sigma=0.0):
@@ -41,9 +41,9 @@ def test_core_term_carries_no_uncertainty_and_grades_map_to_relative_error():
     assert ac.fosc_rel_uncertainty('NIST', 'weird-grade') == 0.10      # falls back to the source default
 
 
-def test_na_result_has_error_bars(tmp_path):
-    import json, os
-    p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data_json', 'Na_polarizability.json')
-    d = json.load(open(p))
+def test_na_result_has_error_bars(data_dir):
+    import json
+    with (data_dir / 'Na_polarizability.json').open(encoding='utf-8') as f:
+        d = json.load(f)
     assert 0.0 < d['alpha0_sigma_au'] < 0.05 * d['alpha0_au']
     assert 0.0 < d['C6_sigma_au'] < 0.10 * d['C6_au']

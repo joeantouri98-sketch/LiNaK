@@ -6,8 +6,9 @@ import json
 import math
 
 import numpy as np
+import pytest
 
-from feshbach import multi_resonance_a, scattering_length
+from linak.physics.feshbach import Resonance, multi_resonance_a, scattering_length
 
 from helpers import write_result_summary
 
@@ -53,12 +54,12 @@ def test_scattering_length_zero_and_background(anchors, results_dir):
     )
 
 
-def test_multi_resonance_product_near_background(na_feshbach_params, anchors):
+def test_multi_resonance_product_near_background(na_feshbach_params):
     """Far below all poles, multi-resonance a(B) recovers a_bg."""
-    a = anchors["feshbach"]
     a_bg = float(na_feshbach_params["a_bg_default_a0"])
     B = np.array([0.0, 10.0, 50.0])
-    vals = multi_resonance_a(B, na_feshbach_params["resonances"], a_bg)
+    resonances = [Resonance.from_json(row) for row in na_feshbach_params["resonances"]]
+    vals = multi_resonance_a(B, resonances, a_bg)
     for v in vals:
         assert abs(float(v) - a_bg) / abs(a_bg) < 0.02
 
@@ -66,8 +67,7 @@ def test_multi_resonance_product_near_background(na_feshbach_params, anchors):
 # ---- PHYSICS_BUGS P1 / P10 / P16 --------------------------------------------------------------
 def test_a_bar_is_gribakin_flambaum_for_beta6():
     """abar = 2 pi / Gamma(1/4)^2 * beta6 (= 0.956 * R_vdW with R_vdW = beta6/2)."""
-    from feshbach import a_bar_a0, beta6_a0
-    import pytest
+    from linak.physics.feshbach import a_bar_a0, beta6_a0
     assert a_bar_a0(100.0) == pytest.approx(100.0 * 2.0 * math.pi / math.gamma(0.25) ** 2, rel=1e-6)
     b = beta6_a0(4698.0, 86.90918)          # Rb-87, C6 = 4698 au
     assert 164.0 < b < 166.5                 # R_vdW = 82.9 a0
@@ -76,13 +76,13 @@ def test_a_bar_is_gribakin_flambaum_for_beta6():
 
 
 def test_shipped_na_out_json_has_corrected_a_bar(data_dir):
-    d = json.load(open(data_dir / "Na_feshbach_out.json"))
+    with (data_dir / "Na_feshbach_out.json").open(encoding="utf-8") as f:
+        d = json.load(f)
     assert abs(d["a_bar_a0"] / d["beta6_a0"] - 0.477989) < 1e-4
 
 
 def test_nonpositive_c6_is_rejected_with_clear_error():
-    from feshbach import beta6_a0
-    import pytest
+    from linak.physics.feshbach import beta6_a0
     for bad in (-5.0, 0.0, float("nan")):
         with pytest.raises(ValueError, match="C6"):
             beta6_a0(bad, 23.0)
@@ -90,8 +90,7 @@ def test_nonpositive_c6_is_rejected_with_clear_error():
 
 def test_resonance_sign_convention_and_schema():
     """a_bg > 0, Delta > 0: a -> +inf just below B0 and -inf just above; zero at B0 + Delta."""
-    import pytest
-    from feshbach import validate_feshbach_params
+    from linak.physics.feshbach import validate_feshbach_params
     assert scattering_length(905.0 - 1e-3, 54.54, 905.0, 1.04) > 1e3
     assert scattering_length(905.0 + 1e-3, 54.54, 905.0, 1.04) < -1e3
     assert abs(float(scattering_length(906.04, 54.54, 905.0, 1.04))) < 1e-9
@@ -103,14 +102,14 @@ def test_resonance_sign_convention_and_schema():
 
 # ---- PHYSICS_BUGS P24 / P25 (fork review) -----------------------------------------------------
 def test_quantum_statistics_from_isotope():
-    from feshbach import is_boson
+    from linak.physics.feshbach import is_boson
     assert is_boson('Na', 23) and is_boson('K', 39) and is_boson('Rb', 87) and is_boson('Cs', 133)
     assert is_boson('Li', 6) is False and is_boson('K', 40) is False and is_boson('Li', 7)
     assert is_boson('Xx', 3) is None
 
 
 def test_sigma_el_identical_bosons_is_twice_distinguishable():
-    from feshbach import sigma_el_a0
+    from linak.physics.feshbach import sigma_el_a0
     a = np.array([50.0, 500.0]); k = 0.001
     assert np.allclose(sigma_el_a0(a, k, identical_bosons=True), 2 * sigma_el_a0(a, k))
     assert np.allclose(sigma_el_a0(a, 0.0), 4 * np.pi * a ** 2)
@@ -118,26 +117,64 @@ def test_sigma_el_identical_bosons_is_twice_distinguishable():
 
 
 def test_channel_parsing_and_grouping(na_feshbach_params):
-    from feshbach import identical_particles, group_s_wave_by_channel
+    from linak.physics.feshbach import identical_particles, group_s_wave_by_channel
     assert identical_particles('|1,+1> + |1,+1>') and not identical_particles('|1> + |2>')
     assert not identical_particles('ee (highest F=2 stretched)')
-    g = group_s_wave_by_channel(na_feshbach_params['resonances'])
+    g = group_s_wave_by_channel([Resonance.from_json(r) for r in na_feshbach_params['resonances']])
     assert len(g) == 2 and len(g['|1,+1> + |1,+1>']) == 3 and len(g['|1,-1> + |1,-1>']) == 1
-    mixed = [{'channel': 'x', 'partial_wave': 'd'}, {'channel': 'x', 'partial_wave': 's'}]
+    mixed = [Resonance.from_json({'channel': 'x', 'partial_wave': pw, 'B0_G': 1.0, 'Delta_G': 1.0})
+             for pw in ('d', 's')]
     assert len(group_s_wave_by_channel(mixed)['x']) == 1       # d-wave poles never enter a_s(B)
 
 
-def test_combined_curve_does_not_mix_channels():
-    import os
-    from feshbach import compute_element
-    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data_json')
-    r = compute_element('Na', root, B_points=3000)
-    B = r['B_G']
-    comb = np.asarray(r['a_combined_a0'])
+def test_combined_curve_does_not_mix_channels(data_dir):
+    from linak.physics.feshbach import compute, is_boson
+    from linak.pipelines.feshbach import load_inputs
+    inp = load_inputs('Na', str(data_dir))
+    r = compute(inp.resonances, inp.a_bg_default_a0, inp.C6_au, inp.mass_amu,
+                B_points=3000, boson=is_boson('Na', inp.isotope_A))
+    B = r.B_G
+    comb = np.asarray(r.a_combined_a0)
     # the |1,-1> pole at 1195 G must not appear in the |1,+1> curve ...
     i = int(np.argmin(abs(B - 1195.0)))
     assert abs(comb[i]) < 5000
     # ... but it is in its own channel's curve
-    other = next(c for c in r['channels'] if c['channel'] == '|1,-1> + |1,-1>')
-    assert np.nanmax(np.abs(other['a_a0'][i - 3:i + 4])) > 1e3
-    assert r['sigma_combined_a02'][0] == np.pi * 8 * comb[0] ** 2 / (1 + (r['k_a0inv'] * comb[0]) ** 2)
+    other = next(c for c in r.channels if c.channel == '|1,-1> + |1,-1>')
+    assert np.nanmax(np.abs(other.a_a0[i - 3:i + 4])) > 1e3
+    assert r.sigma_combined_a02[0] == np.pi * 8 * comb[0] ** 2 / (1 + (r.k_a0inv * comb[0]) ** 2)
+
+
+# --- engine (physics.feshbach) --------------------------------------------
+
+
+def test_van_der_waals_length_matches_chin_2010_for_rb87():
+    """R_vdW = β₆/2 = 82.6 a₀ for ⁸⁷Rb with C₆ = 4698 au (Chin et al., RMP 82, 1225)."""
+    from linak.physics.feshbach import beta6_a0
+
+    assert beta6_a0(4698.0, 86.909180527) / 2 == pytest.approx(82.6, rel=2e-3)
+
+
+def test_compute_single_resonance_combined_equals_isolated():
+    from linak.physics.feshbach import Resonance, compute
+
+    res = Resonance.from_json({"B0_G": 907.0, "Delta_G": 1.0, "a_bg_a0": 63.0})
+    result = compute([res], 63.0, 1556.0, 22.98976928, kT_uK=1.0, B_points=500)
+    assert result.B_G[-1] == pytest.approx(907.0 * 1.15), "default range: 15 % past B₀"
+    np.testing.assert_allclose(result.a_combined_a0, result.curves[0].a_a0, equal_nan=True)
+    assert result.curves[0].resonance.label == "B0=907.0G"
+    assert result.curves[0].a_bg_a0 == 63.0
+
+
+def test_cross_section_is_4_pi_a_squared_at_low_energy():
+    """σ_el → 4πa² for k·a ≪ 1 (distinguishable-particle form, see P25)."""
+    from linak.physics.feshbach import sigma_el_a0
+
+    assert float(sigma_el_a0(50.0, 1e-8)) == pytest.approx(4 * math.pi * 50.0**2, rel=1e-9)
+
+
+def test_resonance_without_own_background_uses_the_table_default():
+    from linak.physics.feshbach import Resonance
+
+    res = Resonance.from_json({"label": "x", "B0_G": 10, "Delta_G": 0.5})
+    assert res.a_bg_a0 is None and res.background(54.5) == 54.5
+    assert (res.partial_wave, res.channel, res.ref) == ("s", "", "")

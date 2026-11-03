@@ -1,0 +1,22 @@
+# Line endings: LF in the repository and in every working tree (Windows
+# included), so editing on different OSes never produces whole-file diffs.
+* text=auto eol=lf
+
+# Windows Internet Shortcut files are parsed by the Windows shell.
+*.url text eol=crlf
+
+# ORCA binary outputs (wavefunctions, densities, CIS vectors) and images.
+*.gbw binary
+*.ges binary
+*.cis binary
+*.densities binary
+*.densitiesinfo binary
+*.png binary
+
+# GitHub language statistics: the HTML here is generated reports, docs and
+# report templates, and plotly.js is a vendored bundle; neither should make
+# the repository read as an HTML/JavaScript project. Generated plots are also
+# collapsed in pull-request diffs.
+*.html linguist-detectable=false
+src/linak/resources/plots/** linguist-generated
+src/linak/resources/vendor/** linguist-vendored

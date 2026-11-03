@@ -1,0 +1,24 @@
+
+<style>
+#tw-ctrl {
+  position:fixed; top:16px; right:16px; width:280px;
+  background:rgba(12,14,28,0.92); border:1px solid #2a2a5a; border-radius:10px;
+  padding:12px 14px; font-family:'Helvetica Neue',Arial,sans-serif; font-size:12px;
+  color:#ccc; box-shadow:0 4px 20px rgba(0,0,0,0.65); z-index:9999;
+  backdrop-filter:blur(6px);
+}
+#tw-ctrl h3 { margin:0 0 9px; font-size:13px; color:#e0e8ff;
+  border-bottom:1px solid #2a2a5a; padding-bottom:5px; cursor:pointer; }
+#tw-ctrl .st { font-weight:bold; color:#7a9eff; font-size:10px;
+  text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; margin-top:9px; }
+#tw-ctrl input[type=number] { width:90px; background:#111830; border:1px solid #2a3060;
+  border-radius:4px; color:#ccc; font-size:11px; padding:3px 6px; }
+#tw-ctrl button { padding:5px 10px; font-size:11px; border:1px solid #2a3060;
+  border-radius:5px; background:#111830; color:#aac; cursor:pointer; margin-top:8px; }
+#tw-ctrl button:hover { background:#1a2850; color:#e0e8ff; }
+#tw-out { background:#0d0d20; border:1px solid #2a2a4a; border-radius:6px;
+  padding:8px 10px; font-size:11px; color:#9ab; line-height:1.7; margin-top:8px; }
+#tw-out b { color:#e0e8ff; }
+#tw-body { display:block; }
+#tw-ctrl.collapsed #tw-body { display:none; }
+</style>

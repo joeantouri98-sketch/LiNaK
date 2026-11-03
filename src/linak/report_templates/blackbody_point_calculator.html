@@ -1,0 +1,14 @@
+
+<div id="bb-ctrl" class="collapsed">
+  <button type="button" id="bb-ctrl-toggle" aria-expanded="false"
+          aria-controls="bb-ctrl-body" title="Show or hide calculator">
+    <span>Point calculator</span>
+    <span id="bb-ctrl-chevron" aria-hidden="true">&#9660;</span>
+  </button>
+  <div id="bb-ctrl-body">
+    <div class="st">Temperature (K)</div>
+    <input type="number" id="bb-T" value="300" step="1" min="1">
+    <button type="button" class="bb-go" onclick="bbCalc()">Calculate</button>
+    <div id="bb-out">Enter T and click Calculate.</div>
+  </div>
+</div>

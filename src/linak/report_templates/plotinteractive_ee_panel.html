@@ -1,0 +1,76 @@
+
+<div id="ee-filter-panel">
+  <h3>Transition Filter</h3>
+  <div class="notice">
+    <b>Transitions hidden by default.</b> Select regions/sources, then click
+    <b>▶ Apply</b>. Arrows are coloured by spectral region.
+  </div>
+  <div class="section">
+    <div class="section-title">Transition type</div>
+    <div id="ee-kind-checks"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Spectral region</div>
+    <div id="ee-region-checks"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">fosc source</div>
+    <div id="ee-source-checks"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Orbital type (lower→upper)</div>
+    <div id="ee-ltype-checks"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Wavelength (nm)</div>
+    <div style="display:flex;gap:6px;">
+      <input type="number" id="ee-wl-min" placeholder="min" style="width:48%">
+      <input type="number" id="ee-wl-max" placeholder="max" style="width:48%">
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">n range (both states)</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="number" id="ee-n-min" placeholder="min" style="width:48%">
+      <input type="number" id="ee-n-max" placeholder="max" style="width:48%">
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Min fosc</div>
+    <input type="number" id="ee-fmin" value="0" min="0" step="0.0001" style="width:100%">
+  </div>
+  <div class="section">
+    <div class="section-title">Label search</div>
+    <input type="text" id="ee-label-search" placeholder="e.g. 3p, 4s, 4d"
+      style="width:100%;box-sizing:border-box;">
+  </div>
+  <div id="ee-result-count"></div>
+  <div class="btn-row">
+    <button class="primary" onclick="applyEEFilter()">▶ Apply</button>
+    <button onclick="resetEEFilter()">↺ Reset</button>
+    <button onclick="hideAllEE()">Hide all</button>
+  </div>
+  <div class="section" style="margin-top:8px;">
+    <div class="section-title">
+      Matched transitions
+      <span style="font-size:10px;color:#999;font-weight:normal;margin-left:4px;">
+        click · shift+click · dbl-click isolate
+      </span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0;">
+      <button onclick="isolateSelectedEE()" style="flex:1;background:#1a4a80;color:#cce;border:1px solid #2a5aaa;border-radius:4px;padding:3px 6px;font-size:11px;cursor:pointer;">Isolate selected</button>
+      <button onclick="clearSelectionEE()" style="flex:1;border:1px solid #ccc;border-radius:4px;padding:3px 6px;font-size:11px;cursor:pointer;">✕ Clear selection</button>
+    </div>
+    <div id="ee-sel-count" style="font-size:10px;color:#888;margin-bottom:3px;"></div>
+    <div id="ee-page-info" style="font-size:10px;color:#888;margin:3px 0;"></div>
+    <div id="ee-table-pager" style="display:none;font-size:11px;margin:3px 0;display:flex;gap:6px;align-items:center;">
+      <button onclick="tablePageEE(-1)" style="padding:1px 7px;font-size:11px;">◀</button>
+      <span id="ee-page-label"></span>
+      <button onclick="tablePageEE(1)" style="padding:1px 7px;font-size:11px;">▶</button>
+    </div>
+    <table id="ee-trans-table">
+      <thead><tr><th></th><th>Upper</th><th>Lower</th><th>λ</th><th>Reg</th><th>fosc</th></tr></thead>
+      <tbody id="ee-trans-tbody"></tbody>
+    </table>
+  </div>
+</div>

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Generate f_values/<El>_literature.json: ARC model-potential ground-state ns -> np absorption f
 (J-resolved), for the np states where NIST lists no f, plus an uncertainty caveat on the NIST
@@ -26,7 +25,7 @@ import sys
 import warnings
 
 warnings.filterwarnings('ignore')
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src'))
 
 PREF = 6.6703e13   # A = PREF/lambda_nm^2 * (g_l/g_u) * f   (constants.EINSTEIN_PREFACTOR)
 ARC_OK = {
@@ -62,20 +61,28 @@ REFTXT = ("ARC 3.10 model-potential (Sibalic et al., CPC 220, 319 (2017); Marine
           "n<={nsafe})")
 
 
+def _read_json(path):
+    with open(path, encoding='utf-8') as fh:
+        return json.load(fh)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('element')
     ap.add_argument('--check', action='store_true', help='compare with the existing file instead of writing')
-    ap.add_argument('--f-values-dir', default='f_values')
+    ap.add_argument('--f-values-dir', default=None, help='default: the bundled f_values folder')
     ap.add_argument('--refresh-caveats', action='store_true',
                     help="replace this tool's own nist_series_caveats entry with the built-in text (default: keep the file's)")
     a = ap.parse_args()
+    if a.f_values_dir is None:
+        from linak.core.paths import reference_path
+        a.f_values_dir = str(reference_path('f_values'))
     el = a.element
     if el not in ARC_OK:
         sys.exit(f"{el}: ARC series not validated against NIST (see the module docstring); no file written.")
     cfg = ARC_OK[el]
     import arc
-    import alpha_core as ac
+    import linak.physics.polarizability_core as ac
     if cfg.get('scaled_p'):
         return main_scaled(a, el, cfg, arc, ac)
     atom = getattr(arc, cfg['cls'])()
@@ -127,7 +134,7 @@ def main():
     # never overwrite anything that is not this generator's own ARC rows: curated rows, the note, hand-edited
     # caveats and any other top-level key are kept as they are in the existing file
     path = os.path.join(a.f_values_dir, f'{el}_literature.json')
-    old = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {}
+    old = _read_json(path) if os.path.exists(path) else {}
     kept = [t for t in old.get('transitions', []) if not str(t.get('ref', '')).startswith('ARC ')]
     keys_kept = {(t['lower'], t['upper'], t.get('upper_J')) for t in kept}
     rows = kept + [t for t in rows if (t['lower'], t['upper'], t.get('upper_J')) not in keys_kept]
@@ -188,7 +195,7 @@ def main_scaled(a, el, cfg, arc, ac):
     atom.getRadialMatrixElement = functools.partial(atom.getRadialMatrixElement, useLiterature=False)
     nist = ac.load_nist_fvalues(el, a.f_values_dir, verbose=False)
     apath = os.path.join(a.f_values_dir, f'{el}_published_anchors.json')
-    anchors = json.load(open(apath, encoding='utf-8'))['transitions']
+    anchors = _read_json(apath)['transitions']
     HA_EV = 27.211386245988
     LET = {0: 's', 2: 'd'}
     PJ = {'1/2': 0.5, '3/2': 1.5, '5/2': 2.5}
@@ -257,7 +264,7 @@ def main_scaled(a, el, cfg, arc, ac):
     # published J-resolved f (f_values/<El>_published_f.json), e.g. K 4s->np: only where NIST lists no f
     pf_path = os.path.join(a.f_values_dir, f'{el}_published_f.json')
     if os.path.exists(pf_path):
-        pf = json.load(open(pf_path, encoding='utf-8'))
+        pf = _read_json(pf_path)
         nj = {(lo, up, str(J)) for (lo, up, J) in nist.get('fosc_j', {})}
         nm = set(nist['fosc'])
         n_pf = 0
@@ -271,7 +278,7 @@ def main_scaled(a, el, cfg, arc, ac):
             n_pf += 1
         print(f'{el}: {n_pf} published J-resolved rows from {pf_path}')
     path = os.path.join(a.f_values_dir, f'{el}_literature.json')
-    old = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {}
+    old = _read_json(path) if os.path.exists(path) else {}
     mine = ('ARC ', 'PUBLISHED')
     kept = [t for t in old.get('transitions', []) if not str(t.get('ref', '')).startswith(mine)]
     keys_kept = {(t['lower'], t['upper'], t.get('upper_J')) for t in kept}

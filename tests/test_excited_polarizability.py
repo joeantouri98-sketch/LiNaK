@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-import alpha_core as A
+import linak.physics.polarizability_core as A
 
 ARC_VALENCE = {          # a.u.
     "3s": 162.09, "3p1/2": 360.55, "3p3/2": 362.27, "4s": 3101.44,
@@ -56,7 +56,7 @@ def test_multiplet_f_rebuilt_from_lines(na_network):
 
 def test_s_to_p_scale_depends_on_gap(na_network):
     """NIST/Numerov for Na s->p is ~1.0 for near pairs and ~1.37 for far pairs."""
-    from qdt_radial import numerov_scale_for
+    from linak.physics.qdt_radial import numerov_scale_for
     cal = na_network["numerov_cal_types"]
     info = cal["types"][("s", "p")]
     assert info["gap_dependent"]

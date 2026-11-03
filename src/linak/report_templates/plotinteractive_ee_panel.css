@@ -1,0 +1,65 @@
+
+<style>
+#ee-filter-panel {
+  position: fixed; top: 60px; right: 10px; width: 310px;
+  max-height: calc(100vh - 80px); overflow-y: auto;
+  background: #fff; border: 1.5px solid #ccc; border-radius: 8px;
+  padding: 10px 12px; font-family: Arial, sans-serif; font-size: 12px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.15); z-index: 9999;
+}
+#ee-filter-panel h3 {
+  margin: 0 0 8px 0; font-size: 13px; color: #333;
+  border-bottom: 1px solid #ddd; padding-bottom: 4px;
+}
+#ee-filter-panel .section { margin-bottom: 10px; }
+#ee-filter-panel .section-title {
+  font-weight: bold; color: #555; margin-bottom: 4px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+#ee-filter-panel label {
+  display: flex; align-items: center; gap: 5px;
+  margin: 2px 0; cursor: pointer; color: #333;
+}
+#ee-filter-panel input[type=checkbox] { cursor: pointer; }
+#ee-filter-panel input[type=number], #ee-filter-panel input[type=text] {
+  font-size: 11px; padding: 2px 4px; border: 1px solid #ccc; border-radius: 3px;
+}
+#ee-filter-panel button {
+  flex: 1; padding: 4px 6px; font-size: 11px;
+  border: 1px solid #ccc; border-radius: 4px;
+  background: #f5f5f5; cursor: pointer;
+}
+#ee-filter-panel button:hover { background: #e0e8ff; }
+#ee-filter-panel button.primary {
+  background: #4a7ec7; color: white; border-color: #3a6ab0;
+}
+#ee-filter-panel button.primary:hover { background: #3a6ab0; }
+#ee-filter-panel .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+#ee-filter-panel .count-badge {
+  margin-left: auto; background: #eee; border-radius: 8px;
+  padding: 0 5px; font-size: 10px; color: #666;
+}
+#ee-filter-panel .color-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block; flex-shrink: 0;
+}
+#ee-filter-panel .notice {
+  background: #fff8e6; border: 1px solid #f0d080; border-radius: 5px;
+  padding: 6px 8px; font-size: 11px; color: #7a5a10; line-height: 1.5;
+  margin-bottom: 10px;
+}
+#ee-result-count {
+  font-size: 11px; color: #4a7ec7; text-align: center;
+  margin: 4px 0; font-weight: bold;
+}
+#ee-trans-table {
+  width: 100%; border-collapse: collapse; font-size: 10px;
+  max-height: 180px; display: block; overflow-y: auto; margin-top: 4px;
+}
+#ee-trans-table th {
+  position: sticky; top: 0; background: #f5f5f5;
+  padding: 2px 4px; text-align: left; border-bottom: 1px solid #ddd;
+}
+#ee-trans-table td { padding: 2px 4px; border-bottom: 1px solid #eee; }
+#ee-trans-table tr:hover td { background: #eef4ff; cursor: pointer; }
+</style>

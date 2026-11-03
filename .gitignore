@@ -35,3 +35,8 @@ Thumbs.db
 
 # orca_outputs/
 # plots/
+.linak/
+src/linak/deployment/
+
+# Nuitka build crash dumps
+nuitka-crash-report.xml

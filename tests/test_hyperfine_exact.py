@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import hyperfine as hf
+import linak.physics.hyperfine_core as hf
 
 CASES = [(1.5, .5), (1.5, 1.5), (2.5, 1.5), (3.5, .5), (3.5, 1.5), (3.5, 2.5), (2.5, 2.5)]
 
@@ -29,9 +29,9 @@ def test_na_3p32_quadrupole_was_wrong_by_4_MHz_with_old_diagonal_model():
 
 @pytest.mark.parametrize('I,J', [(1.5, 1.5), (2.5, 1.5), (3.5, 1.5), (3.5, 2.5)])
 def test_octupole_matches_exact_rank3_angular_factor(I, J):
-    sympy = pytest.importorskip('sympy')
-    from sympy.physics.wigner import wigner_6j
+    pytest.importorskip('sympy')
     from sympy import Rational as R
+    from sympy.physics.wigner import wigner_6j
     Fs = hf.F_levels(I, J)
     six = np.array([(-1) ** int(round(I + J + F)) *
                     float(wigner_6j(R(int(2 * I), 2), R(int(2 * J), 2), R(int(2 * F), 2),
@@ -48,15 +48,14 @@ def test_octupole_is_zero_below_threshold_spins():
 def test_cycling_transition_found_from_real_line_list():
     I = 1.5
     Fg, Fe = hf.F_levels(I, 0.5), hf.F_levels(I, 1.5)
-    sp = hf.identify_special_transitions(hf.allowed_transitions(Fg, Fe), Fg, I, 0.5, 885.8)
-    assert sp['cycling'] == (2.0, 3.0)
-    assert hf.identify_special_transitions([], Fg, I, 0.5, 885.8).get('cycling') is None
+    assert hf.cycling_transition(hf.allowed_transitions(Fg, Fe), Fg) == (2.0, 3.0)
+    assert hf.cycling_transition([], Fg) is None
 
 
 def test_clock_interval_uses_B_and_C_for_J_above_half():
     Fs = hf.F_levels(1.5, 1.5)
-    with_B = hf.identify_special_transitions([], Fs, 1.5, 1.5, 18.5, 2.7)['microwave_clock']['frequency_MHz']
-    no_B = hf.identify_special_transitions([], Fs, 1.5, 1.5, 18.5)['microwave_clock']['frequency_MHz']
+    with_B = hf.clock_interval(Fs, 1.5, 1.5, 18.5, 2.7)[2]
+    no_B = hf.clock_interval(Fs, 1.5, 1.5, 18.5)[2]
     assert with_B != no_B
     assert with_B == pytest.approx(abs(hf.hyperfine_energy(3, 1.5, 1.5, 18.5, 2.7)
                                        - hf.hyperfine_energy(2, 1.5, 1.5, 18.5, 2.7)))

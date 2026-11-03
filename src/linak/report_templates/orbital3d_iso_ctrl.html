@@ -1,0 +1,51 @@
+  <div class="sec">
+    <div class="st">Level scale</div>
+    <select id="lscale" onchange="redraw()">
+      <option value="0" selected>Linear |ψ|²  (classic)</option>
+      <option value="1">Amplitude |ψ|  (shows the diffuse tail)</option>
+    </select>
+    <div id="cmap-note">Levels are fractions of the maximum of the plotted quantity.</div>
+  </div>
+  <div class="sec">
+    <div class="st">Outer level &nbsp;<span id="isov">$!iso_default</span></div>
+    <input type="range" id="iso-sl" min="0.01" max="0.55" value="$!iso_default" step="0.01"
+           oninput="isoLabel('iso-sl','isov',2)" onchange="isoClamp();redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Inner level &nbsp;<span id="isohv">0.95</span></div>
+    <input type="range" id="isohi-sl" min="0.50" max="1.00" value="0.95" step="0.01"
+           oninput="isoLabel('isohi-sl','isohv',2)" onchange="isoClamp();redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Surfaces &nbsp;<span id="surfv">4</span></div>
+    <input type="range" id="surf-sl" min="1" max="6" value="4" step="1"
+           oninput="document.getElementById('surfv').textContent=this.value" onchange="redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Opacity &nbsp;<span id="opv">0.55</span></div>
+    <input type="range" id="op-sl" min="0.05" max="1.0" value="0.55" step="0.05"
+           oninput="isoLabel('op-sl','opv',2)" onchange="redraw()">
+  </div>
+  <div class="sec">
+    <div class="st">Colour map</div>
+    <select id="cmap" onchange="redraw()">
+      <option value="auto">H-wavefunction (inferno)</option>
+      <option value="Viridis">Viridis</option>
+      <option value="Plasma">Plasma</option>
+      <option value="Hot">Hot</option>
+      <option value="Electric">Electric</option>
+      <option value="RdBu">RdBu</option>
+    </select>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+    <button onclick="redraw()">↻ Redraw</button>
+    <button onclick="clearOrb()">✕ Clear</button>
+    <button onclick="resetCamera()">↺ Reset view</button>
+  </div>
+  <div class="sec" style="border-top:1px solid #1a1a3a;padding-top:6px;margin-top:4px">
+    <div style="font-size:10px;color:#556;line-height:1.9">
+      <b>Drag</b> rotate &nbsp; <b>Scroll</b> zoom<br>
+      Grid: up to $!grid_default³ (+4 per ℓ), computed in browser
+    </div>
+  </div>

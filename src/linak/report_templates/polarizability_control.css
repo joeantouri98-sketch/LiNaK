@@ -1,0 +1,30 @@
+
+<style>
+#as-ctrl {
+  position:fixed; top:12px; right:12px; width:290px;
+  max-height:calc(100vh - 24px); overflow-y:auto;
+  background:rgba(10,10,22,0.94); border:1px solid #2a2a4a; border-radius:10px;
+  padding:12px 14px; font-family:'Helvetica Neue',Arial,sans-serif; font-size:12px;
+  color:#ccc; box-shadow:0 4px 20px rgba(0,0,0,0.65); z-index:9999;
+  backdrop-filter:blur(6px);
+}
+#as-ctrl.collapsed { width:auto; padding:8px 12px; max-height:none; }
+#as-ctrl.collapsed>*:not(h3) { display:none; }
+#as-ctrl h3 { margin:0; font-size:13px; color:#e0e8ff;
+  border-bottom:1px solid #2a2a5a; padding-bottom:5px;
+  display:flex; align-items:center; gap:8px; cursor:pointer; }
+#as-ctrl.collapsed h3 { border-bottom:none; padding-bottom:0; margin:0; }
+#as-ctrl .tog { margin-left:auto; font-size:11px; color:#667; user-select:none; }
+#as-ctrl .sec { margin-top:9px; margin-bottom:10px; }
+#as-ctrl .st { font-weight:bold; color:#7a9eff; font-size:10px;
+  text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+#as-ctrl input[type=range] { width:100%; accent-color:#4a7ec7; }
+#as-ctrl input[type=number] { width:70px; background:#111830; border:1px solid #2a3060;
+  border-radius:4px; color:#ccc; font-size:11px; padding:3px 6px; }
+#as-ctrl button { padding:5px 10px; font-size:11px; border:1px solid #2a3060;
+  border-radius:5px; background:#111830; color:#aac; cursor:pointer; margin-top:6px; }
+#as-ctrl button:hover { background:#1a2850; color:#e0e8ff; }
+#as-out { background:#0d0d20; border:1px solid #2a2a4a; border-radius:6px;
+  padding:8px 10px; font-size:11px; color:#9ab; line-height:1.7; margin-top:6px; }
+#as-out b { color:#e0e8ff; }
+</style>

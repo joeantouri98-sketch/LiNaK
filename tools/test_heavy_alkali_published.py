@@ -7,11 +7,13 @@ References: Rb  Safronova, Safronova & Clark, PRA 83, 052508 (2011), Table IV (p
 Before this tier the 5p/6p/4p -> ns/nd channels were dropped (n*<=2.5 gate) and ns lifetimes were 1.7-2.1x too long.
 """
 import json
-from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+from linak.core.paths import reference_path
+
+DATA = reference_path("data_json")
+F_VALUES = reference_path("f_values")
 PUB_NS = {
     "Rb": {"7s": 88.3, "8s": 161.9, "9s": 271.7, "10s": 426.0},
     "Cs": {"7s": 48.4, "8s": 93.0, "9s": 167.0, "10s": 279.0, "11s": 434.0},
@@ -20,10 +22,10 @@ PUB_NS = {
 
 
 def _load(el):
-    p = ROOT / "data_json" / f"{el}_lifetimes.json"
+    p = DATA / f"{el}_lifetimes.json"
     if not p.exists():
         pytest.skip(f"{el}_lifetimes.json not generated")
-    return json.load(open(p, encoding="utf-8"))
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("el,state", [(e, s) for e, d in PUB_NS.items() for s in d])
@@ -43,7 +45,7 @@ def test_np_to_ns_nd_channels_not_dropped(el):
 
 @pytest.mark.parametrize("el", ["K", "Rb", "Cs"])
 def test_literature_rows_cite_a_source_and_never_override_nist(el):
-    lit = json.load(open(ROOT / "f_values" / f"{el}_literature.json", encoding="utf-8"))
+    lit = json.loads((F_VALUES / f"{el}_literature.json").read_text(encoding="utf-8"))
     rows = [t for t in lit["transitions"]]
     assert rows and all(str(t["ref"]).startswith(("PUBLISHED", "ARC ")) for t in rows)
     lt = _load(el)
@@ -63,7 +65,7 @@ def test_fr_fit_exclusion_leaves_nist_value_untouched():
 def test_k_4s_np_tail_comes_from_published_table_and_nothing_is_dropped():
     lt = _load("K")
     assert lt["dropped_transitions"]["n_total"] == 0
-    lit = json.load(open(ROOT / "f_values" / "K_literature.json", encoding="utf-8"))
+    lit = json.loads((F_VALUES / "K_literature.json").read_text(encoding="utf-8"))
     rows = [t for t in lit["transitions"] if t["lower"] == "4s"]
     assert rows and all("Theodosiou" in t["ref"] and t.get("upper_J") for t in rows)
     # NIST 4s->np at n>=10 is 18-32 % below the published series and carries a >=30 % caveat, values unchanged

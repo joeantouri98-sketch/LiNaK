@@ -1,0 +1,79 @@
+
+<div id="spec-filter">
+  <h3>🔭 Spectrum Filter</h3>
+
+  <div class="section">
+    <div class="sec-title">Broadening type</div>
+    <label><input type="radio" name="broad" value="instrumental" checked>
+      Instrumental (fixed σ) — overview</label>
+    <label><input type="radio" name="broad" value="doppler">
+      Doppler (T-dependent) — zoom for fine structure</label>
+    <label><input type="radio" name="broad" value="natural">
+      Natural linewidth (ħ/τ) — zoom in</label>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Temperature (Doppler, K)</div>
+    <input type="range" id="temp-slider" min="10" max="2000" value="300" step="10"
+           oninput="document.getElementById('temp-val').textContent=this.value+'K'">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#666">
+      <span>10 K</span><span id="temp-val">300K</span><span>2000 K</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Instrumental σ (nm)</div>
+    <input type="number" id="inst-sigma" value="0.3" step="0.05" min="0.001"
+           style="width:80px">
+    <span style="font-size:10px;color:#888;margin-left:4px">
+      0.3nm = overview · 0.05nm = resolved · zoom for Doppler
+    </span>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Data source</div>
+    <div id="src-checks"></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Wavelength range (nm)</div>
+    <input type="number" id="wl-min-sp" placeholder="min">
+    <input type="number" id="wl-max-sp" placeholder="max">
+  </div>
+
+  <div class="section">
+    <div class="sec-title">fosc threshold (min)</div>
+    <input type="number" id="fosc-min" value="0" step="0.0001" min="0"
+           style="width:80px">
+  </div>
+
+  <div class="section">
+    <div class="sec-title">State label search</div>
+    <input type="text" id="lbl-search-sp" placeholder="e.g. 3p, 5s, d3/2 …"
+      style="width:100%;box-sizing:border-box;padding:3px 5px;
+             border:1px solid #ccc;border-radius:3px;">
+  </div>
+
+  <div id="spec-result"></div>
+  <div class="btn-row">
+    <button class="primary" onclick="applySpecFilter()">▶ Apply</button>
+    <button onclick="resetSpecFilter()">↺ Reset</button>
+  </div>
+
+  <div class="section" style="margin-top:8px;">
+    <div class="sec-title">Matching lines</div>
+    <div id="spec-pager" style="display:none;font-size:11px;color:#666;
+         margin:3px 0;display:flex;gap:5px;align-items:center;">
+      <button onclick="specTablePage(-1)" style="padding:1px 6px;font-size:11px;border:1px solid #ccc;border-radius:3px;cursor:pointer;">◀</button>
+      <span id="spec-page-info"></span>
+      <button onclick="specTablePage(1)"  style="padding:1px 6px;font-size:11px;border:1px solid #ccc;border-radius:3px;cursor:pointer;">▶</button>
+    </div>
+    <table class="line-table" id="line-table">
+      <thead><tr>
+        <th>Upper</th><th>Lower</th><th>λ (nm)</th><th>ΔE</th>
+        <th>fosc</th><th>Src</th>
+      </tr></thead>
+      <tbody id="line-tbody"></tbody>
+    </table>
+  </div>
+</div>

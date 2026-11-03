@@ -1,0 +1,45 @@
+
+<style>
+#ctrl {
+  position:fixed; top:50px; right:10px;
+  width:260px; max-height:calc(100vh - 65px); overflow-y:auto;
+  background:#fff; border:1.5px solid #c8d0e8; border-radius:10px;
+  padding:12px 14px;
+  font-family:'Helvetica Neue',Arial,sans-serif; font-size:12px;
+  box-shadow:3px 3px 12px rgba(60,80,160,.13); z-index:9999;
+}
+#ctrl h3 { margin:0 0 9px; font-size:13px; color:#1a1a2e;
+  border-bottom:2px solid #4a7ec7; padding-bottom:4px; }
+#ctrl .sec { margin-bottom:10px; }
+#ctrl .st { font-weight:bold; color:#3a5a9a; font-size:10px;
+  text-transform:uppercase; letter-spacing:.6px; margin-bottom:3px; }
+#ctrl label { display:flex; align-items:center; gap:5px;
+  margin:2px 0; cursor:pointer; }
+#ctrl input[type=checkbox] { accent-color:#4a7ec7; cursor:pointer; }
+#ctrl input[type=number], #ctrl input[type=text] {
+  font-size:11px; padding:3px 5px;
+  border:1px solid #c5cde8; border-radius:4px; }
+#ctrl button {
+  padding:4px 9px; font-size:11px;
+  border:1px solid #b0bbdd; border-radius:5px;
+  background:#f0f4ff; cursor:pointer; margin:2px; }
+#ctrl button:hover { background:#d8e4ff; }
+#ctrl button.pr { background:#4a7ec7; color:#fff; border-color:#3a6ab0; }
+#ctrl button.pr:hover { background:#3a6ab0; }
+.dot { width:9px;height:9px;border-radius:2px;
+  display:inline-block;flex-shrink:0; }
+.badge { margin-left:auto; background:#e8eeff; border-radius:8px;
+  padding:0 5px; font-size:10px; color:#4a7ec7; }
+.rb { font-size:10px; padding:3px 8px; border-radius:12px;
+  border:1px solid #b0bbdd; background:#f5f7ff;
+  cursor:pointer; margin:2px; }
+.rb.on { background:#4a7ec7; color:#fff; border-color:#3a6ab0; }
+.rb:hover { background:#d8e4ff; }
+#lt { width:100%; border-collapse:collapse; font-size:10px;
+  max-height:175px; display:block; overflow-y:auto; margin-top:4px; }
+#lt th { position:sticky;top:0; background:#eef2ff;
+  padding:2px 4px; text-align:left; border-bottom:1px solid #c8d0e8; }
+#lt td { padding:2px 4px; border-bottom:1px solid #f0f0f8; }
+#lt tr:hover td { background:#f0f6ff; }
+#mc { font-size:11px; color:#888; text-align:center; margin-bottom:3px; }
+</style>

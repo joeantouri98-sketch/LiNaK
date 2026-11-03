@@ -8,11 +8,11 @@ Independent check of the unscaled radial integral: Cs published reduced matrix e
 give published/Numerov = 1.03-1.04 for same-n s->p and 1.09-1.10 for p->s.
 """
 import json
-from pathlib import Path
+from linak.core.paths import reference_path
 
 import pytest
 
-from qdt_radial import numerov_scale_for, GAP_KNOTS
+from linak.physics.qdt_radial import numerov_scale_for, GAP_KNOTS
 
 CAL = {
     "global": {"scale": 3.3},
@@ -39,10 +39,10 @@ def test_type_outside_window_does_not_inherit_pooled_scale():
 
 
 def test_fr_ns_lifetimes_are_not_shortened_by_the_pooled_scale():
-    p = Path(__file__).resolve().parents[1] / "data_json" / "Fr_lifetimes.json"
+    p = reference_path("data_json", "Fr_lifetimes.json")
     if not p.exists():
         pytest.skip("Fr_lifetimes.json not generated")
-    st = {s["state"]: s for s in json.load(open(p, encoding="utf-8"))["lifetimes"]}
+    st = {s["state"]: s for s in json.loads(p.read_text(encoding="utf-8"))["lifetimes"]}
     # Cs ns lifetimes scaled by (n*_Fr/n*_Cs)^3 bracket the Fr values; the buggy pooled scale gave 0.55x of this
     for state, lo, hi in (("10s", 150.0, 230.0), ("20s", 3500.0, 5200.0)):
         if state in st:
