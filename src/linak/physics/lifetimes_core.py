@@ -768,6 +768,7 @@ def _build_extrap_fits(lowers, transition_table: Sequence[TransitionA], qd,
                     cc, rc = _fit_y(cand, yc, xc)
                     if best is None or rc < best[0]:
                         best = (rc, n_drop, cand, cc)
+                assert best is not None  #for mypy      
                 pool = best[2]
                 dropped_pts.append(best[1])
                 if best[0] < _EXTRAP_MAX_RMS:

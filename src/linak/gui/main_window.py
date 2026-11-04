@@ -34,6 +34,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import (
+    QEvent,
     QProcess,
     QProcessEnvironment,
     QSettings,
@@ -43,7 +44,15 @@ from PySide6.QtCore import (
     QUrl,
     Signal,
 )
-from PySide6.QtGui import QAction, QDesktopServices, QFont, QKeySequence, QShortcut, QTextCursor
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QColor,
+    QDesktopServices,
+    QKeySequence,
+    QShortcut,
+    QTextCursor,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -51,10 +60,11 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QFormLayout,
-    QGroupBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListView,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
@@ -63,10 +73,13 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QStatusBar,
     QTabWidget,
+    QToolBar,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -102,14 +115,17 @@ from .stage_process import (
     stage_program,
     start_in_own_session,
 )
+from .stage_list import DONE_ROLE, SYMBOL_ROLE, StageDelegate
 from .stages import (
     PIPELINE,
     STAGE_BY_ID,
+    STAGE_GROUPS,
     STAGE_PHYSICS,
     isotope_prerequisite_issues,
     stage_argv,
     stage_has_output,
 )
+from .theme import DARK, LIGHT, SYSTEM, THEME_NAMES, apply_theme, mono_font
 
 try:
     from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -122,6 +138,23 @@ ORG_NAME = "LiNaK"
 APP_NAME = "ControlPanel"
 # QSettings key remembering the folder picked with File > Open output folder...
 ROOT_SETTING = "root_path"
+# Set to an .ini path to keep the GUI's settings there instead of the user's
+# own store (the registry on Windows). The test suite always sets it.
+SETTINGS_FILE_ENV = "LINAK_SETTINGS_FILE"
+THEME_SETTING = "appearance/theme"
+CENTER_PANEL = 1  # the viewer: the one panel that never collapses
+SPLITTER_HANDLE_WIDTH = 7
+PANEL_REOPEN_SIZE = 280
+CONSOLE_ON_TOP_SETTING = "layout/console_panel_on_top"
+# Dragging the panel's tab bar past these fractions of the height moves it.
+MOVE_PANEL_UP_BELOW = 0.35
+MOVE_PANEL_DOWN_ABOVE = 0.65
+
+
+def open_settings() -> QSettings:
+    """The GUI's settings store."""
+    path = os.environ.get(SETTINGS_FILE_ENV)
+    return QSettings(path, QSettings.IniFormat) if path else QSettings(ORG_NAME, APP_NAME)
 
 
 class _SeedWorker(QThread):
@@ -147,10 +180,10 @@ class _SeedWorker(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("LiNaK Control Panel")
-        self.resize(1320, 840)
+        self.setWindowTitle("LiNaK")
+        self.resize(1440, 900)
 
-        self.settings = QSettings(ORG_NAME, APP_NAME)
+        self.settings = open_settings()
         self.root = self._initial_root()
         self.current_species = ""
         self.process: QProcess | None = None
@@ -163,8 +196,15 @@ class MainWindow(QMainWindow):
         self._plot_cache_dir = Path(tempfile.mkdtemp(prefix="linak_gui_"))
         self._seed_workers: set[_SeedWorker] = set()
 
-        self._build_menu()
         self._build_ui()
+        self._build_menu()
+        saved_theme = self.settings.value(THEME_SETTING, DARK)
+        self._set_theme(saved_theme if saved_theme in THEME_NAMES else DARK, save=False)
+        self._theme_actions[self.theme_name].setChecked(True)
+        QApplication.instance().styleHints().colorSchemeChanged.connect(
+            self._on_system_scheme_changed)
+        self._set_console_panel_on_top(
+            self.settings.value(CONSOLE_ON_TOP_SETTING, False, type=bool), save=False)
         self._seed_root()
         self._refresh_all()
 
@@ -280,6 +320,42 @@ class MainWindow(QMainWindow):
                 self._open_dataset_editor("csv", dataset_name)
             )
             csv_menu.addAction(action)
+
+        view_menu = self.menuBar().addMenu("&View")
+
+        theme_menu = view_menu.addMenu("Theme")
+        theme_group = QActionGroup(self)
+        self._theme_actions = {}
+        for name, label in ((SYSTEM, "Follow system"), (DARK, "Dark"), (LIGHT, "Light")):
+            action = QAction(label, self, checkable=True)
+            action.triggered.connect(lambda _checked=False, theme=name: self._set_theme(theme))
+            theme_group.addAction(action)
+            theme_menu.addAction(action)
+            self._theme_actions[name] = action
+
+        view_menu.addSeparator()
+        self._panel_actions = []
+        self._panel_sizes = {}
+        self._add_panel_action(view_menu, "Pipeline panel", "Ctrl+B",
+                               self.main_splitter, self.sidebar)
+        self._add_panel_action(view_menu, "Options panel", "Ctrl+\\",
+                               self.main_splitter, self.inspector)
+        self.bottom_action = self._add_panel_action(
+            view_menu, "Console panel", "Ctrl+`", self.center_splitter, self.bottom_panel)
+        self.panel_on_top_action = QAction("Console panel on top", self, checkable=True)
+        self.panel_on_top_action.setShortcut("Ctrl+Shift+`")
+        self.panel_on_top_action.toggled.connect(self._set_console_panel_on_top)
+        view_menu.addAction(self.panel_on_top_action)
+
+        run_menu = self.menuBar().addMenu("&Run")
+        run_action = QAction("Run stage", self)
+        run_action.setShortcut("F5")
+        run_action.triggered.connect(self._run_stage)
+        run_menu.addAction(run_action)
+        stop_action = QAction("Stop", self)
+        stop_action.setShortcut("Shift+F5")
+        stop_action.triggered.connect(self._stop_stage)
+        run_menu.addAction(stop_action)
 
         help_menu = self.menuBar().addMenu("&Help")
 
@@ -470,148 +546,149 @@ class MainWindow(QMainWindow):
         self._seed_root()
         self._refresh_all()
 
-    # UI 
+    # UI
     def _build_ui(self):
-        mono = QFont("Consolas")
-        mono.setStyleHint(QFont.Monospace)
-        mono.setPointSize(9)
+        """The window: pipeline on the left, viewer in the middle, inspector right."""
+        center = self._build_center()
+        self.inspector = self._build_inspector()
 
-        #Left: species, stages, options form, console
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
+        self.main_splitter = QSplitter(Qt.Horizontal)
+        self.sidebar = self._build_sidebar()
+        self.main_splitter.addWidget(self.sidebar)
+        self.main_splitter.addWidget(center)
+        self.main_splitter.addWidget(self.inspector)
+        self.main_splitter.setHandleWidth(SPLITTER_HANDLE_WIDTH)
+        self.main_splitter.setCollapsible(CENTER_PANEL, False)
+        self.main_splitter.setSizes([270, 850, 320])
+        self.main_splitter.setStretchFactor(0, 0)
+        self.main_splitter.setStretchFactor(1, 1)
+        self.main_splitter.setStretchFactor(2, 0)
+        self.main_splitter.splitterMoved.connect(self._sync_panel_actions)
+        self.setCentralWidget(self.main_splitter)
 
-        species_box = QGroupBox("Species")
-        sb = QVBoxLayout(species_box)
+        self.addToolBar(self._build_toolbar())
+        self.setStatusBar(QStatusBar())
+        self._update_status()
+
+    def _build_toolbar(self):
+        """Always-visible actions: what is selected, and how to run it."""
+        toolbar = QToolBar("Main")
+        toolbar.setObjectName("mainToolbar")
+        toolbar.setMovable(False)
+        toolbar.setFloatable(False)
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+
+        brand = QLabel("LiNaK")
+        brand.setObjectName("brand")
+        toolbar.addWidget(brand)
+
+        self.species_label = QLabel("No species selected.")
+        self.species_label.setObjectName("speciesTitle")
+        toolbar.addWidget(self.species_label)
+
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
+
+        open_btn = QPushButton("Open file...")
+        open_btn.clicked.connect(self._open_file_dialog)
+        toolbar.addWidget(open_btn)
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setToolTip("Reload the species and output lists from the output folder")
+        refresh_btn.clicked.connect(self._refresh_all)
+        toolbar.addWidget(refresh_btn)
+
+        self.stop_btn = QPushButton("Stop")
+        self.stop_btn.setObjectName("danger")
+        self.stop_btn.setToolTip("Stop the running stage (Shift+F5)")
+        self.stop_btn.setEnabled(False)
+        self.stop_btn.clicked.connect(self._stop_stage)
+        toolbar.addWidget(self.stop_btn)
+        self.run_btn = QPushButton("Run stage")
+        self.run_btn.setObjectName("primary")
+        self.run_btn.setToolTip("Run the selected stage (F5)")
+        self.run_btn.clicked.connect(self._run_stage)
+        toolbar.addWidget(self.run_btn)
+        return toolbar
+
+    def _section_title(self, text):
+        label = QLabel(text.upper())
+        label.setObjectName("sectionTitle")
+        return label
+
+    def _build_sidebar(self):
+        """Species chips above the pipeline, grouped in running order."""
+        sidebar = QWidget()
+        sidebar.setMinimumWidth(210)
+        layout = QVBoxLayout(sidebar)
+        layout.setContentsMargins(10, 12, 10, 8)
+        layout.setSpacing(6)
+
+        layout.addWidget(self._section_title("Species"))
         self.species_list = QListWidget()
-        self.species_list.setMaximumHeight(110)
+        self.species_list.setObjectName("speciesChips")
+        self.species_list.setFlow(QListView.LeftToRight)
+        self.species_list.setWrapping(True)
+        self.species_list.setResizeMode(QListView.Adjust)
+        self.species_list.setFixedHeight(68)
         self.species_list.itemClicked.connect(lambda it: self._set_species(it.text()))
         self.species_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.species_list.customContextMenuRequested.connect(self._species_context_menu)
         delete_key = QShortcut(QKeySequence(QKeySequence.StandardKey.Delete), self.species_list)
         delete_key.setContext(Qt.WidgetShortcut)
         delete_key.activated.connect(self._delete_highlighted_species)
-        sb.addWidget(self.species_list)
+        layout.addWidget(self.species_list)
+
         row = QHBoxLayout()
+        row.setSpacing(6)
         self.species_input = QLineEdit()
-        self.species_input.setPlaceholderText("e.g. Na, Cs, Mg_c1")
+        self.species_input.setPlaceholderText("Add a species: Fe, Mg_c1")
         self.species_input.returnPressed.connect(self._set_species_from_input)
         set_btn = QPushButton("Set")
         set_btn.clicked.connect(self._set_species_from_input)
         row.addWidget(self.species_input)
         row.addWidget(set_btn)
-        sb.addLayout(row)
-        self.species_label = QLabel("No species selected.")
-        self.species_label.setWordWrap(False)
-        self.species_label.setMaximumHeight(24)
-        self.species_label.setMinimumHeight(20)
-        sb.addWidget(self.species_label)
-        species_box.setMaximumHeight(205)
-        left_layout.addWidget(species_box, stretch=0)
+        layout.addLayout(row)
 
-        stage_box = QGroupBox("Pipeline stages")
-        st = QVBoxLayout(stage_box)
+        layout.addSpacing(8)
+        layout.addWidget(self._section_title("Pipeline"))
         self.stage_list = QListWidget()
-        self.stage_list.setMinimumHeight(260)
-        self.stage_list.setMaximumHeight(420)
-        for stage in PIPELINE:
-            item = QListWidgetItem(f"[{stage['symbol']}]  {stage['label']}")
-            item.setData(Qt.UserRole, stage["id"])
-            item.setToolTip(stage["desc"])
-            self.stage_list.addItem(item)
+        self.stage_list.setItemDelegate(StageDelegate(self.stage_list))
+        self.stage_list.setMouseTracking(True)
+        self.stage_list.setVerticalScrollMode(QListView.ScrollPerPixel)
+        for heading, stage_ids in STAGE_GROUPS:
+            header = QListWidgetItem(heading)
+            header.setFlags(Qt.NoItemFlags)
+            self.stage_list.addItem(header)
+            for stage_id in stage_ids:
+                stage = STAGE_BY_ID[stage_id]
+                item = QListWidgetItem(stage["label"])
+                item.setData(Qt.UserRole, stage["id"])
+                item.setData(SYMBOL_ROLE, stage["symbol"])
+                item.setToolTip(stage["desc"])
+                self.stage_list.addItem(item)
         self.stage_list.itemDoubleClicked.connect(lambda _it: self._run_stage())
-        st.addWidget(self.stage_list)
-        self.stage_desc = QLabel("")
-        self.stage_desc.setWordWrap(True)
         self.stage_list.currentItemChanged.connect(self._on_stage_selected)
-        st.addWidget(self.stage_desc)
+        layout.addWidget(self.stage_list, stretch=1)
+        return sidebar
 
-        st.addWidget(QLabel("Options for this stage:"))
-        self.flags_form = QFormLayout()
-        self.flags_form.setLabelAlignment(Qt.AlignRight)
-        flags_holder = QWidget()
-        flags_holder.setLayout(self.flags_form)
-        flags_scroll = QScrollArea()
-        flags_scroll.setWidget(flags_holder)
-        flags_scroll.setWidgetResizable(True)
-        flags_scroll.setMinimumHeight(180)
-        flags_scroll.setMaximumHeight(360)
-        flags_scroll.setFrameShape(QScrollArea.StyledPanel)
-        st.addWidget(flags_scroll)
+    def _build_center(self):
+        """The viewer, as large as possible, with the console folding away below."""
+        self.center_tabs = QTabWidget()
+        self.center_tabs.setDocumentMode(True)
 
-        self.cmd_preview = QLabel("")
-        self.cmd_preview.setWordWrap(True)
-        self.cmd_preview.setFont(mono)
-        st.addWidget(self.cmd_preview)
-
-        run_row = QHBoxLayout()
-        self.run_btn = QPushButton("Run selected stage")
-        self.run_btn.clicked.connect(self._run_stage)
-        self.stop_btn = QPushButton("Stop")
-        self.stop_btn.setEnabled(False)
-        self.stop_btn.clicked.connect(self._stop_stage)
-        run_row.addWidget(self.run_btn)
-        run_row.addWidget(self.stop_btn)
-        st.addLayout(run_row)
-        left_layout.addWidget(stage_box, stretch=3)
-
-        # Right: output browser + viewer
-        right = QWidget()
-        right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(6, 6, 6, 6)
-        right_layout.setSpacing(6)
-
-        tabs = QTabWidget()
-
-        self.console = QPlainTextEdit()
-        self.console.setReadOnly(True)
-        console_font = QFont("Consolas")
-        console_font.setStyleHint(QFont.Monospace)
-        console_font.setPointSize(9)
-        self.console.setFont(console_font)
-        tabs.addTab(self.console, "Console")
-
-        self.overview_view = SpeciesOverviewWidget()
-        tabs.addTab(self.overview_view, "Overview")
-
-        self.species_html_list = QListWidget()
-        self.species_html_list.itemClicked.connect(self._on_output_clicked)
-        tabs.addTab(self.species_html_list, "Species HTML plots")
-
-        self.species_json_list = QListWidget()
-        self.species_json_list.itemClicked.connect(self._on_output_clicked)
-        tabs.addTab(self.species_json_list, "Species JSON data")
-
-        self.shared_outputs_list = QListWidget()
-        self.shared_outputs_list.itemClicked.connect(self._on_output_clicked)
-        tabs.addTab(self.shared_outputs_list, "Shared / cross-element")
-
-        right_splitter = QSplitter(Qt.Vertical)
-        right_splitter.addWidget(tabs)
-
-        open_row = QHBoxLayout()
-        open_btn = QPushButton("Open file...")
-        open_btn.clicked.connect(self._open_file_dialog)
-        refresh_btn = QPushButton("Refresh lists")
-        refresh_btn.clicked.connect(self._refresh_all)
-        open_row.addWidget(open_btn)
-        open_row.addWidget(refresh_btn)
-        open_row.addStretch(1)
-        right_layout.addLayout(open_row)
-
-        viewer_box = QGroupBox("Viewer")
-        vb = QVBoxLayout(viewer_box)
         self.viewer_stack = QStackedWidget()
-
         if HAS_WEBENGINE:
             self.web_view = QWebEngineView()
-            self.viewer_stack.addWidget(self.web_view) 
+            self.viewer_stack.addWidget(self.web_view)
         else:
             self.web_view = None
             self.viewer_stack.addWidget(QLabel("(unused)"))
 
         self.json_view = QPlainTextEdit()
+        self.json_view.setObjectName("jsonView")
         self.json_view.setReadOnly(True)
-        self.json_view.setFont(mono)
+        self.json_view.setFont(mono_font())
         self.viewer_stack.addWidget(self.json_view)  # index 1
 
         fallback = QWidget()
@@ -630,30 +707,200 @@ class MainWindow(QMainWindow):
         fb.addStretch(1)
         self.viewer_stack.addWidget(fallback)  # index 2
 
-        placeholder = QLabel("Select a species and an output file to view it here.")
+        placeholder = QLabel(
+            "Pick a species and a stage, then press Run.\n"
+            "Plots and data appear under the tabs on the right.")
+        placeholder.setObjectName("emptyState")
         placeholder.setAlignment(Qt.AlignCenter)
         self.viewer_stack.addWidget(placeholder)  # index 3
         self.viewer_stack.setCurrentIndex(3)
+        self.center_tabs.addTab(self.viewer_stack, "Viewer")
 
-        vb.addWidget(self.viewer_stack)
-        right_splitter.addWidget(viewer_box)
-        right_splitter.setChildrenCollapsible(False)
-        right_splitter.setHandleWidth(8)
-        right_splitter.setStretchFactor(0, 0)
-        right_splitter.setStretchFactor(1, 1)
-        right_splitter.setSizes([260, 620])
-        right_layout.addWidget(right_splitter, stretch=1)
+        self.overview_view = SpeciesOverviewWidget()
+        self.center_tabs.addTab(self.overview_view, "Overview")
 
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.addWidget(left)
-        splitter.addWidget(right)
-        splitter.setSizes([420, 1100])
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        self.setCentralWidget(splitter)
+        self.console = QPlainTextEdit()
+        self.console.setObjectName("console")
+        self.console.setReadOnly(True)
+        self.console.setFont(mono_font())
+        self.bottom_overview = SpeciesOverviewWidget()
+        self.bottom_tabs = QTabWidget()
+        self.bottom_tabs.setDocumentMode(True)
+        self.bottom_tabs.addTab(self.console, "Console")
+        self.bottom_tabs.addTab(self.bottom_overview, "Overview")
+        self.move_panel_btn = QToolButton()
+        self.move_panel_btn.setText("\u21c5")
+        self.move_panel_btn.clicked.connect(
+            lambda: self._set_console_panel_on_top(not self._console_panel_on_top()))
+        self.bottom_tabs.setCornerWidget(self.move_panel_btn)
+        self.bottom_tabs.tabBar().setToolTip(
+            "Drag up or down to move this panel above or below the viewer")
+        self.bottom_tabs.tabBar().installEventFilter(self)
 
-        self.setStatusBar(QStatusBar())
-        self._update_status()
+        self.bottom_panel = QWidget()
+        self.bottom_panel.setObjectName("bottomPanel")
+        self.bottom_panel.setAttribute(Qt.WA_StyledBackground)
+        bottom_layout = QVBoxLayout(self.bottom_panel)
+        bottom_layout.setContentsMargins(0, 1, 0, 0)
+        bottom_layout.addWidget(self.bottom_tabs)
+
+        # Overview can sit in either place; each view refreshes when it is showing.
+        self._overview_places = (
+            (self.center_tabs, self.overview_view),
+            (self.bottom_tabs, self.bottom_overview),
+        )
+        self._stale_overviews = set()
+        self.center_tabs.currentChanged.connect(self._refresh_shown_overviews)
+        self.bottom_tabs.currentChanged.connect(self._refresh_shown_overviews)
+
+        self.center_splitter = QSplitter(Qt.Vertical)
+        self.center_splitter.setObjectName("centerSplitter")
+        self.center_splitter.addWidget(self.center_tabs)
+        self.center_splitter.addWidget(self.bottom_panel)
+        self.center_splitter.setHandleWidth(SPLITTER_HANDLE_WIDTH)
+        self.center_splitter.splitterMoved.connect(self._sync_panel_actions)
+        self.center_splitter.setStretchFactor(0, 1)
+        self.center_splitter.setStretchFactor(1, 0)
+        self.center_splitter.setSizes([660, 170])
+        self.center_splitter.setCollapsible(0, False)
+        return self.center_splitter
+
+    def _build_inspector(self):
+        """Right panel: the selected stage's options, then what it produced."""
+        tabs = QTabWidget()
+        tabs.setDocumentMode(True)
+        tabs.setMinimumWidth(280)
+
+        options = QWidget()
+        layout = QVBoxLayout(options)
+        layout.setContentsMargins(12, 12, 8, 10)
+        layout.setSpacing(8)
+        self.stage_desc = QLabel("")
+        self.stage_desc.setObjectName("muted")
+        self.stage_desc.setWordWrap(True)
+        layout.addWidget(self.stage_desc)
+
+        self.flags_form = QFormLayout()
+        self.flags_form.setRowWrapPolicy(QFormLayout.WrapAllRows)
+        self.flags_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.flags_form.setVerticalSpacing(4)
+        flags_holder = QWidget()
+        flags_holder.setLayout(self.flags_form)
+        flags_scroll = QScrollArea()
+        flags_scroll.setWidget(flags_holder)
+        flags_scroll.setWidgetResizable(True)
+        flags_scroll.setFrameShape(QFrame.NoFrame)
+        layout.addWidget(flags_scroll, stretch=1)
+
+        layout.addWidget(self._section_title("Command"))
+        self.cmd_preview = QLabel("")
+        self.cmd_preview.setObjectName("commandPreview")
+        self.cmd_preview.setWordWrap(True)
+        self.cmd_preview.setFont(mono_font())
+        self.cmd_preview.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(self.cmd_preview)
+        tabs.addTab(options, "Options")
+
+        self.species_html_list = QListWidget()
+        self.species_html_list.itemClicked.connect(self._on_output_clicked)
+        tabs.addTab(self.species_html_list, "Plots")
+
+        self.species_json_list = QListWidget()
+        self.species_json_list.itemClicked.connect(self._on_output_clicked)
+        tabs.addTab(self.species_json_list, "Data")
+
+        self.shared_outputs_list = QListWidget()
+        self.shared_outputs_list.itemClicked.connect(self._on_output_clicked)
+        tabs.addTab(self.shared_outputs_list, "Shared")
+        return tabs
+
+    def _set_theme(self, name: str, save: bool = True) -> None:
+        """Apply theme *name* to the app and the web view's blank background."""
+        self.theme_name = name
+        tokens = apply_theme(QApplication.instance(), name)
+        if self.web_view is not None:
+            self.web_view.page().setBackgroundColor(QColor(tokens.bg))
+        if save:
+            self.settings.setValue(THEME_SETTING, name)
+
+    def _on_system_scheme_changed(self, _scheme) -> None:
+        if self.theme_name == SYSTEM:
+            self._set_theme(SYSTEM, save=False)
+
+    def _show_console(self) -> None:
+        self.bottom_action.setChecked(True)
+        self.bottom_tabs.setCurrentWidget(self.console)
+
+    def _console_panel_on_top(self) -> bool:
+        return self.center_splitter.indexOf(self.bottom_panel) == 0
+
+    def _set_console_panel_on_top(self, on_top: bool, save: bool = True) -> None:
+        """Put the Console / Overview panel above or below the viewer."""
+        splitter = self.center_splitter
+        if on_top != self._console_panel_on_top():
+            viewer_height, panel_height = (
+                reversed(splitter.sizes()) if self._console_panel_on_top()
+                else splitter.sizes())
+            splitter.insertWidget(0, self.bottom_panel if on_top else self.center_tabs)
+            splitter.setSizes(
+                [panel_height, viewer_height] if on_top else [viewer_height, panel_height])
+            for widget, collapsible, stretch in (
+                    (self.center_tabs, False, 1), (self.bottom_panel, True, 0)):
+                splitter.setCollapsible(splitter.indexOf(widget), collapsible)
+                splitter.setStretchFactor(splitter.indexOf(widget), stretch)
+        self.bottom_panel.setProperty("onTop", on_top)
+        self.bottom_panel.style().unpolish(self.bottom_panel)
+        self.bottom_panel.style().polish(self.bottom_panel)
+        self.move_panel_btn.setToolTip(
+            f"Move this panel {'below' if on_top else 'above'} the viewer")
+        self.panel_on_top_action.blockSignals(True)
+        self.panel_on_top_action.setChecked(on_top)
+        self.panel_on_top_action.blockSignals(False)
+        if save:
+            self.settings.setValue(CONSOLE_ON_TOP_SETTING, on_top)
+
+    def eventFilter(self, watched, event):
+        """Dragging the panel's tab bar moves the panel past the viewer."""
+        if (watched is self.bottom_tabs.tabBar()
+                and event.type() == QEvent.MouseMove
+                and event.buttons() & Qt.LeftButton):
+            y = self.center_splitter.mapFromGlobal(event.globalPosition().toPoint()).y()
+            fraction = y / max(self.center_splitter.height(), 1)
+            if not self._console_panel_on_top() and fraction < MOVE_PANEL_UP_BELOW:
+                self._set_console_panel_on_top(True)
+            elif self._console_panel_on_top() and fraction > MOVE_PANEL_DOWN_ABOVE:
+                self._set_console_panel_on_top(False)
+        return super().eventFilter(watched, event)
+
+    def _add_panel_action(self, menu, label, shortcut, splitter, panel):
+        """A View menu tick box that opens and closes one splitter panel."""
+        action = QAction(label, self, checkable=True, checked=True)
+        action.setShortcut(shortcut)
+        action.toggled.connect(
+            lambda shown: self._set_panel_open(splitter, panel, shown))
+        menu.addAction(action)
+        self._panel_actions.append((action, splitter, panel))
+        return action
+
+    def _set_panel_open(self, splitter, panel, shown) -> None:
+        """Open or collapse a panel; reopening restores the size it had."""
+        index = splitter.indexOf(panel)
+        sizes = splitter.sizes()
+        if shown == (sizes[index] > 0):
+            return
+        if shown:
+            sizes[index] = self._panel_sizes.get(panel, PANEL_REOPEN_SIZE)
+        else:
+            self._panel_sizes[panel] = sizes[index]
+            sizes[index] = 0
+        splitter.setSizes(sizes)
+
+    def _sync_panel_actions(self, *_position) -> None:
+        """Keep the View menu ticks true after a panel is dragged shut or open."""
+        for action, splitter, panel in self._panel_actions:
+            action.blockSignals(True)
+            action.setChecked(splitter.sizes()[splitter.indexOf(panel)] > 0)
+            action.blockSignals(False)
 
     #species
     def _set_species_from_input(self):
@@ -748,11 +995,12 @@ class MainWindow(QMainWindow):
         if not species:
             return
         self.current_species = species
-        self.species_input.setText(species)
+        self.species_input.clear()
         self.species_label.setText(f"Current species: {species}")
-        existing = self.species_list.findItems(species, Qt.MatchExactly)
-        if not existing:
+        if not self.species_list.findItems(species, Qt.MatchExactly):
             self.species_list.addItem(species)
+        self.species_list.setCurrentItem(
+            self.species_list.findItems(species, Qt.MatchExactly)[0])
         self._refresh_stage_markers()
         self._refresh_species_outputs()
         self._refresh_overview()
@@ -766,7 +1014,7 @@ class MainWindow(QMainWindow):
 
     def _update_stage_desc(self):
         stage = self._selected_stage()
-        text = "" if stage is None else stage["desc"].replace(
+        text = "Select a stage from the pipeline." if stage is None else stage["desc"].replace(
             "{el}", self.current_species or "<el>")
         self.stage_desc.setText(text)
 
@@ -1067,6 +1315,7 @@ class MainWindow(QMainWindow):
         program, args = stage_program(pipeline_args)
 
         self.console.clear()
+        self._show_console()
         self._log(f"$ {program} {' '.join(args)}")
         self.statusBar().showMessage(f"Running {stage['label']} for {self.current_species}...")
         self.run_btn.setEnabled(False)
@@ -1217,11 +1466,11 @@ class MainWindow(QMainWindow):
         ws = Workspace(root=self.root)
         for i in range(self.stage_list.count()):
             item = self.stage_list.item(i)
-            stage = STAGE_BY_ID[item.data(Qt.UserRole)]
-            done = bool(self.current_species) and stage_has_output(
-                stage, ws, self.current_species)
-            mark = "\u2713 " if done else "\u00b7  "
-            item.setText(f"{mark}[{stage['symbol']}]  {stage['label']}")
+            stage_id = item.data(Qt.UserRole)
+            if stage_id is None:  # a group heading
+                continue
+            item.setData(DONE_ROLE, bool(self.current_species) and stage_has_output(
+                STAGE_BY_ID[stage_id], ws, self.current_species))
 
     def _refresh_species_outputs(self):
         self.species_html_list.clear()
@@ -1275,7 +1524,15 @@ class MainWindow(QMainWindow):
                 self.species_list.addItem(sp)
 
     def _refresh_overview(self):
-        self.overview_view.refresh(self.root, self.current_species)
+        self._stale_overviews.update(view for _tabs, view in self._overview_places)
+        self._refresh_shown_overviews()
+
+    def _refresh_shown_overviews(self, *_index) -> None:
+        """Refresh the Overviews on show; a hidden one waits, as reading is slow."""
+        for tabs, view in self._overview_places:
+            if tabs.currentWidget() is view and view in self._stale_overviews:
+                self._stale_overviews.discard(view)
+                view.refresh(self.root, self.current_species)
 
     def _refresh_all(self):
         self._update_status()
@@ -1297,6 +1554,7 @@ class MainWindow(QMainWindow):
         self._load_output(path, kind)
 
     def _load_output(self, path: Path, kind: str):
+        self.center_tabs.setCurrentWidget(self.viewer_stack)
         if kind == "PLOT":
             if HAS_WEBENGINE:
                 self.viewer_stack.setCurrentIndex(0)

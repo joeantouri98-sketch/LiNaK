@@ -75,14 +75,11 @@ def test_seeding_into_a_checkout_stays_under_dot_linak(tmp_path, fake_bundle):
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def window(tmp_path, monkeypatch, isolated_user_data):
-    """A MainWindow with QSettings redirected into *tmp_path*."""
+    """A MainWindow factory; conftest keeps its settings in a temporary file."""
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance() or QApplication([])
-    QSettings.setDefaultFormat(QSettings.IniFormat)
-    QSettings.setPath(QSettings.IniFormat, QSettings.UserScope, str(tmp_path / "settings"))
     from linak.gui.main_window import MainWindow
 
     created = []

@@ -42,6 +42,16 @@ def isolated_user_data(tmp_path_factory) -> Path:
         yield home
 
 
+@pytest.fixture(autouse=True)
+def isolated_gui_settings(tmp_path, monkeypatch) -> None:
+    """Give each test its own settings file.
+
+    Without this the GUI uses the developer's real settings, which on Windows
+    are in the registry: the remembered output folder, theme and layout.
+    """
+    monkeypatch.setenv("LINAK_SETTINGS_FILE", str(tmp_path / "gui_settings.ini"))
+
+
 @pytest.fixture(scope="session")
 def root_dir() -> Path:
     return ROOT

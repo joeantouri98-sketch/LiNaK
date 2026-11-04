@@ -88,7 +88,7 @@ PIPELINE = [
          ],
          outputs=["data/{el}.json", "data/{el}_soc.json"]),
 
-    dict(id="orca_to_json", label="Re-parse ORCA output", symbol="->JSON",
+    dict(id="orca_to_json", label="Re-parse ORCA output", symbol="→JSON",
          pipeline="orca_to_json",
          desc="Re-parses existing orca_outputs/<species>/<run>/ files into data/ "
               "without re-running ORCA (e.g. after hand-editing an input file).",
@@ -137,7 +137,7 @@ PIPELINE = [
          ],
          outputs=["data/{el}_transitions.json"]),
 
-    dict(id="lifetimes", label="Lifetimes", symbol="A/tau", pipeline="lifetimes",
+    dict(id="lifetimes", label="Lifetimes", symbol="A/τ", pipeline="lifetimes",
          desc="Einstein A coefficients and radiative lifetimes.",
          positional=lambda el: [el],
          flags=[
@@ -150,7 +150,7 @@ PIPELINE = [
          ],
          outputs=["data/{el}_lifetimes.json"]),
 
-    dict(id="polarizability", label="Polarizability", symbol="alpha(w)",
+    dict(id="polarizability", label="Polarizability", symbol="α(ω)",
          pipeline="polarizability",
          desc="Dynamic polarizability, C6, magic wavelengths, AC Stark.",
          positional=lambda el: [el],
@@ -290,7 +290,7 @@ PIPELINE = [
          outputs=["data/{el}_feshbach_out.json",
                   "plots/{el}/{el}_feshbach.html"]),
 
-    dict(id="grotrian", label="Grotrian diagram", symbol="hv", pipeline="plotinteractive",
+    dict(id="grotrian", label="Grotrian diagram", symbol="hν", pipeline="plotinteractive",
          desc="Interactive level diagram (plotinteractive). Needs ORCA data already "
               "generated (the ORCA stage above) for this species.",
          positional=lambda el: [el],
@@ -432,7 +432,7 @@ PIPELINE = [
          ],
          outputs=["plots/{el}/{el}_grotrian.html"]),
 
-    dict(id="spectra", label="Spectrum", symbol="lambda", pipeline="spectra",
+    dict(id="spectra", label="Spectrum", symbol="λ", pipeline="spectra",
          desc="Absorption + emission spectral bar chart.",
          positional=lambda el: [el],
          flags=[
@@ -442,7 +442,7 @@ PIPELINE = [
          ],
          outputs=["plots/{el}/{el}_spectra.html"]),
 
-    dict(id="orbital3d", label="Orbital viewer", symbol="psi^2", pipeline="orbital3d",
+    dict(id="orbital3d", label="Orbital viewer", symbol="|ψ|²", pipeline="orbital3d",
          desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
          positional=lambda el: [el],
          flags=[
@@ -458,7 +458,7 @@ PIPELINE = [
          ],
          outputs=["plots/{el}/{el}_orbital3d.html"]),
 
-    dict(id="compare", label="Compare elements", symbol="Sigma",
+    dict(id="compare", label="Compare elements", symbol="Σ",
          pipeline="compare_elements",
          desc="Adds selected element(s) to the cross-element CompTable.",
          positional=lambda el: [],
@@ -487,6 +487,16 @@ PIPELINE = [
          outputs=["plots/scattering_rate.html"]),
 
 ]
+# The sidebar's sections, in running order. Every stage is in exactly one
+# (tests/test_gui_stage_table.py checks that).
+STAGE_GROUPS = (
+    ("Quantum chemistry", ("runorca", "orca_to_json")),
+    ("Atomic structure", ("rydberg", "transitions", "lifetimes")),
+    ("Atomic response", ("polarizability", "blackbody", "tweezer", "hyperfine", "feshbach")),
+    ("Visualise", ("grotrian", "spectra", "orbital3d")),
+    ("Compare", ("compare", "scattering")),
+)
+
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
 
 # Short physics context per stage for the Help dialog's "Pipeline stages" tab, summarized from HTMLs/Pipeline Overview.html.

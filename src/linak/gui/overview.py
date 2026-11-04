@@ -9,16 +9,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import (
+    QAbstractScrollArea,
     QApplication,
     QFormLayout,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -28,6 +29,12 @@ from PySide6.QtWidgets import (
 from linak.core.workspace import Workspace
 
 from .stages import PIPELINE, stage_has_output
+
+# Cards flow into as many columns of at least this width as fit.
+CARD_MIN_WIDTH = 300
+MAX_CARD_COLUMNS = 3
+# A table's last column (notes, references) is capped; the tooltip has it in full.
+LAST_COLUMN_MAX_WIDTH = 260
 
 
 class SpeciesOverviewWidget(QWidget):
@@ -39,16 +46,24 @@ class SpeciesOverviewWidget(QWidget):
         self.root = Path(".")
         self.species = ""
 
+        self._cards: list[QGroupBox] = []
+        self._column_count = 0
         self._root_widget = QWidget(self)
-        self._cards_layout = QGridLayout(self._root_widget)
-        self._cards_layout.setColumnStretch(0, 1)
-        self._cards_layout.setColumnStretch(1, 1)
+        root_layout = QVBoxLayout(self._root_widget)
+        self._columns_row = QHBoxLayout()
+        self._columns_row.setSpacing(10)
+        self._wide_cards = QVBoxLayout()
+        root_layout.addLayout(self._columns_row)
+        root_layout.addLayout(self._wide_cards)
+        root_layout.addStretch(1)
 
         outer = QVBoxLayout(self)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._root_widget)
-        outer.addWidget(scroll)
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._scroll.setWidget(self._root_widget)
+        self._scroll.viewport().installEventFilter(self)
+        outer.addWidget(self._scroll)
 
         btn_row = QHBoxLayout()
         refresh_btn = QPushButton("Refresh overview")
@@ -76,13 +91,67 @@ class SpeciesOverviewWidget(QWidget):
         placeholder = QGroupBox("Species overview")
         form = QFormLayout(placeholder)
         form.addRow("Status", QLabel("Select a species to view the computed summary."))
-        self._add_card(placeholder, 0, 0)
+        self._show_cards([placeholder])
 
     def _clear_cards(self):
-        while self._cards_layout.count():
-            item = self._cards_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        self._take_cards_out_of_layouts()
+        for card in self._cards:
+            card.deleteLater()
+        self._cards = []
+
+    def _take_cards_out_of_layouts(self):
+        """Empty the layouts; the cards stay alive to be placed again."""
+        while self._columns_row.count():
+            column = self._columns_row.takeAt(0).layout()
+            while column.count():
+                column.takeAt(0)
+            column.deleteLater()
+        while self._wide_cards.count():
+            self._wide_cards.takeAt(0)
+
+    def _show_cards(self, cards):
+        self._cards = cards
+        self._layout_cards()
+
+    def _columns_that_fit(self):
+        width = self._scroll.viewport().width()
+        return max(1, min(MAX_CARD_COLUMNS, width // CARD_MIN_WIDTH))
+
+    def _layout_cards(self):
+        """Put each card in the shortest column; tables get a full-width row."""
+        self._take_cards_out_of_layouts()
+        self._column_count = self._columns_that_fit()
+        columns = [QVBoxLayout() for _ in range(self._column_count)]
+        heights = [0] * self._column_count
+        for card in self._cards:
+            if card.property("wide"):
+                self._wide_cards.addWidget(card)
+                continue
+            shortest = heights.index(min(heights))
+            columns[shortest].addWidget(card)
+            heights[shortest] += card.sizeHint().height()
+        for column in columns:
+            column.addStretch(1)
+            self._columns_row.addLayout(column, 1)
+
+    def eventFilter(self, watched, event):
+        """Follow the visible width: never wider than it, reflowing as it changes."""
+        if watched is self._scroll.viewport() and event.type() == QEvent.Resize:
+            self._root_widget.setMaximumWidth(event.size().width())
+            if self._cards and self._columns_that_fit() != self._column_count:
+                self._layout_cards()
+        return super().eventFilter(watched, event)
+
+    @staticmethod
+    def _fit_table(table):
+        """Keep a table inside its card: it scrolls itself if it is too wide."""
+        table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
+        table.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        table.setTextElideMode(Qt.ElideRight)
+        table.verticalHeader().hide()
+        last = table.columnCount() - 1
+        table.setColumnWidth(last, min(table.columnWidth(last), LAST_COLUMN_MAX_WIDTH))
+        table.horizontalHeader().setStretchLastSection(True)
 
     @staticmethod
     def _number(value):
@@ -152,17 +221,17 @@ class SpeciesOverviewWidget(QWidget):
             return None, f"expected a JSON object, found {type(data).__name__}"
         return data, None
 
-    def _add_card(self, card, row, col):
-        self._cards_layout.addWidget(card, row, col)
-
     def _card(self, title, rows):
         self._summary_parts.append(
             "\n".join([title, *(f"  {label}: {value}" for label, value in rows)]))
         box = QGroupBox(title)
         form = QFormLayout(box)
         form.setLabelAlignment(Qt.AlignRight)
+        form.setRowWrapPolicy(QFormLayout.WrapLongRows)
         for label, value in rows:
-            form.addRow(label, QLabel(str(value)))
+            text = QLabel(str(value))
+            text.setWordWrap(True)
+            form.addRow(label, text)
         return box
 
     def _make_species_card(self, core_data, rydberg_data):
@@ -479,6 +548,11 @@ class SpeciesOverviewWidget(QWidget):
         if states:
             summary.addRow("Computed states", QLabel(str(len(states))))
 
+        summary.setRowWrapPolicy(QFormLayout.WrapLongRows)
+        for index in range(summary.count()):
+            label = summary.itemAt(index).widget()
+            if isinstance(label, QLabel):
+                label.setWordWrap(True)
         outer.addLayout(summary)
 
         if states:
@@ -497,12 +571,8 @@ class SpeciesOverviewWidget(QWidget):
             ])
             constants.setRowCount(0)
             constants.setWordWrap(False)
-            constants.setTextElideMode(Qt.ElideNone)
             constants.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
             constants.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            constants.setSizeAdjustPolicy(
-                QTableWidget.AdjustToContents
-            )
 
             row_index = 0
             for state in states:
@@ -537,6 +607,7 @@ class SpeciesOverviewWidget(QWidget):
 
             constants.resizeColumnsToContents()
             constants.resizeRowsToContents()
+            self._fit_table(constants)
 
             
             header_height = constants.horizontalHeader().height()
@@ -552,6 +623,7 @@ class SpeciesOverviewWidget(QWidget):
             constants.setMaximumHeight(total_height)
 
             outer.addWidget(constants)
+            box.setProperty("wide", True)
 
         if not states and not clock:
             outer.addWidget(
@@ -622,10 +694,8 @@ class SpeciesOverviewWidget(QWidget):
         ])
         table.setRowCount(len(resonances))
         table.setWordWrap(False)
-        table.setTextElideMode(Qt.ElideNone)
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        table.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
 
         for row_index, resonance in enumerate(resonances):
             values = [
@@ -645,6 +715,7 @@ class SpeciesOverviewWidget(QWidget):
 
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
+        self._fit_table(table)
 
         header_height = table.horizontalHeader().height()
         frame_height = table.frameWidth() * 2
@@ -659,6 +730,7 @@ class SpeciesOverviewWidget(QWidget):
         table.setMaximumHeight(total_height)
 
         layout.addWidget(table)
+        box.setProperty("wide", True)
         return box
 
     def refresh(self, root, species):
@@ -720,7 +792,4 @@ class SpeciesOverviewWidget(QWidget):
             self._make_feshbach_channels_card(fesh),
         ]
 
-        for index, card in enumerate(cards):
-            row = index // 2
-            col = index % 2
-            self._add_card(card, row, col)
+        self._show_cards(cards)

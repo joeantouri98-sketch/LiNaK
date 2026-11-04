@@ -12,7 +12,7 @@ import importlib
 
 import pytest
 
-from linak.gui.stages import PIPELINE
+from linak.gui.stages import PIPELINE, STAGE_GROUPS
 from linak.pipelines.runner import IMPLEMENTATIONS
 
 # GUI defaults that deliberately differ from the CLI's, with the reason.
@@ -83,3 +83,8 @@ def test_stage_flags_match_the_pipeline_parser(stage):
         else:
             assert str(cli_default) == str(default), (
                 f"{stage['id']}: GUI default {name}={default!r} != CLI {cli_default!r}")
+
+
+def test_every_stage_is_in_exactly_one_sidebar_group():
+    grouped = [stage_id for _heading, stage_ids in STAGE_GROUPS for stage_id in stage_ids]
+    assert sorted(grouped) == sorted(stage["id"] for stage in PIPELINE)
