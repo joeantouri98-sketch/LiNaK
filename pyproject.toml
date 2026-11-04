@@ -48,6 +48,7 @@ linak = [
     "resources/Moments/*",
     "resources/NIST Levels/*",
     "resources/data_json/**",
+    "resources/extrapolation/**",
     "resources/f_values/*",
     "resources/orca_outputs/**",
     "resources/plots/**",

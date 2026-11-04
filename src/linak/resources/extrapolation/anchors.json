@@ -1,0 +1,126 @@
+{
+ "_comment": "Anchor data and error model for the extrapolation. User overrides are layered on top in the workspace; this packaged file is never edited at run time.",
+ "ridge": {
+  "tau0": 0.15,
+  "tau1": 3.0,
+  "tau2_threshold_aware": 1.0,
+  "threshold_aware_scale": 0.01
+ },
+ "ssys_by_type": {
+  "precision": 0.08,
+  "nist": 0.15
+ },
+ "floor_unc": 0.02,
+ "low_weight_unc": 0.5,
+ "extra_sys": [
+  {
+   "species": "K",
+   "J": 0.5,
+   "nu_min": 9.0,
+   "sigma": 0.3,
+   "why": "SSC13 ab initio vs Theodosiou/NIST differ above n~8"
+  },
+  {
+   "species": "K",
+   "J": 1.5,
+   "nu_min": 9.0,
+   "sigma": 0.3,
+   "why": "same"
+  },
+  {
+   "species": "Cs",
+   "J": 0.5,
+   "nu_min": 10.0,
+   "sigma": 0.25,
+   "why": "NIST measurements and all-order paper disagree up to 20% in D at n=12"
+  }
+ ],
+ "low_weight_tp_tags": [
+  "extrap",
+  "T817",
+  "T117"
+ ],
+ "low_weight_rules": [],
+ "threshold_anchors": {
+  "Rb": {
+   "sigma_Mb": 0.076,
+   "unc_Mb": 0.015,
+   "src": "Ciampini 2002 (296 nm)"
+  },
+  "K": {
+   "sigma_Mb": 0.01,
+   "unc_Mb": 0.0025,
+   "src": "Theodosiou 2022 recommended 0.010(1), widened to cover 0.007-0.012"
+  },
+  "Na": {
+   "sigma_Mb": 0.117,
+   "unc_Mb": 0.015,
+   "src": "lit 0.105-0.129"
+  }
+ },
+ "precision_anchors": {
+  "src": "Tran Tan & Derevianko 2023, <6S||D||nP_J> (e a0), (D, relative unc in D); NOT yet verified against the PDF",
+  "Cs": {
+   "0.5": {
+    "6": [
+     4.4966,
+     0.0012
+    ],
+    "7": [
+     0.2752,
+     0.0065
+    ],
+    "8": [
+     0.0753,
+     0.013
+    ],
+    "9": [
+     0.03077,
+     0.02
+    ],
+    "10": [
+     0.01529,
+     0.027
+    ],
+    "11": [
+     0.00875,
+     0.044
+    ],
+    "12": [
+     0.00524,
+     0.052
+    ]
+   },
+   "1.5": {
+    "6": [
+     6.3288,
+     0.0012
+    ],
+    "7": [
+     0.5704,
+     0.0034
+    ],
+    "8": [
+     0.2097,
+     0.0049
+    ],
+    "9": [
+     0.11332,
+     0.0063
+    ],
+    "10": [
+     0.07297,
+     0.0056
+    ],
+    "11": [
+     0.05256,
+     0.0089
+    ],
+    "12": [
+     0.04014,
+     0.0095
+    ]
+   }
+  }
+ }
+}
