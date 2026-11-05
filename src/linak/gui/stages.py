@@ -429,14 +429,13 @@ PIPELINE = [
                   choices=[
                       ("1", "Grotrian diagram only"),
                       ("2", "Grotrian + Spectrum"),
-                      ("3", "Grotrian + Spectrum + Excited\u2194excited Grotrian"),
-                      ("4", "All four, incl. 3D view (default)"),
+                      ("3", "All three, incl. Excited\u2194excited Grotrian (default)"),
                   ],
-                  default="4",
+                  default="3",
                   help="Cumulative, not exclusive: each option always includes every "
                        "plot below it too, so '2' already writes both the Grotrian "
                        "diagram and the Spectrum. Matches the script's own default "
-                       "of generating all four."),
+                       "of generating all three."),
              dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
                   help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
          ],
