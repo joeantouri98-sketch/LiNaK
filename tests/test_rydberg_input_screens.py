@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from linak.physics.qdt_radial import CALIBRATED_NSTAR_MAX, numerov_scale_for
+from linak.physics.qdt_radial import (
+    CALIBRATED_NSTAR_MAX,
+    level_defect,
+    fit_numerov_scale_from_nist,
+    level_defects_from_rydberg,
+    numerov_fosc,
+    numerov_scale_for,
+)
 from linak.physics.rydberg import Ry, fit_ritz_defects, screen_nist_levels
 
 IE = 5.0
@@ -97,3 +104,68 @@ def test_noisy_series_without_uncertainties_stays_unfitted():
 def test_five_precise_points_need_the_weighted_fit():
     levels = [_ritz_level(n, 2.65, 0.3, 1e-7) for n in range(5, 12)]
     assert fit_ritz_defects(IE, levels)["p"]["weighted"] is True
+
+
+def _ryd(**extra):
+    return dict(kind="neutral", rydberg_constant_eV=Ry, ionization_energy_eV=IE,
+                quantum_defects={"s": 3.14, "p": 2.68},
+                ground_state={"n": 5, "l": "s"},
+                excitations=[
+                    dict(n=30, l="p", J="1/2", energy_eV=-Ry / (30 - 2.655) ** 2),
+                    dict(n=30, l="p", J="3/2", energy_eV=-Ry / (30 - 2.642) ** 2),
+                    dict(n=30, l="s", J=None, energy_eV=-Ry / (30 - 3.131) ** 2),
+                    dict(n=31, l="p", J=None, energy_eV=-Ry / (31 - 9.0) ** 2),
+                ], **extra)
+
+
+def test_a_level_has_its_own_defect():
+    qd = level_defects_from_rydberg(_ryd())
+    assert level_defect(qd, 30, "s") == pytest.approx(3.131, abs=1e-4)
+    assert level_defect(qd, 30, "p") == pytest.approx(2.6463, abs=1e-3)   # 2J+1 weighted
+    assert qd["p"] == 2.68
+
+
+def test_the_ground_state_comes_from_the_ionization_energy():
+    qd = level_defects_from_rydberg(_ryd())
+    assert level_defect(qd, 5, "s") == pytest.approx(5 - (Ry / IE) ** 0.5)
+
+
+def test_unknown_or_implausible_levels_use_the_average():
+    qd = level_defects_from_rydberg(_ryd())
+    assert level_defect(qd, 40, "p") == 2.68
+    assert level_defect(qd, 31, "p") == 2.68
+
+
+def test_ions_keep_the_plain_averages():
+    averaged = dict(s=1.0)
+    ryd = dict(_ryd(), kind="ion", quantum_defects=averaged)
+    assert level_defects_from_rydberg(ryd) is averaged
+    assert level_defect(averaged, 30, "s") == 1.0
+
+
+def test_pooled_scale_needs_most_pairs_inside_the_window():
+    qd = {"s": 0.0, "p": 0.0}
+    fosc = {}
+    for i, up in enumerate(range(5, 22)):
+        ratio = 1.0 if i < 6 else 0.1
+        fosc[("4s", f"{up}p")] = ratio * numerov_fosc(up, 1, 4, 0, 0.0, 0.0)
+    info = fit_numerov_scale_from_nist(qd, fosc)
+    assert info["reason"] == "median_outside_window"
+    assert info["scale"] == 1.0
+
+
+def test_a_qdt_row_uses_the_series_value_not_its_rounded_energy():
+    ryd = _ryd(quantum_defects_ritz={"p": dict(delta0=2.65, delta2=0.3, n_min=7)})
+    ryd["excitations"].append(dict(n=40, l="p", J=None, energy_eV=-Ry / (40 - 2.70) ** 2,
+                                   source="QDT model"))
+    qd = level_defects_from_rydberg(ryd)
+    assert level_defect(qd, 40, "p") == pytest.approx(2.65 + 0.3 / (40 - 2.65) ** 2)
+    assert level_defect(qd, 60, "p") == pytest.approx(2.65 + 0.3 / (60 - 2.65) ** 2)
+
+
+def test_an_imprecise_level_takes_the_series_value():
+    ryd = _ryd(quantum_defects_ritz={"p": dict(delta0=2.65, delta2=0.3, n_min=7)})
+    ryd["excitations"].append(dict(n=35, l="p", J="1/2", energy_eV=-Ry / (35 - 2.70) ** 2,
+                                   uncertainty_eV=4e-5))
+    qd = level_defects_from_rydberg(ryd)
+    assert level_defect(qd, 35, "p") == pytest.approx(2.65 + 0.3 / (35 - 2.65) ** 2)

@@ -53,6 +53,7 @@ from linak.physics.qdt_radial import (
     ls_group_branching,
     ls_line_weight,
     numerov_fosc_scaled,
+    level_defect,
     n_star,
     numerov_scale_for,
     parse_J2_set,
@@ -630,8 +631,8 @@ def _line_row(t, c: _Context) -> TransitionA | str:
     # without J (ns, 21p, 21d, ...) is an unresolved multiplet and is averaged
     # statistically over its fine-structure levels (no double counting).
     if fosc is None and not c.orca_only:
-        delta_u = qd.get(lu_char, 0.0)
-        delta_l = qd.get(ll_char, 0.0)
+        delta_u = level_defect(qd, nu, lu_char)
+        delta_l = level_defect(qd, nl, ll_char)
         n_eff_u = nu - delta_u
         n_eff_l = nl - delta_l
         f_num = 0.0
@@ -656,8 +657,8 @@ def _line_row(t, c: _Context) -> TransitionA | str:
 
     # Coulomb approximation (last resort; alkalis only)
     if fosc is None and _drop_reason is None and not c.orca_only:
-        delta_u = qd.get(lu_char, 0.0)
-        delta_l = qd.get(ll_char, 0.0)
+        delta_u = level_defect(qd, nu, lu_char)
+        delta_l = level_defect(qd, nl, ll_char)
         n_eff_u = nu - delta_u
         n_eff_l = nl - delta_l
         if n_eff_u > 4 and n_eff_l > 4:
@@ -675,8 +676,8 @@ def _line_row(t, c: _Context) -> TransitionA | str:
 
     if fosc is None or fosc <= 0:
         if _drop_reason is None:
-            _du = qd.get(lu_char, 0.0) if lu_char else 0.0
-            _dl = qd.get(ll_char, 0.0) if ll_char else 0.0
+            _du = level_defect(qd, nu, lu_char) if lu_char else 0.0
+            _dl = level_defect(qd, nl, ll_char) if ll_char else 0.0
             _nsu, _nsl = nu - _du, nl - _dl
             if lu < 0 or ll_int < 0 or abs(lu - ll_int) != 1:
                 _drop_reason = 'not_E1_or_unlabelled'
@@ -945,7 +946,8 @@ def flag_nist_vs_model(rows: Sequence[TransitionA], nist_cal_fosc: Mapping, nume
         _a, _b = _parse_nl_token(_key[0]), _parse_nl_token(_key[1])
         if _a is None or _b is None or abs(_a[1] - _b[1]) != 1:
             continue
-        _da, _db = float(qd.get(L_INT.get(_a[1], 's'), 0.0)), float(qd.get(L_INT.get(_b[1], 'p'), 0.0))
+        _da = level_defect(qd, _a[0], L_INT.get(_a[1], 's'))
+        _db = level_defect(qd, _b[0], L_INT.get(_b[1], 'p'))
         _nsa, _nsb = n_star(_a[0], _da), n_star(_b[0], _db)
         _lo, _up, _dl, _du = (_a, _b, _da, _db) if _nsb > _nsa else (_b, _a, _db, _da)
         if min(_nsa, _nsb) <= 2.5:

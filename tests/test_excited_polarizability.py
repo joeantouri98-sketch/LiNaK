@@ -54,18 +54,13 @@ def test_multiplet_f_rebuilt_from_lines(na_network):
     assert f[("3s", "4p")] == pytest.approx(0.01346, rel=1e-6)      # s->p unchanged
 
 
-def test_s_to_p_scale_depends_on_gap(na_network):
-    """NIST/Numerov for Na s->p is ~1.0 for near pairs and ~1.37 for far pairs."""
+def test_s_to_p_needs_no_scale_with_each_levels_own_defect(na_network):
+    """NIST/Numerov for Na s->p was 1.0 (near) to 1.37 (far) with the averaged defect."""
     from linak.physics.qdt_radial import numerov_scale_for
     cal = na_network["numerov_cal_types"]
-    info = cal["types"][("s", "p")]
-    assert info["gap_dependent"]
-    near = numerov_scale_for(cal, "s", "p", gap=0.5)
-    mid = numerov_scale_for(cal, "s", "p", gap=2.75)
-    far = numerov_scale_for(cal, "s", "p", gap=8.0)
-    assert 0.97 < near < 1.05
-    assert 1.25 < far < 1.50
-    assert near < mid < far
+    assert not cal["types"][("s", "p")]["gap_dependent"]
+    for gap in (0.5, 2.75, 8.0):
+        assert numerov_scale_for(cal, "s", "p", gap=gap) == pytest.approx(1.0, abs=0.02)
     # flat types keep the single type-wide scale
     assert not cal["types"][("p", "d")]["gap_dependent"]
     assert numerov_scale_for(cal, "p", "d", gap=0.5) == numerov_scale_for(cal, "p", "d", gap=8.0)

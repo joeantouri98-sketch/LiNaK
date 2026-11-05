@@ -3,7 +3,7 @@
     "element": "Na",
     "T_K": 300.0,
     "field_V_cm": 100.0,
-    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change. rydberg_dyn: principal-value Planck integral (the former grid sum was grid-dependent). Numerov type scales stop at n*=10 (qdt_radial.CALIBRATED_NSTAR_MAX), so high-n pairs obey the sum rule; rydberg_dyn moved to approach Farley-Wing from above, within 1-2 % of an ARC 3.10 sum plus its missing strength.",
+    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change. rydberg_dyn: principal-value Planck integral (the former grid sum was grid-dependent). Numerov is solved at each level's own defect (qdt_radial.level_defects_from_rydberg) and type scales stop at n*=10; rydberg_dyn matches an ARC 3.10 sum once its missing strength is added, to about 1 %.",
     "sources": {
       "alpha0": "data_json/Na_polarizability.json",
       "lifetimes": "data_json/Na_lifetimes.json",
@@ -69,23 +69,23 @@
       "10s": {
         "Gamma_PI_s": 4.602995,
         "Gamma_SFI_s": 1.575462,
-        "Gamma_mix_PI_s": 9.952932,
-        "Gamma_mix_SFI_s": 3.411342,
-        "Gamma_ion_s": 19.542732
+        "Gamma_mix_PI_s": 9.964215,
+        "Gamma_mix_SFI_s": 3.414988,
+        "Gamma_ion_s": 19.55766
       },
       "20s": {
         "Gamma_PI_s": 216.376074,
         "Gamma_SFI_s": 88.372688,
-        "Gamma_mix_PI_s": 64.730463,
-        "Gamma_mix_SFI_s": 26.428771,
-        "Gamma_ion_s": 395.907996
+        "Gamma_mix_PI_s": 64.845075,
+        "Gamma_mix_SFI_s": 26.491213,
+        "Gamma_ion_s": 396.08505
       },
       "25s": {
         "Gamma_PI_s": 247.249154,
         "Gamma_SFI_s": 123.489418,
-        "Gamma_mix_PI_s": 45.280861,
-        "Gamma_mix_SFI_s": 22.588955,
-        "Gamma_ion_s": 438.608388
+        "Gamma_mix_PI_s": 45.346857,
+        "Gamma_mix_SFI_s": 22.639697,
+        "Gamma_ion_s": 438.725127
       }
     },
     "tol_rel": 1e-05
@@ -94,11 +94,11 @@
     "farley_wing_hz": 2416.665774,
     "states": {
       "20s": {
-        "shift_dyn_hz": 2536.909568,
+        "shift_dyn_hz": 2513.823012,
         "tol_rel": 0.001
       },
       "40s": {
-        "shift_dyn_hz": 2433.860764,
+        "shift_dyn_hz": 2429.865501,
         "tol_rel": 0.001
       }
     },

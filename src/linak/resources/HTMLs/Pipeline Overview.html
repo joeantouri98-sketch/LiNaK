@@ -3163,9 +3163,13 @@ p {
       (mainly high-$n$ Rydberg channels), the pipeline uses QD Numerov radial
       dipoles (<span class="file-badge">qdt_radial.py</span>), scaled by a
       per-element NIST-overlap median. The Bates-Damgaard Coulomb closed form
-      remains only as a last resort if Numerov returns 0. The scales come from low-lying NIST lines, so
-      they apply only where the lower state has $n^*&lt;10$; above that the bare Numerov value is used, which
-      obeys the sum rule (K $30d$: signed sum $-3.35$ when scaled, about 1 unscaled).
+      remains only as a last resort if Numerov returns 0. Each wavefunction is solved at its own level's
+      defect, not the orbital average: the outer dipole is very sensitive to it, and with the average
+      NIST/Numerov is 76 for K $s\to p$ and 1.27 for Na $s\to p$, against 0.97 and 1.00 with each level's
+      own defect. Levels quoted to worse than $\sigma_\delta=10^{-3}$ take the Ritz value of their series, so
+      their scatter does not reach $f$. The remaining scales are close to 1 for Li, Na and K, and none is
+      fitted for Rb or Cs. Fr is the exception ($s\to p$ 0.53, $d\to p$ 0.36, from few lines). The scales come from
+      low-lying NIST lines, so they apply only where the lower state has $n^*&lt;10$.
     </p>
   </div>
 
@@ -3562,8 +3566,8 @@ p {
       near partners with a closed $f$ sum give Farley-Wing exactly. A grid over $\omega$ cannot do
       this integral, because the resonances are far narrower than any practical step and are sampled
       at random; the principal value needs no widths, since $\Gamma\ll k_BT/\hbar$ for every channel.
-      Na @ 300&nbsp;K: $20s$ $+2537$&nbsp;Hz (FW ratio 1.05), $30s$ $+2459$&nbsp;Hz (1.02),
-      $40s$ $+2434$&nbsp;Hz (1.01).
+      Na @ 300&nbsp;K: $20s$ $+2514$&nbsp;Hz (FW ratio 1.04), $30s$ $+2450$&nbsp;Hz (1.01),
+      $40s$ $+2430$&nbsp;Hz (1.01).
     </p>
     <div class="annotation amber">
       <span class="icon">!</span>
@@ -3571,7 +3575,7 @@ p {
       assumes missing strength lies in the continuum, so a state that has lost a nearby partner gets a
       wrong shift even though the integral is exact. A state with <code>f_cont</code> above 1 is written with
       <code>dyn_reliable: false</code> and left out of the $\Delta\nu(n)$ plots. Known cases: all $g$ states (the
-      network has no $h$ partners); K $6d$-$10d$, $17d_{3/2}$ and $19s$; Li $26p$ (NIST places it above $26d$);
+      network has no $h$ partners); K $17d_{3/2}$ and $19s$; Li $26p$ (NIST places it above $26d$);
       Cs $nf_{7/2}$ for $n=11$-$23$ (NIST labels its $g$ levels $J=7/2$ only, so $g_{9/2}$ partners are missing);
       and Fr $9d$, $18f$, $23p_{3/2}$.</p>
     </div>
@@ -4223,10 +4227,10 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <p>
       Channels such as $20s\to 5p$ have no NIST/literature $f$, and ORCA does not
       assign a root under the $0.10\,\mathrm{eV}$ / $\mathrm{IE}-0.25\,\mathrm{eV}$
-      match window. The pipeline uses QD Numerov radial $f$ for the line, then multiplies by the
-      scale for its type. For $s\to p$ the NIST/Numerov ratio depends on the gap
-      $\Delta n^*=|n^*_u-n^*_l|$: $s_{\rm near}=1.006$ (gap &lt; 1.5), $s_{\rm far}=1.360$ (gap ≥ 4),
-      linear in between (37 NIST pairs). This profile is used only when far/near differ by more than 20%.
+      match window. The pipeline uses QD Numerov radial $f$ for the line, solved at each level's own defect, then
+      multiplies by the scale for its type: $s=1.013$ for this $p\to s$ pair (27 NIST pairs). A gap-dependent
+      profile exists for types whose far and near pairs differ by more than 20%; with each level's own
+      defect, no Na type needs it.
       The levels come from the Ritz expansion $\delta(n)=\delta_0+\delta_2/(n-\delta_0)^2$
       (Na $s$: $1.3479+0.0627/(n-\delta)^2$; $p$: $0.8548+0.1162/(n-\delta)^2$), not a constant defect.
       The radial grid step is 0.125 $a_0$ (so high-$n$ orbitals are converged).
@@ -4235,21 +4239,21 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       <div class="math-label">Scaled Numerov f for Na 20s → 5p₃/₂</div>
       $$n^*_{20s} = 20 - \delta_s(20) = 20 - 1.3481 = 18.652,\quad
         n^*_{5p} = 5 - \delta_p(5) = 4.138,\quad \Delta n^* = 14.5$$
-      $$f_{\rm bare} = f_{\rm Numerov}(20s,5p_{3/2}) = 1.21\times 10^{-4},\quad
-        s_{\rm far}=1.360$$
-      $$f = s\cdot f_{\rm bare} = 1.360\times 1.21\times 10^{-4} = 1.64\times 10^{-4}$$
+      $$f_{\rm bare} = f_{\rm Numerov}(5p,20s) = 1.60\times 10^{-4},\quad
+        s=1.013$$
+      $$f = s\cdot f_{\rm bare} = 1.013\times 1.60\times 10^{-4} = 1.62\times 10^{-4}$$
     </div>
     <p>
       Fine structure: the multiplet $f$ is split between $5p_{1/2}$ and $5p_{3/2}$ with 6j weights (2:1 here), not by $g$-weights alone. Einstein $A$ for the $20s\to 5p_{3/2}$ line ($\lambda=1641.72\,\mathrm{nm}$, $g_l/g_u=4/2$):
     </p>
     <div class="math-block green">
       <div class="math-label">Na 20s → 5p₃/₂ via scaled Numerov</div>
-      $$A = \frac{6.6703\times 10^{13}}{(1641.72)^2}\cdot 2\cdot 1.64\times 10^{-4}
-         \approx 8.13\times 10^{3}\,\mathrm{s}^{-1}$$
+      $$A = \frac{6.6703\times 10^{13}}{(1641.72)^2}\cdot 2\cdot 1.62\times 10^{-4}
+         \approx 8.01\times 10^{3}\,\mathrm{s}^{-1}$$
       $$\text{source tag: Numerov (not Coulomb)}$$
     </div>
     <p>
-      The two NIST $20s\to 3p$ channels are the largest single contributors (about 44% of the $20s$ decay rate);
+      The two NIST $20s\to 3p$ channels are the largest single contributors (about 45% of the $20s$ decay rate);
       Numerov fills the many mid-/high-$n$ partners that NIST does not tabulate.
       Coulomb is not used for this channel.
     </p>

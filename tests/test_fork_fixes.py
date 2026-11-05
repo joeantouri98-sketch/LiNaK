@@ -210,10 +210,11 @@ def test_coulomb_fosc_alkali_close_to_nist(data_dir):
 def test_tail_partner_interpolation_matches_exact(data_dir):
     import linak.physics.blackbody_core as bb
     import linak.physics.polarizability_core as ac
+    from linak.physics.qdt_radial import level_defect
     data = ac.load_element('Na', str(data_dir))
     tail = bb.discrete_tail_partners('40d', data, 51, 200)
     assert tail
     for x in tail[::53]:
         n = int(''.join(c for c in x['other_label'] if c.isdigit())); lc = x['other_label'][-1]
-        ex = ac.coulomb_fosc(n, bb.L_CHAR[lc], 40, 2, bb._qd_delta(data['qd'], lc), bb._qd_delta(data['qd'], 'd'))
+        ex = ac.coulomb_fosc(n, bb.L_CHAR[lc], 40, 2, level_defect(data['qd'], n, lc), level_defect(data['qd'], 40, 'd'))
         assert x['fosc'] == pytest.approx(ex, rel=0.03)

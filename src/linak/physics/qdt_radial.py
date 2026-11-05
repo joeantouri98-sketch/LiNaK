@@ -16,6 +16,8 @@ from functools import lru_cache
 
 import numpy as np
 
+from linak.physics.rydberg import parse_j
+
 # np.trapz was removed in NumPy 2.4; np.trapezoid exists from NumPy 2.0
 _trapezoid = getattr(np, 'trapezoid', None) or np.trapz
 
@@ -25,6 +27,80 @@ _trapezoid = getattr(np, 'trapezoid', None) or np.trapz
 # _parse_nl_token). Consolidating would drop the 'h' entry and change behaviour.
 L_CHAR = {"s": 0, "p": 1, "d": 2, "f": 3, "g": 4, "h": 5}
 L_INT = {v: k for k, v in L_CHAR.items()}
+MAX_DEFECT_OFFSET = 1.0  # no level of a series sits this far from its orbital average
+MAX_SIGMA_OWN_DEFECT = 1e-3  # above this a level's defect is noise for f, not structure
+
+
+class LevelDefects(dict):
+    """Averaged defect per orbital (the dict itself), each level's defect, and the Ritz fits."""
+
+    def __init__(self, averaged, levels, ritz=None):
+        super().__init__(averaged)
+        self.levels = levels
+        self.ritz = ritz or {}
+
+
+def _ritz_defect(fit, n):
+    return fit['delta0'] + fit['delta2'] / (n - fit['delta0']) ** 2
+
+
+def level_defect(qd, n, l_char) -> float:
+    """Defect of level (n, l): its own, else the series' Ritz value, else the orbital average."""
+    own = getattr(qd, 'levels', {}).get((int(n), l_char))
+    if own is not None:
+        return own
+    fit = getattr(qd, 'ritz', {}).get(l_char)
+    if fit and n >= fit['n_min']:
+        return _ritz_defect(fit, n)
+    return float(qd.get(l_char, 0.0) or 0.0)
+
+
+def level_defects_from_rydberg(ryd: dict):
+    """
+    The quantum defects a Rydberg JSON implies, level by level (neutrals only).
+
+    The wavefunction of a level must be solved at that level's energy. The orbital average is
+    dominated by the lowest members and sits far from them higher up (Fr np: 4.618 against 4.56),
+    and the outer-region dipole is very sensitive to it: NIST/Numerov for Fr 8s -> np is 3.8 with
+    the average and 0.66 with each level's own defect, K s->p 76 and 0.98, Li s->p spreads by
+    1.54x and 1.04x. Levels of one (n, l) are averaged with weights 2J+1. A level more than
+    MAX_DEFECT_OFFSET from the orbital average keeps the average.
+
+    A near-resonant f follows the gap between defects far more closely than the energy shift
+    does, so a level known to no better than MAX_SIGMA_OWN_DEFECT would pass its scatter straight
+    into f. Such a level takes the smooth Ritz value of its series instead.
+    """
+    averaged = ryd.get('quantum_defects') or {}
+    ry = ryd.get('rydberg_constant_eV')
+    if not averaged or not ry or ryd.get('kind') != 'neutral':
+        return averaged
+    ritz = ryd.get('quantum_defects_ritz') or {}
+    energy: dict[tuple[int, str], list[tuple[float, float, float | None]]] = {}
+    gs = ryd.get('ground_state') or {}
+    if gs.get('n') and gs.get('l'):
+        energy[(int(gs['n']), gs['l'])] = [(float(ryd['ionization_energy_eV']), 1.0, None)]
+    for lv in ryd.get('excitations') or []:
+        binding = -float(lv.get('energy_eV') or 0.0)
+        # a QDT row IS the series value: its energy, rounded in the JSON, would only add noise
+        # (1e-6 eV is 0.002 in delta at n = 40)
+        if binding <= 0 or lv.get('l') not in averaged or 'QDT' in str(lv.get('source')):
+            continue
+        j = parse_j(lv.get('J'))
+        g = 2.0 * j + 1.0 if j is not None else 1.0
+        energy.setdefault((int(lv['n']), lv['l']), []).append(
+            (binding, g, lv.get('uncertainty_eV')))
+    levels = {}
+    for (n, l_char), rows in energy.items():
+        binding = sum(r[0] * r[1] for r in rows) / sum(r[1] for r in rows)
+        n_eff = math.sqrt(float(ry) / binding)
+        delta = n - n_eff
+        unc = max((r[2] or 0.0) for r in rows)
+        fit = ritz.get(l_char)
+        if fit and n >= fit['n_min'] and n_eff ** 3 * unc / (2 * float(ry)) > MAX_SIGMA_OWN_DEFECT:
+            delta = _ritz_defect(fit, n)
+        if abs(delta - float(averaged.get(l_char, 0.0))) < MAX_DEFECT_OFFSET:
+            levels[(n, l_char)] = delta
+    return LevelDefects(averaged, levels, ritz)
 
 
 def n_star(n: int, delta: float) -> float:
@@ -249,8 +325,8 @@ def fit_numerov_scale_from_nist(qd: dict, nist_fosc: dict,
         if abs(l_b - l_a) != 1:
             continue
 
-        delta_a = float(qd.get(L_INT.get(l_a, "s"), 0.0))
-        delta_b = float(qd.get(L_INT.get(l_b, "p"), 0.0))
+        delta_a = level_defect(qd, n_a, L_INT.get(l_a, "s"))
+        delta_b = level_defect(qd, n_b, L_INT.get(l_b, "p"))
         ns_a = n_star(n_a, delta_a)
         ns_b = n_star(n_b, delta_b)
 
@@ -292,6 +368,10 @@ def fit_numerov_scale_from_nist(qd: dict, nist_fosc: dict,
     info["n_inliers"] = int(inliers.size)
     if inliers.size < min_pairs:
         info["reason"] = "insufficient_inliers"
+        return info
+    if not scale_lo <= info["median_ratio_raw"] <= scale_hi:
+        # most pairs disagree with the model (Rb: raw median 0.19, 5 of 17 inside the window)
+        info["reason"] = "median_outside_window"
         return info
 
     med = float(np.median(inliers))
@@ -503,8 +583,8 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
         a = _parse_nl_token(key[0]); b = _parse_nl_token(key[1])
         if a is None or b is None or abs(a[1] - b[1]) != 1:
             continue
-        da = float(qd.get(L_INT.get(a[1], "s"), 0.0))
-        db = float(qd.get(L_INT.get(b[1], "p"), 0.0))
+        da = level_defect(qd, a[0], L_INT.get(a[1], "s"))
+        db = level_defect(qd, b[0], L_INT.get(b[1], "p"))
         nsa, nsb = n_star(a[0], da), n_star(b[0], db)
         if nsb > nsa:
             lo, up, dl, du = a, b, da, db
@@ -586,8 +666,8 @@ def numerov_scale_for(cal: dict, l_lower: str, l_upper: str, gap=None, n_star_up
             w = min(1.0, max(0.0, (abs(float(gap)) - g1) / (g2 - g1)))
             return float((1.0 - w) * t["scale_near"] + w * t["scale_far"])
         return float(t["scale"])
-    # a type with no NIST pair of its own is NOT calibrated: the pooled scale mixes other types (Fr: 8s -> np
-    # far pairs, 3.3) and is no evidence for it. The unscaled radial integral is within 10-35 % of published
+    # a type with no NIST pair of its own is NOT calibrated: the pooled scale mixes other types
+    # and is no evidence for it. The unscaled radial integral is within 10-35 % of published
     # values for p->s, d->f (Cs, Table I of PRA 94, 012505), so 1.0 is used.
     return 1.0
 

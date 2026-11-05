@@ -20,6 +20,7 @@ import numpy as np
 
 from linak.core.paths import reference_path
 from linak.physics.rydberg import unwrap_asd_field
+from linak.physics.qdt_radial import level_defect, level_defects_from_rydberg
 
 from linak.core.constants import (
     EV_TO_HARTREE,
@@ -962,7 +963,7 @@ def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrap
         trans = json.load(f)
 
     IE = ryd['ionization_energy_eV']
-    qd = ryd.get('quantum_defects', {})
+    qd = level_defects_from_rydberg(ryd)
 
     _gs_meta = ryd.get('ground_state')
     if _gs_meta:
@@ -1233,8 +1234,8 @@ def get_fosc(lower_label, upper_label, lower_n, upper_n,
                         pass
                 return f, 'literature'
 
-    dl = qd.get(lower_l, 0.0)
-    du = qd.get(upper_l, 0.0)
+    dl = level_defect(qd, lower_n, lower_l)
+    du = level_defect(qd, upper_n, upper_l)
     ll_int = L_CHAR.get(lower_l, 0)
     ul_int = L_CHAR.get(upper_l, 0)
 
@@ -1332,9 +1333,11 @@ def _ls_state_term(t, state_label, data):
                     continue
             if f_mult is None:
                 _qd = data['qd']
-                _gap = abs((t['upper_n'] - _qd.get(t['upper_l'], 0.0)) - (t['lower_n'] - _qd.get(t['lower_l'], 0.0)))
+                _nsu = t['upper_n'] - level_defect(_qd, t['upper_n'], t['upper_l'])
+                _nsl = t['lower_n'] - level_defect(_qd, t['lower_n'], t['lower_l'])
+                _gap = abs(_nsu - _nsl)
                 scale = numerov_scale_for(data.get('numerov_cal_types'), t['lower_l'], t['upper_l'], gap=_gap,
-                                          n_star_upper=max(t['upper_n'] - _qd.get(t['upper_l'], 0.0), t['lower_n'] - _qd.get(t['lower_l'], 0.0)))
+                                          n_star_upper=max(_nsu, _nsl))
                 f_mult, src_mult = get_fosc(
                     ll, ul, t['lower_n'], t['upper_n'], t['lower_l'], t['upper_l'],
                     data['nist_fosc'], data['qd'], upper_J_str=None,

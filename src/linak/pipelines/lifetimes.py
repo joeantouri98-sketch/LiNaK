@@ -48,6 +48,7 @@ from linak.physics.lifetimes_core import (
     TransitionA,
     compute,
 )
+from linak.physics.qdt_radial import level_defects_from_rydberg
 from linak.physics.polarizability_core import (
     is_transition_metal_species,
     load_literature_fvalues,
@@ -219,9 +220,10 @@ def main(argv: list[str] | None = None) -> int:
         print("  Metal path: NIST gA/fik only (no Numerov / Coulomb)")
 
     z_core = float(rydberg_data.get('z_core') or (sp.get('charge', 0) + 1) or 1)
+    defects = level_defects_from_rydberg(rydberg_data)
     result = compute(
         transitions, sources,
-        qd=rydberg_data.get('quantum_defects', {}), z_core=z_core, IE=IE,
+        qd=defects, z_core=z_core, IE=IE,
         gs_label=_ground_label(rydberg_data, n_start),
         mass_amu=ATOMIC_MASS_AMU.get(element, ATOMIC_MASS_AMU[sp["symbol"]]),
         is_ion=sp.get('kind') == 'ion', is_metal=is_metal,
@@ -233,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
         import dataclasses
         base = compute(
             transitions, dataclasses.replace(sources, literature=literature_measured),
-            qd=rydberg_data.get('quantum_defects', {}), z_core=z_core, IE=IE,
+            qd=defects, z_core=z_core, IE=IE,
             gs_label=_ground_label(rydberg_data, n_start),
             mass_amu=ATOMIC_MASS_AMU.get(element, ATOMIC_MASS_AMU[sp["symbol"]]),
             is_ion=sp.get('kind') == 'ion', is_metal=is_metal,

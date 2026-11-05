@@ -50,6 +50,7 @@ from linak.core.constants import (
     HBAR_SI,
     KB_SI,
 )
+from linak.physics.qdt_radial import level_defect
 from linak.physics.polarizability_core import (
     L_CHAR,
     alpha0_static,
@@ -451,13 +452,9 @@ def compute_shifts(trans_gs: Sequence[dict], trans_ex: Sequence[dict] | None,
 # NETWORK COMPLETION FOR THE DYNAMIC RYDBERG SHIFTS
 # ============================================================================
 
-def _qd_delta(qd, l_char):
-    return float(qd.get(l_char, 0.0) or 0.0)
-
-
 def _qdt_energy_au(n, l_char, qd, mass_factor=1.0):
     """E = -(R_M/R_inf)/(2 n*^2) in Hartree; mass_factor = R_M/(Z^2 R_inf) (1.0 = infinite mass)."""
-    n_eff = int(n) - _qd_delta(qd, l_char)
+    n_eff = int(n) - level_defect(qd, n, l_char)
     if n_eff <= 0:
         return None
     return -0.5 * mass_factor / (n_eff * n_eff)
@@ -491,7 +488,7 @@ def discrete_tail_partners(label, data, n_from, n_to):
     _mass_factor = _rydberg_mass_factor(data)
     out = []
     n_from, n_to = int(n_from), int(n_to)
-    d0 = _qd_delta(qd, l0)
+    d0 = level_defect(qd, n0, l0)
     # Exact radial integrals (hydrogen-validated Coulomb/Numerov hybrid in polarizability_core) for n' up to
     # n_dense, then a PCHIP interpolation of g(n') = f n*'^3 / dE in 1/n*' on a geometric anchor set.
     # g is smooth for n' >> n0 (threshold law f ~ dE / n*'^3); it is NOT smooth near the diagonal
@@ -500,17 +497,17 @@ def discrete_tail_partners(label, data, n_from, n_to):
     for l_char, L in L_CHAR.items():
         if abs(L - L0) != 1:
             continue
-        du = _qd_delta(qd, l_char)
+        du = {n: level_defect(qd, n, l_char) for n in range(n_from, n_to + 1)}
         exact_ns = list(range(n_from, n_dense + 1))
-        f_of = {n: coulomb_fosc(n, L, n0, L0, du, d0) for n in exact_ns}
+        f_of = {n: coulomb_fosc(n, L, n0, L0, du[n], d0) for n in exact_ns}
         if n_to > n_dense:
             anchors = sorted(set([n_dense] + [int(round(n_dense * (n_to / n_dense) ** (k / 8.0)))
                                               for k in range(1, 9)] + [n_to]))
             xs, ys = [], []
             for na in anchors:
-                nsu, nsl = na - du, n0 - d0
+                nsu, nsl = na - du[na], n0 - d0
                 dE = 0.5 / nsl ** 2 - 0.5 / nsu ** 2
-                fa = f_of[na] if na in f_of else coulomb_fosc(na, L, n0, L0, du, d0)
+                fa = f_of[na] if na in f_of else coulomb_fosc(na, L, n0, L0, du[na], d0)
                 if fa > 0 and dE > 0:
                     xs.append(1.0 / nsu)
                     ys.append(fa * nsu ** 3 / dE)
@@ -518,7 +515,7 @@ def discrete_tail_partners(label, data, n_from, n_to):
                 from scipy.interpolate import PchipInterpolator
                 P = PchipInterpolator(xs[::-1], ys[::-1])
                 for n in range(n_dense + 1, n_to + 1):
-                    nsu, nsl = n - du, n0 - d0
+                    nsu, nsl = n - du[n], n0 - d0
                     dE = 0.5 / nsl ** 2 - 0.5 / nsu ** 2
                     f_of[n] = max(float(P(1.0 / nsu)), 0.0) * dE / nsu ** 3
         for n in range(n_from, n_to + 1):
