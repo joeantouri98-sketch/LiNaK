@@ -3,7 +3,7 @@
     "element": "Na",
     "T_K": 300.0,
     "field_V_cm": 100.0,
-    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change.",
+    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change. rydberg_dyn: principal-value Planck integral (the former grid sum was grid-dependent). Numerov type scales stop at n*=10 (qdt_radial.CALIBRATED_NSTAR_MAX), so high-n pairs obey the sum rule; rydberg_dyn moved to approach Farley-Wing from above, within 1-2 % of an ARC 3.10 sum plus its missing strength.",
     "sources": {
       "alpha0": "data_json/Na_polarizability.json",
       "lifetimes": "data_json/Na_lifetimes.json",
@@ -69,23 +69,23 @@
       "10s": {
         "Gamma_PI_s": 4.602995,
         "Gamma_SFI_s": 1.575462,
-        "Gamma_mix_PI_s": 9.951245,
-        "Gamma_mix_SFI_s": 3.41076,
-        "Gamma_ion_s": 19.540463
+        "Gamma_mix_PI_s": 9.952932,
+        "Gamma_mix_SFI_s": 3.411342,
+        "Gamma_ion_s": 19.542732
       },
       "20s": {
         "Gamma_PI_s": 216.376074,
         "Gamma_SFI_s": 88.372688,
-        "Gamma_mix_PI_s": 66.102836,
-        "Gamma_mix_SFI_s": 27.000832,
-        "Gamma_ion_s": 397.852431
+        "Gamma_mix_PI_s": 64.730463,
+        "Gamma_mix_SFI_s": 26.428771,
+        "Gamma_ion_s": 395.907996
       },
       "25s": {
         "Gamma_PI_s": 247.249154,
         "Gamma_SFI_s": 123.489418,
-        "Gamma_mix_PI_s": 46.24281,
-        "Gamma_mix_SFI_s": 23.081954,
-        "Gamma_ion_s": 440.063336
+        "Gamma_mix_PI_s": 45.280861,
+        "Gamma_mix_SFI_s": 22.588955,
+        "Gamma_ion_s": 438.608388
       }
     },
     "tol_rel": 1e-05
@@ -94,12 +94,12 @@
     "farley_wing_hz": 2416.665774,
     "states": {
       "20s": {
-        "shift_dyn_hz": 6704.885116,
-        "tol_rel": 0.05
+        "shift_dyn_hz": 2536.909568,
+        "tol_rel": 0.001
       },
       "40s": {
-        "shift_dyn_hz": 1674.988624,
-        "tol_rel": 0.05
+        "shift_dyn_hz": 2433.860764,
+        "tol_rel": 0.001
       }
     },
     "tol_fw_rel": 1e-06

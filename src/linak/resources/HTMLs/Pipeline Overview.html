@@ -2115,7 +2115,7 @@ p {
         <h4>Structure &amp; spectroscopy</h4>
         <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.8">
           <li><b>One active electron:</b> alkalis treated as $[\text{core}]^+\,nl_j$ with frozen core</li>
-          <li><b>QDT:</b> $\delta_l$ from NIST levels; Ritz $\delta(n)$ fit used for model levels beyond the tables (needs ≥6 measured points, else constant)</li>
+          <li><b>QDT:</b> $\delta_l$ from NIST levels; Ritz $\delta(n)$ fit used for model levels beyond the tables and for NIST levels too coarse to use (needs ≥6 measured points, or ≥5 with weights, else constant)</li>
           <li><b>Electric dipole (E1):</b> $\lambda \gg a_0$; magnetic and quadrupole transitions dropped</li>
           <li><b>$\Delta S=0$:</b> spin does not flip in E1; intercombination lines excluded from E1 network</li>
           <li><b>TD-DFT (ORCA):</b> centroids and $f_{\rm osc}$ for screening; not a replacement for SOC fine structure. For transition metals, <code>--mode auto</code> stays TD-DFT screening; use <code>--mode soc</code> for fine structure</li>
@@ -2131,7 +2131,7 @@ p {
           <li><b>Rotating-wave (RWA):</b> counter-rotating terms dropped at $\omega_L \approx \omega_0$</li>
           <li><b>Weak probe for $\alpha(\omega)$:</b> linear response; no saturation in polarizability sum</li>
           <li><b>Closure / TRK:</b> finite transition sets; sum rule not enforced exactly in truncated sums</li>
-          <li><b>BBR:</b> static Itano + dynamic Planck + high-$n$ damped dyn (Farley-Wing) + bound-bound rates + Beterov PI/SFI/mix in <span class="file-badge">blackbody.py</span> (Sec.&nbsp;11)</li>
+          <li><b>BBR:</b> static Itano + dynamic Planck + high-$n$ dynamic shift (Farley-Wing) + bound-bound rates + Beterov PI/SFI/mix in <span class="file-badge">blackbody.py</span> (Sec.&nbsp;11)</li>
           <li><b>Tweezer heating:</b> $\mathrm{Im}[\alpha]$ scattering in <span class="file-badge">tweezer.py</span> (Sec.&nbsp;12); near-resonant cooling stays in <span class="file-badge">scattering_rate.py</span></li>
         </ul>
       </div>
@@ -2365,8 +2365,17 @@ p {
       <span class="file-badge">rydberg.py</span> therefore also fits
       $\delta(n)=\delta_0+\delta_2/(n-\delta_0)^2$ per orbital to the <em>measured</em> levels
       (J-averaged with $2J+1$ weights, lowest two $n$ dropped, at least 6 points, rms &lt; 2e-3) and uses it
-      only for 'QDT model' levels beyond the NIST tables. NIST levels are never replaced. The averages above
-      remain the written <code>quantum_defects</code>; the fit is saved as <code>quantum_defects_ritz</code>.
+      for 'QDT model' levels. A series whose high members are quoted coarsely fails that fit, so it is
+      refitted with weights $1/\sigma_\delta$ (at least 5 points) and marked <code>weighted</code>: Rb $np$ gives
+      2.6454 against the measured 2.6461, Cs $np$ 3.5698 against 3.5699. The averages above remain the
+      written <code>quantum_defects</code>; the fit is saved as <code>quantum_defects_ritz</code>.
+    </p>
+    <p>
+      A NIST level fixes $\delta$ only to $\sigma_\delta=n^{*3}\sigma_E/(2\,{\rm Ry})$, which grows quickly with
+      $n$. Neutral-atom levels with $\sigma_\delta&gt;0.01$, or more than 0.5 from their series (a mislabelled
+      level), are replaced by the QDT model and listed in <code>nist_levels_replaced</code>: 36 for Li, 133 for
+      Rb from $n=37$, 1 for Fr ($22d_{5/2}$), none for Na, K or Cs. Without this, Li $np$ drifts from
+      $\delta=0.04$ to 0.68 and $35p$ falls below $35s$. All other NIST levels are used exactly as listed.
     </p>
 
     <div class="annotation">
@@ -2448,8 +2457,7 @@ p {
       NIST-overlap scale partly absorbed the error. After the fix the bare Numerov $f$ is larger
       (Na $20s\to4p$: $8.29\to8.96\times10^{-5}$), the NIST-overlap scale is smaller and tighter
       ($1.52\to1.38$, inliers $129\to178$ of $193$ pairs; raw median ratio $1.62\to1.46$), and
-      the partner $A$ values that feed the BBR mixing rates move (Na $20s$: $\Gamma_{\rm mix,PI}\approx143$,
-      $\Gamma_{\rm ion}\approx506$&nbsp;s<sup>&minus;1</sup>, Section 11). Direct $\Gamma_{\rm PI}$ and
+      the partner $A$ values that feed the BBR mixing rates move (current values are in Section 11). Direct $\Gamma_{\rm PI}$ and
       $\Gamma_{\rm SFI}$ are unchanged.</p>
     </div>
     <p>
@@ -2537,13 +2545,13 @@ p {
       The TD-DFT calculation (ORCA) does not enforce spin-orbit coupling by default.
       A $p$ level with $l=1$ produces <em>three</em> TD-DFT states
       ($m_l = -1, 0, +1$) at nearly identical energies, degenerate within the
-      numerical noise of the SCF. The <code>deduplicate</code> function in
-      <span class="file-badge">orca_runner.py</span> collapses these into a single
+      numerical noise of the SCF. The <code>deduplicate_excitations</code> function in
+      <span class="file-badge">orca_parser.py</span> collapses these into a single
       physical level using gap-based grouping:
     </p>
     <div class="math-block amber">
-      <div class="math-label">Gap-based degeneracy grouping (orca_runner.py)</div>
-      $$\text{Group states } i, i+1 \text{ together if } E_{i+1} - E_i \leq \epsilon_{\rm tol} = 5\,{\rm meV}$$
+      <div class="math-label">Gap-based degeneracy grouping (orca_parser.py)</div>
+      $$\text{Group states } i, i+1 \text{ together if } E_{i+1} - E_i \leq \epsilon_{\rm tol} = 0.1\,{\rm meV}$$
     </div>
     <p>
       Within each group, the representative state is chosen as the one with the
@@ -3155,7 +3163,9 @@ p {
       (mainly high-$n$ Rydberg channels), the pipeline uses QD Numerov radial
       dipoles (<span class="file-badge">qdt_radial.py</span>), scaled by a
       per-element NIST-overlap median. The Bates-Damgaard Coulomb closed form
-      remains only as a last resort if Numerov returns 0.
+      remains only as a last resort if Numerov returns 0. The scales come from low-lying NIST lines, so
+      they apply only where the lower state has $n^*&lt;10$; above that the bare Numerov value is used, which
+      obeys the sum rule (K $30d$: signed sum $-3.35$ when scaled, about 1 unscaled).
     </p>
   </div>
 
@@ -3304,8 +3314,13 @@ p {
     </p>
     <div class="math-block green">
       <div class="math-label">Imaginary-frequency polarizability (alpha_imag_freq)</div>
-      $$\alpha(i\xi)=\sum_k\frac{f_k}{\omega_k^2+\xi^2}$$
+      $$\alpha(i\xi)=\sum_k\mathrm{sign}_k\,\frac{f_k}{\omega_k^2+\xi^2}$$
     </div>
+    <p>
+      $\mathrm{sign}_k$ is the same $+1$ / $-1$ as in the real-frequency sum. For the
+      ground state every channel is upward, so $\alpha(i\xi)>0$. For an excited state
+      the downward terms are negative and $\alpha(i\xi)$ can change sign.
+    </p>
     <div class="math-block amber">
       <div class="math-label">Casimir-Polder $C_6$</div>
       $$C_6=\frac{3}{\pi}\int_0^\infty\big[\alpha(i\xi)\big]^2\,d\xi$$
@@ -3416,7 +3431,7 @@ p {
       percent of the static term (unlike Sr clocks, where it can reach $\sim7\%$). <br>
       - For Na at 300&nbsp;K: $\Delta\nu_{\rm gs}=-1.40$&nbsp;Hz (static),
       $-1.40$&nbsp;Hz (full dynamic, JSON $-1.404$); D1 differential
-      $\approx-0.52$&nbsp;Hz (<a href="#sec16">Na Step&nbsp;7</a>). <br> 
+      $\approx-1.69$&nbsp;Hz (<a href="#sec16">Na Step&nbsp;7</a>). <br> 
       - Outputs:
       <code>data_json/&lt;el&gt;_blackbody.json</code> and fullscreen HTML plots
       under <code>plots/&lt;el&gt;/</code>: a chooser hub
@@ -3440,11 +3455,15 @@ p {
       $$\Gamma_{\rm BBR}(s,T)=\sum_p\Gamma_{s\to p},\qquad
         \tau_{\rm eff}=\bigl(\Gamma_{\rm rad}+\Gamma_{\rm BBR}\bigr)^{-1}$$
     </div>
+    <p style="font-size:13px;color:var(--text2)">
+      When the continuum block is present, the stored <code>tau_eff_s</code> also includes
+      $\Gamma_{\rm PI}$.
+    </p>
     <p>
       Default table: states with $n\ge n_{\rm gs}+2$ (<code>--n-min</code> to
       override). Optical D-lines at 300&nbsp;K give
       $\Gamma_{\rm BBR}/\Gamma_{\rm rad}\sim10^{-19}$ (sanity). High-$n$
-      $s$-states show a growing ratio (Na $10s\sim3.5\%$, $25s\sim25\%$ at
+      $s$-states show a growing ratio (Na $10s\sim5\%$, $25s\sim53\%$ at
       300&nbsp;K). Continuum photoionization is handled separately (next
       subsection).
       CLI: <code>linak --pipeline blackbody Na --T 300</code>,
@@ -3487,8 +3506,8 @@ p {
       Free-space quench still uses $\Gamma_{\rm BBR}+\Gamma_{\rm PI}$ only.
       Na @ 300&nbsp;K: $20s$ $\Gamma_{\rm PI}\sim216$/s; with
       <code>--field 100</code>, $\Gamma_{\rm SFI}\sim88$/s,
-      $\Gamma_{\rm mix,PI}\sim143$/s, $\Gamma_{\rm mix,SFI}\sim58$/s,
-      $\Gamma_{\rm ion}\sim506$/s
+      $\Gamma_{\rm mix,PI}\sim66$/s, $\Gamma_{\rm mix,SFI}\sim27$/s,
+      $\Gamma_{\rm ion}\sim398$/s
       (regression anchors in <code>tests/anchors/na_regression.json</code>).
       CLI: <code>--pi-n-min</code>, <code>--no-pi</code>, <code>--field</code>,
       <code>--no-mix</code>, <code>--t1</code>, <code>--t2</code>,
@@ -3503,10 +3522,9 @@ p {
       <code>*_polarizability.json</code>. For arbitrary Rydberg labels,
       <span class="file-badge">blackbody.py</span> builds an on-the-fly
       sum-over-states $\alpha(0)$ from <code>*_transitions.json</code>
-      (NIST $f$ where available, Coulomb fallback otherwise) and reports the
-      static Itano shift plus a <b>damped</b> dynamic Planck integral
-      (Lorentzian $\Gamma=A_{\rm total}$ from lifetimes; IR resonances near
-      $k_BT/\hbar$). Default $n$ window:
+      (NIST $f$ where available, otherwise calibrated Numerov, with Coulomb only as a last resort) and reports the
+      static Itano shift plus a dynamic Planck integral in which each
+      channel is a principal value (IR resonances sit near $k_BT/\hbar$). Default $n$ window:
       $n_{\rm gs}+2$ to $n_{\max}-n_{\rm pad}$ ($n_{\rm pad}=5$). All alkalis
       use series $n_{\max}=50$ (alpha window through $n=45$).
     </p>
@@ -3516,29 +3534,47 @@ p {
         \Delta\nu=-\tfrac12\alpha(0)\,\langle E^2\rangle_T\,(E_h/h)$$
     </div>
     <div class="math-block amber">
-      <div class="math-label">Farley-Wing high-$n$ asymptote + damped dyn</div>
+      <div class="math-label">Farley-Wing high-$n$ asymptote and the channel integral</div>
       $$\Delta E_{\rm FW}=\frac{\pi(k_BT)^2}{3c^3}
         \quad\Rightarrow\quad
         \Delta\nu_{\rm FW}=+2416.666\,\mathrm{Hz}\ (T=300\,\mathrm{K})$$
-      $$\alpha(\omega)=\sum_k\mathrm{sign}_k\,
-        \frac{f_k(\omega_k^2-\omega^2)}
-             {(\omega_k^2-\omega^2)^2+(\Gamma_k\omega)^2}$$
+      $$\Delta\nu_{\rm dyn}=-\frac{1}{2\varepsilon_0 h}\,\frac{\hbar\theta^4}{\pi^2c^3}\,
+          \frac{\alpha_{\rm SI/au}}{\theta_{\rm au}^2}\sum_k\mathrm{sign}_k\,f_k\,F(y_k),
+          \qquad y_k=\frac{\hbar\omega_k}{k_BT},\quad\theta=\frac{k_BT}{\hbar}$$
+      $$F(y)={\rm PV}\!\int_0^\infty\frac{x^3}{e^x-1}\,\frac{dx}{y^2-x^2},\qquad
+          F(0)=-\frac{\pi^2}{6},\qquad F(y\to\infty)\to\frac{\pi^4}{15\,y^2}$$
     </div>
     <p>
       Static Itano grows as $\alpha(0)\sim n^7$ and is <em>not</em> physical
       once IR partners sit in the thermal band; use $\Delta\nu_{\rm dyn}$.
       The dyn network applies TRK closure (scale signed $f$ to 1), a QDT
       discrete tail beyond series $n_{\max}$, and Kramers continuum bins for
-      any residual strength - without this, Coulomb same-$n$ $f$ overshoots
-      TRK and dyn sits ~3× above Farley–Wing.
-      Na @ 300&nbsp;K: $20s$ $\Delta\nu_{\rm dyn}\sim+2630$&nbsp;Hz (FW ratio
-      $\sim1.09$); $40s\sim+2320$&nbsp;Hz ($\sim0.96$).
+      any residual strength, so the signed $f$ sum closes at the one-electron TRK limit.
       CLI: <code>--shift-n-min</code> / <code>--shift-n-max</code>,
       <code>--state 20s,25s</code>, <code>--no-rydberg-shifts</code>,
       <code>--no-rydberg-dyn</code>, <code>--no-rydberg-cont</code>,
       <code>--n-tail-max</code>;
       debug: <code>linak --pipeline polarizability Na --state 20s</code>.
     </p>
+    <p>
+      $F(y)$ is one universal function, tabulated once and evaluated for every channel. Its limits
+      recover both textbook results: a partner far above $k_BT$ gives the static Itano shift, and
+      near partners with a closed $f$ sum give Farley-Wing exactly. A grid over $\omega$ cannot do
+      this integral, because the resonances are far narrower than any practical step and are sampled
+      at random; the principal value needs no widths, since $\Gamma\ll k_BT/\hbar$ for every channel.
+      Na @ 300&nbsp;K: $20s$ $+2537$&nbsp;Hz (FW ratio 1.05), $30s$ $+2459$&nbsp;Hz (1.02),
+      $40s$ $+2434$&nbsp;Hz (1.01).
+    </p>
+    <div class="annotation amber">
+      <span class="icon">!</span>
+      <p><strong>Where the network is incomplete, the shift is not reliable.</strong> The closure
+      assumes missing strength lies in the continuum, so a state that has lost a nearby partner gets a
+      wrong shift even though the integral is exact. A state with <code>f_cont</code> above 1 is written with
+      <code>dyn_reliable: false</code> and left out of the $\Delta\nu(n)$ plots. Known cases: all $g$ states (the
+      network has no $h$ partners); K $6d$-$10d$, $17d_{3/2}$ and $19s$; Li $26p$ (NIST places it above $26d$);
+      Cs $nf_{7/2}$ for $n=11$-$23$ (NIST labels its $g$ levels $J=7/2$ only, so $g_{9/2}$ partners are missing);
+      and Fr $9d$, $18f$, $23p_{3/2}$.</p>
+    </div>
   </div>
 </section>
 
@@ -3568,8 +3604,16 @@ p {
     </p>
     <div class="math-block purple">
       <div class="math-label">Complex dynamic polarizability (tweezer.alpha_complex)</div>
-      $$\alpha(\omega)=\sum_k \mathrm{sign}_k\,\frac{f_k}{\omega_k^2-\omega^2-i\Gamma_k\omega}$$
+      $$\alpha(\omega)=\sum_k \mathrm{sign}_k\,\frac{f_k}{\omega_k^2-\omega^2-i\Gamma_{k}(\omega)\,\omega},
+        \qquad \Gamma_k(\omega)=\Gamma_k\left(\frac{\omega}{\omega_k}\right)^{2}$$
     </div>
+    <p>
+      The $(\omega/\omega_k)^2$ factor is the frequency-dependent radiative damping of a
+      classical oscillator (Grimm et al. 2000, Eqs. 2 and 10). It gives the off-resonant
+      scattering its $(\omega/\omega_k)^3$ scaling. A constant $\Gamma_k$ would overestimate
+      $\mathrm{Im}[\alpha]$, and so $R_{\rm sc}$, by $(\omega_k/\omega)^2$, which is about
+      3.3 for Na at 1064&nbsp;nm.
+    </p>
     <p>
       Ionic-core channels (<code>source=='core'</code>) are dropped from
       $\mathrm{Im}[\alpha]$: they do not represent optical-frequency scattering
@@ -3588,7 +3632,7 @@ p {
       $R_{\rm sc}\approx(\Gamma/|\Delta|)|U|/\hbar$. At typical tweezer
       wavelengths ($|\Delta|$ optical-scale) the full multi-level
       $\mathrm{Im}[\alpha]$ sum is required; the RWA two-level ratio is only
-      $\sim0.7$ at 1064&nbsp;nm for Na D2.
+      $\sim0.2$ at 1064&nbsp;nm for Na D2.
     </p>
   </div>
 
@@ -3615,8 +3659,8 @@ p {
       <span class="icon">✅</span>
       <p>
         Na @ 1064&nbsp;nm, 50&nbsp;kW/cm², $w_0=1$&nbsp;µm:
-        $U/k_B\approx-26$&nbsp;µK, $R_{\rm sc}\approx0.105$&nbsp;s⁻¹,
-        heating $\approx0.077$&nbsp;µK/s, $\tau_{\rm heat}\sim340$&nbsp;s,
+        $U/k_B\approx-26$&nbsp;µK, $R_{\rm sc}\approx0.032$&nbsp;s⁻¹,
+        heating $\approx0.024$&nbsp;µK/s, $\tau_{\rm heat}\sim1100$&nbsp;s,
         dominated by the D2 then D1 virtual channels.
       </p>
     </div>
@@ -3890,8 +3934,7 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <h2>Sodium: A Full Worked Example</h2>
     <p class="section-intro">
       Placed after the module chapters so the walkthrough can cite every formula
-      already derived. Numbers are a snapshot of 2026-10-14 (after the QDT radial
-      normalisation fix); regenerate and read the JSON for exact current values. Every number the pipeline produces for Na, traced from the
+      already derived. Numbers were recomputed on 2026-11-05 at commit 28667f7, and ORCA values come from the shipped Na run with 40 roots. Regenerate and read the JSON for exact current values. Every number the pipeline produces for Na, traced from the
       raw NIST file through ORCA and every downstream script, to the final trap,
       hyperfine, Feshbach, and visualization artifacts. Execution order:
       <code style="font-family:var(--mono);font-size:12px;color:var(--blue)">
@@ -3924,17 +3967,18 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <div class="two-col">
       <div class="card">
         <h4>NIST Levels/<wbr>Na.txt</h4>
-        <p style="font-size:13px">Tab-separated NIST ASD export with columns: config, term, J, energy (eV). Each row is one $J$ sublevel. The "Limit" row gives $E_{\rm IE}$.</p>
+        <p style="font-size:13px">Tab-separated NIST ASD export with columns: config, term, J, energy (eV), uncertainty, reference. Each row is one $J$ sublevel. The "Limit" row gives $E_{\rm IE}$.</p>
         <div class="code-block" style="font-size:11px;">
 <span class="comment"># First rows of Na.txt (simplified)</span>
 <span class="var">Config     Term   J    Energy(eV)</span>
-<span class="var">2p6.3s     2S     1/2   0.000000</span>   <span class="comment">← ground state</span>
-<span class="var">2p6.3p     2P*    1/2   2.102297</span>   <span class="comment">← D1 upper</span>
-<span class="var">2p6.3p     2P*    3/2   2.104429</span>   <span class="comment">← D2 upper</span>
-<span class="var">2p6.4s     2S     1/2   3.190530</span>
-<span class="var">2p6.3d     2D     3/2   3.619059</span>
+<span class="var">2p63s      2S     1/2   0.000000</span>   <span class="comment">← ground state</span>
+<span class="var">2p63p      2P°    1/2   2.102297</span>   <span class="comment">← D1 upper</span>
+<span class="var">           ...    3/2   2.104429</span>   <span class="comment">← D2 upper</span>
+<span class="var">2p64s      2S     1/2   3.191353</span>
+<span class="var">2p63d      2D     5/2   3.616971</span>
+<span class="var">           ...    3/2   3.616977</span>
 <span class="var">...        ...    ...   ...</span>
-<span class="var">Limit            5.139076</span>           <span class="comment">← IE</span>
+<span class="var">Limit            5.139077</span>           <span class="comment">← IE</span>
         </div>
       </div>
       <div class="card">
@@ -3983,6 +4027,8 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <h4>Excited-state input (Na_ex.inp): TD-DFT / TDA</h4>
     <div class="code-block">
 <span class="comment">! UKS CAM-B3LYP aug-cc-pVTZ VeryTightSCF</span>
+<span class="comment">%scf MaxIter 500 end</span>
+<span class="comment">%moinp "Na_gs.gbw"</span>
 <span class="comment">%tddft</span>
 <span class="comment">  nroots 20          ← compute 20 excited states</span>
 <span class="comment">  maxdim 100</span>
@@ -4000,42 +4046,42 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       <span class="icon">①</span>
       <p><strong>Absorption spectrum table</strong> finds the block starting with
       <code>ABSORPTION SPECTRUM VIA TRANSITION ELECTRIC DIPOLE MOMENTS</code>.
-      Each row: <code>0-2A → 1-2A &nbsp; 2.1070 &nbsp; 16984 &nbsp; 588.7 &nbsp; 0.328219</code>
-      → state 1, $E=2.107$ eV, $f=0.3282$. Stored as <code>fosc_by_state[1]</code>.</p>
+      Each row: <code>0-2A → 1-2A &nbsp; 2.176660 &nbsp; 17556.0 &nbsp; 569.6 &nbsp; 0.319772</code>
+      → state 1, $E=2.177$ eV, $f=0.3198$. Stored as <code>fosc_by_state[1]</code>.</p>
     </div>
     <div class="annotation">
       <span class="icon">②</span>
-      <p><strong>STATE blocks</strong> finds <code>STATE 1: E= 0.077397 au &nbsp; 2.107 eV ... &lt;S**2&gt; = 0.750 Mult 2</code>.
-      Then reads orbital lines: <code>9a → 10a : 0.937327 (c= 0.96815660)</code>.
-      Weight = $0.937$, dominant coefficient $c = 0.968$. Stored as <code>state_data[1]</code>.</p>
+      <p><strong>STATE blocks</strong> finds <code>STATE 1: E= 0.079991 au &nbsp; 2.177 eV ... &lt;S**2&gt; = 0.750 Mult 2</code>.
+      Then reads orbital lines: <code>5a → 7a : 0.784631 (c= 0.88579407)</code>.
+      Weight = $0.785$, dominant coefficient $c = 0.886$. Stored as <code>state_data[1]</code>.</p>
     </div>
     <div class="annotation green">
       <span class="icon">③</span>
       <p><strong>Merge</strong> joins on state index. Result: one dict per state with
-      <code>energy_eV=2.107, oscillator_strength=0.3282, from='9a', to='10a',
-      dominant_coeff=0.968, multiplicity=2, s2=0.750</code>.</p>
+      <code>energy_eV=2.177, oscillator_strength=0.3198, from='5a', to='7a',
+      dominant_coeff=0.886, multiplicity=2, s2=0.750</code>.</p>
     </div>
 
-    <h4>deduplicate() in orca_runner.py</h4>
+    <h4>deduplicate_excitations() in orca_parser.py</h4>
     <p>TD-DFT without SOC produces three near-degenerate $3p$ states ($m_l = -1, 0, +1$):</p>
     <div class="math-block amber">
-      <div class="math-label">Gap-based grouping (tolerance = 5 meV)</div>
-      $$\text{State 1: }2.1068\,{\rm eV},\quad \text{State 2: }2.1070\,{\rm eV},\quad \text{State 3: }2.1072\,{\rm eV}$$
-      $$\Delta E_{12} = 0.2\,{\rm meV} \ll 5\,{\rm meV} \Rightarrow \text{all three grouped}$$
-      $$\text{Representative: state with highest }f = 0.3282,\quad n\_{\rm degenerate} = 3$$
+      <div class="math-label">Gap-based grouping (tolerance = 0.1 meV)</div>
+      $$\text{State 1: }2.17667\,{\rm eV},\quad \text{State 2: }2.17667\,{\rm eV},\quad \text{State 3: }2.17667\,{\rm eV}$$
+      $$\Delta E \ll 0.1\,{\rm meV} \Rightarrow \text{all three grouped}$$
+      $$\text{Representative: state with highest }f = 0.3198,\quad n\_{\rm degenerate} = 3$$
     </div>
 
     <p>Final JSON written to <code>data_json/Na.json</code>:</p>
     <div class="code-block">
 {
   <span class="str">"element"</span>: <span class="str">"Na"</span>,  <span class="str">"Z"</span>: <span class="num">11</span>,  <span class="str">"charge"</span>: <span class="num">0</span>,  <span class="str">"multiplicity"</span>: <span class="num">2</span>,
-  <span class="str">"ground_energy_eV"</span>: <span class="num">-113592.4</span>,
+  <span class="str">"ground_energy_eV"</span>: <span class="num">-4415.66</span>,
   <span class="str">"excitations"</span>: [
-    { <span class="str">"energy_eV"</span>: <span class="num">2.107</span>, <span class="str">"oscillator_strength"</span>: <span class="num">0.3282</span>,
-      <span class="str">"from"</span>: <span class="str">"9a"</span>, <span class="str">"to"</span>: <span class="str">"10a"</span>,
-      <span class="str">"dominant_coeff"</span>: <span class="num">0.9682</span>, <span class="str">"multiplicity"</span>: <span class="num">2</span>,
+    { <span class="str">"energy_eV"</span>: <span class="num">2.177</span>, <span class="str">"oscillator_strength"</span>: <span class="num">0.3198</span>,
+      <span class="str">"from"</span>: <span class="str">"5a"</span>, <span class="str">"to"</span>: <span class="str">"7a"</span>,
+      <span class="str">"dominant_coeff"</span>: <span class="num">0.8858</span>, <span class="str">"multiplicity"</span>: <span class="num">2</span>,
       <span class="str">"n_degenerate"</span>: <span class="num">3</span>, <span class="str">"spin_forbidden"</span>: <span class="kw">false</span> },
-    <span class="comment">... 6 more unique levels up to n=20 ...</span>
+    <span class="comment">... 22 more unique levels ...</span>
   ]
 }
     </div>
@@ -4045,7 +4091,7 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
   <div class="subsection">
     <h3>Step 2: rydberg.py: quantum defects from NIST + Rydberg series</h3>
     <p>Input: <code>NIST Levels/Na.txt</code>. Script: <code>linak --pipeline rydberg Na --n-max 50</code>
-      (interactive default prompt is also 50).</p>
+      (50 is also the default).</p>
 
     <h4>parse_nist_file(): reading the level structure</h4>
     <p>
@@ -4065,22 +4111,22 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <p>For each level $(n, l, J, E)$, binding energy $= E_{\rm IE} - E$ and:</p>
     <div class="math-block amber">
       <div class="math-label">Quantum defect computation: one row per NIST level</div>
-      $$\delta_l^{(n,J)} = n - \sqrt{\frac{13.6057\,{\rm eV}}{E_{\rm IE} - E}}$$
+      $$\delta_l^{(n,J)} = n - \sqrt{\frac{13.6054\,{\rm eV}}{E_{\rm IE} - E}}\qquad(\text{mass-corrected Ry for }{}^{23}{\rm Na})$$
     </div>
 
     <table class="def-table" style="margin:16px 0;">
       <tr><th>Level</th><th>n</th><th>l</th><th>J</th><th>E (eV)</th><th>Binding (eV)</th><th>n*</th><th>δ_l</th></tr>
       <tr><td>3s</td><td>3</td><td>s</td><td>1/2</td><td>0.0000</td><td>5.1391</td><td>1.6271</td><td>1.3729</td></tr>
-      <tr><td>3p₁/₂</td><td>3</td><td>p</td><td>1/2</td><td>2.1023</td><td>3.0368</td><td>2.1170</td><td>0.8830</td></tr>
-      <tr><td>3p₃/₂</td><td>3</td><td>p</td><td>3/2</td><td>2.1044</td><td>3.0347</td><td>2.1173</td><td>0.8827</td></tr>
-      <tr><td>4s</td><td>4</td><td>s</td><td>1/2</td><td>3.1905</td><td>1.9486</td><td>2.6421</td><td>1.3579</td></tr>
-      <tr><td>3d₃/₂</td><td>3</td><td>d</td><td>3/2</td><td>3.6191</td><td>1.5200</td><td>2.9918</td><td>0.0082</td></tr>
-      <tr><td>4p₁/₂</td><td>4</td><td>p</td><td>1/2</td><td>3.7528</td><td>1.3863</td><td>3.1348</td><td>0.8652</td></tr>
+      <tr><td>3p₁/₂</td><td>3</td><td>p</td><td>1/2</td><td>2.1023</td><td>3.0368</td><td>2.1166</td><td>0.8834</td></tr>
+      <tr><td>3p₃/₂</td><td>3</td><td>p</td><td>3/2</td><td>2.1044</td><td>3.0346</td><td>2.1174</td><td>0.8826</td></tr>
+      <tr><td>4s</td><td>4</td><td>s</td><td>1/2</td><td>3.1914</td><td>1.9477</td><td>2.6430</td><td>1.3570</td></tr>
+      <tr><td>3d₃/₂</td><td>3</td><td>d</td><td>3/2</td><td>3.6170</td><td>1.5221</td><td>2.9897</td><td>0.0103</td></tr>
+      <tr><td>4p₁/₂</td><td>4</td><td>p</td><td>1/2</td><td>3.7526</td><td>1.3864</td><td>3.1326</td><td>0.8674</td></tr>
     </table>
     <p>Averaged over all $n, J$ per orbital:</p>
     <div class="math-block green">
       <div class="math-label">Final averaged quantum defects written to Na_rydberg.json</div>
-      $$\bar{\delta}_s = 1.3505, \quad \bar{\delta}_p = 0.8650, \quad \bar{\delta}_d = 0.0127, \quad \bar{\delta}_f \approx 0.0014, \quad \bar{\delta}_g \approx 0.0002$$
+      $$\bar{\delta}_s = 1.3506, \quad \bar{\delta}_p = 0.8651, \quad \bar{\delta}_d = 0.0128, \quad \bar{\delta}_f \approx 0.0015, \quad \bar{\delta}_g \approx 0.0003$$
     </div>
     <p style="font-size:13px;color:var(--text2)">
       These are the values currently stored in <code>Na_rydberg.json</code> /
@@ -4090,26 +4136,27 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     </p>
 
     <h4>generate_rydberg_series(): building the full level list</h4>
-    <p>For each $(n, l)$ pair from $n_{\rm start}=3$ to $n_{\rm max}=30$:</p>
+    <p>For each $(n, l)$ pair from $n_{\rm start}=3$ to $n_{\rm max}=50$:</p>
     <div class="annotation">
       <span class="icon">🔵</span>
       <p><strong>NIST path</strong> (low $n$, J-resolved): if $(n,l)$ is in <code>nist_lookup</code>,
       emit one state per $J$ sublevel with the exact NIST energy.
-      E.g. $n=3, l=p$ → two states: $3p_{1/2}$ at $-3.0368$ eV and $3p_{3/2}$ at $-3.0347$ eV.</p>
+      E.g. $n=3, l=p$ → two states: $3p_{1/2}$ at $-3.0368$ eV and $3p_{3/2}$ at $-3.0346$ eV.</p>
     </div>
     <div class="annotation amber">
       <span class="icon">🟠</span>
-      <p><strong>QDT path</strong> (high $n$, not in NIST): single state per $(n,l)$ using
-      $E = -13.6057/(n-\bar{\delta}_l)^2$. Example for $n=10, l=s$:</p>
+      <p><strong>QDT path</strong> (levels NIST does not list): single state per $(n,l)$ using
+      $E = -{\rm Ry}_M/(n-\bar{\delta}_l)^2$ with ${\rm Ry}_M=13.6054$ eV. Testing it on $n=10, l=s$,
+      which NIST does list:</p>
     </div>
     <div class="math-block">
-      <div class="math-label">QDT energy for Na 10s (not in NIST tables)</div>
-      $$n^* = 10 - 1.3505 = 8.6495$$
-      $$E_{10s} = -\frac{13.6057}{8.6495^2} = -0.18186\,{\rm eV} \quad (\text{ionization-relative})$$
-      $$\lambda(10s \to 3p_{3/2}) = \frac{1239.842}{(5.1391 - 0.18186) - 3.0347} = \frac{1239.842}{1.9225} \approx 645\,{\rm nm}$$
+      <div class="math-label">QDT energy for Na 10s, compared with NIST</div>
+      $$n^* = 10 - 1.3506 = 8.6494$$
+      $$E_{10s} = -\frac{13.6054}{8.6494^2} = -0.18186\,{\rm eV} \quad (\text{NIST: }-0.18178\,{\rm eV,\ ionization\text{-}relative})$$
+      $$\lambda(10s \to 3p_{3/2}) = \frac{1239.842}{E_{10s}-E_{3p_{3/2}}} = \frac{1239.842}{-0.18178 + 3.03465} = \frac{1239.842}{2.8529} \approx 434.6\,{\rm nm}$$
     </div>
 
-    <p>Final JSON <code>data_json/Na_rydberg.json</code> contains 312 states (n=3..30, all l, all J from NIST, single entry from QDT for high n).</p>
+    <p>Final JSON <code>data_json/Na_rydberg.json</code> contains 282 states (n=3..50): J-resolved NIST levels where they exist, plus 78 QDT model states.</p>
   </div>
 
   <!-- ── STEP 3: TRANSITIONS ───────────────────────────────────── -->
@@ -4128,13 +4175,13 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       <tr><td>3p₁/₂</td><td>3s</td><td>1 ✅</td><td>0 ✅</td><td>589.756</td><td>Visible</td><td>✅ D1</td></tr>
       <tr><td>3p₃/₂</td><td>3s</td><td>1 ✅</td><td>1 ✅</td><td>589.158</td><td>Visible</td><td>✅ D2</td></tr>
       <tr><td>4s</td><td>3s</td><td>0 ❌</td><td>n/a</td><td>n/a</td><td>n/a</td><td>❌ Δl=0</td></tr>
-      <tr><td>4p₁/₂</td><td>3s</td><td>1 ✅</td><td>0 ✅</td><td>330.3</td><td>UV</td><td>✅</td></tr>
-      <tr><td>4p₁/₂</td><td>4s</td><td>1 ✅</td><td>0 ✅</td><td>1139.1</td><td>Near-IR</td><td>✅</td></tr>
-      <tr><td>3d₃/₂</td><td>3p₁/₂</td><td>1 ✅</td><td>1 ✅</td><td>818.4</td><td>Near-IR</td><td>✅</td></tr>
+      <tr><td>4p₁/₂</td><td>3s</td><td>1 ✅</td><td>0 ✅</td><td>330.4</td><td>UV</td><td>✅</td></tr>
+      <tr><td>4p₁/₂</td><td>4s</td><td>1 ✅</td><td>0 ✅</td><td>2209.0</td><td>Near-IR</td><td>✅</td></tr>
+      <tr><td>3d₃/₂</td><td>3p₁/₂</td><td>1 ✅</td><td>1 ✅</td><td>818.5</td><td>Near-IR</td><td>✅</td></tr>
       <tr><td>3d₅/₂</td><td>3p₁/₂</td><td>1 ✅</td><td>2 ❌</td><td>n/a</td><td>n/a</td><td>❌ |ΔJ|=2</td></tr>
-      <tr><td>10s</td><td>3p₃/₂</td><td>1 ✅</td><td>J=? QDT</td><td>644.9</td><td>Visible</td><td>✅ (J not enforced)</td></tr>
+      <tr><td>10s</td><td>3p₃/₂</td><td>1 ✅</td><td>1 ✅</td><td>434.6</td><td>Visible</td><td>✅</td></tr>
     </table>
-    <p>Total for Na with n_max=50: ~13k allowed transitions spanning X-ray to microwave. Written to <code>data_json/Na_transitions.json</code>.</p>
+    <p>Total for Na with n_max=50: about 13,300 allowed transitions, from the near UV (241.5&nbsp;nm) to the radio range. Written to <code>data_json/Na_transitions.json</code>.</p>
   </div>
 
   <!-- ── STEP 4: LIFETIMES ─────────────────────────────────────── -->
@@ -4172,44 +4219,46 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
         \approx 0.16\,{\rm ns}\quad(\text{from Acc AA})$$
     </div>
 
-    <h4>Priority 4: QD Numerov for high-n Rydberg (e.g. 20s → 4p)</h4>
+    <h4>Priority 4: QD Numerov for high-n Rydberg (e.g. 20s → 5p)</h4>
     <p>
-      Channels such as $20s\to 4p$ have no NIST/literature $f$, no NIST series to extrapolate
-      (the NIST $np\to ns$ column is too sparse and inconsistent at this $n$), and ORCA does not
+      Channels such as $20s\to 5p$ have no NIST/literature $f$, and ORCA does not
       assign a root under the $0.10\,\mathrm{eV}$ / $\mathrm{IE}-0.25\,\mathrm{eV}$
       match window. The pipeline uses QD Numerov radial $f$ for the line, then multiplies by the
       scale for its type. For $s\to p$ the NIST/Numerov ratio depends on the gap
-      $\Delta n^*=|n^*_u-n^*_l|$: $s_{\rm near}=1.006$ (gap &lt; 1.5), $s_{\rm far}=1.359$ (gap ≥ 4),
+      $\Delta n^*=|n^*_u-n^*_l|$: $s_{\rm near}=1.006$ (gap &lt; 1.5), $s_{\rm far}=1.360$ (gap ≥ 4),
       linear in between (37 NIST pairs). This profile is used only when far/near differ by more than 20%.
       The levels come from the Ritz expansion $\delta(n)=\delta_0+\delta_2/(n-\delta_0)^2$
-      (Na $s$: $1.3478+0.0639/(n-\delta)^2$; $p$: $0.8547+0.1176/(n-\delta)^2$), not a constant defect.
+      (Na $s$: $1.3479+0.0627/(n-\delta)^2$; $p$: $0.8548+0.1162/(n-\delta)^2$), not a constant defect.
       The radial grid step is 0.125 $a_0$ (so high-$n$ orbitals are converged).
     </p>
     <div class="math-block">
-      <div class="math-label">Scaled Numerov f for Na 20s → 4p₃/₂</div>
-      $$n^*_{20s} = 20 - \delta_s(20) = 20 - 1.3480 = 18.652,\quad
-        n^*_{4p} = 4 - \delta_p(4) = 3.133,\quad \Delta n^* = 15.5$$
-      $$f_{\rm bare} = f_{\rm Numerov}(20s,4p_{3/2}) = 6.81\times 10^{-5},\quad
-        s_{\rm far}=1.359$$
-      $$f = s\cdot f_{\rm bare} = 1.359\times 6.81\times 10^{-5} = 9.26\times 10^{-5}$$
+      <div class="math-label">Scaled Numerov f for Na 20s → 5p₃/₂</div>
+      $$n^*_{20s} = 20 - \delta_s(20) = 20 - 1.3481 = 18.652,\quad
+        n^*_{5p} = 5 - \delta_p(5) = 4.138,\quad \Delta n^* = 14.5$$
+      $$f_{\rm bare} = f_{\rm Numerov}(20s,5p_{3/2}) = 1.21\times 10^{-4},\quad
+        s_{\rm far}=1.360$$
+      $$f = s\cdot f_{\rm bare} = 1.360\times 1.21\times 10^{-4} = 1.64\times 10^{-4}$$
     </div>
-    <p>Fine structure: the multiplet $f$ is split between $4p_{1/2}$ and $4p_{3/2}$ with 6j weights (2:1 here), not by $g$-weights alone. Einstein $A$ for the $20s\to 4p_{3/2}$ line ($\lambda=920.69\,\mathrm{nm}$, $g_l/g_u=4/2$):</p>
+    <p>
+      Fine structure: the multiplet $f$ is split between $5p_{1/2}$ and $5p_{3/2}$ with 6j weights (2:1 here), not by $g$-weights alone. Einstein $A$ for the $20s\to 5p_{3/2}$ line ($\lambda=1641.72\,\mathrm{nm}$, $g_l/g_u=4/2$):
+    </p>
     <div class="math-block green">
-      <div class="math-label">Na 20s → 4p₃/₂ via scaled Numerov</div>
-      $$A = \frac{6.6703\times 10^{13}}{(920.69)^2}\cdot 2\cdot 9.26\times 10^{-5}
-         \approx 1.46\times 10^{4}\,\mathrm{s}^{-1}$$
+      <div class="math-label">Na 20s → 5p₃/₂ via scaled Numerov</div>
+      $$A = \frac{6.6703\times 10^{13}}{(1641.72)^2}\cdot 2\cdot 1.64\times 10^{-4}
+         \approx 8.13\times 10^{3}\,\mathrm{s}^{-1}$$
       $$\text{source tag: Numerov (not Coulomb)}$$
     </div>
     <p>
-      The $20s$ lifetime itself is still set mostly by NIST $20s\to 3p$ channels;
+      The two NIST $20s\to 3p$ channels are the largest single contributors (about 44% of the $20s$ decay rate);
       Numerov fills the many mid-/high-$n$ partners that NIST does not tabulate.
       Coulomb is not used for this channel.
     </p>
+
     <h4>Priority 3b: NIST-extrap and J-less labels</h4>
     <p>
       NIST lists $3s\to np$ only to about $n=18$ (and those values are 1.3-1.45× above the smooth physical curve for $n\ge12$; their uncertainty is raised to 40%, values unchanged). For $3s\to np$, $n\ge19$ the curated literature tier supplies model-potential values whose threshold limit (0.137 Mb) lies inside the measured/calculated range, so this channel is not extrapolated. NIST lists $3p\to ns/nd$ to $n\approx20$. Beyond that the Seaton
       relation $f\,n^{*3}=2\,{\rm Ry}\,df/dE$ is smooth through threshold, so each J-resolved series is fitted with
-      $y=a+b/n^{*2}$ on its last 6 NIST points (accepted if rms &lt; 5%). Uncertainty = NIST accuracy ⊕ fit rms ⊕
+      $y=a+b/n^{*2}$ on its last 6 NIST points (accepted if rms &lt; 5%; a robust retry may leave out up to 2 outlying points). Example: $20s\to 4p_{3/2}$ gets $f=8.80\times10^{-5}$ and $A=1.39\times10^{4}\,\mathrm{s}^{-1}$ (rms 4.6%, within 5% of Numerov). Uncertainty = NIST accuracy ⊕ fit rms ⊕
       window-to-window spread ⊕ half the model difference. For levels without $J$ (QDT-model $n\ge21$) the
       multiplet aggregate $f$ is the sum over NIST lines (not the former mean-over-lower-$J$ sum, which was 1.45-1.48×
       too large for $p\leftrightarrow d$, $d\leftrightarrow f$), and the fine-structure rates are averaged statistically.
@@ -4322,11 +4371,11 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <table class="def-table">
       <tr><th>Quantity</th><th>Symbol</th><th>Value</th><th>Source</th><th>Script</th></tr>
       <tr><td>Ionization energy</td><td>$E_{\rm IE}$</td><td>5.139077 eV</td><td>NIST ASD</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect s</td><td>$\bar\delta_s$</td><td>1.3505 (Ritz $\delta_0$ 1.3478)</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect p</td><td>$\bar\delta_p$</td><td>0.8650 (Ritz $\delta_0$ 0.8547)</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>Quantum defect d</td><td>$\bar\delta_d$</td><td>0.0127 (Ritz $\delta_0$ 0.0149)</td><td>NIST levels</td><td>rydberg.py</td></tr>
-      <tr><td>TD-DFT 3p energy</td><td>$\Omega_{\rm TD}$</td><td>2.107 eV</td><td>ORCA CAM-B3LYP/aug-cc-pVTZ</td><td>orca_runner.py</td></tr>
-      <tr><td>TD-DFT error</td><td>$\Delta E$</td><td>2.6 meV (0.1%)</td><td>vs NIST 2.1044 eV</td><td>orca_runner.py</td></tr>
+      <tr><td>Quantum defect s</td><td>$\bar\delta_s$</td><td>1.3506 (Ritz $\delta_0$ 1.3479)</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>Quantum defect p</td><td>$\bar\delta_p$</td><td>0.8651 (Ritz $\delta_0$ 0.8548)</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>Quantum defect d</td><td>$\bar\delta_d$</td><td>0.0128 (Ritz $\delta_0$ 0.0150)</td><td>NIST levels</td><td>rydberg.py</td></tr>
+      <tr><td>TD-DFT 3p energy</td><td>$\Omega_{\rm TD}$</td><td>2.177 eV</td><td>ORCA CAM-B3LYP/aug-cc-pVTZ</td><td>orca_runner.py</td></tr>
+      <tr><td>TD-DFT error</td><td>$\Delta E$</td><td>72 meV (3.4%)</td><td>vs NIST 2.1044 eV</td><td>orca_runner.py</td></tr>
       <tr><td>D1 wavelength</td><td>$\lambda_{\rm D1}$</td><td>589.755 nm</td><td>NIST</td><td>transitions.py</td></tr>
       <tr><td>D2 wavelength</td><td>$\lambda_{\rm D2}$</td><td>589.158 nm</td><td>NIST</td><td>transitions.py</td></tr>
       <tr><td>SOC splitting</td><td>$\Delta E_{\rm SOC}$</td><td>2.13 meV</td><td>NIST $E(3p_{3/2})-E(3p_{1/2})$</td><td>compare_elements.py</td></tr>
@@ -4349,10 +4398,10 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       <tr><td>α(0) ground</td><td>$\alpha(0)$</td><td>162.61 au (expt 162.7)</td><td>sum-over-states + core</td><td>polarizability.py</td></tr>
       <tr><td>$C_6$ (homonuclear)</td><td>$C_6$</td><td>1558 au (expt 1556)</td><td>Casimir-Polder $\int[\alpha(i\xi)]^2$</td><td>polarizability.py</td></tr>
       <tr><td>BBR gs shift (300 K)</td><td>$\Delta\nu_{\rm gs}$</td><td>$-1.40$ Hz (static); $-1.40$ Hz (dyn)</td><td>Itano + Planck integral</td><td>blackbody.py</td></tr>
-      <tr><td>BBR D1 differential</td><td>$\Delta\nu_{\rm ex}-\Delta\nu_{\rm gs}$</td><td>$-0.52$ Hz (static)</td><td>$3p_{1/2}$ vs $3s$</td><td>blackbody.py</td></tr>
-      <tr><td>Tweezer $U/k_B$ (1064 nm, 50 kW/cm²)</td><td>$U$</td><td>$-26.21$ µK</td><td>$-(2\pi a_0^3/c)\mathrm{Re}[\alpha]I$</td><td>tweezer.py</td></tr>
-      <tr><td>Tweezer $R_{\rm sc}$</td><td>$R_{\rm sc}$</td><td>0.105 s⁻¹</td><td>$\mathrm{Im}[\alpha]$</td><td>tweezer.py</td></tr>
-      <tr><td>Tweezer $\tau_{\rm heat}$</td><td>$\tau_{\rm heat}$</td><td>$\sim339$ s</td><td>$|U|/\dot E$</td><td>tweezer.py</td></tr>
+      <tr><td>BBR D1 differential</td><td>$\Delta\nu_{\rm ex}-\Delta\nu_{\rm gs}$</td><td>$-1.69$ Hz (static)</td><td>$3p_{1/2}$ vs $3s$</td><td>blackbody.py</td></tr>
+      <tr><td>Tweezer $U/k_B$ (1064 nm, 50 kW/cm²)</td><td>$U$</td><td>$-26.19$ µK</td><td>$-(2\pi a_0^3/c)\mathrm{Re}[\alpha]I$</td><td>tweezer.py</td></tr>
+      <tr><td>Tweezer $R_{\rm sc}$</td><td>$R_{\rm sc}$</td><td>0.032 s⁻¹</td><td>$\mathrm{Im}[\alpha]$</td><td>tweezer.py</td></tr>
+      <tr><td>Tweezer $\tau_{\rm heat}$</td><td>$\tau_{\rm heat}$</td><td>$\sim1104$ s</td><td>$|U|/\dot E$</td><td>tweezer.py</td></tr>
       <tr><td>Trap freqs ($w_0=1$ µm)</td><td>$\nu_r,\nu_z$</td><td>31.0 kHz, 7.4 kHz</td><td>Gaussian ODT</td><td>tweezer.py</td></tr>
       <tr><td>Ground hf clock (${}^{23}$Na)</td><td>$\nu_{\rm hf}$</td><td>1771.626 MHz</td><td>$F=2\to F=1$ ($3s_{1/2}$)</td><td>hyperfine.py</td></tr>
       <tr><td>Ground $A$ constant</td><td>$A_{3s}$</td><td>885.813 MHz</td><td>literature / nuclear data</td><td>hyperfine.py</td></tr>
@@ -4392,8 +4441,8 @@ linak --pipeline tweezer Na --wl 1064 --intensity 50 --waist 1
     <div class="math-block amber">
       <div class="math-label">Na BBR (gs = 3s, ex = 3p₁/₂): Na_blackbody.json</div>
       $$\Delta\nu_{\rm gs}^{\rm static}=-1.400\,{\rm Hz},\quad
-        \Delta\nu_{\rm ex}^{\rm static}=-1.922\,{\rm Hz},\quad
-        \Delta\nu_{\rm diff}=-0.522\,{\rm Hz}$$
+        \Delta\nu_{\rm ex}^{\rm static}=-3.090\,{\rm Hz},\quad
+        \Delta\nu_{\rm diff}=-1.690\,{\rm Hz}$$
       $$\Delta\nu_{\rm gs}^{\rm dyn}=-1.404\,{\rm Hz}\quad
         (\text{dynamic correction }\sim0.3\%)$$
     </div>
@@ -4402,9 +4451,9 @@ linak --pipeline tweezer Na --wl 1064 --intensity 50 --waist 1
     <h4>Tweezer point @ 1064 nm</h4>
     <div class="math-block purple">
       <div class="math-label">Na tweezer (I = 50 kW/cm², w₀ = 1 µm): Na_tweezer.json</div>
-      $$\mathrm{Re}[\alpha]=233\,{\rm au},\quad \mathrm{Im}[\alpha]=3.57\times10^{-6}\,{\rm au}$$
-      $$U/k_B=-26.21\,{\rm µK},\quad R_{\rm sc}=0.105\,{\rm s}^{-1},\quad
-        \tau_{\rm heat}\approx339\,{\rm s}$$
+      $$\mathrm{Re}[\alpha]=233\,{\rm au},\quad \mathrm{Im}[\alpha]=1.09\times10^{-6}\,{\rm au}$$
+      $$U/k_B=-26.19\,{\rm µK},\quad R_{\rm sc}=0.032\,{\rm s}^{-1},\quad
+        \tau_{\rm heat}\approx1104\,{\rm s}$$
       $$\nu_r=31.0\,{\rm kHz},\quad \nu_z=7.42\,{\rm kHz}$$
     </div>
     <p>
@@ -4478,7 +4527,7 @@ linak --pipeline orbital3d Na                       <span class="comment"># GPU 
 linak --pipeline orbital3d Na --render isosurface   <span class="comment"># Plotly isosurfaces instead (no WebGL2 needed)</span>
 linak --pipeline plotinteractive Na
 <span class="comment"># optional: linak --pipeline plotinteractive Na -e v13 --plots 1</span>
-<span class="comment"># plotinteractive prompts: energy mode (1=Excitation), filter continuum (y), …</span>
+<span class="comment"># defaults: --energy-shift 1 (Excitation), --filter-ie y</span>
 linak --pipeline compare_elements --elements Na
 linak --pipeline scattering_rate --element Na --line D2
     </div>
@@ -4955,7 +5004,7 @@ python -m linak.integrations.arc Sr --n-max 40
       <tr><td><code>--shift-n-min</code> / <code>--shift-n-max</code></td><td>$n_{\rm gs}+2$ / $n_{\max}-5$</td><td>Rydberg $\alpha(0)$ static-shift table</td></tr>
       <tr><td><code>--state</code></td><td>n/a</td><td>Extra labels (comma-separated)</td></tr>
       <tr><td><code>--no-rydberg-shifts</code></td><td>off</td><td>Skip high-$n$ $\alpha(0)$ / shift table</td></tr>
-      <tr><td><code>--no-rydberg-dyn</code></td><td>off</td><td>Skip damped dynamic Planck integral (static only)</td></tr>
+      <tr><td><code>--no-rydberg-dyn</code></td><td>off</td><td>Skip dynamic Planck integral (static only)</td></tr>
       <tr><td><code>--no-rydberg-cont</code></td><td>off</td><td>Skip TRK / QDT-tail / Kramers continuum on dyn network</td></tr>
       <tr><td><code>--n-tail-max</code></td><td>200</td><td>QDT discrete tail max $n$ for dyn completion</td></tr>
       <tr><td><code>--n-pad</code></td><td>5</td><td>Headroom below series $n_{\max}$</td></tr>
@@ -5226,16 +5275,15 @@ linak --pipeline compare_elements      <span class="comment"># rebuild CompTable
     <div class="math-block">
       <div class="math-label">Natural width, peak cross-section, saturation intensity</div>
       $$\Delta\nu_{\rm nat}=\frac{A}{2\pi},\qquad
-        \sigma_{\rm peak}^{\rm nat}=\frac{\lambda^2}{4}\frac{g_u}{g_l},\qquad
+        \sigma_{\rm peak}^{\rm nat}=\frac{\lambda^2}{2\pi}\frac{g_u}{g_l},\qquad
         I_{\rm sat}=\frac{h\nu}{2\sigma_{\rm peak}\,\tau}$$
     </div>
     <p style="font-size:13px;color:var(--text2)">
-      The $\lambda^2/4$ form is the <b>pipeline</b> natural peak
-      ($\sigma=(\lambda^2/8\pi)(g_u/g_l)(A/\Delta\nu_{\rm nat})$ with
-      $\Delta\nu_{\rm nat}=A/(2\pi)$), matching <code>lifetimes.py</code> and
-      this CompTable. It is <em>not</em> the unit-normalised Lorentzian peak
-      $\lambda^2/(2\pi)\,(g_u/g_l)$ used in Steck's isotropic sheet; see
-      <a href="#sec7">Section 07</a> for both conventions side by side.
+      The $\lambda^2/(2\pi)$ form is the unit-normalised Lorentzian peak
+      ($\sigma=(\lambda^2/8\pi)(g_u/g_l)(A\,\phi_L(0))$ with
+      $\phi_L(0)=2/(\pi\Delta\nu_{\rm nat})$ and $\Delta\nu_{\rm nat}=A/(2\pi)$). It is what
+      <code>lifetimes.py</code> and this CompTable use, and it matches Steck's isotropic
+      sheet; see <a href="#sec7">Section 07</a>.
     </p>
     <div class="math-block amber">
       <div class="math-label">Doppler FWHM and peak $\sigma$ (recomputed in-browser when $T$ changes)</div>
@@ -5325,7 +5373,7 @@ linak --pipeline compare_elements      <span class="comment"># rebuild CompTable
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.85">
       <li>Preferred $f$/$A$/$\tau$: NIST ASD via the lifetimes stack; curated Fr D-line values use the <b>precision</b> tag; ORCA TD-DFT only when needed.</li>
       <li>If <code>&lt;el&gt;_lifetimes.json</code> is missing, that row is built from hardcoded Steck / NIST sheets and coloured <span style="color:#e67e22;font-weight:600">literature</span>. With lifetimes present, the row source is <span style="color:#2e7d32;font-weight:600">pipeline</span> even when the D-line $f$ itself is NIST.</li>
-      <li>$\sigma_{\rm peak}$ and $I_{\rm sat}$ use the pipeline isotropic / two-level convention ($\lambda^2/4$). Compare carefully to Steck cycling ($\approx6.26$&nbsp;mW/cm² for Na D2) or Steck isotropic Lorentzian ($\approx9.4$&nbsp;mW/cm²) - see <a href="#sec7">Section 07</a>.</li>
+      <li>$\sigma_{\rm peak}$ and $I_{\rm sat}$ use the isotropic Lorentzian convention ($\lambda^2/(2\pi)\,(g_u/g_l)$). Compare carefully to Steck cycling ($\approx6.26$&nbsp;mW/cm² for Na D2) or Steck isotropic Lorentzian ($\approx9.4$&nbsp;mW/cm²) - see <a href="#sec7">Section 07</a>.</li>
       <li>Doppler columns ignore pressure / transit-time / laser linewidth; they are the pure thermal Gaussian piece.</li>
       <li>Highlight / sort / CSV use the current display order (including live Doppler values at the selected $T$).</li>
       <li>This section is the CompTable legend. After lifetimes or NIST updates, re-run

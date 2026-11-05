@@ -10,13 +10,16 @@ import json
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QAbstractScrollArea,
     QApplication,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -35,6 +38,66 @@ CARD_MIN_WIDTH = 300
 MAX_CARD_COLUMNS = 3
 # A table's last column (notes, references) is capped; the tooltip has it in full.
 LAST_COLUMN_MAX_WIDTH = 260
+
+
+# Names shown in the cards for raw data keys, with real subscripts (rich text).
+CARD_LABELS = {
+    "alpha_0": "α<sub>0</sub>", "alpha_static": "α static", "C6_au": "C<sub>6</sub>", "C6_expt_au": "C<sub>6</sub> (experiment)",
+    "magic_wavelength_nm": "Magic wavelength",
+    "wl_nm": "Wavelength", "I_kWcm2": "Intensity", "waist_um": "Waist", "trap_depth_uK": "Trap depth",
+    "scattering_rate_s-1": "Scattering rate", "recoil_heating_K_s": "Recoil heating", "trap_frequency_Hz": "Trap frequency",
+    "isotope_A": "Isotope A", "isotope": "Isotope", "a_bg_default_a0": "Background scattering length a<sub>bg</sub>",
+    "C6_source": "C<sub>6</sub> source", "beta6_a0": "β<sub>6</sub>", "a_bar_a0": "Mean scattering length ā",
+    "kT_uK": "k<sub>B</sub>T", "mass_amu": "Mass", "mass_source": "Mass source", "k_a0inv": "Wave number k",
+}
+_SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+
+
+def plain_label(text: str) -> str:
+    """A card label as plain text (for the copied summary): <sub>digits</sub> become subscript digits, other subscripts follow an underscore."""
+    import re
+    return re.sub(r"<sub>(.*?)</sub>", lambda m: m.group(1).translate(_SUB) if m.group(1).isdigit() else "_" + m.group(1), text)
+
+
+class CopyableTable(QTableWidget):
+    """Read-only table whose selection copies as tab-separated text (Ctrl+C or right-click)."""
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._menu)
+
+    def selected_text(self) -> str:
+        cells = {(i.row(), i.column()) for i in self.selectedIndexes()}
+        if not cells:
+            return ""
+        rows = sorted({r for r, _ in cells})
+        cols = sorted({c for _, c in cells})
+        lines = []
+        for r in rows:
+            lines.append("\t".join(
+                (self.item(r, c).text() if (r, c) in cells and self.item(r, c) else "") for c in cols))
+        return "\n".join(lines)
+
+    def copy_selection(self) -> None:
+        QGuiApplication.clipboard().setText(self.selected_text())
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Copy):
+            self.copy_selection()
+        elif event.matches(QKeySequence.SelectAll):
+            self.selectAll()
+        else:
+            super().keyPressEvent(event)
+
+    def _menu(self, pos):
+        menu = QMenu(self)
+        menu.addAction("Copy", self.copy_selection).setEnabled(bool(self.selectedIndexes()))
+        menu.addAction("Select all", self.selectAll)
+        menu.exec(self.viewport().mapToGlobal(pos))
 
 
 class SpeciesOverviewWidget(QWidget):
@@ -160,6 +223,11 @@ class SpeciesOverviewWidget(QWidget):
         except (TypeError, ValueError):
             return None
 
+    @classmethod
+    def _with_unit(cls, value, unit):
+        text = cls._format_value(value)
+        return f"{text} {unit}" if unit and value is not None and not isinstance(value, str) else text
+
     @staticmethod
     def _format_value(value):
         if value is None:
@@ -223,7 +291,7 @@ class SpeciesOverviewWidget(QWidget):
 
     def _card(self, title, rows):
         self._summary_parts.append(
-            "\n".join([title, *(f"  {label}: {value}" for label, value in rows)]))
+            "\n".join([title, *(f"  {plain_label(str(label))}: {value}" for label, value in rows)]))
         box = QGroupBox(title)
         form = QFormLayout(box)
         form.setLabelAlignment(Qt.AlignRight)
@@ -231,6 +299,7 @@ class SpeciesOverviewWidget(QWidget):
         for label, value in rows:
             text = QLabel(str(value))
             text.setWordWrap(True)
+            text.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
             form.addRow(label, text)
         return box
 
@@ -245,13 +314,14 @@ class SpeciesOverviewWidget(QWidget):
             ("Ground energy", ("ground_energy_eV",)),
             ("Ionization energy", ("ionization_energy_eV",)),
         ):
+            unit = "eV" if "energy" in label.lower() else ""
             value = next(
                 (source[key] for source in (core_data, rydberg_data) for key in keys
                  if not isinstance(source.get(key), (dict, list, type(None)))),
                 None,
             )
             if value is not None:
-                rows.append((label, self._format_value(value)))
+                rows.append((label, self._with_unit(value, unit)))
 
         if not rows:
             rows.append(("Data", "No core metadata found"))
@@ -275,7 +345,7 @@ class SpeciesOverviewWidget(QWidget):
         rows = []
         for label, keys in (
             ("Method", ("method",)),
-            ("Ionization energy", ("ionization_energy_eV",)),
+            ("Ionization energy [eV]", ("ionization_energy_eV",)),
             ("States", ("num_states",)),
             ("Theoretical states", ("num_theoretical",)),
             ("n min", ("n_start",)),
@@ -356,8 +426,8 @@ class SpeciesOverviewWidget(QWidget):
         rows = [("States", str(len(lifetime_list))), ("Channels", str(channel_count))]
         if taus:
             rows.extend([
-                ("τ min", self._format_value(min(taus))),
-                ("τ max", self._format_value(max(taus))),
+                ("τ min", self._with_unit(min(taus), "s")),
+                ("τ max", self._with_unit(max(taus), "s")),
             ])
         if source_counts:
             src_text = ", ".join(f"{k}: {v}" for k, v in sorted(source_counts.items()))
@@ -370,10 +440,11 @@ class SpeciesOverviewWidget(QWidget):
             return self._card("Polarizability", [("Status", "Not available")])
 
         rows = []
-        for key in ("alpha_0", "alpha_static", "C6_au", "C6_expt_au", "magic_wavelength_nm"):
+        for key, unit in (("alpha_0", "a.u."), ("alpha_static", "a.u."), ("C6_au", "a.u."),
+                          ("C6_expt_au", "a.u."), ("magic_wavelength_nm", "nm")):
             value = self._find_value(data, (key,))
             if value is not None:
-                rows.append((key, self._format_value(value)))
+                rows.append((CARD_LABELS.get(key, key), self._with_unit(value, unit)))
         if not rows:
             rows.append(("Status", "File present but no summary values found"))
         return self._card("Polarizability", rows)
@@ -438,10 +509,13 @@ class SpeciesOverviewWidget(QWidget):
             )),
         )
 
+        bb_units = {"Temperature": "K", "Static shift": "Hz", "Dynamic shift": "Hz", "Total shift": "Hz",
+                    "BBR depopulation rate": "s⁻¹", "Photoionization rate": "s⁻¹", "Total quenching rate": "s⁻¹",
+                    "Effective lifetime": "s", "BBR lifetime": "s"}
         for label, keys in scalar_fields:
             value = self._find_value(data, keys)
             if value is not None:
-                rows.append((label, self._format_value(value)))
+                rows.append((label, self._with_unit(value, bb_units.get(label, ""))))
 
         # Report whether optional physical blocks were included.
         if isinstance(data, dict):
@@ -475,13 +549,13 @@ class SpeciesOverviewWidget(QWidget):
             return self._card("Optical tweezer", [("Status", "Not available")])
 
         rows = []
-        for key in (
-            "wl_nm", "I_kWcm2", "waist_um", "trap_depth_uK",
-            "scattering_rate_s-1", "recoil_heating_K_s", "trap_frequency_Hz"
+        for key, unit in (
+            ("wl_nm", "nm"), ("I_kWcm2", "kW/cm²"), ("waist_um", "µm"), ("trap_depth_uK", "µK"),
+            ("scattering_rate_s-1", "s⁻¹"), ("recoil_heating_K_s", "K/s"), ("trap_frequency_Hz", "Hz"),
         ):
             value = self._find_value(data, (key,))
             if value is not None:
-                rows.append((key, self._format_value(value)))
+                rows.append((CARD_LABELS.get(key, key), self._with_unit(value, unit)))
 
         if not rows:
             rows.append(("Status", "File present but no useful tweezer values found"))
@@ -503,16 +577,16 @@ class SpeciesOverviewWidget(QWidget):
         summary = QFormLayout()
         summary.setLabelAlignment(Qt.AlignRight)
 
-        for label, keys in (
-            ("Isotope", ("isotope_A", "isotope")),
-            ("Nuclear spin I", ("I", "nuclear_spin")),
-            ("Magnetic moment μI", ("mu_I", "mu")),
-            ("Quadrupole moment Q", ("Q_barn", "Q")),
-            ("Nuclear g-factor", ("gI", "g_I")),
+        for label, keys, unit in (
+            ("Isotope", ("isotope_A", "isotope"), ""),
+            ("Nuclear spin I", ("I", "nuclear_spin"), ""),
+            ("Magnetic moment μI", ("mu_I", "mu"), "μN"),
+            ("Quadrupole moment Q", ("Q_barn", "Q"), "barn"),
+            ("Nuclear g-factor", ("gI", "g_I"), ""),
         ):
             value = self._find_value(data, keys)
             if value is not None:
-                summary.addRow(label, QLabel(self._format_value(value)))
+                summary.addRow(label, QLabel(self._with_unit(value, unit)))
 
         special = data.get("special", {})
         clock = special.get("microwave_clock", {}) if isinstance(special, dict) else {}
@@ -553,12 +627,13 @@ class SpeciesOverviewWidget(QWidget):
             label = summary.itemAt(index).widget()
             if isinstance(label, QLabel):
                 label.setWordWrap(True)
+                label.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
         outer.addLayout(summary)
 
         if states:
             outer.addWidget(QLabel("Hyperfine constants and F-levels"))
 
-            constants = QTableWidget()
+            constants = CopyableTable()
             constants.setColumnCount(7)
             constants.setHorizontalHeaderLabels([
                 "State",
@@ -640,21 +715,21 @@ class SpeciesOverviewWidget(QWidget):
             return self._card("Feshbach summary", [("Status", "Not available")])
 
         rows = []
-        for key in (
-            "isotope_A", "isotope", "a_bg_default_a0", "C6_au",
-            "C6_source", "beta6_a0", "a_bar_a0", "kT_uK",
-            "mass_amu", "mass_source", "k_a0inv"
+        for key, unit in (
+            ("isotope_A", ""), ("isotope", ""), ("a_bg_default_a0", "a0"), ("C6_au", "a.u."),
+            ("C6_source", ""), ("beta6_a0", "a0"), ("a_bar_a0", "a0"), ("kT_uK", "µK"),
+            ("mass_amu", "amu"), ("mass_source", ""), ("k_a0inv", "a0⁻¹"),
         ):
             value = self._find_value(data, (key,))
             if value is not None:
-                rows.append((key, self._format_value(value)))
+                rows.append((CARD_LABELS.get(key, key), self._with_unit(value, unit)))
 
         resonances = data.get("resonances")
         if isinstance(resonances, list) and resonances:
             rows.append(("Resonances", str(len(resonances))))
             b0s = [float(r.get("B0_G")) for r in resonances if self._number(r.get("B0_G")) is not None]
             if b0s:
-                rows.append(("B0 range", f"{min(b0s):.1f}–{max(b0s):.1f} G"))
+                rows.append(("B<sub>0</sub> range", f"{min(b0s):.1f}–{max(b0s):.1f} G"))
 
         if not rows:
             rows.append(("Status", "File present but no summary values found"))
@@ -681,15 +756,15 @@ class SpeciesOverviewWidget(QWidget):
         box = QGroupBox(title)
         layout = QVBoxLayout(box)
 
-        table = QTableWidget()
+        table = CopyableTable()
         table.setColumnCount(7)
         table.setHorizontalHeaderLabels([
             "Label",
             "Channel",
             "Partial wave",
-            "B0 (G)",
+            "B₀ (G)",
             "Δ (G)",
-            "a_bg (a0)",
+            "Background a (a₀)",
             "Reference",
         ])
         table.setRowCount(len(resonances))

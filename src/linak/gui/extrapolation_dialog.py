@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 from linak.core.workspace import Workspace
+from linak.physics.extrapolation import fit_settings, model_settings
 from linak.physics.extrapolation.params import UnsupportedSpeciesError, species_params
 from linak.physics.extrapolation.stage import (
     MODES,
@@ -167,6 +168,7 @@ class ExtrapolationDialog(QDialog):
         super().__init__(parent)
         self.root, self.element, self.nist, self.rydberg = Path(root), element, nist, rydberg
         self.setWindowTitle(f"Extrapolation - {element}")
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.resize(1050, 700)
         # a normal resizable window: minimize and maximize buttons, size grip
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
@@ -180,6 +182,9 @@ class ExtrapolationDialog(QDialog):
             self.cfg = load_config(saved) if saved.is_file() else ExtrapolationConfig(mode="show")
         except (OSError, ValueError, KeyError):
             self.cfg = ExtrapolationConfig(mode="show")
+        self._fit = fit_settings.load(fit_settings.settings_path(saved))     # Preferences > Extrapolator
+        self._model = model_settings.load(model_settings.settings_path(saved))
+        self._tables_dir = str(model_settings.tables_dir(saved))
         self._user_file_problem = ""
         self._load_user_anchors()
         self._result: dict | None = None
@@ -273,6 +278,10 @@ class ExtrapolationDialog(QDialog):
         edit.setToolTip("Edit your own anchor points for this species (never changes the packaged data).")
         edit.clicked.connect(self._edit_datasets)
         bottom.addWidget(edit)
+        fit_btn = QPushButton("Fit settings...")
+        fit_btn.setToolTip("Open Preferences > Extrapolator: priors, anchor weighting, presets and the model parameters.")
+        fit_btn.clicked.connect(self._open_fit_settings)
+        bottom.addWidget(fit_btn)
         bottom.addStretch(1)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self._accept)
@@ -298,11 +307,16 @@ class ExtrapolationDialog(QDialog):
         return ExtrapolationConfig(
             mode=self.mode.currentData(), n_max=self.n_max.value(), threshold=self.threshold.isChecked(),
             threshold_aware=self.threshold_aware.isChecked(), excluded=list(self.cfg.excluded),
-            user_anchors=list(self.cfg.user_anchors), user_threshold=self.cfg.user_threshold)
+            user_anchors=list(self.cfg.user_anchors), user_threshold=self.cfg.user_threshold, fit=dict(self._fit),
+            model={k: dict(v) for k, v in self._model.items()}, tables_dir=self._tables_dir)
 
     def _compute(self):
         self.cfg = self._current_cfg()
-        self._result = run_for_species(self.element, self.cfg, self.nist, self.rydberg)
+        QApplication.setOverrideCursor(Qt.WaitCursor)          # the exact calculation can take a while
+        try:
+            self._result = run_for_species(self.element, self.cfg, self.nist, self.rydberg)
+        finally:
+            QApplication.restoreOverrideCursor()
         notes = ([self._user_file_problem] if self._user_file_problem else []) + self._result["warnings"]
         self.warnings.setPlainText("\n".join(f"- {w}" for w in notes) or "No warnings.")
 
@@ -317,7 +331,7 @@ class ExtrapolationDialog(QDialog):
         sig = a.get("sigma")
         if not sig:
             return "Weight in the fit (best anchor = 100%)."
-        tip = f"Weight in the fit (best anchor = 100%). sigma = {100 * sig:.1f}%."
+        tip = f"Weight in the fit (best anchor = 100%). σ = {100 * sig:.1f}%."
         return tip + (" Low weight: spliced or extrapolated source." if a.get("low_weight") else "")
 
     def _fill_table(self):
@@ -402,6 +416,30 @@ class ExtrapolationDialog(QDialog):
     def _load_user_anchors(self):
         self.cfg.user_anchors, self.cfg.user_threshold, self._user_file_problem = _read_user_file(
             user_anchor_path(self.root, self.element))
+
+    def _open_fit_settings(self):
+        parent = self.parent()
+        if hasattr(parent, "_open_preferences"):
+            parent._open_preferences(start_tab="extrapolator", species=self.element)
+        else:                                  # no main window (tests, embedding): the same page on its own
+            from .extrapolator_settings import ExtrapolatorSettingsPage
+            dlg = QDialog(self)
+            dlg.setWindowTitle("Extrapolator settings")
+            lay = QVBoxLayout(dlg)
+            page = ExtrapolatorSettingsPage(self.root, self.element)
+            lay.addWidget(page)
+            box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            box.accepted.connect(dlg.accept)
+            box.rejected.connect(dlg.reject)
+            lay.addWidget(box)
+            if dlg.exec() == QDialog.Accepted:
+                page.apply()
+        saved = config_path(self.root, self.element)
+        self._fit = fit_settings.load(fit_settings.settings_path(saved))
+        self._model = model_settings.load(model_settings.settings_path(saved))
+        self._compute()
+        self._fill_table()
+        self._draw()
 
     def _edit_datasets(self):
         path = user_anchor_path(self.root, self.element)

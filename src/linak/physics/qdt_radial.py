@@ -431,6 +431,9 @@ def ls_group_branching(Lu: int, Ju2_set, Ll: int, Jl2_set):
 # distant pairs.  A single type-wide scale (1.27 for s->p) therefore over-scales the
 # near-resonant channels (20s->20p) that dominate Rydberg polarizabilities by ~27 %.
 GAP_KNOTS = (1.5, 4.0)       # n* gap below/above which the near/far value applies
+CALIBRATED_NSTAR_MAX = 10.0  # NIST calibrates Numerov below this lower-level n*; above it the bare
+                             # integral is used: the pairs there obey the TRK sum rule, and a scale
+                             # fitted at low n (K p->d 1.74, Fr s->p 3.45) breaks it
 NEAR_DEG_FRAC = 0.5          # n*_u^2 - n*_l^2 < NEAR_DEG_FRAC * n*_u  ==  same-n / near-degenerate pair
 GAP_MIN_BIN = 5              # inliers required in EACH bin to switch the profile on
 GAP_MIN_CONTRAST = 0.20      # |far/near - 1| must exceed ~2x the Numerov model uncertainty (0.10)
@@ -507,7 +510,7 @@ def fit_numerov_scales_by_type(qd: dict, nist_fosc: dict,
             lo, up, dl, du = a, b, da, db
         else:
             lo, up, dl, du = b, a, db, da
-        if min(nsa, nsb) <= gate:
+        if min(nsa, nsb) <= gate or min(nsa, nsb) >= CALIBRATED_NSTAR_MAX:
             continue
         if is_near_degenerate(max(nsa, nsb), min(nsa, nsb)):
             near_deg.append(f_nist)   # kept out of the type fits (see numerov_scale_for)
@@ -566,13 +569,16 @@ def numerov_scale_for(cal: dict, l_lower: str, l_upper: str, gap=None, n_star_up
 
     Near-degenerate (same-n) pairs, recognised from gap and `n_star_upper`, get scale 1.0: they were
     excluded from the fits, the NIST/Numerov ratio of such pairs measured ~1.00 (Na d->p 0.95-1.04),
-    and the unscaled radial integral agrees with hydrogen to ~1%.
+    and the unscaled radial integral agrees with hydrogen to ~1%. So do pairs whose lower level
+    lies above CALIBRATED_NSTAR_MAX, the range the fits measure.
     """
     if not cal:
         return 1.0
-    if gap is not None and n_star_upper is not None and is_near_degenerate(
-            float(n_star_upper), float(n_star_upper) - abs(float(gap))):
-        return 1.0
+    if gap is not None and n_star_upper is not None:
+        n_star_lower = float(n_star_upper) - abs(float(gap))
+        if (n_star_lower >= CALIBRATED_NSTAR_MAX
+                or is_near_degenerate(float(n_star_upper), n_star_lower)):
+            return 1.0
     t = cal.get("types", {}).get((l_lower, l_upper))
     if t is not None:
         if gap is not None and t.get("gap_dependent"):

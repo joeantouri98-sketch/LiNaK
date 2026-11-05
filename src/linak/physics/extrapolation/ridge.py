@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from .params import anchor_config, species_params
-from .tables import Table, load_table
+from .tables import OutOfTableRange, Table, get_model
 
 _NAN6 = ("value", "lo68", "hi68", "lo95", "hi95")
 
@@ -43,13 +43,20 @@ def fit_and_predict(
     """
     cfg = config or anchor_config()
     species_params(element)
-    tab = table or load_table(element)
+    tab = table or get_model(element)
     rg = cfg["ridge"]
     tau0, tau1, tau2 = rg["tau0"], rg["tau1"], rg["tau2_threshold_aware"]
     ssys = cfg["ssys_by_type"][anchor_type] if ssys is None else ssys
 
-    excluded = [r["nu"] for r in series if not tab.contains(r["nu"])]
-    tr = sorted((r for r in series if tab.contains(r["nu"])), key=lambda r: r["nu"])
+    def placeable(r):
+        try:
+            tab.f(r["nu"], J)
+            return True
+        except OutOfTableRange:
+            return False
+
+    excluded = [r["nu"] for r in series if not (tab.contains(r["nu"]) and placeable(r))]
+    tr = sorted((r for r in series if tab.contains(r["nu"]) and placeable(r)), key=lambda r: r["nu"])
     if len(tr) < 1 and not threshold:
         raise ValueError(f"{element} J={J}: no anchors inside the model range [{tab.nu_min:.2f}, {tab.nu_max:.2f}]")
 
@@ -80,7 +87,7 @@ def fit_and_predict(
     out: dict = {k: [] for k in ("nu", *_NAN6)}
     out_of_range = []
     for nu in targets_nu:
-        if not tab.contains(nu):
+        if not (tab.contains(nu) and placeable({"nu": nu})):
             out_of_range.append(nu)
             out["nu"].append(float(nu))
             for k in _NAN6:
@@ -110,5 +117,6 @@ def fit_and_predict(
         sigma_th_Mb=float(tab.sigma_th_Mb() * np.exp(b[0] + (b[2] if ta else 0.0))),
         table_hash=tab.table_hash,
         table_fresh=tab.fresh,
+        backend="table" if hasattr(tab, "splines") else "exact",
     )
     return out

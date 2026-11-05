@@ -619,6 +619,51 @@ def compute_quantum_defects(ionization_energy, levels, ry_eff=None):
     return averaged
 
 
+def screen_nist_levels(ionization_energy, levels, ry_eff=None):
+    """
+    Split a neutral atom's measured levels into (kept, dropped).
+
+    A level's quantum defect is known to σ_δ = n*³ σ_E / (2 Ry), which grows quickly with n.
+    A level is dropped, so that the model takes its place, when
+
+      * σ_δ > MAX_SIGMA_DELTA: the measurement constrains the defect less well than the
+        series does (Li np from n = 11, σ_E = 0.12 meV, σ_δ ≈ 0.06, and the listed energies
+        drift to δ = 0.68 where δ ≈ 0.05); or
+      * its defect is more than MAX_DELTA_OUTLIER from the median of its (l, J) series, which
+        only a mislabelled level can be (Fr "22d 5/2" lies below 21d 3/2).
+
+    Each dropped record gains 'reason' and 'delta'.
+    """
+    if ry_eff is None:
+        ry_eff = Ry
+    series = {}
+    for lv in levels:
+        binding = ionization_energy - lv['energy_eV']
+        if binding > 0:
+            series.setdefault((lv['l'], lv['J']), []).append(
+                lv['n'] - float(np.sqrt(ry_eff / binding)))
+    kept, dropped = [], []
+    for lv in levels:
+        binding = ionization_energy - lv['energy_eV']
+        if binding <= 0:
+            kept.append(lv)
+            continue
+        n_star = float(np.sqrt(ry_eff / binding))
+        delta = lv['n'] - n_star
+        sigma_delta = n_star ** 3 * float(lv.get('uncertainty_eV') or 0.0) / (2.0 * ry_eff)
+        members = series[(lv['l'], lv['J'])]
+        reason = None
+        if sigma_delta > MAX_SIGMA_DELTA:
+            reason = f'sigma_delta = {sigma_delta:.3g}'
+        elif len(members) >= 5 and abs(delta - float(np.median(members))) > MAX_DELTA_OUTLIER:
+            reason = f'outlier from series median {float(np.median(members)):.3f}'
+        if reason:
+            dropped.append(dict(lv, reason=reason, delta=delta))
+        else:
+            kept.append(lv)
+    return kept, dropped
+
+
 def build_nist_lookup(ionization_energy, levels):
     """
     Build (n, l, J_str, term) -> {energy_eV, uncertainty_eV, theoretical, term}.
@@ -652,8 +697,26 @@ def rydberg_energy(n, l_char, delta, ry_eff=None):
     return -ry_eff / (n_eff ** 2)
 
 
+MAX_SIGMA_DELTA = 0.01     # quantum-defect precision below which the series is the better value
+MAX_DELTA_OUTLIER = 0.5    # no alkali series member can sit this far from its neighbours
 RITZ_MIN_POINTS = 6        # distinct measured n required per orbital
 RITZ_MAX_RMS = 2e-3        # reject the fit if the residual in delta exceeds this
+RITZ_MIN_WEIGHTED_POINTS = 5   # the weighted fit is held by its most precise levels
+RITZ_SIGMA_FLOOR = 1e-5    # no level counts as better known than this in delta
+
+
+def _ritz_solve(ns, ds, weights):
+    """Least-squares (d0, d2, weighted rms) of delta(n) = d0 + d2 / (n - d0)^2."""
+    d0 = float(ds[-1])
+    c = None
+    for _ in range(30):
+        x = 1.0 / (ns - d0) ** 2
+        M = np.vstack([np.ones_like(x), x]).T
+        c = np.linalg.lstsq(M * weights[:, None], ds * weights, rcond=None)[0]
+        d0 = float(c[0])
+    resid = c[0] + c[1] / (ns - c[0]) ** 2 - ds
+    rms = float(np.sqrt(np.sum(weights ** 2 * resid ** 2) / np.sum(weights ** 2)))
+    return float(c[0]), float(c[1]), rms
 
 
 def fit_ritz_defects(ionization_energy, levels, ry_eff=None):
@@ -667,8 +730,13 @@ def fit_ritz_defects(ionization_energy, levels, ry_eff=None):
     (np vs ns) and wrecks near-resonant quantities (Rydberg polarizabilities
     +20..30 %). Levels of one n are averaged over J with weights 2J+1. The lowest two
     n of a series (core penetration beyond a 2-term Ritz law) are left out.
-    Returns {orbital: {delta0, delta2, n_min, n_max, n_points, rms}}; orbitals with
-    too few points or a poor fit are omitted (constant defect is used for them).
+    Returns {orbital: {delta0, delta2, n_min, n_max, n_points, rms}}.
+
+    A series whose high members are quoted coarsely (Rb np, Cs np, Li np) fails the
+    unweighted fit, and its constant defect is off by more than the levels it
+    replaces (Rb np: 2.679 against the measured 2.646). Those series are refitted
+    with weights 1/sigma_delta, and the result carries weighted=True. Orbitals that
+    still fail are omitted (constant defect is used for them).
     """
     if ry_eff is None:
         ry_eff = Ry
@@ -681,28 +749,33 @@ def fit_ritz_defects(ionization_energy, levels, ry_eff=None):
             continue
         j = parse_j(lv['J'])
         g = 2 * j + 1 if j is not None else 1.0
+        n_star = float(np.sqrt(ry_eff / binding))
+        unc = lv.get('uncertainty_eV')
+        sigma = n_star ** 3 * unc / (2 * ry_eff) if unc else None
         acc.setdefault(lv['l'], {}).setdefault(lv['n'], []).append(
-            (lv['n'] - float(np.sqrt(ry_eff / binding)), g))
+            (lv['n'] - n_star, g, sigma))
     out = {}
     for l_char, by_n in acc.items():
         ns_all = sorted(by_n)
         n_lo = ns_all[0] + 2
         ns = np.array([n for n in ns_all if n >= n_lo], dtype=float)
-        if ns.size < RITZ_MIN_POINTS:
+        if ns.size < RITZ_MIN_WEIGHTED_POINTS:
             continue
-        ds = np.array([sum(d * g for d, g in by_n[int(n)]) / sum(g for _, g in by_n[int(n)])
-                       for n in ns])
-        d0 = float(ds[-1])
-        c = None
-        for _ in range(30):
-            x = 1.0 / (ns - d0) ** 2
-            M = np.vstack([np.ones_like(x), x]).T
-            c = np.linalg.lstsq(M, ds, rcond=None)[0]
-            d0 = float(c[0])
-        rms = float(np.sqrt(np.mean((c[0] + c[1] / (ns - c[0]) ** 2 - ds) ** 2)))
+        ds = np.array([sum(d * g for d, g, _ in by_n[int(n)])
+                       / sum(g for _, g, _ in by_n[int(n)]) for n in ns])
+        d0, d2, rms = _ritz_solve(ns, ds, np.ones_like(ns))
+        fit = dict(delta0=d0, delta2=d2, n_min=int(ns[0]), n_max=int(ns[-1]),
+                   n_points=int(ns.size), rms=rms)
+        if ns.size >= RITZ_MIN_POINTS and np.isfinite(rms) and rms < RITZ_MAX_RMS:
+            out[l_char] = fit
+            continue
+        sigmas = [max((m[2] for m in by_n[int(n)] if m[2]), default=None) for n in ns]
+        if None in sigmas:
+            continue
+        w = 1.0 / np.maximum(np.array(sigmas), RITZ_SIGMA_FLOOR)
+        d0, d2, rms = _ritz_solve(ns, ds, w)
         if np.isfinite(rms) and rms < RITZ_MAX_RMS:
-            out[l_char] = dict(delta0=float(c[0]), delta2=float(c[1]), n_min=int(ns[0]),
-                               n_max=int(ns[-1]), n_points=int(ns.size), rms=rms)
+            out[l_char] = dict(fit, delta0=d0, delta2=d2, rms=rms, weighted=True)
     return out
 
 

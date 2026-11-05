@@ -43,8 +43,13 @@ class Tokens:
     accent_ink: str      # the accent as text or line on bg/surface
     selection: str       # selected rows
     danger: str
-    highlight: str       # selected cells, text and menu items
+    highlight: str       # selected table cells
     highlight_text: str  # text on the highlight
+    text_select: str     # selected text in edit boxes
+    text_select_text: str
+    menu_select: str     # hovered menu items
+    stage_done: str      # dot of a finished stage
+    stage_todo: str      # dot of a stage not run yet
 
 
 THEMES = {
@@ -55,7 +60,9 @@ THEMES = {
         text="#e6eaf0", text_muted="#9aa5b5",
         accent="#8fe03f", accent_hover="#a6ec62", accent_text="#10180a",
         accent_ink="#8fe03f", selection="#1d2b1e", danger="#ff7b72",
-        highlight="#8fe03f", highlight_text="#111723",
+        highlight="#1d2b1e", highlight_text="#e6eaf0",
+        text_select="#1d2b1e", text_select_text="#e6eaf0", menu_select="#1a2230",
+        stage_done="#8fe03f", stage_todo="#9aa5b5",
     ),
     LIGHT: Tokens(
         bg="#f3f5f8", surface="#ffffff", raised="#e9edf2",
@@ -63,7 +70,9 @@ THEMES = {
         text="#1b2230", text_muted="#566172",
         accent="#8fe03f", accent_hover="#7fd02f", accent_text="#10180a",
         accent_ink="#2f7a12", selection="#e4f5d4", danger="#c62828",
-        highlight="#2f7a12", highlight_text="#ffffff",
+        highlight="#e4f5d4", highlight_text="#1b2230",
+        text_select="#c9ced6", text_select_text="#1b2230", menu_select="#e9edf2",
+        stage_done="#2f7a12", stage_todo="#566172",
     ),
 }
 
@@ -75,12 +84,16 @@ def resolve(name: str) -> str:
     return DARK if QGuiApplication.styleHints().colorScheme() != Qt.ColorScheme.Light else LIGHT
 
 
-# Colours the user may change in View > Preferences: token -> label. Everything else follows from these.
+# Colours the user may change in Edit > Preferences: token -> label. Everything else follows from these.
 EDITABLE_COLOURS = (
-    ("highlight", "Selection (tables, text, menus)"),
-    ("selection", "Selected row in lists"),
-    ("accent", "Accent (primary buttons, check marks)"),
-    ("danger", "Warning / delete"),
+    ("highlight", "Table selection"),
+    ("text_select", "Text selection"),
+    ("menu_select", "Menu hover"),
+    ("selection", "List selection"),
+    ("accent", "Buttons and check marks"),
+    ("stage_done", "Stage done dot"),
+    ("stage_todo", "Stage not done dot"),
+    ("danger", "Warning and delete"),
 )
 _overrides: dict[str, dict[str, str]] = {}
 
@@ -110,12 +123,22 @@ def tokens_for(name: str) -> Tokens:
     changes = dict(ov)
     if "highlight" in ov:
         changes["highlight_text"] = _readable_on(ov["highlight"])
+    if "text_select" in ov:
+        changes["text_select_text"] = _readable_on(ov["text_select"])
     if "accent" in ov:
         acc = QColor(ov["accent"])
         changes["accent_hover"] = acc.lighter(112).name() if key == DARK else acc.darker(112).name()
         changes["accent_ink"] = acc.name() if key == DARK else acc.darker(150).name()
         changes["accent_text"] = _readable_on(ov["accent"])
     return replace(base, **changes)
+
+
+_current: Tokens | None = None
+
+
+def current() -> Tokens:
+    """The tokens of the theme last applied (the dark ones before any theme is applied)."""
+    return _current or tokens_for(DARK)
 
 
 def ui_font() -> QFont:
@@ -172,10 +195,10 @@ QToolTip {{ background: {raised}; color: {text}; border: 1px solid {border}; pad
 
 QMenuBar {{ background: {bg}; color: {text}; padding: 2px 4px; }}
 QMenuBar::item {{ background: transparent; padding: 4px 8px; border-radius: 4px; }}
-QMenuBar::item:selected {{ background: {raised}; }}
+QMenuBar::item:selected {{ background: {menu_select}; }}
 QMenu {{ background: {surface}; color: {text}; border: 1px solid {border}; padding: 4px; }}
 QMenu::item {{ padding: 5px 24px 5px 20px; border-radius: 4px; }}
-QMenu::item:selected {{ background: {raised}; }}
+QMenu::item:selected {{ background: {menu_select}; }}
 QMenu::separator {{ height: 1px; background: {border}; margin: 4px 6px; }}
 
 QToolBar#mainToolbar {{ background: {bg}; border: none; border-bottom: 1px solid {border};
@@ -202,7 +225,7 @@ QPushButton#danger:enabled {{ color: {danger}; }}
 
 QLineEdit, QPlainTextEdit, QTextEdit {{ background: {surface}; color: {text};
     border: 1px solid {border_strong}; border-radius: 6px; padding: 4px 6px;
-    selection-background-color: {highlight}; selection-color: {highlight_text}; }}
+    selection-background-color: {text_select}; selection-color: {text_select_text}; }}
 QLineEdit:focus {{ border-color: {accent_ink}; }}
 QComboBox {{ min-height: 24px; }}
 QComboBox QAbstractItemView {{ background: {surface}; color: {text}; border: 1px solid {border};
@@ -223,6 +246,9 @@ QListWidget#speciesChips::item {{ background: {raised}; border: 1px solid {borde
     padding: 3px 10px; margin: 2px; }}
 QListWidget#speciesChips::item:selected {{ background: {selection}; border-color: {accent_ink};
     color: {accent_ink}; }}
+
+QListWidget#prefsNav {{ border-right: 1px solid {border}; }}
+QListWidget#prefsNav::item {{ border-bottom: 1px solid {border}; border-radius: 0; padding: 8px 10px; }}
 
 QSplitter::handle {{ background: {border}; }}
 QSplitter::handle:horizontal {{ margin: 0 3px; }}
@@ -254,7 +280,10 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
 QGroupBox {{ background: {surface}; border: 1px solid {border}; border-radius: 8px;
     margin-top: 20px; padding: 10px; font-weight: 600; }}
 QGroupBox::title {{ subcontrol-origin: margin; left: 4px; color: {text_muted}; }}
-QTableWidget {{ background: transparent; border: none; gridline-color: {border}; }}
+QTableWidget {{ background: transparent; border: none; gridline-color: {border};
+    selection-background-color: {highlight}; selection-color: {highlight_text}; }}
+QTableWidget#settingsTable {{ gridline-color: {border_strong}; border: 1px solid {border_strong}; }}
+QTableWidget#settingsTable QHeaderView::section {{ border-right: 1px solid {border_strong}; border-bottom: 1px solid {border_strong}; }}
 QHeaderView::section {{ background: {raised}; color: {text_muted}; border: none;
     border-bottom: 1px solid {border}; padding: 4px 6px; }}
 """
@@ -275,7 +304,8 @@ def apply_theme(app: QApplication, name: str) -> Tokens:
     hints = app.styleHints()
     if hasattr(hints, "setColorScheme"):  # Qt >= 6.8
         hints.setColorScheme(scheme)
-    tokens = tokens_for(name)
+    global _current
+    tokens = _current = tokens_for(name)
     app.setStyle("Fusion")
     app.setFont(ui_font())
     app.setPalette(build_palette(tokens))

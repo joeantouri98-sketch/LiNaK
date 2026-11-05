@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .params import anchor_config, species_params
 from .ridge import fit_and_predict
-from .tables import load_table
+from .tables import get_model
 
 
 def flag_low_weight(rows: list[dict], element: str | None = None, J: float | None = None) -> list[dict]:
@@ -72,10 +72,10 @@ def extrapolate(
         config=cfg,
     )
     out["n"] = [t["n"] for t in targets]
-    out["backend"] = "table"
+    out["backend"] = out.pop("backend", "table")
     return out
 
 
 def model_range(element: str) -> tuple[float, float]:
-    t = load_table(element)
+    t = get_model(element)
     return t.nu_min, t.nu_max

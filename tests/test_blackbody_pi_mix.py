@@ -2,6 +2,8 @@
 """Na BBR continuum PI / SFI / mixing and high-n dyn-shift anchors."""
 from __future__ import annotations
 
+from itertools import pairwise
+
 from helpers import write_result_summary
 
 
@@ -72,3 +74,15 @@ def test_farley_wing_and_dyn_shifts(na_blackbody, anchors, results_dir):
         assert rel <= exp["tol_rel"], f"{state} dyn: {got} vs {ref}"
         summary[state] = {"shift_dyn_hz": got, "anchor": ref, "rel_err": rel}
     write_result_summary(results_dir, "rydberg_dyn", summary)
+
+
+def test_high_n_shifts_approach_farley_wing_smoothly(na_blackbody):
+    # A grid sum over the thermal resonances scatters by factors of several here.
+    rs = na_blackbody["rydberg_shifts"]
+    fw = float(rs["farley_wing_hz"])
+    ratios = [float(row["shift_dyn_hz"]) / fw for row in rs["states"]
+              if row["l"] == "s" and 20 <= row["n"] <= 45]
+    assert len(ratios) == 26
+    assert all(1.0 < r < 1.06 for r in ratios)
+    assert all(b < a for a, b in pairwise(ratios))
+    assert max(abs(a - b) for a, b in pairwise(ratios)) < 0.01

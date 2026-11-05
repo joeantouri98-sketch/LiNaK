@@ -21,6 +21,7 @@ from linak.physics.rydberg import (
     compute_quantum_defects,
     fit_ritz_defects,
     generate_rydberg_series,
+    screen_nist_levels,
     metal_state_label,
     metal_state_label_pretty,
     parse_config,
@@ -447,6 +448,13 @@ def main(argv=None) -> int:
     print(f"Rydberg constant (reduced-mass, {sp['symbol']}): R_M = {rydberg_constant_eV(sp['symbol']):.6f} eV"
           f"{'' if z_core == 1 else f'; Z={z_core} scale: Ry_eff = {ry_eff:.4f} eV'}")
 
+    replaced_levels = []
+    if sp["kind"] == "neutral":
+        levels, replaced_levels = screen_nist_levels(ionization_energy, levels, ry_eff=ry_eff)
+        if replaced_levels:
+            print(f"Replaced by the QDT model: {len(replaced_levels)} NIST levels "
+                  "(see nist_levels_replaced in the JSON)")
+
     print("\nComputing quantum defects (averaged over all n,J per orbital):")
     quantum_defects = compute_quantum_defects(
         ionization_energy, levels, ry_eff=ry_eff)
@@ -536,6 +544,11 @@ def main(argv=None) -> int:
             'Averaged with inverse-variance weights from ASD Uncertainty (eV); '
             'theoretical [ ] levels excluded from the QD fit but kept in excitations.'
         ),
+        'nist_levels_replaced': [
+            dict(n=lv['n'], l=lv['l'], J=lv['J'], energy_eV=lv['energy_eV'],
+                 delta=round(lv['delta'], 4), reason=lv['reason'])
+            for lv in replaced_levels
+        ],
         'ground_state': {
             'n':     gs_n,
             'l':     gs_l,

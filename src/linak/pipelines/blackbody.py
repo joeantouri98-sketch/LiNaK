@@ -4,7 +4,7 @@ blackbody.py - Blackbody radiation (BBR) shift + depopulation rates
 Computes:
   1. Static (Itano) and dynamic (Planck x alpha) BBR energy shifts
      for ground + one D-line state, plus high-n Rydberg alpha(0) and
-     damped dynamic Planck integrals (IR resonances) from transitions.json
+     dynamic Planck integrals (IR resonances as principal values) from transitions.json
   2. Bound-bound BBR depopulation rates Gamma_BBR from lifetimes.json
      (stimulated emission + absorption via nbar(omega,T))
   3. Continuum BBR photoionization Gamma_PI (Beterov eq.27 with A_L and
@@ -32,8 +32,9 @@ Usage:
 
 from __future__ import annotations
 
-__version__ = '2.8'   # TRK + continuum/tail completion for high-n dyn BBR.
-                      # Dynamic damped Planck v2.7; mixing v2.6.
+__version__ = '2.9'   # High-n dyn BBR: each channel a principal value, not a grid sum.
+                      # TRK + continuum/tail completion v2.8.
+                      # Dynamic Planck v2.7; mixing v2.6.
 
 import argparse
 import json
@@ -59,7 +60,6 @@ from linak.physics.blackbody_core import (
     compute_rates,
     compute_rydberg_shifts,
     compute_shifts,
-    gamma_map_from_lifetimes,
 )
 from linak.physics.polarizability_core import (
     build_transitions_for_state,
@@ -204,7 +204,6 @@ def run_element(element, args, data_dir) -> BlackbodyRun | None:
         do_dyn = not args.no_rydberg_dyn
         rydberg = compute_rydberg_shifts(
             data, T_K,
-            gamma_map=gamma_map_from_lifetimes(life) if do_dyn and life else {},
             n_min=args.shift_n_min, n_max=args.shift_n_max,
             extra_states=extra_states, n_pad=args.n_pad,
             table=not args.no_rydberg_shifts,
@@ -308,7 +307,7 @@ def _print_rydberg(rs: RydbergShifts) -> None:
     if rs.do_dyn:
         cont_note = (f", TRK+cont+tail(n<={rs.n_tail_max})"
                      if rs.do_cont else ", bound-only (no TRK/cont)")
-        dyn_note = f", damped dyn on{cont_note} (Farley-Wing = {fw:+.3f} Hz)"
+        dyn_note = f", dyn on{cont_note} (Farley-Wing = {fw:+.3f} Hz)"
     else:
         dyn_note = ", static only"
     print(f"  Rydberg alpha shifts at T = {rs.T_K:.1f} K "
@@ -470,11 +469,12 @@ def _rydberg_json(rs: RydbergShifts) -> dict:
     note = ('static Itano from on-the-fly alpha(0) SOS; '
             f'n_pad={rs.n_pad}: avoid states within {rs.n_pad} of series n_max.')
     if rs.do_dyn:
-        note += (' damped Planck integral Re[alpha(omega)] with Gamma=A_total; '
+        note += (' dynamic Planck integral, each channel a principal value; '
                  f'Farley-Wing asymptote {fw:+.4f} Hz at T={rs.T_K:g} K.')
         if rs.do_cont:
             note += (' Dyn network: QDT discrete tail + TRK closure '
-                     '(scale signed f to 1) + Kramers continuum residual.')
+                     '(scale signed f to 1) + Kramers continuum residual; dyn_reliable=false '
+                     'where f_cont > 1 (a nearby partner is missing from the network).')
         else:
             note += ' Dyn continuum/TRK completion skipped (--no-rydberg-cont).'
     else:
@@ -501,8 +501,8 @@ def _rydberg_json(rs: RydbergShifts) -> dict:
                            else float(f'{r.alpha0_au:.6g}')),
                 shift_stat_hz=_rounded(r.shift_stat_hz),
                 shift_dyn_hz=_rounded(r.shift_dyn_hz),
+                dyn_reliable=r.dyn_reliable,
                 n_transitions=r.n_transitions,
-                n_gamma=r.n_gamma,
                 min_dE_au=(None if r.min_dE_au is None
                            else float(f'{r.min_dE_au:.6g}')),
                 fosc_sources=r.fosc_sources,
@@ -546,7 +546,7 @@ def output_json(element, run: BlackbodyRun) -> dict:
               'continuum = Beterov eq.27 PI (A_L + QD phases) + optional SFI '
               '(--field) + multi-step mixing (eq.35; --no-mix to skip); '
               'Gamma_quench = Gamma_BBR + Gamma_PI. '
-              'rydberg_shifts = static Itano + damped Planck dyn with TRK/tail/'
+              'rydberg_shifts = static Itano + principal-value Planck dyn with TRK/tail/'
               'Kramers continuum completion (Farley-Wing asymptote); '
               'for high-n labels (no dynamic integral).'),
     )
@@ -730,7 +730,8 @@ def _fig_series_vs_n(el, title, subtitle, states, value_key, y_title,
                     hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
                 ))
         if dyn_key:
-            ns5, ys5 = _avg_by_n(rows, dyn_key, abs_val=abs_val)
+            ns5, ys5 = _avg_by_n([r for r in rows if r.get('dyn_reliable', True)],
+                                 dyn_key, abs_val=abs_val)
             if ns5:
                 if log_y:
                     ys5 = [max(abs(y), 1e-30) for y in ys5]
@@ -926,7 +927,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--no-rydberg-shifts', action='store_true',
                         help='Skip high-n Rydberg alpha(0) shift table')
     parser.add_argument('--no-rydberg-dyn', action='store_true',
-                        help='Skip damped dynamic Planck integral for Rydberg shifts')
+                        help='Skip dynamic Planck integral for Rydberg shifts')
     parser.add_argument('--no-rydberg-cont', action='store_true',
                         help='Skip TRK/tail/continuum completion on Rydberg dyn network')
     parser.add_argument('--n-tail-max', type=int, default=N_TAIL_DEFAULT,

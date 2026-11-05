@@ -6,6 +6,8 @@ from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPalette, QPen
 from PySide6.QtWidgets import QStyle, QStyledItemDelegate
 
+from . import theme
+
 # Item data roles alongside Qt.UserRole, which holds the stage id (None on headings).
 DONE_ROLE = Qt.UserRole + 1
 SYMBOL_ROLE = Qt.UserRole + 2
@@ -43,15 +45,17 @@ class StageDelegate(QStyledItemDelegate):
 
     def _paint_stage(self, painter, option, index):
         palette = option.palette
-        accent = palette.color(QPalette.Highlight)
         muted = palette.color(QPalette.PlaceholderText)
         selected = bool(option.state & QStyle.State_Selected)
         hovered = bool(option.state & QStyle.State_MouseOver)
         row = QRectF(option.rect).adjusted(0, 1, 0, -1)
 
         if selected or hovered:
-            fill = QColor(accent if selected else muted)
-            fill.setAlphaF(0.16 if selected else 0.10)
+            if selected:
+                fill = QColor(theme.current().selection)
+            else:
+                fill = QColor(muted)
+                fill.setAlphaF(0.10)
             painter.setPen(Qt.NoPen)
             painter.setBrush(fill)
             painter.drawRoundedRect(row, 4, 4)
@@ -59,8 +63,10 @@ class StageDelegate(QStyledItemDelegate):
         done = bool(index.data(DONE_ROLE))
         dot = QRectF(row.left() + 10, row.center().y() - DOT_DIAMETER / 2,
                      DOT_DIAMETER, DOT_DIAMETER)
-        painter.setPen(QPen(accent if done else muted, 1.4))
-        painter.setBrush(accent if done else Qt.NoBrush)
+        tokens = theme.current()
+        dot_colour = QColor(tokens.stage_done if done else tokens.stage_todo)
+        painter.setPen(QPen(dot_colour, 1.4))
+        painter.setBrush(dot_colour if done else Qt.NoBrush)
         painter.drawEllipse(dot)
 
         # The name matters more: the symbol gives way when both don't fit.

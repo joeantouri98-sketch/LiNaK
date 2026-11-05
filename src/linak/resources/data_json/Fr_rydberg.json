@@ -12,29 +12,48 @@
   "quantum_defects": {
     "s": 5.092712711352892,
     "p": 4.6180082660683555,
-    "d": 3.4173869640683616,
+    "d": 3.414502486666498,
     "f": 0.0,
     "g": 0.0
   },
   "quantum_defects_ritz": {
     "s": {
-      "delta0": 5.0705437125090125,
-      "delta2": 0.29712390747534767,
+      "delta0": 5.070543712509012,
+      "delta2": 0.2971239074753868,
       "n_min": 9,
       "n_max": 30,
       "n_points": 22,
-      "rms": 0.00011977762014819431
+      "rms": 0.00011977762014819411
     },
     "p": {
       "delta0": 4.5325448247748765,
-      "delta2": 0.5234812369663975,
+      "delta2": 0.5234812369663943,
       "n_min": 9,
       "n_max": 30,
       "n_points": 22,
-      "rms": 8.470859860129207e-05
+      "rms": 8.47085986012947e-05
+    },
+    "d": {
+      "delta0": 3.4113565505655052,
+      "delta2": 0.08918145057862698,
+      "n_min": 8,
+      "n_max": 30,
+      "n_points": 23,
+      "rms": 7.022528538655563e-05,
+      "weighted": true
     }
   },
   "qd_notes": "Averaged with inverse-variance weights from ASD Uncertainty (eV); theoretical [ ] levels excluded from the QD fit but kept in excitations.",
+  "nist_levels_replaced": [
+    {
+      "n": 22,
+      "l": "d",
+      "J": "5/2",
+      "energy_eV": 4.021002,
+      "delta": 5.7838,
+      "reason": "outlier from series median 3.403"
+    }
+  ],
   "ground_state": {
     "n": 7,
     "l": "s",
@@ -45,7 +64,7 @@
   },
   "n_start": 7,
   "n_max": 50,
-  "num_states": 267,
+  "num_states": 266,
   "num_theoretical": 0,
   "excitations": [
     {
@@ -1641,21 +1660,6 @@
     {
       "state_number": 109,
       "n": 22,
-      "l": "d",
-      "J": "5/2",
-      "term": "2D",
-      "energy_eV": -0.051739,
-      "wavelength_nm": 308.3411,
-      "label": "22d5/2",
-      "label_pretty": "22d5/2",
-      "source": "NIST",
-      "method": "Quantum Defect Theory (NIST-derived)",
-      "theoretical": false,
-      "uncertainty_eV": 4e-06
-    },
-    {
-      "state_number": 110,
-      "n": 22,
       "l": "f",
       "J": null,
       "energy_eV": -0.028111,
@@ -1668,7 +1672,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 111,
+      "state_number": 110,
       "n": 22,
       "l": "g",
       "J": null,
@@ -1682,7 +1686,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 112,
+      "state_number": 111,
       "n": 23,
       "l": "s",
       "J": "1/2",
@@ -1697,7 +1701,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 113,
+      "state_number": 112,
       "n": 23,
       "l": "p",
       "J": "1/2",
@@ -1712,7 +1716,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 114,
+      "state_number": 113,
       "n": 23,
       "l": "p",
       "J": "3/2",
@@ -1727,7 +1731,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 115,
+      "state_number": 114,
       "n": 23,
       "l": "d",
       "J": "3/2",
@@ -1742,7 +1746,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 116,
+      "state_number": 115,
       "n": 23,
       "l": "d",
       "J": "5/2",
@@ -1757,7 +1761,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 117,
+      "state_number": 116,
       "n": 23,
       "l": "f",
       "J": null,
@@ -1771,7 +1775,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 118,
+      "state_number": 117,
       "n": 23,
       "l": "g",
       "J": null,
@@ -1785,7 +1789,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 119,
+      "state_number": 118,
       "n": 24,
       "l": "s",
       "J": "1/2",
@@ -1800,7 +1804,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 120,
+      "state_number": 119,
       "n": 24,
       "l": "p",
       "J": "1/2",
@@ -1815,7 +1819,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 121,
+      "state_number": 120,
       "n": 24,
       "l": "p",
       "J": "3/2",
@@ -1830,7 +1834,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 122,
+      "state_number": 121,
       "n": 24,
       "l": "d",
       "J": "3/2",
@@ -1845,7 +1849,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 123,
+      "state_number": 122,
       "n": 24,
       "l": "d",
       "J": "5/2",
@@ -1860,7 +1864,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 124,
+      "state_number": 123,
       "n": 24,
       "l": "f",
       "J": null,
@@ -1874,7 +1878,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 125,
+      "state_number": 124,
       "n": 24,
       "l": "g",
       "J": null,
@@ -1888,7 +1892,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 126,
+      "state_number": 125,
       "n": 25,
       "l": "s",
       "J": "1/2",
@@ -1903,7 +1907,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 127,
+      "state_number": 126,
       "n": 25,
       "l": "p",
       "J": "1/2",
@@ -1918,7 +1922,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 128,
+      "state_number": 127,
       "n": 25,
       "l": "p",
       "J": "3/2",
@@ -1933,7 +1937,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 129,
+      "state_number": 128,
       "n": 25,
       "l": "d",
       "J": "3/2",
@@ -1948,7 +1952,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 130,
+      "state_number": 129,
       "n": 25,
       "l": "d",
       "J": "5/2",
@@ -1963,7 +1967,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 131,
+      "state_number": 130,
       "n": 25,
       "l": "f",
       "J": null,
@@ -1977,7 +1981,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 132,
+      "state_number": 131,
       "n": 25,
       "l": "g",
       "J": null,
@@ -1991,7 +1995,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 133,
+      "state_number": 132,
       "n": 26,
       "l": "s",
       "J": "1/2",
@@ -2006,7 +2010,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 134,
+      "state_number": 133,
       "n": 26,
       "l": "p",
       "J": "1/2",
@@ -2021,7 +2025,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 135,
+      "state_number": 134,
       "n": 26,
       "l": "p",
       "J": "3/2",
@@ -2036,7 +2040,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 136,
+      "state_number": 135,
       "n": 26,
       "l": "d",
       "J": "3/2",
@@ -2051,7 +2055,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 137,
+      "state_number": 136,
       "n": 26,
       "l": "d",
       "J": "5/2",
@@ -2066,7 +2070,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 138,
+      "state_number": 137,
       "n": 26,
       "l": "f",
       "J": null,
@@ -2080,7 +2084,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 139,
+      "state_number": 138,
       "n": 26,
       "l": "g",
       "J": null,
@@ -2094,7 +2098,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 140,
+      "state_number": 139,
       "n": 27,
       "l": "s",
       "J": "1/2",
@@ -2109,7 +2113,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 141,
+      "state_number": 140,
       "n": 27,
       "l": "p",
       "J": "1/2",
@@ -2124,7 +2128,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 142,
+      "state_number": 141,
       "n": 27,
       "l": "p",
       "J": "3/2",
@@ -2139,7 +2143,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 143,
+      "state_number": 142,
       "n": 27,
       "l": "d",
       "J": "3/2",
@@ -2154,7 +2158,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 144,
+      "state_number": 143,
       "n": 27,
       "l": "d",
       "J": "5/2",
@@ -2169,7 +2173,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 145,
+      "state_number": 144,
       "n": 27,
       "l": "f",
       "J": null,
@@ -2183,7 +2187,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 146,
+      "state_number": 145,
       "n": 27,
       "l": "g",
       "J": null,
@@ -2197,7 +2201,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 147,
+      "state_number": 146,
       "n": 28,
       "l": "s",
       "J": "1/2",
@@ -2212,7 +2216,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 148,
+      "state_number": 147,
       "n": 28,
       "l": "p",
       "J": "1/2",
@@ -2227,7 +2231,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 149,
+      "state_number": 148,
       "n": 28,
       "l": "p",
       "J": "3/2",
@@ -2242,7 +2246,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 150,
+      "state_number": 149,
       "n": 28,
       "l": "d",
       "J": "3/2",
@@ -2257,7 +2261,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 151,
+      "state_number": 150,
       "n": 28,
       "l": "d",
       "J": "5/2",
@@ -2272,7 +2276,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 152,
+      "state_number": 151,
       "n": 28,
       "l": "f",
       "J": null,
@@ -2286,7 +2290,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 153,
+      "state_number": 152,
       "n": 28,
       "l": "g",
       "J": null,
@@ -2300,7 +2304,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 154,
+      "state_number": 153,
       "n": 29,
       "l": "s",
       "J": "1/2",
@@ -2315,7 +2319,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 155,
+      "state_number": 154,
       "n": 29,
       "l": "p",
       "J": "1/2",
@@ -2330,7 +2334,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 156,
+      "state_number": 155,
       "n": 29,
       "l": "p",
       "J": "3/2",
@@ -2345,7 +2349,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 157,
+      "state_number": 156,
       "n": 29,
       "l": "d",
       "J": "3/2",
@@ -2360,7 +2364,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 158,
+      "state_number": 157,
       "n": 29,
       "l": "d",
       "J": "5/2",
@@ -2375,7 +2379,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 159,
+      "state_number": 158,
       "n": 29,
       "l": "f",
       "J": null,
@@ -2389,7 +2393,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 160,
+      "state_number": 159,
       "n": 29,
       "l": "g",
       "J": null,
@@ -2403,7 +2407,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 161,
+      "state_number": 160,
       "n": 30,
       "l": "s",
       "J": "1/2",
@@ -2418,7 +2422,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 162,
+      "state_number": 161,
       "n": 30,
       "l": "p",
       "J": "1/2",
@@ -2433,7 +2437,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 163,
+      "state_number": 162,
       "n": 30,
       "l": "p",
       "J": "3/2",
@@ -2448,7 +2452,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 164,
+      "state_number": 163,
       "n": 30,
       "l": "d",
       "J": "3/2",
@@ -2463,7 +2467,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 165,
+      "state_number": 164,
       "n": 30,
       "l": "d",
       "J": "5/2",
@@ -2478,7 +2482,7 @@
       "uncertainty_eV": 4e-06
     },
     {
-      "state_number": 166,
+      "state_number": 165,
       "n": 30,
       "l": "f",
       "J": null,
@@ -2492,7 +2496,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 167,
+      "state_number": 166,
       "n": 30,
       "l": "g",
       "J": null,
@@ -2506,7 +2510,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 168,
+      "state_number": 167,
       "n": 31,
       "l": "s",
       "J": null,
@@ -2520,7 +2524,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 169,
+      "state_number": 168,
       "n": 31,
       "l": "p",
       "J": null,
@@ -2534,12 +2538,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 170,
+      "state_number": 169,
       "n": 31,
       "l": "d",
       "J": null,
-      "energy_eV": -0.017883,
-      "wavelength_nm": 305.7666,
+      "energy_eV": -0.017876,
+      "wavelength_nm": 305.766,
       "label": "31d",
       "label_pretty": "31d",
       "source": "QDT model",
@@ -2548,7 +2552,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 171,
+      "state_number": 170,
       "n": 31,
       "l": "f",
       "J": null,
@@ -2562,7 +2566,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 172,
+      "state_number": 171,
       "n": 31,
       "l": "g",
       "J": null,
@@ -2576,7 +2580,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 173,
+      "state_number": 172,
       "n": 32,
       "l": "s",
       "J": null,
@@ -2590,7 +2594,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 174,
+      "state_number": 173,
       "n": 32,
       "l": "p",
       "J": null,
@@ -2604,12 +2608,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 175,
+      "state_number": 174,
       "n": 32,
       "l": "d",
       "J": null,
-      "energy_eV": -0.016654,
-      "wavelength_nm": 305.6739,
+      "energy_eV": -0.016647,
+      "wavelength_nm": 305.6734,
       "label": "32d",
       "label_pretty": "32d",
       "source": "QDT model",
@@ -2618,7 +2622,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 176,
+      "state_number": 175,
       "n": 32,
       "l": "f",
       "J": null,
@@ -2632,7 +2636,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 177,
+      "state_number": 176,
       "n": 32,
       "l": "g",
       "J": null,
@@ -2646,7 +2650,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 178,
+      "state_number": 177,
       "n": 33,
       "l": "s",
       "J": null,
@@ -2660,7 +2664,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 179,
+      "state_number": 178,
       "n": 33,
       "l": "p",
       "J": null,
@@ -2674,12 +2678,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 180,
+      "state_number": 179,
       "n": 33,
       "l": "d",
       "J": null,
-      "energy_eV": -0.015547,
-      "wavelength_nm": 305.5905,
+      "energy_eV": -0.015541,
+      "wavelength_nm": 305.59,
       "label": "33d",
       "label_pretty": "33d",
       "source": "QDT model",
@@ -2688,7 +2692,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 181,
+      "state_number": 180,
       "n": 33,
       "l": "f",
       "J": null,
@@ -2702,7 +2706,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 182,
+      "state_number": 181,
       "n": 33,
       "l": "g",
       "J": null,
@@ -2716,7 +2720,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 183,
+      "state_number": 182,
       "n": 34,
       "l": "s",
       "J": null,
@@ -2730,7 +2734,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 184,
+      "state_number": 183,
       "n": 34,
       "l": "p",
       "J": null,
@@ -2744,12 +2748,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 185,
+      "state_number": 184,
       "n": 34,
       "l": "d",
       "J": null,
-      "energy_eV": -0.014547,
-      "wavelength_nm": 305.5152,
+      "energy_eV": -0.014541,
+      "wavelength_nm": 305.5148,
       "label": "34d",
       "label_pretty": "34d",
       "source": "QDT model",
@@ -2758,7 +2762,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 186,
+      "state_number": 185,
       "n": 34,
       "l": "f",
       "J": null,
@@ -2772,7 +2776,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 187,
+      "state_number": 186,
       "n": 34,
       "l": "g",
       "J": null,
@@ -2786,7 +2790,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 188,
+      "state_number": 187,
       "n": 35,
       "l": "s",
       "J": null,
@@ -2800,7 +2804,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 189,
+      "state_number": 188,
       "n": 35,
       "l": "p",
       "J": null,
@@ -2814,12 +2818,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 190,
+      "state_number": 189,
       "n": 35,
       "l": "d",
       "J": null,
-      "energy_eV": -0.01364,
-      "wavelength_nm": 305.447,
+      "energy_eV": -0.013635,
+      "wavelength_nm": 305.4466,
       "label": "35d",
       "label_pretty": "35d",
       "source": "QDT model",
@@ -2828,7 +2832,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 191,
+      "state_number": 190,
       "n": 35,
       "l": "f",
       "J": null,
@@ -2842,7 +2846,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 192,
+      "state_number": 191,
       "n": 35,
       "l": "g",
       "J": null,
@@ -2856,7 +2860,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 193,
+      "state_number": 192,
       "n": 36,
       "l": "s",
       "J": null,
@@ -2870,7 +2874,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 194,
+      "state_number": 193,
       "n": 36,
       "l": "p",
       "J": null,
@@ -2884,12 +2888,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 195,
+      "state_number": 194,
       "n": 36,
       "l": "d",
       "J": null,
-      "energy_eV": -0.012816,
-      "wavelength_nm": 305.3849,
+      "energy_eV": -0.012811,
+      "wavelength_nm": 305.3846,
       "label": "36d",
       "label_pretty": "36d",
       "source": "QDT model",
@@ -2898,7 +2902,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 196,
+      "state_number": 195,
       "n": 36,
       "l": "f",
       "J": null,
@@ -2912,7 +2916,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 197,
+      "state_number": 196,
       "n": 36,
       "l": "g",
       "J": null,
@@ -2926,7 +2930,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 198,
+      "state_number": 197,
       "n": 37,
       "l": "s",
       "J": null,
@@ -2940,7 +2944,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 199,
+      "state_number": 198,
       "n": 37,
       "l": "p",
       "J": null,
@@ -2954,12 +2958,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 200,
+      "state_number": 199,
       "n": 37,
       "l": "d",
       "J": null,
-      "energy_eV": -0.012064,
-      "wavelength_nm": 305.3284,
+      "energy_eV": -0.01206,
+      "wavelength_nm": 305.3281,
       "label": "37d",
       "label_pretty": "37d",
       "source": "QDT model",
@@ -2968,7 +2972,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 201,
+      "state_number": 200,
       "n": 37,
       "l": "f",
       "J": null,
@@ -2982,7 +2986,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 202,
+      "state_number": 201,
       "n": 37,
       "l": "g",
       "J": null,
@@ -2996,7 +3000,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 203,
+      "state_number": 202,
       "n": 38,
       "l": "s",
       "J": null,
@@ -3010,7 +3014,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 204,
+      "state_number": 203,
       "n": 38,
       "l": "p",
       "J": null,
@@ -3024,12 +3028,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 205,
+      "state_number": 204,
       "n": 38,
       "l": "d",
       "J": null,
-      "energy_eV": -0.011376,
-      "wavelength_nm": 305.2767,
+      "energy_eV": -0.011372,
+      "wavelength_nm": 305.2764,
       "label": "38d",
       "label_pretty": "38d",
       "source": "QDT model",
@@ -3038,7 +3042,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 206,
+      "state_number": 205,
       "n": 38,
       "l": "f",
       "J": null,
@@ -3052,7 +3056,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 207,
+      "state_number": 206,
       "n": 38,
       "l": "g",
       "J": null,
@@ -3066,7 +3070,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 208,
+      "state_number": 207,
       "n": 39,
       "l": "s",
       "J": null,
@@ -3080,7 +3084,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 209,
+      "state_number": 208,
       "n": 39,
       "l": "p",
       "J": null,
@@ -3094,12 +3098,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 210,
+      "state_number": 209,
       "n": 39,
       "l": "d",
       "J": null,
-      "energy_eV": -0.010746,
-      "wavelength_nm": 305.2293,
+      "energy_eV": -0.010742,
+      "wavelength_nm": 305.229,
       "label": "39d",
       "label_pretty": "39d",
       "source": "QDT model",
@@ -3108,7 +3112,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 211,
+      "state_number": 210,
       "n": 39,
       "l": "f",
       "J": null,
@@ -3122,7 +3126,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 212,
+      "state_number": 211,
       "n": 39,
       "l": "g",
       "J": null,
@@ -3136,7 +3140,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 213,
+      "state_number": 212,
       "n": 40,
       "l": "s",
       "J": null,
@@ -3150,7 +3154,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 214,
+      "state_number": 213,
       "n": 40,
       "l": "p",
       "J": null,
@@ -3164,12 +3168,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 215,
+      "state_number": 214,
       "n": 40,
       "l": "d",
       "J": null,
-      "energy_eV": -0.010166,
-      "wavelength_nm": 305.1858,
+      "energy_eV": -0.010163,
+      "wavelength_nm": 305.1855,
       "label": "40d",
       "label_pretty": "40d",
       "source": "QDT model",
@@ -3178,7 +3182,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 216,
+      "state_number": 215,
       "n": 40,
       "l": "f",
       "J": null,
@@ -3192,7 +3196,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 217,
+      "state_number": 216,
       "n": 40,
       "l": "g",
       "J": null,
@@ -3206,7 +3210,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 218,
+      "state_number": 217,
       "n": 41,
       "l": "s",
       "J": null,
@@ -3220,7 +3224,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 219,
+      "state_number": 218,
       "n": 41,
       "l": "p",
       "J": null,
@@ -3234,12 +3238,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 220,
+      "state_number": 219,
       "n": 41,
       "l": "d",
       "J": null,
-      "energy_eV": -0.009633,
-      "wavelength_nm": 305.1457,
+      "energy_eV": -0.00963,
+      "wavelength_nm": 305.1455,
       "label": "41d",
       "label_pretty": "41d",
       "source": "QDT model",
@@ -3248,7 +3252,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 221,
+      "state_number": 220,
       "n": 41,
       "l": "f",
       "J": null,
@@ -3262,7 +3266,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 222,
+      "state_number": 221,
       "n": 41,
       "l": "g",
       "J": null,
@@ -3276,7 +3280,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 223,
+      "state_number": 222,
       "n": 42,
       "l": "s",
       "J": null,
@@ -3290,7 +3294,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 224,
+      "state_number": 223,
       "n": 42,
       "l": "p",
       "J": null,
@@ -3304,12 +3308,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 225,
+      "state_number": 224,
       "n": 42,
       "l": "d",
       "J": null,
-      "energy_eV": -0.00914,
-      "wavelength_nm": 305.1087,
+      "energy_eV": -0.009137,
+      "wavelength_nm": 305.1085,
       "label": "42d",
       "label_pretty": "42d",
       "source": "QDT model",
@@ -3318,7 +3322,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 226,
+      "state_number": 225,
       "n": 42,
       "l": "f",
       "J": null,
@@ -3332,7 +3336,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 227,
+      "state_number": 226,
       "n": 42,
       "l": "g",
       "J": null,
@@ -3346,7 +3350,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 228,
+      "state_number": 227,
       "n": 43,
       "l": "s",
       "J": null,
@@ -3360,7 +3364,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 229,
+      "state_number": 228,
       "n": 43,
       "l": "p",
       "J": null,
@@ -3374,12 +3378,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 230,
+      "state_number": 229,
       "n": 43,
       "l": "d",
       "J": null,
-      "energy_eV": -0.008684,
-      "wavelength_nm": 305.0744,
+      "energy_eV": -0.008681,
+      "wavelength_nm": 305.0742,
       "label": "43d",
       "label_pretty": "43d",
       "source": "QDT model",
@@ -3388,7 +3392,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 231,
+      "state_number": 230,
       "n": 43,
       "l": "f",
       "J": null,
@@ -3402,7 +3406,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 232,
+      "state_number": 231,
       "n": 43,
       "l": "g",
       "J": null,
@@ -3416,7 +3420,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 233,
+      "state_number": 232,
       "n": 44,
       "l": "s",
       "J": null,
@@ -3430,7 +3434,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 234,
+      "state_number": 233,
       "n": 44,
       "l": "p",
       "J": null,
@@ -3444,12 +3448,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 235,
+      "state_number": 234,
       "n": 44,
       "l": "d",
       "J": null,
-      "energy_eV": -0.008261,
-      "wavelength_nm": 305.0427,
+      "energy_eV": -0.008259,
+      "wavelength_nm": 305.0425,
       "label": "44d",
       "label_pretty": "44d",
       "source": "QDT model",
@@ -3458,7 +3462,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 236,
+      "state_number": 235,
       "n": 44,
       "l": "f",
       "J": null,
@@ -3472,7 +3476,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 237,
+      "state_number": 236,
       "n": 44,
       "l": "g",
       "J": null,
@@ -3486,7 +3490,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 238,
+      "state_number": 237,
       "n": 45,
       "l": "s",
       "J": null,
@@ -3500,7 +3504,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 239,
+      "state_number": 238,
       "n": 45,
       "l": "p",
       "J": null,
@@ -3514,12 +3518,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 240,
+      "state_number": 239,
       "n": 45,
       "l": "d",
       "J": null,
-      "energy_eV": -0.007869,
-      "wavelength_nm": 305.0133,
+      "energy_eV": -0.007866,
+      "wavelength_nm": 305.0131,
       "label": "45d",
       "label_pretty": "45d",
       "source": "QDT model",
@@ -3528,7 +3532,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 241,
+      "state_number": 240,
       "n": 45,
       "l": "f",
       "J": null,
@@ -3542,7 +3546,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 242,
+      "state_number": 241,
       "n": 45,
       "l": "g",
       "J": null,
@@ -3556,7 +3560,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 243,
+      "state_number": 242,
       "n": 46,
       "l": "s",
       "J": null,
@@ -3570,7 +3574,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 244,
+      "state_number": 243,
       "n": 46,
       "l": "p",
       "J": null,
@@ -3584,12 +3588,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 245,
+      "state_number": 244,
       "n": 46,
       "l": "d",
       "J": null,
-      "energy_eV": -0.007503,
-      "wavelength_nm": 304.9859,
+      "energy_eV": -0.007501,
+      "wavelength_nm": 304.9857,
       "label": "46d",
       "label_pretty": "46d",
       "source": "QDT model",
@@ -3598,7 +3602,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 246,
+      "state_number": 245,
       "n": 46,
       "l": "f",
       "J": null,
@@ -3612,7 +3616,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 247,
+      "state_number": 246,
       "n": 46,
       "l": "g",
       "J": null,
@@ -3626,7 +3630,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 248,
+      "state_number": 247,
       "n": 47,
       "l": "s",
       "J": null,
@@ -3640,7 +3644,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 249,
+      "state_number": 248,
       "n": 47,
       "l": "p",
       "J": null,
@@ -3654,12 +3658,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 250,
+      "state_number": 249,
       "n": 47,
       "l": "d",
       "J": null,
-      "energy_eV": -0.007163,
-      "wavelength_nm": 304.9603,
+      "energy_eV": -0.007161,
+      "wavelength_nm": 304.9602,
       "label": "47d",
       "label_pretty": "47d",
       "source": "QDT model",
@@ -3668,7 +3672,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 251,
+      "state_number": 250,
       "n": 47,
       "l": "f",
       "J": null,
@@ -3682,7 +3686,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 252,
+      "state_number": 251,
       "n": 47,
       "l": "g",
       "J": null,
@@ -3696,7 +3700,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 253,
+      "state_number": 252,
       "n": 48,
       "l": "s",
       "J": null,
@@ -3710,7 +3714,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 254,
+      "state_number": 253,
       "n": 48,
       "l": "p",
       "J": null,
@@ -3724,12 +3728,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 255,
+      "state_number": 254,
       "n": 48,
       "l": "d",
       "J": null,
-      "energy_eV": -0.006845,
-      "wavelength_nm": 304.9365,
+      "energy_eV": -0.006843,
+      "wavelength_nm": 304.9363,
       "label": "48d",
       "label_pretty": "48d",
       "source": "QDT model",
@@ -3738,7 +3742,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 256,
+      "state_number": 255,
       "n": 48,
       "l": "f",
       "J": null,
@@ -3752,7 +3756,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 257,
+      "state_number": 256,
       "n": 48,
       "l": "g",
       "J": null,
@@ -3766,7 +3770,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 258,
+      "state_number": 257,
       "n": 49,
       "l": "s",
       "J": null,
@@ -3780,7 +3784,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 259,
+      "state_number": 258,
       "n": 49,
       "l": "p",
       "J": null,
@@ -3794,12 +3798,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 260,
+      "state_number": 259,
       "n": 49,
       "l": "d",
       "J": null,
-      "energy_eV": -0.006548,
-      "wavelength_nm": 304.9142,
+      "energy_eV": -0.006546,
+      "wavelength_nm": 304.9141,
       "label": "49d",
       "label_pretty": "49d",
       "source": "QDT model",
@@ -3808,7 +3812,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 261,
+      "state_number": 260,
       "n": 49,
       "l": "f",
       "J": null,
@@ -3822,7 +3826,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 262,
+      "state_number": 261,
       "n": 49,
       "l": "g",
       "J": null,
@@ -3836,7 +3840,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 263,
+      "state_number": 262,
       "n": 50,
       "l": "s",
       "J": null,
@@ -3850,7 +3854,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 264,
+      "state_number": 263,
       "n": 50,
       "l": "p",
       "J": null,
@@ -3864,12 +3868,12 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 265,
+      "state_number": 264,
       "n": 50,
       "l": "d",
       "J": null,
-      "energy_eV": -0.00627,
-      "wavelength_nm": 304.8934,
+      "energy_eV": -0.006268,
+      "wavelength_nm": 304.8932,
       "label": "50d",
       "label_pretty": "50d",
       "source": "QDT model",
@@ -3878,7 +3882,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 266,
+      "state_number": 265,
       "n": 50,
       "l": "f",
       "J": null,
@@ -3892,7 +3896,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 267,
+      "state_number": 266,
       "n": 50,
       "l": "g",
       "J": null,

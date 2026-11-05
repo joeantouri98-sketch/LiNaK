@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import contextmanager
 from copy import deepcopy
 from functools import lru_cache
 
@@ -30,19 +31,72 @@ def model_params() -> dict:
 
 
 @lru_cache(maxsize=1)
-def anchor_config() -> dict:
+def _anchor_config_base() -> dict:
     return _read("anchors.json")
+
+
+_ACTIVE: dict | None = None      # merged anchor config while ``fit_overrides`` is active
+
+
+def anchor_config() -> dict:
+    """The packaged anchor settings, with the user's fit settings on top while ``fit_overrides`` is active."""
+    return _ACTIVE if _ACTIVE is not None else _anchor_config_base()
+
+
+@contextmanager
+def fit_overrides(nested: dict | None):
+    """Use the given nested overrides (see ``fit_settings.to_overrides``) for everything inside the block."""
+    global _ACTIVE
+    previous = _ACTIVE
+    _ACTIVE = merge_overrides(_anchor_config_base(), nested) if nested else previous
+    try:
+        yield
+    finally:
+        _ACTIVE = previous
 
 
 def supported_species() -> list[str]:
     return sorted(model_params()["species"])
 
 
-def species_params(element: str) -> dict:
-    """Parameters for ``element`` or a clear refusal (e.g. Fr)."""
+_MODEL_ACTIVE: dict | None = None    # {species: {field: value}} while ``model_overrides`` is active
+_USER_DIR = None                     # where rebuilt tables and the exact-calculation cache live
+
+
+def user_dir():
+    """Folder for rebuilt tables (None: only the packaged tables)."""
+    return _USER_DIR
+
+
+@contextmanager
+def model_overrides(nested: dict | None, tables_dir=None):
+    """Use the user's model settings (``{species: {field: value}}``) and rebuilt tables inside the block."""
+    global _MODEL_ACTIVE, _USER_DIR
+    previous = (_MODEL_ACTIVE, _USER_DIR)
+    _MODEL_ACTIVE = {k: dict(v) for k, v in (nested or {}).items() if v} or None
+    _USER_DIR = tables_dir
+    try:
+        yield
+    finally:
+        _MODEL_ACTIVE, _USER_DIR = previous
+
+
+def packaged_species_params(element: str) -> dict:
+    """The shipped settings of ``element`` (what the packaged tables were built with)."""
     mp = model_params()
     if element in mp["species"]:
         return mp["species"][element]
+    species_params(element)  # raises the refusal
+    raise AssertionError("unreachable")
+
+
+def species_params(element: str) -> dict:
+    """Parameters for ``element`` or a clear refusal (e.g. Fr); the user's model settings are applied when active."""
+    mp = model_params()
+    if element in mp["species"]:
+        base = mp["species"][element]
+        ov = (_MODEL_ACTIVE or {}).get(element)
+        return {**base, **ov} if ov else base
     why = mp.get("unsupported", {}).get(element)
     if why:
         raise UnsupportedSpeciesError(f"Extrapolation is not available for {element}: {why}")
@@ -59,13 +113,18 @@ def params_hash(element: str) -> str:
     mp = model_params()
     sp = species_params(element)
     d = {
-        "form": mp["form"],
+        "form": sp.get("form") or mp["form"],
         "singor": [sp["singor_alpha_D"], sp["singor_rc"]],
         "lam": sp["lam"],
         "wcore": sp["wcore_eV"],
         "sof": mp["sof"],
         "np": mp["np_cutoff"],
     }
+    if str(d["form"]).startswith("U"):          # a user-written form: its formula and parameters define the model
+        d["user"] = [sp.get("user_formula", ""), sorted(sp.get("user_params") or [], key=lambda q: q.get("name", ""))]
+    base = mp["species"][element]
+    if sp["so_scale"] != base["so_scale"]:   # shipped tables never carried it; only an edited value changes the hash
+        d["so_scale"] = sp["so_scale"]
     return hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()[:12]
 
 

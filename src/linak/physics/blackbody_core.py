@@ -11,8 +11,9 @@ Four calculations, one ``compute_*`` entry point each:
    11, 013052 (2009), eq. 27), optional field ionization after BBR transfer (eq. 30),
    and ionization through neighbouring states (eq. 35).
 4. ``compute_rydberg_shifts`` — static shifts of high-n states from α(0) networks, and
-   damped dynamic shifts on a network completed by a QDT tail, TRK closure and a
-   Kramers continuum, so high n approaches the Farley–Wing limit
+   dynamic shifts (each channel a principal value against the Planck spectrum) on a
+   network completed by a QDT tail, TRK closure and a Kramers continuum, so high n
+   approaches the Farley–Wing limit
    π (k_B T)² / (3 c³) = +2416.666 Hz at 300 K.
 
 The continuum reads the bound-bound rates as stored in the JSON, with 12
@@ -28,13 +29,15 @@ import math
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from functools import lru_cache
 
 import numpy as np
+from scipy.integrate import quad
+from scipy.interpolate import CubicSpline
 
 from linak.core.constants import (
     A0_SI,
     ATOMIC_FREQ_RAD_S,
-    AU_TIME_S,
     AU_TO_SI_ALPHA,
     C_SI,
     E_FIELD_REF_T_K,
@@ -65,6 +68,12 @@ N_PAD_DEFAULT = 5
 # Coulomb same-n f values otherwise overshoot TRK (~3) and inflate dyn to
 # ~3x Farley-Wing; completion restores the high-n asymptote.
 N_TAIL_DEFAULT = 200
+# Table of the thermal channel integral F(y), y = ħω/k_BT: dense enough for cubic
+# interpolation to about 1e-7; beyond it the exact limits take over.
+_PV_Y_MIN = 1e-4
+_PV_Y_MAX = 1e3
+_PV_POINTS = 800
+_PV_THERMAL_CUTOFF = 80.0
 N_CONT_BINS_DEFAULT = 80
 EPS_MAX_AU_DEFAULT = 0.05
 
@@ -233,10 +242,19 @@ class RydbergShift:
     shift_stat_hz: float
     shift_dyn_hz: float | None          # None when the dynamic integral is skipped
     n_transitions: int
-    n_gamma: int
     min_dE_au: float | None
     fosc_sources: dict[str, int]
     completion: Completion | None       # None when the dynamic integral is skipped
+
+    @property
+    def dyn_reliable(self) -> bool:
+        """False when the valence network cannot close the TRK sum.
+
+        The completion puts missing strength into the continuum, so a negative signed f
+        sum, which needs f_cont > 1, means a nearby partner is absent from the network:
+        the shift is then wrong however exactly it is integrated.
+        """
+        return self.completion is None or self.completion.f_cont <= 1.0
 
 
 @dataclass(frozen=True)
@@ -327,43 +345,69 @@ def farley_wing_shift_hz(T_K):
     return dE_au * HARTREE_TO_HZ
 
 
-def alpha_real_damped_vectorized(omega_au_arr, transitions_list):
-    """
-    Re[alpha(omega)] with Lorentzian damping (atomic units).
-    Denominator: (dE^2 - omega^2)^2 + (Gamma * omega)^2, as in tweezer_core.alpha_complex.
-    Soft floor on Gamma regularizes IR poles for high-n BBR integrals.
-    """
-    if not transitions_list:
-        return np.zeros_like(omega_au_arr, dtype=float)
-    dE = np.array([tr['delta_E_au'] for tr in transitions_list], dtype=float)
-    f = np.array([tr['fosc'] for tr in transitions_list], dtype=float)
-    sgn = np.array([tr['sign'] for tr in transitions_list], dtype=float)
-    Gam = np.array([
-        max(float(tr.get('Gamma_au') or 0.0), 1e-14 * max(abs(tr['delta_E_au']), 1e-12))
-        for tr in transitions_list
-    ], dtype=float)
-    w = omega_au_arr[:, None]
-    x = dE[None, :] ** 2 - w ** 2
-    y = Gam[None, :] * w
-    denom2 = x * x + y * y
-    return (sgn[None, :] * f[None, :] * x / np.where(denom2 > 0, denom2, np.inf)).sum(axis=1)
+@lru_cache(maxsize=1)
+def _planck_pv_spline() -> CubicSpline:
+    """F(y) tabulated on a log grid; see :func:`planck_pv_integral`."""
+    def thermal(x):
+        return x * x * (x / math.expm1(x) if x > 0.0 else 1.0) if x < 700.0 else 0.0
+
+    def value(y):
+        if y > _PV_THERMAL_CUTOFF:   # the pole lies where the spectrum has vanished
+            return quad(lambda x: thermal(x) / ((y - x) * (y + x)), 0.0, _PV_THERMAL_CUTOFF,
+                        limit=400, epsabs=0.0, epsrel=1e-11)[0]
+        # F = -PV∫ g(x)/(x - y) dx with g = x³/(eˣ-1)/(x + y), the pole isolated on [0, 2y].
+        near = quad(lambda x: thermal(x) / (x + y), 0.0, 2.0 * y,
+                    weight='cauchy', wvar=y, limit=200, epsabs=0.0, epsrel=1e-11)[0]
+        far = quad(lambda x: thermal(x) / ((y - x) * (y + x)), 2.0 * y, np.inf,
+                   limit=400, epsabs=1e-13, epsrel=1e-11)[0]
+        return far - near
+
+    log_y = np.linspace(math.log(_PV_Y_MIN), math.log(_PV_Y_MAX), _PV_POINTS)
+    return CubicSpline(log_y, [value(math.exp(v)) for v in log_y])
 
 
-def bbr_total_shift_damped_hz(transitions_list, T_K, n_pts=2000, omega_max_factor=40):
+def planck_pv_integral(y):
     """
-    Full BBR shift via Planck x Re[alpha_damped(omega)].
-    Use for high-n Rydberg states where IR resonances sit in the thermal band.
+    The universal thermal integral of one E1 channel, for y = ħω_k / k_B T ≥ 0:
+
+        F(y) = PV ∫₀^∞ x³ / (eˣ - 1) · dx / (y² - x²)
+
+    Its limits are exact: F → -π²/6 for y → 0 (a partner much closer than k_B T, which
+    is what gives the Farley-Wing shift) and F → π⁴ / (15 y²) for y → ∞ (a partner far
+    above k_B T, which gives the static Itano shift).
+    """
+    y = np.asarray(y, dtype=float)
+    spline = _planck_pv_spline()
+    inside = spline(np.log(np.clip(y, _PV_Y_MIN, _PV_Y_MAX)))
+    with np.errstate(divide='ignore', invalid='ignore'):
+        above = math.pi ** 4 / (15.0 * y ** 2) + 8.0 * math.pi ** 6 / (63.0 * y ** 4)
+    return np.where(y > _PV_Y_MAX, above, inside)
+
+
+def bbr_total_shift_pv_hz(transitions_list, T_K):
+    """
+    Full BBR shift (Hz) of a state whose partners may sit inside the thermal spectrum.
+
+    Each channel of α(ω) = Σ sign f / (ω_k² - ω²) is integrated against the Planck
+    spectrum as a principal value. With x = ħω/k_BT and θ = k_BT/ħ,
+
+        Δν = -(1 / 2ε₀h) (ħθ⁴ / π²c³) Σ sign f F(y_k) / θ²   (θ in a.u. in the last factor)
+
+    A grid over ω cannot do this: the resonances are many orders of magnitude narrower
+    than any practical step, so the sum samples them at random and the result depends
+    on the grid. Their widths need no treatment here, because Γ ≪ k_BT/ħ for every
+    channel: the integrated effect of a narrow line depends only on its position.
     """
     if not transitions_list:
         return 0.0
-    kT_over_hbar = KB_SI * T_K / HBAR_SI
-    omega_max = omega_max_factor * kT_over_hbar
-    w_grid = np.linspace(1e-3 * kT_over_hbar, omega_max, n_pts)
-    w_au = w_grid / ATOMIC_FREQ_RAD_S
-    alpha_SI = alpha_real_damped_vectorized(w_au, transitions_list) * AU_TO_SI_ALPHA
-    integrand = _u_planck_arr(w_grid, T_K) * alpha_SI
-    val_J = -0.5 / EPS0_SI * np.trapezoid(integrand, w_grid)
-    return val_J / H_SI
+    theta = KB_SI * T_K / HBAR_SI
+    theta_au = theta / ATOMIC_FREQ_RAD_S
+    f = np.array([t['fosc'] for t in transitions_list], dtype=float)
+    sign = np.array([t['sign'] for t in transitions_list], dtype=float)
+    y = np.abs(np.array([t['delta_E_au'] for t in transitions_list], dtype=float)) / theta_au
+    channels = float(np.sum(sign * f * planck_pv_integral(y)))
+    planck = HBAR_SI * theta ** 4 / (math.pi ** 2 * C_SI ** 3)
+    return -0.5 / EPS0_SI * AU_TO_SI_ALPHA * planck * channels / theta_au ** 2 / H_SI
 
 
 def compute_shifts(trans_gs: Sequence[dict], trans_ex: Sequence[dict] | None,
@@ -404,37 +448,8 @@ def compute_shifts(trans_gs: Sequence[dict], trans_ex: Sequence[dict] | None,
 
 
 # ============================================================================
-# DAMPING AND NETWORK COMPLETION FOR THE DYNAMIC RYDBERG SHIFTS
+# NETWORK COMPLETION FOR THE DYNAMIC RYDBERG SHIFTS
 # ============================================================================
-
-def gamma_map_from_lifetimes(life_data: Mapping) -> dict[str, float]:
-    """Map state label -> A_total_s from a lifetimes JSON (for damped alpha)."""
-    gmap = {}
-    for row in life_data.get('lifetimes', []):
-        st = row.get('state')
-        A = row.get('A_total_s')
-        if st and A is not None and float(A) > 0:
-            gmap[st] = float(A)
-    return gmap
-
-
-def attach_gamma_au(transitions_list, gamma_map):
-    """Copy transitions with Gamma_au from partner A_total (drop core).
-    Preserves Gamma_au already set (e.g. continuum bins).
-    """
-    out = []
-    for tr in transitions_list:
-        if tr.get('source') == 'core':
-            continue
-        t = dict(tr)
-        if t.get('Gamma_au'):
-            out.append(t)
-            continue
-        A = gamma_map.get(t.get('other_label'))
-        t['Gamma_au'] = (A * AU_TIME_S) if A else 0.0
-        out.append(t)
-    return out
-
 
 def _qd_delta(qd, l_char):
     return float(qd.get(l_char, 0.0) or 0.0)
@@ -554,7 +569,6 @@ def kramers_continuum_partners(E_bind_au, f_cont, n_bins=N_CONT_BINS_DEFAULT,
             other_label=f'cont:{eps:.5g}',
             source='continuum',
             wl_nm=0.0,
-            Gamma_au=de,
         ))
     return out
 
@@ -798,13 +812,12 @@ def parse_nl_label(label):
     return int(m.group(1)), m.group(2)
 
 
-def rydberg_shift_for_state(label, data, T_K, gamma_map=None, do_dyn=True,
+def rydberg_shift_for_state(label, data, T_K, do_dyn=True,
                             do_cont=True, n_tail_max=N_TAIL_DEFAULT) -> RydbergShift | None:
     """
-    Build E1 alpha network for label; return static Itano + optional damped
-    dynamic Planck BBR shift. Dynamic uses Lorentzian widths from lifetimes
-    and (by default) TRK + QDT-tail + Kramers continuum completion so high-n
-    approaches the Farley-Wing asymptote.
+    Build E1 alpha network for label; return static Itano + optional dynamic Planck
+    BBR shift. Dynamic uses (by default) TRK + QDT-tail + Kramers continuum completion
+    so high-n approaches the Farley-Wing asymptote.
     """
     all_transitions = data['transitions']
     if label not in data['state_energy_au']:
@@ -828,7 +841,6 @@ def rydberg_shift_for_state(label, data, T_K, gamma_map=None, do_dyn=True,
         n_sources[src] = n_sources.get(src, 0) + 1
     shift_hz = bbr_static_shift_hz(alpha0, T_K)
     shift_dyn = None
-    n_gamma = 0
     completion = None
     if do_dyn:
         if do_cont:
@@ -838,9 +850,7 @@ def rydberg_shift_for_state(label, data, T_K, gamma_map=None, do_dyn=True,
             dyn_channels = [dict(t) for t in valence]
             completion = Completion(trk_scale=1.0, f_cont=0.0, n_tail=0, n_cont=0,
                                     n_tail_max=0, trk_sum=None)
-        damped = attach_gamma_au(dyn_channels, gamma_map or {})
-        n_gamma = sum(1 for t in damped if (t.get('Gamma_au') or 0) > 0)
-        shift_dyn = bbr_total_shift_damped_hz(damped, T_K)
+        shift_dyn = bbr_total_shift_pv_hz(dyn_channels, T_K)
     return RydbergShift(
         state=label,
         n=n,
@@ -849,19 +859,18 @@ def rydberg_shift_for_state(label, data, T_K, gamma_map=None, do_dyn=True,
         shift_stat_hz=shift_hz,
         shift_dyn_hz=shift_dyn,
         n_transitions=len(valence),
-        n_gamma=n_gamma,
         min_dE_au=min_dE,
         fosc_sources=n_sources,
         completion=completion,
     )
 
 
-def compute_rydberg_shifts(data, T_K, *, gamma_map: Mapping[str, float],
+def compute_rydberg_shifts(data, T_K, *,
                            n_min=None, n_max=None, extra_states: Iterable[str] = (),
                            n_pad=N_PAD_DEFAULT, table=True, do_dyn=True, do_cont=True,
                            n_tail_max=N_TAIL_DEFAULT) -> RydbergShifts | None:
     """
-    Static + optional damped-dynamic BBR shifts from on-the-fly alpha networks,
+    Static + optional dynamic BBR shifts from on-the-fly alpha networks,
     or None when no state is selected.
 
     Default n window: [gs_n+2, series_n_max - n_pad]. Near the series end,
@@ -894,7 +903,7 @@ def compute_rydberg_shifts(data, T_K, *, gamma_map: Mapping[str, float],
 
     def shift_for(label):
         return rydberg_shift_for_state(
-            label, data, T_K, gamma_map=gamma_map, do_dyn=do_dyn,
+            label, data, T_K, do_dyn=do_dyn,
             do_cont=do_cont, n_tail_max=n_tail_max)
 
     rows = []

@@ -18,8 +18,9 @@ from pathlib import Path
 from linak.core.fileio import write_json
 
 from .api import extrapolate, flag_low_weight
-from .params import UnsupportedSpeciesError, anchor_config, species_params
-from .tables import load_table, table_status
+from . import fit_settings, model_settings
+from .params import UnsupportedSpeciesError, anchor_config, fit_overrides, model_overrides, species_params
+from .tables import get_model, table_status
 
 MODES = ("off", "show", "use")
 RY_FALLBACK_EV = 13.605693122994
@@ -38,6 +39,9 @@ class ExtrapolationConfig:
     excluded: list[str] = field(default_factory=list)       # anchor ids, e.g. "12p3/2"
     user_anchors: list[dict] = field(default_factory=list)  # {n, J:'1/2', f, unc}
     user_threshold: dict | None = None  # {sigma_Mb, unc_Mb, src}: your own threshold cross-section, replaces the packaged one
+    fit: dict = field(default_factory=dict)   # fit settings (see fit_settings); read from fit_settings.json, not saved here
+    model: dict = field(default_factory=dict)  # model parameters per species (see model_settings); read from model_settings.json, not saved here
+    tables_dir: str = ""                      # rebuilt tables and the exact-calculation cache; set when the config is loaded
 
     def validate(self) -> None:
         if self.mode not in MODES:
@@ -73,13 +77,18 @@ def threshold_for(element: str, cfg: ExtrapolationConfig) -> dict | None:
 
 
 def load_config(path: str | Path) -> ExtrapolationConfig:
+    """The config file plus the fit settings that sit next to it (``fit_settings.json``)."""
     with Path(path).open(encoding="utf-8") as fh:
-        return ExtrapolationConfig.from_dict(json.load(fh))
+        cfg = ExtrapolationConfig.from_dict(json.load(fh))
+    cfg.fit = fit_settings.load(fit_settings.settings_path(path))
+    cfg.model = model_settings.load(model_settings.settings_path(path))
+    cfg.tables_dir = str(model_settings.tables_dir(path))
+    return cfg
 
 
 def save_config(cfg: ExtrapolationConfig, path: str | Path) -> None:
     cfg.validate()
-    write_json(str(path), asdict(cfg))
+    write_json(str(path), {k: v for k, v in asdict(cfg).items() if k not in ("fit", "model", "tables_dir")})   # these live in their own files
 
 
 def _line_tags(element: str) -> dict[tuple[int, str], str]:
@@ -181,17 +190,36 @@ def _user_rows(element: str, cfg: ExtrapolationConfig, nus: dict[str, float], pr
 def run_for_species(element: str, cfg: ExtrapolationConfig, nist: dict, rydberg: dict) -> dict:
     """Extrapolated ns->np f-values for both J channels, with bands and warnings."""
     cfg.validate()
+    fit, problems = fit_settings.validate(cfg.fit)
+    model, model_problems = model_settings.validate(cfg.model)
+    with fit_overrides(fit_settings.to_overrides(fit)), model_overrides(
+        model_settings.to_overrides(model), Path(cfg.tables_dir) if cfg.tables_dir else None
+    ):
+        out = _run_for_species(element, cfg, nist, rydberg)
+    out["fit_settings"] = fit
+    out["model_settings"] = model.get(element, {})
+    out["warnings"] = list(out["warnings"]) + problems + model_problems
+    if fit:
+        out["warnings"].append("Custom fit settings in use: " + fit_settings.describe(fit) + ".")
+    if model.get(element):
+        out["warnings"].append("Custom model parameters in use: " + model_settings.describe(model, element) + ".")
+    return out
+
+
+def _run_for_species(element: str, cfg: ExtrapolationConfig, nist: dict, rydberg: dict) -> dict:
     sp = species_params(element)
     nl = sp["nl"]
     acfg = anchor_config()
-    tab = load_table(element)
+    tab = get_model(element)
+    exact = not hasattr(tab, "splines")
     nus = _nu_by_label(rydberg)
     warnings: list[str] = []
     anchors = collect_anchors(element, nist, rydberg) + _user_rows(element, cfg, nus, warnings)
     excluded_ids = set(cfg.excluded)
-    if not tab.fresh:
+    if exact:
         warnings.append(
-            "The model tables are out of date for the current model settings; values are not trustworthy until the tables are rebuilt."
+            "The shipped tables do not match the current model parameters, so the exact model calculation was used "
+            "(slower). Rebuild the tables in Edit > Preferences > Extrapolator to make it fast again."
         )
     if element == "Li":
         warnings.append("Lithium: some model parameters are not yet sourced, so results may vary between species.")
@@ -235,10 +263,10 @@ def run_for_species(element: str, cfg: ExtrapolationConfig, nist: dict, rydberg:
                          "lo95": o["lo95"][i], "hi95": o["hi95"][i],
                          "f_measured": m["f"] if m else None, "measured": m is not None})
         if o["out_of_range_targets"]:
-            warnings.append(f"p{jstr}: {len(o['out_of_range_targets'])} level(s) lie outside the model range (nu {tab.nu_min:.1f}-{tab.nu_max:.0f}) and were skipped.")
+            warnings.append(f"p{jstr}: {len(o['out_of_range_targets'])} level(s) lie outside the model range (ν {tab.nu_min:.1f}-{tab.nu_max:.0f}) and were skipped.")
         if o["excluded_series_nu"]:
             names = [a["id"].rstrip("*") for a in used if not tab.contains(a["nu"])]
-            warnings.append(f"p{jstr}: {len(names)} anchor(s) outside the model range (nu {tab.nu_min:.1f}-{tab.nu_max:.0f}; e.g. the resonance line) are not used in the fit ({', '.join(names)}).")
+            warnings.append(f"p{jstr}: {len(names)} anchor(s) outside the model range (ν {tab.nu_min:.1f}-{tab.nu_max:.0f}; e.g. the resonance line) are not used in the fit ({', '.join(names)}).")
         if o["conflict"]:
             warnings.append(f"p{jstr}: the model needs a large overall correction (exp({o['c0']:+.2f}) = {100 * (math.exp(o['c0']) - 1):+.0f}%); check the anchors.")
         if thr:
@@ -258,7 +286,7 @@ def run_for_species(element: str, cfg: ExtrapolationConfig, nist: dict, rydberg:
                     warnings.append(f"p{jstr}: uncertainty widened for {span} (n >= {hit[0]}): {rule['why']}.")
         channels[jstr] = {"J": J, "c0": o["c0"], "c1": o["c1"], "sigma_th_Mb": o["sigma_th_Mb"],
                           "n_anchors_used": len(used), "excluded": skipped, "rows": rows}
-    return {"element": element, "mode": cfg.mode, "n_max": cfg.n_max, "backend": "table",
+    return {"element": element, "mode": cfg.mode, "n_max": cfg.n_max, "backend": "exact" if exact else "table",
             "sigma_th_model_Mb": tab.sigma_th_Mb(), "threshold_reference": thr,
             "table": table_status(element), "channels": channels, "warnings": warnings,
             "anchors": [{k: v for k, v in a.items() if k != "sys"} | {"included": a["id"] not in excluded_ids, "sigma": _anchor_sigma(a)}
@@ -334,7 +362,7 @@ def output_block(result: dict, entries: list[dict] | None = None) -> dict:
     """JSON-ready 'extrapolation' section: everything tagged as extrapolated, nothing mixed with measured data."""
     return {
         "mode": result["mode"], "backend": result["backend"], "table": result["table"], "warnings": result["warnings"],
-        "tag": "extrapolated",
+        "tag": "extrapolated", "fit_settings": result.get("fit_settings", {}),
         "channels": {j: {k: v for k, v in ch.items() if k != "rows"} | {"rows": [r for r in ch["rows"]]}
                      for j, ch in result["channels"].items()},
         "filled": [{"lower": e["key"][0], "upper": e["key"][1], "J": e["key"][2], "f": e["f"], "lo68": e["lo68"], "hi68": e["hi68"]}
@@ -368,3 +396,26 @@ def apply_to_stage(element: str, config_path, nist: dict, literature: dict, rydb
     if cfg.mode == "use":
         literature = overlay_literature(literature, entries)
     return result, entries, literature
+
+
+def rebuild_tables(element: str, config_path: str | Path, model: dict | None = None, progress=None, cancelled=None) -> dict:
+    """Build the tables of ``element`` for the model parameters in ``model`` (default: the saved ones) into ``extrapolation_tables/``."""
+    from .exact import build_table
+
+    path = Path(config_path)
+    clean, _ = model_settings.validate(model if model is not None else model_settings.load(model_settings.settings_path(path)))
+    out_dir = model_settings.tables_dir(path)
+    with model_overrides(model_settings.to_overrides(clean), out_dir):
+        return build_table(element, out_dir, progress=progress, cancelled=cancelled)
+
+
+def table_state(element: str, config_path: str | Path, model: dict | None = None) -> dict:
+    """Which tables the given model parameters would use: 'shipped', 'rebuilt', or 'exact' (no table matches)."""
+    from .tables import packaged_table, rebuilt_table
+
+    path = Path(config_path)
+    clean, _ = model_settings.validate(model if model is not None else model_settings.load(model_settings.settings_path(path)))
+    with model_overrides(model_settings.to_overrides(clean), model_settings.tables_dir(path)):
+        if rebuilt_table(element) is not None:
+            return {"state": "rebuilt"}
+        return {"state": "shipped" if packaged_table(element).fresh else "exact"}

@@ -98,6 +98,7 @@ from linak.core.workspace import (
 
 from .dataset_editor import DatasetEditorDialog
 from .extrapolation_dialog import active_config_path
+from . import wheel_guard
 from .preferences_dialog import PreferencesDialog, load_overrides as load_colour_overrides
 from .extrapolation_dialog import open_for_species as open_extrapolation_dialog
 from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
@@ -204,6 +205,7 @@ class MainWindow(QMainWindow):
         self._build_menu()
         load_colour_overrides(self.settings)
         saved_theme = self.settings.value(THEME_SETTING, DARK)
+        wheel_guard.install(QApplication.instance())
         self._set_theme(saved_theme if saved_theme in THEME_NAMES else DARK, save=False)
         self._theme_actions[self.theme_name].setChecked(True)
         QApplication.instance().styleHints().colorSchemeChanged.connect(
@@ -292,6 +294,13 @@ class MainWindow(QMainWindow):
 
         edit_menu.addSeparator()
 
+        prefs_action = QAction("Preferences...", self)
+        prefs_action.setShortcut("Ctrl+,")
+        prefs_action.triggered.connect(lambda _checked=False: self._open_preferences())
+        edit_menu.addAction(prefs_action)
+
+        edit_menu.addSeparator()
+
         json_menu = edit_menu.addMenu("JSON datasets")
 
         for name in [
@@ -337,11 +346,6 @@ class MainWindow(QMainWindow):
             theme_group.addAction(action)
             theme_menu.addAction(action)
             self._theme_actions[name] = action
-
-        prefs_action = QAction("Preferences...", self)
-        prefs_action.setShortcut("Ctrl+,")
-        prefs_action.triggered.connect(self._open_preferences)
-        view_menu.addAction(prefs_action)
 
         view_menu.addSeparator()
         self._panel_actions = []
@@ -840,9 +844,15 @@ class MainWindow(QMainWindow):
         if save:
             self.settings.setValue(THEME_SETTING, name)
 
-    def _open_preferences(self) -> None:
+    def _open_preferences(self, start_tab: str | None = None, species: str | None = None) -> None:
         PreferencesDialog(self, self.theme_name, self.settings,
-                          lambda: self._set_theme(self.theme_name, save=False)).exec()
+                          lambda: self._set_theme(self.theme_name, save=False),
+                          root=self.root, species=species or self.current_species or None,
+                          start_tab=start_tab, set_theme=self._set_theme_from_prefs).exec()
+
+    def _set_theme_from_prefs(self, name: str) -> None:
+        self._set_theme(name)
+        self._theme_actions[name].setChecked(True)
 
     def _on_system_scheme_changed(self, _scheme) -> None:
         if self.theme_name == SYSTEM:
