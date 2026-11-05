@@ -18,14 +18,14 @@
    "J": 0.5,
    "nu_min": 9.0,
    "sigma": 0.3,
-   "why": "SSC13 ab initio vs Theodosiou/NIST differ above n~8"
+   "why": "SSC13 ab initio and Theodosiou/NIST values differ above n~8"
   },
   {
    "species": "K",
    "J": 1.5,
    "nu_min": 9.0,
    "sigma": 0.3,
-   "why": "same"
+   "why": "SSC13 ab initio and Theodosiou/NIST values differ above n~8"
   },
   {
    "species": "Cs",

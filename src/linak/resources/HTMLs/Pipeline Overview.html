@@ -2237,7 +2237,7 @@ p {
           <li>BBR static + dynamic; tweezer $R_{\rm sc}$ &amp; heating</li>
           <li>Hyperfine structure + Breit-Rabi / Zeeman (<span class="file-badge">hyperfine.py</span>)</li>
           <li>Magnetic Feshbach $a(B)$ for Li, Na, K, Rb, Cs (<span class="file-badge">feshbach.py</span>; Fr skipped: no experimental FR data)</li>
-          <li>Grotrian / 3D / spectra / comparison HTML suite</li>
+          <li>Grotrian / spectra / comparison HTML suite</li>
         </ul>
       </div>
       <div class="card">
@@ -3780,7 +3780,7 @@ p {
   </div>
 
   <div class="subsection">
-    <h3>plotinteractive.py: Grotrian, spectrum, 3D</h3>
+    <h3>plotinteractive.py: Grotrian, spectrum</h3>
     <p>
       Usage:
       <code>linak --pipeline plotinteractive Na [--soc-only] [--extra FILE …] [--plots N]</code>.
@@ -3791,11 +3791,11 @@ p {
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.8">
       <li><code>*_grotrian.html</code>: primary Grotrian; ionization line always drawn (0&nbsp;eV Absolute, IE Excitation)</li>
       <li><code>*_ee_grotrian.html</code>: excited↔excited by $l$ column</li>
-      <li><code>*_spectrum_levels.html</code>, <code>*_3d_visualization.html</code></li>
+      <li><code>*_spectrum_levels.html</code></li>
     </ul>
     <p>
       <code>--plots N</code> writes plots 1..N only (1=grotrian, 2=+spectrum_levels,
-      3=+ee_grotrian, 4=+3d; default all). Useful for quick method comparisons.
+      3=+ee_grotrian; default all). Useful for quick method comparisons.
     </p>
     <p>
       <code>--extra</code> / <code>-e</code> (repeatable) overlays additional
@@ -3810,7 +3810,7 @@ p {
       (<code>legendonly</code>); the Plot&nbsp;1 filter panel adds an unchecked
       source checkbox that Apply uses to show/hide that series. Missing or
       wrong-format files warn and skip; the rest of the plot still builds.
-      Spectrum / ee Grotrian / 3D are unchanged by <code>--extra</code> in this version.
+      Spectrum / ee Grotrian are unchanged by <code>--extra</code> in this version.
     </p>
     <div class="code-block">
 linak --pipeline plotinteractive Rb -e v13 --plots 1
@@ -3914,7 +3914,7 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <div style="color:var(--text3);padding:0 6px;font-size:18px;">→</div>
     <div style="background:var(--bg2);border:1px solid #00838f;border-radius:6px;padding:10px 14px;color:#00838f;">structure<br><span style="color:var(--text3);font-size:10px;">hyperfine + Feshbach</span></div>
     <div style="color:var(--text3);padding:0 6px;font-size:18px;">→</div>
-    <div style="background:var(--bg2);border:1px solid #ef5350;border-radius:6px;padding:10px 14px;color:#ef5350;">plots<br><span style="color:var(--text3);font-size:10px;">Grotrian / 3D / compare</span></div>
+    <div style="background:var(--bg2);border:1px solid #ef5350;border-radius:6px;padding:10px 14px;color:#ef5350;">plots<br><span style="color:var(--text3);font-size:10px;">Grotrian / compare</span></div>
   </div>
 
   <!-- ── STEP 0: INPUTS ───────────────────────────────────────── -->
@@ -4487,7 +4487,6 @@ linak --pipeline scattering_rate --element Na --line D2
       <tr><th>File</th><th>What it shows</th></tr>
       <tr><td><code>Na_grotrian.html</code></td><td>Levels + E1 arrows; ionization line at IE in Excitation mode</td></tr>
       <tr><td><code>Na_ee_grotrian.html</code></td><td>$l$-column excited↔excited Grotrian</td></tr>
-      <tr><td><code>Na_3d_visualization.html</code></td><td>Rotatable 3D energy landscape</td></tr>
       <tr><td><code>Na_spectrum_levels.html</code></td><td>Interactive spectrum / levels</td></tr>
       <tr><td><code>Na_spectra.html</code></td><td>Absorption / emission bars</td></tr>
       <tr><td><code>Na_orbital3d.html</code></td><td>Orbital viewer (QDT radial; volume or isosurface)</td></tr>
@@ -4521,7 +4520,7 @@ linak --pipeline scattering_rate --element Na --line D2
         <h4>plots/Na/ (selected)</h4>
         <ul style="font-size:12px;color:var(--text2);padding-left:18px;line-height:1.7;font-family:var(--mono)">
           <li>Na_grotrian.html · Na_ee_grotrian.html</li>
-          <li>Na_spectrum_levels.html · Na_3d_visualization.html</li>
+          <li>Na_spectrum_levels.html</li>
           <li>Na_polarizability.html · Na_tweezer.html</li>
           <li>Na_hyperfine.html · Na_zeeman.html</li>
           <li>Na_feshbach.html · Na_spectra.html</li>

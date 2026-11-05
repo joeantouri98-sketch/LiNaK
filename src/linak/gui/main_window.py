@@ -97,6 +97,9 @@ from linak.core.workspace import (
 )
 
 from .dataset_editor import DatasetEditorDialog
+from .extrapolation_dialog import active_config_path
+from .preferences_dialog import PreferencesDialog, load_overrides as load_colour_overrides
+from .extrapolation_dialog import open_for_species as open_extrapolation_dialog
 from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
 from .help_dialog import HelpDialog
 from .overview import SpeciesOverviewWidget
@@ -104,6 +107,7 @@ from .plot_cache import local_plot_copy
 from .species_delete import DeleteSpeciesDialog, delete_permanently, move_to_trash
 from .project_io import (
     open_pipeline_overview_html,
+    output_actions,
     shared_outputs,
     species_outputs,
     workspace_species,
@@ -198,6 +202,7 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
         self._build_menu()
+        load_colour_overrides(self.settings)
         saved_theme = self.settings.value(THEME_SETTING, DARK)
         self._set_theme(saved_theme if saved_theme in THEME_NAMES else DARK, save=False)
         self._theme_actions[self.theme_name].setChecked(True)
@@ -333,6 +338,11 @@ class MainWindow(QMainWindow):
             theme_menu.addAction(action)
             self._theme_actions[name] = action
 
+        prefs_action = QAction("Preferences...", self)
+        prefs_action.setShortcut("Ctrl+,")
+        prefs_action.triggered.connect(self._open_preferences)
+        view_menu.addAction(prefs_action)
+
         view_menu.addSeparator()
         self._panel_actions = []
         self._panel_sizes = {}
@@ -428,13 +438,15 @@ class MainWindow(QMainWindow):
         chooser.accept()
         self._open_dataset_editor(dataset_type, "new")
 
-    def _open_existing_dataset(self):
-        path, _selected_filter = QFileDialog.getOpenFileName(
-            self,
-            "Open dataset file",
-            str(self.root),
-            "JSON files (*.json);;CSV files (*.csv);;All files (*)",
-        )
+    def _open_existing_dataset(self, path: str | Path | None = None):
+        """Edit > Open existing...; with *path* the file dialog is skipped (right-click Edit on an output)."""
+        if not path:
+            path, _selected_filter = QFileDialog.getOpenFileName(
+                self,
+                "Open dataset file",
+                str(self.root),
+                "JSON files (*.json);;CSV files (*.csv);;All files (*)",
+            )
 
         if not path:
             return
@@ -812,6 +824,11 @@ class MainWindow(QMainWindow):
         self.shared_outputs_list = QListWidget()
         self.shared_outputs_list.itemClicked.connect(self._on_output_clicked)
         tabs.addTab(self.shared_outputs_list, "Shared")
+
+        for output_list in (self.species_html_list, self.species_json_list, self.shared_outputs_list):
+            output_list.setContextMenuPolicy(Qt.CustomContextMenu)
+            output_list.customContextMenuRequested.connect(
+                lambda pos, lst=output_list: self._output_context_menu(lst, pos))
         return tabs
 
     def _set_theme(self, name: str, save: bool = True) -> None:
@@ -822,6 +839,10 @@ class MainWindow(QMainWindow):
             self.web_view.page().setBackgroundColor(QColor(tokens.bg))
         if save:
             self.settings.setValue(THEME_SETTING, name)
+
+    def _open_preferences(self) -> None:
+        PreferencesDialog(self, self.theme_name, self.settings,
+                          lambda: self._set_theme(self.theme_name, save=False)).exec()
 
     def _on_system_scheme_changed(self, _scheme) -> None:
         if self.theme_name == SYSTEM:
@@ -1069,6 +1090,19 @@ class MainWindow(QMainWindow):
                 hl.addWidget(value_widget, stretch=1)
                 hl.addWidget(browse_btn)
                 row_widget = container
+            elif kind == "extrapolation":
+                value_widget = QLineEdit(default)
+                value_widget.setReadOnly(True)
+                value_widget.setPlaceholderText("not set")
+                value_widget.textChanged.connect(self._update_cmd_preview)
+                open_btn = QPushButton("Extrapolation...")
+                open_btn.clicked.connect(self._open_extrapolation_dialog)
+                container = QWidget()
+                hl = QHBoxLayout(container)
+                hl.setContentsMargins(0, 0, 0, 0)
+                hl.addWidget(value_widget, stretch=1)
+                hl.addWidget(open_btn)
+                row_widget = container
             else:  # int, float, str, strlist
                 value_widget = QLineEdit(default)
                 value_widget.textChanged.connect(self._update_cmd_preview)
@@ -1098,6 +1132,27 @@ class MainWindow(QMainWindow):
             self.flags_form.addRow(QLabel("Basis set"), self._basis_picker_combo)
 
         self._update_cmd_preview()
+
+    def _open_extrapolation_dialog(self):
+        element = self.current_species
+        if not element:
+            QMessageBox.information(self, "Extrapolation", "Select a species first.")
+            return
+        data_dir = Workspace(root=self.root).data_json_dir
+        ryd_file = data_dir / f"{element}_rydberg.json"
+        if not ryd_file.is_file():
+            QMessageBox.information(self, "Extrapolation",
+                                    f"Run the Rydberg series stage for {element} first; the dialog needs its levels.")
+            return
+        import json as _json
+        from linak.physics.polarizability_core import load_nist_fvalues
+        rydberg = _json.loads(ryd_file.read_text(encoding="utf-8"))
+        nist = load_nist_fvalues(element, verbose=False)
+        if open_extrapolation_dialog(self, self.root, element, nist, rydberg):
+            entry = self._flag_widgets.get("--extrapolation")
+            if entry is not None:
+                entry[1].setText(active_config_path(self.root, element))
+            self._update_cmd_preview()
 
     def _toggle_basis_picker(self, checked):
         if self._basis_picker_combo is None:
@@ -1220,7 +1275,11 @@ class MainWindow(QMainWindow):
             # expander; its values are appended separately in _run_stage.
             if name.startswith("__"):
                 continue
-            if kind == "flag":
+            if kind == "extrapolation":
+                path = active_config_path(self.root, self.current_species or "")
+                if path:
+                    args += [name, path]
+            elif kind == "flag":
                 if w.isChecked():
                     args.append(name)
             elif kind == "choice":
@@ -1545,6 +1604,55 @@ class MainWindow(QMainWindow):
     def _update_status(self):
         self.statusBar().showMessage(f"Output folder: {self.root}")
 
+    def _output_context_menu(self, output_list: QListWidget, position) -> None:
+        """Right-click on a Plots / Data / Shared entry: Edit (json, csv) and Delete."""
+        item = output_list.itemAt(position)
+        data = item.data(Qt.UserRole) if item is not None else None
+        if not data:
+            return
+        path, kind = Path(data[0]), data[1]
+        actions = output_actions(path, kind)
+        menu = QMenu(output_list)
+        edit_action = menu.addAction("Edit...")
+        edit_action.setEnabled(actions["edit"])
+        if not actions["edit"]:
+            edit_action.setToolTip("Only JSON and CSV files can be edited.")
+        delete_action = menu.addAction(f"Delete {path.name}...")
+        delete_action.setEnabled(actions["delete"])
+        if not actions["delete"]:
+            delete_action.setText("Delete (protected)")
+            delete_action.setToolTip(f"{path.name} is {actions['protected_reason']}.")
+        chosen = menu.exec(output_list.viewport().mapToGlobal(position))
+        if chosen is edit_action:
+            self._open_existing_dataset(path)
+            self._refresh_all()
+        elif chosen is delete_action:
+            self._delete_output(path)
+
+    def _delete_output(self, path: Path) -> None:
+        """Delete one output file after asking; the Recycle Bin is used when there is one."""
+        if protected_reason_text := output_actions(path, "")["protected_reason"]:
+            QMessageBox.information(self, "Protected file", f"{path.name} is {protected_reason_text}.")
+            return
+        if self.process is not None and self.process.state() != QProcess.NotRunning:
+            QMessageBox.information(self, "Busy", "Wait for the running stage to finish first.")
+            return
+        extra = ""
+        if path.suffix.lower() == ".json" and "_" not in path.stem.replace("_c1", ""):
+            extra = "\n\nThis is the ORCA result for the species; getting it back needs a new ORCA run."
+        answer = QMessageBox.question(
+            self, "Delete file", f"Delete {path.name}?\n\n{path}{extra}",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if answer != QMessageBox.Yes:
+            return
+        kept = self._delete_paths([path])
+        if kept:
+            QMessageBox.warning(self, "Not deleted", "\n".join(str(p) for p in kept))
+        if getattr(self, "_shown_path", None) == path and not kept:
+            self.viewer_stack.setCurrentIndex(3)
+            self._shown_path = None
+        self._refresh_all()
+
     def _on_output_clicked(self, item: QListWidgetItem):
         data = item.data(Qt.UserRole)
         if not data:
@@ -1555,6 +1663,7 @@ class MainWindow(QMainWindow):
 
     def _load_output(self, path: Path, kind: str):
         self.center_tabs.setCurrentWidget(self.viewer_stack)
+        self._shown_path = path
         if kind == "PLOT":
             if HAS_WEBENGINE:
                 self.viewer_stack.setCurrentIndex(0)

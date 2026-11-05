@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import math
+
 from linak.core.spectroscopy import SPECTRAL_REGIONS
-from linak.physics.rydberg import label_to_pretty, label_to_unicode, unicode_digits_to_plain
+from linak.physics.rydberg import label_to_pretty, unicode_digits_to_plain
 
 
 def ionization_energy_eV(rd):
@@ -31,13 +33,6 @@ def _display_label(label, pretty_by_label):
     if pretty:
         return unicode_digits_to_plain(pretty)
     return label_to_pretty(label)
-
-
-def _disp3d(label):
-    """Classic Unicode label for 3D Grotrian / orbital viewer: '3s ³P°₂'."""
-    if not label:
-        return label
-    return label_to_unicode(label)
 
 
 def orca_line_strength(ex):
@@ -75,3 +70,11 @@ def _fnv_hash(s: str) -> int:
         h ^= c
         h = (h * 16777619) & 0xFFFFFFFF
     return h
+
+
+def _fmt_f(f):
+    """Oscillator strength with 4 significant digits (scientific below 1e-3, so small f is never shown as 0)."""
+    if f >= 1e-3:
+        return f"{f:.4g}"
+    places = max(0, 4 - math.floor(math.log10(f))) if f > 0 else 0
+    return f"{f:.3e} = {f:.{places}f}"

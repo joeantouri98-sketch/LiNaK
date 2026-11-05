@@ -882,7 +882,7 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
     if f_values_dir is None:
         f_values_dir = reference_path("f_values")
     path = os.path.join(f_values_dir, f"{element}_literature.json")
-    empty = dict(fosc={}, fosc_j={}, acc_j={}, n_rows=0, path=None)
+    empty = dict(fosc={}, fosc_j={}, acc_j={}, model_j=set(), model=set(), n_rows=0, path=None)
     if not os.path.exists(path):
         if verbose:
             print(f"  {element}: no literature overlay at {path}")
@@ -894,6 +894,8 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
     fosc = {}
     fosc_j = {}
     acc_j = {}
+    model_j = set()   # rows that are model-potential values (ARC), not measurements or published tables
+    model = set()
     for row in raw.get('transitions', []):
         lo = row.get('lower')
         up = row.get('upper')
@@ -918,20 +920,24 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
             jkey = (lo, up, str(Ju))
             fosc_j[jkey] = f
             acc_j[jkey] = acc
+            if ref.startswith('ARC '):
+                model_j.add(jkey)
         else:
             fosc[key] = fosc.get(key, 0.0) + f
+            if ref.startswith('ARC '):
+                model.add(key)
 
     if verbose:
         print(f"  {element}: literature overlay {len(raw.get('transitions', []))} rows "
               f"({len(fosc_j)} J-resolved, {len(fosc)} multiplet) from {path}")
-    return dict(fosc=fosc, fosc_j=fosc_j, acc_j=acc_j,
+    return dict(fosc=fosc, fosc_j=fosc_j, acc_j=acc_j, model_j=model_j, model=model,
                 n_rows=len(raw.get('transitions', [])), path=path)
 
 
 
 # ELEMENT DATA LOADER
 
-def load_element(element, data_dir=None, f_values_dir=None, verbose=True):
+def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrapolation=None):
     """
     Load rydberg + transitions JSON for one element.
     Returns a dict with everything needed for polarizability calculations.
@@ -988,6 +994,21 @@ def load_element(element, data_dir=None, f_values_dir=None, verbose=True):
                              max_ek_eV=float(IE))
     lit  = load_literature_fvalues(element, f_values_dir=f_values_dir, verbose=verbose)
 
+    # Optional extrapolated ns->np f-values ('use' fills gaps, tagged 'extrapolated'; 'show' only records them)
+    from linak.physics.extrapolation.stage import apply_to_stage, output_block
+    extrap_result, extrap_entries, lit = apply_to_stage(
+        element, extrapolation, nist, lit, ryd, log=print if verbose else (lambda *_: None))
+    extrap_block = output_block(extrap_result, extrap_entries) if extrap_result is not None else None
+    if extrap_entries:
+        # this stage looks levels up as parsed (n, l) tuples, the overlay carries label strings
+        lit = dict(lit)
+        lit['fosc_j'], lit['acc_j'] = dict(lit['fosc_j']), dict(lit['acc_j'])
+        for e in extrap_entries:
+            lo, up, jstr = e['key']
+            jkey = (parse_state_nl(lo), parse_state_nl(up), jstr)
+            lit['fosc_j'][jkey] = e['f']
+            lit['acc_j'][jkey] = 'extrapolated'
+
     from linak.physics.qdt_radial import fit_numerov_scale_from_nist, fit_numerov_scales_by_type
     numerov_cal = fit_numerov_scale_from_nist(qd, nist['fosc'])
     nist_fosc_jl_ = nist.get('fosc_jl') or {}
@@ -1026,6 +1047,7 @@ def load_element(element, data_dir=None, f_values_dir=None, verbose=True):
         alpha_core_au   = ALPHA_CORE_AU.get(element, 0.0),
         core_electrons  = CORE_ELECTRONS.get(element, 0),
         ryd             = ryd,
+        extrapolation   = extrap_block,
     )
 
 
@@ -1299,6 +1321,15 @@ def _ls_state_term(t, state_label, data):
                 lines[(jl, ju)] = hit[0]
                 src_line = 'NIST'
                 continue
+            if Ll == 0 and not (data['nist_fosc'].get((lo_nl, up_nl)) or data['nist_fosc'].get((up_nl, lo_nl))):
+                # (never ahead of a NIST multiplet value, same order as the lifetimes stage)
+                # extrapolated ns -> np_J value (the only J-resolved literature rows this path takes)
+                _jk = (lo_nl, up_nl, f"{ju}/2" if ju % 2 else str(ju // 2))
+                _lit = data.get('literature_fosc_j') or {}
+                if (data.get('literature_acc_j') or {}).get(_jk) == 'extrapolated' and _lit.get(_jk, 0) > 0:
+                    lines[(jl, ju)] = float(_lit[_jk])
+                    src_line = 'extrapolated'
+                    continue
             if f_mult is None:
                 _qd = data['qd']
                 _gap = abs((t['upper_n'] - _qd.get(t['upper_l'], 0.0)) - (t['lower_n'] - _qd.get(t['lower_l'], 0.0)))
@@ -1328,7 +1359,7 @@ def _ls_state_term(t, state_label, data):
 # NIST-graded A–B lines. The ionic-core term carries no uncertainty (α_core's own error is
 # NOT included in the propagated α and C₆ errors).
 SOURCE_REL_UNCERTAINTY = {
-    'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'ORCA': 0.25,
+    'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'extrapolated': 0.20, 'ORCA': 0.25,
     'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
 }
 
@@ -1355,7 +1386,7 @@ def _transition_acc(src, data, lower_label, upper_label, upper_J):
             g = (data.get('nist_acc') or {}).get(key)
             if g:
                 return g
-        elif src == 'literature':
+        elif src in ('literature', 'extrapolated'):
             if upper_J:
                 g = (data.get('literature_acc_j') or {}).get((key[0], key[1], upper_J))
                 if g:
@@ -1440,6 +1471,8 @@ def build_transitions_for_state(state_label, data, all_transitions):
 
         if f <= 0:
             continue
+        if src == 'literature' and _transition_acc(src, data, ll, ul, upper_J) == 'extrapolated':
+            src = 'extrapolated'
 
         if sign == -1:
             # The state is the UPPER level: its emission strength is f_nk = -(g_k/g_n) f_kn, with f_kn

@@ -79,6 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Only use ORCA oscillator strengths')
     parser.add_argument('--nist-only', action='store_true',
                         help='Only use NIST/Rydberg transitions')
+    parser.add_argument('--extrapolation', default=None, metavar='CONFIG.json',
+                        help='Extrapolation settings written by the GUI dialog (mode off/show/use, '
+                             'anchors, n_max). Show adds extrapolated ns->np f-values to the output; '
+                             'use also fills levels that have no measured/published value.')
     return parser
 
 
@@ -172,6 +176,11 @@ def main(argv: list[str] | None = None) -> int:
     rydberg_data, trans_data = _load_pipeline_json(element, data_dir)
     nist = load_nist_fvalues(element, verbose=True)
     literature = load_literature_fvalues(element, verbose=True)
+    extrap_result, extrap_entries = _run_extrapolation(element, args, nist, rydberg_data)
+    literature_measured = literature        # before the extrapolated gap-fill goes in
+    if extrap_result is not None and extrap_result['mode'] == 'use':
+        from linak.physics.extrapolation.stage import overlay_literature
+        literature = overlay_literature(literature, extrap_entries)
     caveats = _nist_series_caveats(element)
     fit_excl = _nist_fit_exclusions(element)
     no_qdt = 'no QDT' in (rydberg_data.get('method') or '')
@@ -218,16 +227,47 @@ def main(argv: list[str] | None = None) -> int:
         is_ion=sp.get('kind') == 'ion', is_metal=is_metal,
         orca_only=args.orca_only, nist_only=args.nist_only,
     )
+    replaced = []
+    if extrap_entries:
+        # what each extrapolated row displaced (earlier NIST-extrap fits, Numerov, ...), from a run without the fill
+        import dataclasses
+        base = compute(
+            transitions, dataclasses.replace(sources, literature=literature_measured),
+            qd=rydberg_data.get('quantum_defects', {}), z_core=z_core, IE=IE,
+            gs_label=_ground_label(rydberg_data, n_start),
+            mass_amu=ATOMIC_MASS_AMU.get(element, ATOMIC_MASS_AMU[sp["symbol"]]),
+            is_ion=sp.get('kind') == 'ion', is_metal=is_metal,
+            orca_only=args.orca_only, nist_only=args.nist_only,
+        )
+        prev = {(t.upper_label, t.lower_label): t for t in base.transitions}
+        for t in result.transitions:
+            if t.fosc_acc == 'extrapolated':
+                o = prev.get((t.upper_label, t.lower_label))
+                replaced.append({
+                    'upper': t.upper_label, 'lower': t.lower_label, 'f_new': t.fosc,
+                    'f_previous': getattr(o, 'fosc', None), 'A_previous_s': getattr(o, 'A_s', None),
+                    'source_previous': getattr(o, 'fosc_source', None), 'note_previous': getattr(o, 'fosc_acc', None)})
     _print_calibration(result, z_core)
     _print_table_summary(result, len(transitions))
 
     payload = output_json(sp, args, IE, n_start, result)
+    if extrap_result is not None:
+        from linak.physics.extrapolation.stage import output_block
+        payload['extrapolation'] = output_block(extrap_result, extrap_entries) | {'replaced': replaced}
     out_file = f"{data_dir}/{element}_lifetimes.json"
     write_json(out_file, payload)
     print(f"\n  Saved: {out_file}")
 
     _print_lifetimes(element, payload['lifetimes'])
     return 0
+
+
+def _run_extrapolation(element, args, nist, rydberg_data):
+    """(result, gap-filling entries) for ``--extrapolation``, or (None, []) when off or not requested."""
+    from linak.physics.extrapolation.stage import apply_to_stage
+    literature = load_literature_fvalues(element, verbose=False)
+    result, entries, _ = apply_to_stage(element, args.extrapolation, nist, literature, rydberg_data)
+    return result, entries
 
 
 def _nist_fit_exclusions(element) -> list:
@@ -267,6 +307,8 @@ _OPTIONAL_ROW_KEYS = ('fosc_model', 'fosc_model_source', 'nist_model_ratio',
 
 def _transition_json(t: TransitionA) -> dict:
     row = asdict(t)
+    if row.get('fosc_acc') == 'extrapolated':
+        row['fosc_source'] = 'extrapolated'
     for key in _OPTIONAL_ROW_KEYS:
         if row[key] is None:
             del row[key]

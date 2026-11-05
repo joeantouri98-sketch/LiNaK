@@ -1,6 +1,12 @@
 
+<button id="filter-open" type="button" title="Show the transition filter" onclick="toggleFilterPanel(false)">🔬 Filter ◂</button>
 <div id="filter-panel">
-  <h3>🔬 Transition Filter</h3>
+  <h3 style="display:flex;align-items:center;justify-content:space-between;">
+    <span>🔬 Transition Filter</span>
+    <button id="filter-close" type="button" title="Collapse the filter so the diagram uses the full width"
+            onclick="toggleFilterPanel(true)"
+            style="flex:none;padding:1px 8px;font-size:12px;border:1px solid #ccc;border-radius:4px;background:#f5f5f5;cursor:pointer;">Collapse ▸</button>
+  </h3>
 
   <div class="section">
     <div class="section-title">Spectral Region</div>
@@ -112,3 +118,15 @@
     </div>
   </div>
 </div>
+
+<script>
+function toggleFilterPanel(collapse) {
+  document.body.classList.toggle('filter-collapsed', collapse);
+  // let Plotly re-measure its container once the CSS width has changed
+  setTimeout(function () {
+    document.querySelectorAll('.plotly-graph-div').forEach(function (gd) {
+      if (window.Plotly) { Plotly.Plots.resize(gd); }
+    });
+  }, 30);
+}
+</script>

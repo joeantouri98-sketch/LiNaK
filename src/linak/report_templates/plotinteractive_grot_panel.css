@@ -123,4 +123,16 @@
   margin-bottom: 4px;
   text-align: center;
 }
+/* collapsible filter: the diagram takes the whole width while the panel is folded away */
+#filter-open {
+  display: none;
+  position: fixed; top: 60px; right: 10px; z-index: 9999;
+  padding: 5px 10px; font-size: 12px; font-family: 'Arial', sans-serif;
+  background: #fff; color: #333; border: 1.5px solid #ccc; border-radius: 8px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.15); cursor: pointer;
+}
+#filter-open:hover { background: #e0e8ff; }
+body.filter-collapsed #filter-panel { display: none; }
+body.filter-collapsed #filter-open { display: block; }
+body.filter-collapsed .plotly-graph-div { width: 100vw !important; }
 </style>

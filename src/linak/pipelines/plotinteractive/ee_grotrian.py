@@ -22,7 +22,7 @@ from linak.report_templates import (
     write_offline_report,
 )
 
-from .common import REGION_COLORS, _region_order_js, ionization_energy_eV
+from .common import _fmt_f, REGION_COLORS, _region_order_js, ionization_energy_eV
 from .inputs import PlotInputs
 from .view import View
 
@@ -320,7 +320,7 @@ def plot_ee_grotrian(inputs: PlotInputs, view: View, plot3_choice, output_dir) -
                 f"λ = {wl:.2f} nm<br>"
                 f"ΔE = {_t.get('delta_E_eV', _t['u_exc'] - _t['l_exc']):.4f} eV<br>"
                 f"Region: {region}<br>"
-                f"fosc = {fosc:.5f}  [{src}]<br>"
+                f"fosc = {_fmt_f(fosc)}  [{src}]<br>"
                 f"Acc: {acc}<extra></extra>"
             )
             fig3.add_trace(go.Scatter(

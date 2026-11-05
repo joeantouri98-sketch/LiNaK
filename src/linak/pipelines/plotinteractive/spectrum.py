@@ -295,7 +295,7 @@ def plot_spectrum(inputs: PlotInputs, view: View, output_dir) -> None:
                 '<b>%{customdata[0]} → %{customdata[1]}</b><br>'
                 'λ = %{customdata[2]:.3f} nm<br>'
                 'ΔE = %{customdata[3]:.2f} meV<br>'
-                'fosc = %{customdata[4]:.5f}<br>'
+                'fosc = %{customdata[4]:.4~g}<br>'
                 'Acc: %{customdata[5]}<extra></extra>'
             ),
             visible='legendonly',

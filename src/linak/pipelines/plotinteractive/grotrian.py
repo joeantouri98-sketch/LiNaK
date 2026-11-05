@@ -18,6 +18,7 @@ from linak.report_templates import (
 )
 
 from .common import (
+    _fmt_f,
     REGION_COLORS,
     _REGION_ORDER,
     _fnv_hash,
@@ -243,7 +244,8 @@ def _assign_grotrian_arrow_x(transitions, to_diagram_y,
 def add_transition_traces(fig, transitions, energy_shift=0.0,
                           visible='legendonly', row=None, col=None,
                           max_show=GROT_INITIAL_MAX, *, fosc_by_transition,
-                          A_by_transition, ionization_energy, disp):
+                          A_by_transition, ionization_energy, disp,
+                          extrapolated_pairs=frozenset(), extrapolated_overlay=()):
     """
     Add transition arrows between energy levels.
 
@@ -342,13 +344,17 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
 
     # ── fosc-based width scaling ─────────────────────────────────────────────
     # Collect all fosc values in the shown set to build a log-normalised scale.
+    # "Show alongside": extrapolated lines are added after the selection so the measured ones are never displaced
+    _ov = list(extrapolated_overlay)
+    show = list(show) + _ov
+
     # Width range: 0.6 (no fosc data) to 4.5 (strongest line).
     # Log scale because fosc spans many orders of magnitude (1e-5 to ~1).
     # Arrowhead size scales with width too (6–14 px).
     import math as _math
     _fosc_vals = []
     for _t in show:
-        _f = (fosc_by_transition.get((_t['upper_label'], _t['lower_label'])) or
+        _f = (_t.get('extrapolated_f') or fosc_by_transition.get((_t['upper_label'], _t['lower_label'])) or
               fosc_by_transition.get((_t['lower_label'], _t['upper_label'])))
         if _f and _f > 0:
             _fosc_vals.append(_f)
@@ -369,9 +375,10 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
         return int(5 + width / 4.5 * 9)
 
     # Horizontal positions: fan out by lower level across the plot width
-    _x_map, _emis_off = _assign_grotrian_arrow_x(show, to_diagram_y)
+    _x_map, _emis_off = _assign_grotrian_arrow_x([t for t in show if 'extrapolated_f' not in t] or show, to_diagram_y)
 
     added_legend = set()
+    _ext_count = sum(1 for t in show if 'extrapolated_f' in t or (t['upper_label'], t['lower_label']) in extrapolated_pairs)
 
     for t in show:
         region = t["region"]
@@ -384,12 +391,25 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
         y_upper = to_diagram_y(t["upper_energy_eV"])
 
         # Look up fosc and A for this transition
-        _fosc   = fosc_by_transition.get(_fkey) or fosc_by_transition.get(_fkey[::-1])
+        _fosc   = t.get('extrapolated_f') or fosc_by_transition.get(_fkey) or fosc_by_transition.get(_fkey[::-1])
         _A      = A_by_transition.get(_fkey)    or A_by_transition.get(_fkey[::-1])
+        _band_str = ''
+        if 'extrapolated_f' in t:
+            # A and the band belong to the extrapolated value, not to the measured line on the same pair
+            from fractions import Fraction as _Fr
+            _gu = 2 * _Fr(str(t.get('upper_J', '1/2'))) + 1
+            _A = 6.6702e15 * (2 / float(_gu)) * t['extrapolated_f'] / (t['wavelength_nm'] * 10) ** 2
+            if 'extrapolated_lo68' in t:
+                _band_str = (f"<br>68%: {_fmt_f(t['extrapolated_lo68'])} – {_fmt_f(t['extrapolated_hi68'])}"
+                             f"<br>95%: {_fmt_f(t['extrapolated_lo95'])} – {_fmt_f(t['extrapolated_hi95'])}")
         _width  = _arrow_width(_fosc)
         _hd_sz  = _arrow_head(_width)
-        _fosc_str = f"<br>fosc = {_fosc:.5f}" if _fosc else "<br>fosc = —"
+        _fosc_str = f"<br>fosc = {_fmt_f(_fosc)}" if _fosc else "<br>fosc = —"
         _A_str    = f"<br>A = {_A:.3e} s⁻¹"  if _A   else ""
+
+        # f-values from the extrapolation module form their own legend group, hidden by default
+        _is_ext = 'extrapolated_f' in t or _fkey in extrapolated_pairs
+        _group  = 'extrapolated' if _is_ext else region
 
         # Draw both absorption (upward) and emission (downward) arrows
         for direction in ("absorption", "emission"):
@@ -415,8 +435,9 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
             hover = (f"<b>{label_str}</b>"
                      f"<br>λ = {t['wavelength_nm']:.1f} nm"
                      f"<br>ΔE = {t['delta_E_eV']:.4f} eV"
-                     f"{_fosc_str}{_A_str}"
+                     f"{_fosc_str}{_band_str}{_A_str}"
                      f"<br>Region: {region}"
+                     f"{'<br><i>f extrapolated (model + anchors)</i>' if _is_ext else ''}"
                      f"<br>[{t['upper_source']}/{t['lower_source']}]"
                      f"<extra></extra>")
 
@@ -431,22 +452,23 @@ def add_transition_traces(fig, transitions, energy_shift=0.0,
                     color=dir_color,
                 ),
                 hovertemplate=hover,
-                legendgroup=f"transition_{region}_{direction}",
-                visible=visible,
+                legendgroup=f"transition_{_group}_{direction}",
+                visible='legendonly' if _is_ext else visible,
                 customdata=[[t['upper_label'], t['lower_label']]],
             )
 
-            legend_key = (region, direction)
+            legend_key = (_group, direction)
             show_in_legend = legend_key not in added_legend
             added_legend.add(legend_key)
-            count = region_counts[region]
+            count = _ext_count if _is_ext else region_counts[region]
+            _label = 'Extrapolated' if _is_ext else region
             if show_in_legend:
                 kwargs['showlegend'] = True
-                kwargs['name'] = (f"{region} ↑ abs ({count})" if direction == "absorption"
-                                  else f"{region} ↓ emis ({count})")
+                kwargs['name'] = (f"{_label} ↑ abs ({count})" if direction == "absorption"
+                                  else f"{_label} ↓ emis ({count})")
             else:
                 kwargs['showlegend'] = False
-                kwargs['name'] = region
+                kwargs['name'] = _label
 
             t_trace = go.Scatter(**kwargs)
             if row:
@@ -558,7 +580,7 @@ def add_orca_transition_traces(fig, excitations, energy_shift, ground_energy,
             lw = 1.5
         x_pos = x_pos_by_level.get(e_shifted,
                                    x_center + np.random.uniform(-x_spread, x_spread))
-        fosc_str = f"fosc = {fosc:.4f}" if has_fosc else "fosc not available"
+        fosc_str = f"fosc = {_fmt_f(fosc)}" if has_fosc else "fosc not available"
 
         for direction in ('absorption', 'emission'):
             legend_key = (region, direction)
@@ -684,6 +706,7 @@ def plot_grotrian(inputs: PlotInputs, view: View, output_dir) -> None:
             fig1, visible_transitions, energy_shift=energy_shift,
             visible='legendonly',
             fosc_by_transition=fosc_by_transition, A_by_transition=A_by_transition,
+            extrapolated_pairs=inputs.extrapolated_pairs, extrapolated_overlay=inputs.extrapolated_overlay,
             ionization_energy=(rydberg_data.get("ionization_energy_eV") if rydberg_data
                                else tdata.get("ionization_energy_eV")),
             disp=_disp)
@@ -709,8 +732,8 @@ def plot_grotrian(inputs: PlotInputs, view: View, output_dir) -> None:
         fosc  = fosc_by_energy.get(orig_e, 0.0)
         ex_match = next((e for e in level_excitations if e['energy_eV'] == orig_e), None)
         n_deg = ex_match.get('n_degenerate', 1) if ex_match else 1
-        fosc_str = (f'<br>fosc = {fosc:.4f}  ({n_deg} TD-DFT roots merged)' if has_fosc and n_deg > 1
-                else f'<br>fosc = {fosc:.4f}' if has_fosc else '')
+        fosc_str = (f'<br>fosc = {_fmt_f(fosc)}  ({n_deg} TD-DFT roots merged)' if has_fosc and n_deg > 1
+                else f'<br>fosc = {_fmt_f(fosc)}' if has_fosc else '')
         hover = (f'<b>{label_show}</b><br>{shift_label} Energy: {sh_e:.4f} eV'
                  + (f'<br>Excitation: {orig_e:.4f} eV' if energy_shift != 0 else '')
                  + fosc_str + '<extra></extra>')
@@ -731,7 +754,7 @@ def plot_grotrian(inputs: PlotInputs, view: View, output_dir) -> None:
             soc_lbl = (ex.get('label')
                        or f"SOC {ex.get('soc_state', ex.get('to', '?'))}")
             fosc = orca_line_strength(ex)
-            fosc_str = f'<br>fosc = {fosc:.4f}' if fosc > 0 else ''
+            fosc_str = f'<br>fosc = {_fmt_f(fosc)}' if fosc > 0 else ''
             hover = (f'<b>{soc_lbl}</b> (CASSCF/SOC)<br>{shift_label} Energy: {sh_e:.4f} eV'
                      + (f'<br>Excitation: {orig_e:.4f} eV' if energy_shift != 0 else '')
                      + fosc_str + '<extra></extra>')
@@ -783,7 +806,7 @@ def plot_grotrian(inputs: PlotInputs, view: View, output_dir) -> None:
                 continue
             sh_e = orig_e + energy_shift
             fosc = orca_line_strength(ex)
-            fosc_str = f'<br>fosc = {fosc:.4f}' if fosc > 0 else ''
+            fosc_str = f'<br>fosc = {_fmt_f(fosc)}' if fosc > 0 else ''
             hover = (f'<b>{_ename}</b><br>{shift_label} Energy: {sh_e:.4f} eV'
                      + (f'<br>Excitation: {orig_e:.4f} eV' if energy_shift != 0 else '')
                      + fosc_str + '<extra></extra>')
@@ -847,7 +870,7 @@ def plot_grotrian(inputs: PlotInputs, view: View, output_dir) -> None:
     fig1.update_layout(
         title=dict(
             text=f'<b>{element} — Grotrian Diagram ({shift_label})</b>'
-                 f'<br><sub>Hover for details • Use legend to toggle series</sub>',
+                 '',
             x=0.5, xanchor='center', font=dict(size=20)
         ),
         xaxis=dict(showticklabels=False, showgrid=False, zeroline=False, range=[-0.2, 1.2]),

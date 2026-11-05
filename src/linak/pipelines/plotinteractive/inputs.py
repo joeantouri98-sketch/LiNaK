@@ -34,6 +34,9 @@ class PlotInputs:
     fosc_by_transition: dict      # (upper, lower) and (lower, upper) -> f
     A_by_transition: dict         # (upper, lower) and (lower, upper) -> A (1/s)
     pretty_by_label: dict         # ASCII label -> display label
+    # (upper, lower) pairs whose f came from the extrapolation module (both orders)
+    extrapolated_pairs: frozenset = frozenset()
+    extrapolated_overlay: tuple = ()
 
     @property
     def species_label(self) -> str:
@@ -70,6 +73,28 @@ class PlotInputs:
     def disp(self, label):
         """Readable spectroscopic label (see ``common._display_label``)."""
         return _display_label(label, self.pretty_by_label)
+
+
+
+def _synthetic_gap_transition(transitions, gs_label, up_label, jstr, row, lt_raw):
+    """ground -> np line for an extrapolated level the transitions list does not carry (needs the ground energy)."""
+    low = next((t for t in transitions if t.get('lower_label') == gs_label), None)
+    ie = lt_raw.get('ionization_energy_eV') or (low or {}).get('ionization_energy_eV')
+    if low is None or not ie or not row.get('nu'):
+        return None
+    ry = 13.605693
+    e_up = -ry / row['nu'] ** 2
+    e_lo = low['lower_energy_eV']
+    de = e_up - e_lo
+    if de <= 0:
+        return None
+    wl = 1239.84198 / de
+    n = int(row['n'])
+    return {'upper_label': up_label, 'lower_label': gs_label, 'upper_n': n, 'lower_n': low['lower_n'],
+            'upper_l': 'p', 'lower_l': 's', 'upper_J': jstr, 'lower_J': '1/2', 'delta_n': n - low['lower_n'],
+            'upper_energy_eV': e_up, 'lower_energy_eV': e_lo, 'delta_E_eV': de, 'wavelength_nm': wl,
+            'region': 'UV' if wl < 400 else ('Visible' if wl < 780 else 'Near-IR'),
+            'upper_source': 'extrapolated', 'lower_source': low.get('lower_source', 'NIST')}
 
 
 def _extra_source_name(path, element):
@@ -168,6 +193,8 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
     lifetimes_transitions = []
     lifetimes_by_state  = {}   # state_label -> lifetime entry dict
     fosc_by_transition  = {}   # (upper_label, lower_label) -> fosc
+    extrapolated_pairs  = set()  # pairs whose f is tagged 'extrapolated'
+    extrapolated_overlay = []    # 'Show alongside' lines, drawn as a hidden legend group
     A_by_transition     = {}   # (upper_label, lower_label) -> A_s
 
     json_file = f"{data_dir}/{element}.json"
@@ -299,11 +326,26 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
                 _ll = _lt.get('lower_label', '')
                 _f  = _lt.get('fosc', 0.0)
                 _A  = _lt.get('A_s', 0.0)
+                if _ul and _ll and _lt.get('fosc_source') == 'extrapolated':
+                    extrapolated_pairs.update({(_ul, _ll), (_ll, _ul)})
                 if _ul and _ll and _f > 0:
                     fosc_by_transition[(_ul, _ll)] = _f
                     fosc_by_transition[(_ll, _ul)] = _f
                     A_by_transition[(_ul, _ll)]    = _A
                     A_by_transition[(_ll, _ul)]    = _A
+            # "Show alongside" extrapolation: one extra line per extrapolated level, kept apart from the measured
+            # transitions so both can be drawn (the extrapolated ones form a legend group hidden by default).
+            _ext = lt_raw.get('extrapolation') or {}
+            if _ext.get('mode') == 'show':
+                from linak.physics.extrapolation.params import species_params
+                _gs = f"{species_params(element)['nl']}s"
+                for _jstr, _ch in (_ext.get('channels') or {}).items():
+                    for _r in _ch.get('rows', []):
+                        _syn = _synthetic_gap_transition(transitions_data, _gs, f"{_r['n']}p{_jstr}", _jstr, _r, lt_raw)
+                        if _syn is not None and _r.get('f', 0) > 0:
+                            _syn['extrapolated_f'] = _r['f']
+                            _syn.update({f'extrapolated_{k}': _r[k] for k in ('lo68', 'hi68', 'lo95', 'hi95') if k in _r})
+                            extrapolated_overlay.append(_syn)
             print(f" fosc lookup: {len(fosc_by_transition)//2} unique transitions with fosc")
         except Exception as e:
             print(f"  Could not load lifetimes: {e}")
@@ -325,4 +367,6 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
         fosc_by_transition=fosc_by_transition,
         A_by_transition=A_by_transition,
         pretty_by_label=pretty_by_label,
+        extrapolated_pairs=frozenset(extrapolated_pairs),
+        extrapolated_overlay=tuple(extrapolated_overlay),
     )

@@ -9,7 +9,7 @@ pipeline or physics imports.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
 from PySide6.QtCore import Qt
@@ -43,6 +43,8 @@ class Tokens:
     accent_ink: str      # the accent as text or line on bg/surface
     selection: str       # selected rows
     danger: str
+    highlight: str       # selected cells, text and menu items
+    highlight_text: str  # text on the highlight
 
 
 THEMES = {
@@ -53,6 +55,7 @@ THEMES = {
         text="#e6eaf0", text_muted="#9aa5b5",
         accent="#8fe03f", accent_hover="#a6ec62", accent_text="#10180a",
         accent_ink="#8fe03f", selection="#1d2b1e", danger="#ff7b72",
+        highlight="#8fe03f", highlight_text="#111723",
     ),
     LIGHT: Tokens(
         bg="#f3f5f8", surface="#ffffff", raised="#e9edf2",
@@ -60,6 +63,7 @@ THEMES = {
         text="#1b2230", text_muted="#566172",
         accent="#8fe03f", accent_hover="#7fd02f", accent_text="#10180a",
         accent_ink="#2f7a12", selection="#e4f5d4", danger="#c62828",
+        highlight="#2f7a12", highlight_text="#ffffff",
     ),
 }
 
@@ -71,9 +75,47 @@ def resolve(name: str) -> str:
     return DARK if QGuiApplication.styleHints().colorScheme() != Qt.ColorScheme.Light else LIGHT
 
 
+# Colours the user may change in View > Preferences: token -> label. Everything else follows from these.
+EDITABLE_COLOURS = (
+    ("highlight", "Selection (tables, text, menus)"),
+    ("selection", "Selected row in lists"),
+    ("accent", "Accent (primary buttons, check marks)"),
+    ("danger", "Warning / delete"),
+)
+_overrides: dict[str, dict[str, str]] = {}
+
+
+def set_overrides(theme_name: str, colours: dict[str, str]) -> None:
+    """Use *colours* (token -> '#rrggbb') on top of theme *theme_name*; empty clears them."""
+    _overrides[resolve(theme_name)] = {k: v for k, v in colours.items() if QColor(v).isValid()}
+
+
+def overrides_for(theme_name: str) -> dict[str, str]:
+    return dict(_overrides.get(resolve(theme_name), {}))
+
+
+def _readable_on(colour: str) -> str:
+    """Black or white, whichever reads better on *colour*."""
+    c = QColor(colour)
+    return "#10180a" if (0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue()) > 150 else "#ffffff"
+
+
 def tokens_for(name: str) -> Tokens:
-    """The colour tokens of theme *name*."""
-    return THEMES[resolve(name)]
+    """The colour tokens of theme *name*, with the user's colour choices applied."""
+    key = resolve(name)
+    base = THEMES[key]
+    ov = _overrides.get(key)
+    if not ov:
+        return base
+    changes = dict(ov)
+    if "highlight" in ov:
+        changes["highlight_text"] = _readable_on(ov["highlight"])
+    if "accent" in ov:
+        acc = QColor(ov["accent"])
+        changes["accent_hover"] = acc.lighter(112).name() if key == DARK else acc.darker(112).name()
+        changes["accent_ink"] = acc.name() if key == DARK else acc.darker(150).name()
+        changes["accent_text"] = _readable_on(ov["accent"])
+    return replace(base, **changes)
 
 
 def ui_font() -> QFont:
@@ -108,8 +150,8 @@ def build_palette(t: Tokens) -> QPalette:
         QPalette.BrightText: t.danger,
         QPalette.ToolTipBase: t.raised,
         QPalette.ToolTipText: t.text,
-        QPalette.Highlight: t.accent_ink,
-        QPalette.HighlightedText: t.surface,
+        QPalette.Highlight: t.highlight,
+        QPalette.HighlightedText: t.highlight_text,
         QPalette.Link: t.accent_ink,
         QPalette.Light: t.raised,
         QPalette.Midlight: t.border,
@@ -160,7 +202,7 @@ QPushButton#danger:enabled {{ color: {danger}; }}
 
 QLineEdit, QPlainTextEdit, QTextEdit {{ background: {surface}; color: {text};
     border: 1px solid {border_strong}; border-radius: 6px; padding: 4px 6px;
-    selection-background-color: {accent_ink}; selection-color: {surface}; }}
+    selection-background-color: {highlight}; selection-color: {highlight_text}; }}
 QLineEdit:focus {{ border-color: {accent_ink}; }}
 QComboBox {{ min-height: 24px; }}
 QComboBox QAbstractItemView {{ background: {surface}; color: {text}; border: 1px solid {border};

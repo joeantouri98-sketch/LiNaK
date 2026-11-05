@@ -329,7 +329,7 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
-                data_dir=None, isotope_A=None):
+                data_dir=None, isotope_A=None, extrapolation=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
@@ -340,7 +340,7 @@ def run_element(element, excited_label=None,
     print(f"  {element}")
     print(f"{'='*65}")
 
-    data = load_element(element, data_dir=data_dir)
+    data = load_element(element, data_dir=data_dir, extrapolation=extrapolation)
     if data is None:
         return None
 
@@ -356,6 +356,9 @@ def run_element(element, excited_label=None,
     n_coulomb = sum(1 for t in trans_gs if t['source'] == 'Coulomb')
     _prec = f"  (precision D-lines: {n_prec})" if n_prec else ""
     print(f"    NIST: {n_nist}{_prec}   Coulomb: {n_coulomb}")
+    n_extrap = sum(1 for t in trans_gs if t['source'] == 'extrapolated')
+    if n_extrap:
+        print(f"    extrapolated (model + anchors, +-20%): {n_extrap}")
 
     # Static polarizability 
     alpha0 = alpha_real(0.0, trans_gs)
@@ -502,6 +505,7 @@ def run_element(element, excited_label=None,
     # Assemble result dict 
     result = dict(
         element          = element,
+        extrapolation    = data.get('extrapolation'),
         gs_label         = gs_label,
         excited_label    = excited_used,
         alpha0_au        = round(alpha0, 4),
@@ -1225,6 +1229,7 @@ def save_json(result, data_dir=None):
         wl_range_nm=[result['wl_min'], result['wl_max']],
         I_ref_kWcm2=result.get('I_ref_kWcm2'),
         point_result=result.get('point_result'),
+        extrapolation=result.get('extrapolation'),
         transitions_gs=_trim_transitions(result['transitions_gs']),
         transitions_ex=_trim_transitions(result['transitions_ex']),
     )
@@ -1245,6 +1250,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--heteronuclear', action='store_true')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir))
     parser.add_argument('--n-grid', type=int, default=2000)
+    parser.add_argument('--extrapolation', default=None, metavar='CONFIG.json',
+                        help='Extrapolated ns->np f-values (same config as the lifetimes stage; '
+                             'mode use fills gaps, tagged extrapolated).')
     parser.add_argument('--isotope', type=int, default=None,
                         help='Mass number A used for the trap-frequency mass (default: most abundant natural isotope)')
     parser.add_argument('--intensity', type=float, default=10.0)
@@ -1270,7 +1278,7 @@ def main(argv=None) -> int:
         if args.element is None:
             parser.error("--state requires an element, e.g. `polarizability Na --state 20s`")
         el = require_alpha_species(args.element, "polarizability.py")["species_id"]
-        data = load_element(el, data_dir)
+        data = load_element(el, data_dir, extrapolation=args.extrapolation)
         if data is None:
             raise MissingDataError(f"No polarizability data for {el} in {data_dir}")
         lab = args.state.strip()
@@ -1314,6 +1322,7 @@ def main(argv=None) -> int:
                 wl_point=args.wl,
                 data_dir=data_dir,
                 isotope_A=args.isotope,
+                extrapolation=args.extrapolation,
             )
         except MissingDataError as exc:
             if not args.all:

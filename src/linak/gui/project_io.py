@@ -131,3 +131,48 @@ def ensure_project_safe_path(root: Path, target: Path) -> Path:
             f"Allowed root: {root}"
         )
     return target
+
+
+def _stage_json_suffixes() -> tuple[set[str], set[str]]:
+    """(file-name suffixes like ``_lifetimes.json``, exact names like ``comparison_table.json``) that a stage writes."""
+    from .stages import PIPELINE
+    suffixes: set[str] = set()
+    exact: set[str] = set()
+    for stage in PIPELINE:
+        for out in stage.get("outputs", []):
+            name = out.rsplit("/", 1)[-1]
+            if not name.endswith(".json"):
+                continue
+            if name.startswith("{el}_"):
+                suffixes.add(name[len("{el}"):])
+            elif name != "{el}.json":
+                exact.add(name)
+    return suffixes, exact
+
+
+def protected_reason(path: Path) -> str:
+    """Why *path* must not be deleted from the GUI, or '' when it may be.
+
+    Plots and anything a pipeline stage regenerates can go. A data JSON that no stage writes is an input
+    (nuclear data, hyperfine constants, NIST and ARC extracts, Feshbach inputs), so it is kept.
+    """
+    if path.suffix.lower() != ".json":
+        return ""
+    name = path.name
+    suffixes, exact = _stage_json_suffixes()
+    if name in exact or any(name.endswith(suf) for suf in suffixes):
+        return ""
+    stem = path.stem
+    if "_" not in stem or stem.split("_", 1)[1].startswith("c") and stem.split("_", 1)[1][1:].isdigit():
+        return ""                       # <species>.json, the ORCA result of a species (Mg_c1 included)
+    return "an input data file that no pipeline stage regenerates"
+
+
+def output_actions(path: Path, kind: str) -> dict:
+    """What the Plots / Data / Shared right-click menu offers for one output file."""
+    reason = protected_reason(path)
+    return {
+        "edit": path.suffix.lower() in (".json", ".csv"),
+        "delete": not reason,
+        "protected_reason": reason,
+    }

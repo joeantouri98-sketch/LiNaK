@@ -147,6 +147,11 @@ PIPELINE = [
                   help="Only use ORCA TD-DFT oscillator strengths."),
              dict(name="--nist-only", kind="flag", label="NIST/Rydberg transitions only",
                   help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
+             dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
+                  default="",
+                  help="Physics-based extrapolation of ns->np oscillator strengths. "
+                       "Use the Extrapolation... button to choose options; the file it "
+                       "writes is passed here."),
          ],
          outputs=["data/{el}_lifetimes.json"]),
 
@@ -179,6 +184,11 @@ PIPELINE = [
              dict(name="--state", kind="str", label="State-only alpha(0) lookup",
                   default="",
                   help="Example: 20s. Prints alpha(0) for one state and exits."),
+             dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
+                  default="",
+                  help="Physics-based extrapolation of ns->np oscillator strengths. "
+                       "Use the Extrapolation... button to choose options; the file it "
+                       "writes is passed here."),
          ],
          outputs=["data/{el}_polarizability.json",
                   "plots/{el}/{el}_polarizability.html",
@@ -419,14 +429,13 @@ PIPELINE = [
                   choices=[
                       ("1", "Grotrian diagram only"),
                       ("2", "Grotrian + Spectrum"),
-                      ("3", "Grotrian + Spectrum + Excited\u2194excited Grotrian"),
-                      ("4", "All four, incl. 3D view (default)"),
+                      ("3", "Grotrian + Spectrum + Excited\u2194excited Grotrian (default)"),
                   ],
-                  default="4",
+                  default="3",
                   help="Cumulative, not exclusive: each option always includes every "
                        "plot below it too, so '2' already writes both the Grotrian "
                        "diagram and the Spectrum. Matches the script's own default "
-                       "of generating all four."),
+                       "of generating all three."),
              dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
                   help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
          ],
