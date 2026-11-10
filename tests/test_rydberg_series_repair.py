@@ -1,4 +1,6 @@
 """Rydberg shifts: series repair (unrounded QDT energies, tied f-g pairs, synthetic h series) and static validity."""
+import itertools
+
 import pytest
 
 from linak.core.paths import reference_path
@@ -77,3 +79,20 @@ def test_validity_rule_on_a_hand_built_network():
     tiny_gap = [dict(delta_E_au=1e-8, fosc=0.5, sign=1, other_label="4g")]
     valid, note, ratio = bc.static_validity(tiny_gap, 300.0, 3)
     assert not valid and ratio > bc.STATIC_COUPLING_MAX and "perturbation" in note
+
+
+def test_blackbody_repair_also_covers_a_transitions_file_made_before_the_merged_j_fix(data):
+    # files written before transitions_core tested every J of a merged level lack f(5/2,7/2) -> g9/2
+    stale = dict(data)
+    stale["transitions"] = [t for t in data["transitions"]
+                            if {t["upper_label"], t["lower_label"]} != {"17f5/2", "18g9/2"}]
+    fixed = bc.refine_series_data(stale)
+    assert any({t["upper_label"], t["lower_label"]} == {"17f5/2", "18g9/2"} for t in fixed["transitions"])
+    assert fixed["_series_refined"]["n_merged"] == 1
+    assert bc.refine_series_data(data)["_series_refined"]["n_merged"] == 0     # current file: nothing to add
+
+
+def test_f_series_is_smooth_across_the_merged_j_range(refined):
+    vals = [bc.rydberg_shift_for_state(f"{n}f5/2", refined, 300.0).shift_dyn_hz for n in (15, 16, 17, 18, 19)]
+    assert all(b > a for a, b in itertools.pairwise(vals))      # 17f5/2 was 490 Hz between 1823 and 2130
+    assert all(1800 < v < 2300 for v in vals)

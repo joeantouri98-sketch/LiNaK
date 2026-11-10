@@ -434,19 +434,21 @@ def check_record(table_id: str, element: str, texts: dict[str, str]) -> dict:
         raw = str(texts.get(name, "")).strip()
         if not raw:
             raise ValueError(f"Fill in {name}.")
+        value: str | float | int
         if kind == "str":
             value = raw
         else:
             try:
-                value = float(raw.replace(",", "."))
+                number = float(raw.replace(",", "."))
             except ValueError:
                 raise ValueError(f"{name} must be a number.") from None
-            if not 0 <= value < float("inf"):
+            if not 0 <= number < float("inf"):
                 raise ValueError(f"{name} must be zero or more.")
+            value = number
             if kind == "int":
-                if not value.is_integer():
+                if not number.is_integer():
                     raise ValueError(f"{name} must be a whole number.")
-                value = int(value)
+                value = int(number)
         node = rec
         *path, last = name.split(" / ")
         for k in path:

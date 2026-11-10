@@ -102,6 +102,25 @@ PIPELINE = [
          ],
          outputs=["data/{el}.json"]),
 
+    dict(id="dhf", label="DHF + core polarisation", symbol="DHF", pipeline="dhf",
+         desc="Ab initio one-valence spectrum: levels, E1 network, lifetimes, alpha.",
+         positional=lambda el: [el],
+         flags=[
+             dict(name="--no-fit-d", kind="flag", label="IP only (no d-level fit)",
+                  help="Fix the core-polarisation cutoff from the IP alone."),
+             dict(name="--alpha-core", kind="float", label="Core polarisability (au)", default="",
+                  help="Blank: LiNaK's alpha_core table. 0 = pure DHF."),
+             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6"),
+             dict(name="--omega", kind="strlist", label="alpha(omega) photon energies (eV)",
+                  default=""),
+             dict(name="--all", kind="flag", label="Run all available elements"),
+             dict(name="--nist-dir", kind="path", browse="dir", label="NIST levels directory (override)",
+                  default="", help="Blank: bundled NIST levels."),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory",
+                  default=workspace_data_dir),
+         ],
+         outputs=["data/{el}_dhf.json"]),
+
     dict(id="rydberg", label="Rydberg series", symbol="QDT", pipeline="rydberg",
          desc="NIST levels + quantum defect theory -> Rydberg series.",
          positional=lambda el: [el],
@@ -567,7 +586,7 @@ PIPELINE = [
 # The sidebar's sections, in running order. Every stage is in exactly one
 # (tests/test_gui_stage_table.py checks that).
 STAGE_GROUPS = (
-    ("Quantum chemistry", ("runorca", "orca_to_json")),
+    ("Ab initio", ("runorca", "orca_to_json", "dhf")),
     ("Atomic structure", ("rydberg", "transitions", "lifetimes")),
     ("Atomic response", ("polarizability", "blackbody", "tweezer", "hyperfine", "feshbach")),
     ("Visualise", ("grotrian", "response", "bbr", "spectra", "orbital3d")),
@@ -591,6 +610,12 @@ STAGE_PHYSICS = {
         "same data/<species>.json format the ORCA stage writes, without "
         "re-running ORCA -- useful after editing an input by hand or comparing "
         "basis sets/functionals."
+    ),
+    "dhf": (
+        "Dirac-Hartree-Fock for the closed M+ core (exact exchange) plus a "
+        "core-polarisation potential -alpha_c/2r^4 for the valence electron. "
+        "Only the IP (and, by default, the lowest d levels) come from NIST; "
+        "levels, fine structure, f values, lifetimes and alpha are predictions."
     ),
     "rydberg": (
         "Fits quantum defects delta_l from NIST energy levels via "

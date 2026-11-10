@@ -147,6 +147,29 @@ def j_selection_rule(j_upper, j_lower):
     return True
 
 
+def j_values(j_string):
+    """
+    Every J a level's J string carries: '5/2' -> [2.5]; '5/2,7/2' -> [2.5, 3.5] (NIST lists the
+    f and g Rydberg levels from n = 12 as one merged level); None when there is no usable J.
+    """
+    if j_string is None:
+        return None
+    values = [parse_j(part) for part in str(j_string).split(',') if part.strip()]
+    values = [v for v in values if v is not None]
+    return values or None
+
+
+def j_sets_allowed(js_upper, js_lower):
+    """
+    True when some J of the upper level and some J of the lower level satisfy the E1 rule.
+    A level with no J (QDT model level) is not checked.  A merged level (several J in one string)
+    is tested with every J it contains, not only the first: f(5/2,7/2) -> g9/2 is allowed through f7/2.
+    """
+    if not js_upper or not js_lower:
+        return True
+    return any(j_selection_rule(a, b) for a in js_upper for b in js_lower)
+
+
 def ground_level(rydberg_data: Mapping, IE: float) -> tuple[Level, bool]:
     """(ground level, True when it was inferred from an old n_start-only JSON).
 
@@ -236,7 +259,7 @@ def e1_transitions(levels: Sequence[Level], wl_min=0.0, wl_max=float('inf')) -> 
                 continue
 
             # ΔJ rule
-            if not j_selection_rule(s_upper.J_float, s_lower.J_float):
+            if not j_sets_allowed(j_values(s_upper.J), j_values(s_lower.J)):
                 continue
 
             delta_E = s_upper.energy - s_lower.energy

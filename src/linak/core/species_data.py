@@ -241,7 +241,7 @@ def check_hf(species: str, mass_text: str, rows: list[tuple[str, str, str, str]]
         if label in seen:
             raise ValueError(f"State {label} appears twice.")
         seen.add(label)
-        nums = []
+        nums: list[float] = []
         for name, txt in (("A", a_txt), ("B", b_txt), ("C", c_txt)):
             try:
                 v = float(txt.strip().replace(",", ".") or ("nan" if name == "A" else "0"))
@@ -250,7 +250,7 @@ def check_hf(species: str, mass_text: str, rows: list[tuple[str, str, str, str]]
             if not math.isfinite(v):
                 raise ValueError(f"Fill in A of {label}." if name == "A" else f"{name} of {label} must be a number.")
             nums.append(v)
-        out.append((label, *nums))
+        out.append((label, nums[0], nums[1], nums[2]))
     if not out:
         raise ValueError("Enter at least one state.")
     return a, out

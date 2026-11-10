@@ -29,6 +29,7 @@ from linak.core.errors import UnknownPipelineError
 IMPLEMENTATIONS = {
     "runorca": "linak.integrations.orca_runner",
     "orca_to_json": "linak.pipelines.orca_to_json",
+    "dhf": "linak.pipelines.dhf",
     "rydberg": "linak.pipelines.rydberg",
     "transitions": "linak.pipelines.transitions",
     "lifetimes": "linak.pipelines.lifetimes",

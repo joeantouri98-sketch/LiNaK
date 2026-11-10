@@ -84,3 +84,22 @@ def test_metal_lines_match_endpoints_by_label_or_unique_term_and_j():
     assert t.delta_E_eV == pytest.approx(2.11)
     assert found.n_resolved == 1, "the second line resolved by term + J (then a duplicate pair)"
     assert found.n_missing_upper == 1
+
+
+def test_merged_j_level_is_tested_with_every_j_it_contains():
+    from linak.physics.transitions_core import j_sets_allowed, j_values
+
+    assert j_values("5/2,7/2") == [2.5, 3.5] and j_values("3/2") == [1.5] and j_values(None) is None
+    assert j_sets_allowed(j_values("9/2"), j_values("5/2,7/2"))        # f7/2 -> g9/2
+    assert not j_sets_allowed(j_values("9/2"), j_values("5/2"))        # f5/2 -> g9/2 alone is forbidden
+    assert j_sets_allowed(None, j_values("5/2"))                       # QDT-model level: not checked
+
+
+def test_na_transitions_include_f_to_g9_2_from_the_merged_f_levels():
+    import json
+
+    from linak.core.paths import reference_path
+
+    pairs = {(t["upper_label"], t["lower_label"])
+             for t in json.loads(reference_path("data_json", "Na_transitions.json").read_text())["transitions"]}
+    assert ("18g9/2", "17f5/2") in pairs and ("18g9/2", "12f5/2") in pairs

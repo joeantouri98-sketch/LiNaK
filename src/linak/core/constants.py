@@ -49,6 +49,8 @@ KB_EV           = 8.617333262e-5        # eV/K
 HARTREE_TO_HZ   = 6.579683920711515e15  # E_h / h  (Hz)
 ATOMIC_FREQ_RAD_S = 4.134137333518e16   # E_h / ħ  (rad/s per a.u. of ω)
 AU_TIME_S       = 2.4188843265857e-17   # ħ / E_h  (s)
+ALPHA_FS_INV    = 137.035999084         # 1/α, fine-structure constant (CODATA 2018);
+                                        # c in atomic units
 
 
 # ATOMIC-UNIT → SI

@@ -368,8 +368,9 @@ def published_disagreements(result: dict, literature: dict, *, n_show: int = 6) 
     for (lo, up), f in literature.get("fosc", {}).items():
         if lo != gs or (lo, up) in model or not up.endswith("p"):
             continue
-        parts = [rows.get((j, int(up[:-1]))) for j in ("1/2", "3/2")]
-        if all(parts):
+        found = [rows.get((j, int(up[:-1]))) for j in ("1/2", "3/2")]
+        parts = [p for p in found if p]
+        if len(parts) == len(found):
             tot = sum(p["f"] for p in parts)
             lo95, hi95 = sum(p["lo95"] for p in parts), sum(p["hi95"] for p in parts)
             if not (lo95 <= f <= hi95):

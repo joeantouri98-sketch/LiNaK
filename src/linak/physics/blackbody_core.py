@@ -896,8 +896,9 @@ def refine_series_data(data):
             if abs(na - nb) > 2:
                 continue
             _pair(a, na, la, None, b, nb, lb, None)
+    jmap = {ex.get('label'): ex.get('J') for ex in ryd.get('excitations') or []}
+    n_merged = _add_merged_j_pairs(state_nl, jmap, energies, have, _pair)
     if n_h:
-        jmap = {ex.get('label'): ex.get('J') for ex in ryd.get('excitations') or []}
         h_labels = [lab for lab in synthetic]
         for g_lab, (ng, lg) in state_nl.items():
             if lg != 'g' or g_lab in synthetic or ng is None or g_lab not in energies:
@@ -908,8 +909,48 @@ def refine_series_data(data):
     out['state_energy_au'] = energies
     out['state_nl'] = state_nl
     out['transitions'] = list(data['transitions']) + added
-    out['_series_refined'] = dict(n_energy=n_energy, n_h=n_h, n_pairs=len(added), synthetic=frozenset(synthetic))
+    out['_series_refined'] = dict(n_energy=n_energy, n_h=n_h, n_pairs=len(added), n_merged=n_merged, synthetic=frozenset(synthetic))
     return out
+
+
+def _j_values(j_string):
+    """The J values of a level's J string ('5/2', or '5/2,7/2' for a merged doublet); None when unknown."""
+    if not j_string:
+        return None
+    try:
+        return [int(a) / int(b) if '/' in x else float(x) for x in j_string.split(',')
+                for a, b in [(x.split('/') + ['1'])[:2]]]
+    except ValueError:
+        return None
+
+
+def _add_merged_j_pairs(state_nl, jmap, energies, have, add_pair):
+    """
+    Pairs the transitions list drops for a merged-J level.
+
+    NIST gives f and g levels from n = 12 on as one level '5/2,7/2' (f) or '7/2,9/2' (g).  The list was
+    built with the first J only, so f(5/2,7/2) -> 18g9/2 failed the dJ rule although f7/2 -> g9/2 is allowed,
+    and the n = 17 f state kept only 8/18 of its strength to the 18g multiplet (17f dynamic shift
+    490 Hz against about 2300).  Every pair between a merged level and a J-resolved level that some
+    member of the doublet allows (|dJ| <= 1) is added; the f-value code then weights it by g_J / g_total.
+    """
+    count = 0
+    for x, jx_string in jmap.items():
+        jx = _j_values(jx_string)
+        if jx is None or ',' not in (jx_string or '') or x not in state_nl or x not in energies:
+            continue
+        nx, lx = state_nl[x]
+        for y, (ny, ly) in state_nl.items():
+            if y == x or y not in energies or ly not in L_CHAR or lx not in L_CHAR:
+                continue
+            if abs(L_CHAR[lx] - L_CHAR[ly]) != 1 or frozenset((x, y)) in have:
+                continue
+            jy = _j_values(jmap.get(y))
+            if jy is None or not any(abs(a - b) <= 1.0 + 1e-9 for a in jx for b in jy):
+                continue
+            add_pair(x, nx, lx, jx_string, y, ny, ly, jmap.get(y))
+            count += 1
+    return count
 
 
 def _kT_au(T_K):

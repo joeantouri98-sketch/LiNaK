@@ -71,9 +71,9 @@ def build_rows(elements: list[dict], T_K: float) -> list[dict]:
     rows = []
     for rec in elements:
         d1 = rec.get("D1")
-        d2 = rec.get("D2") or d1
         if not d1:
             continue
+        d2: dict = rec.get("D2") or d1
         sig_nat = d2.get("sig_nat_1e9cm2") or 0.0
         dnu_nat = d2.get("dnu_nat_MHz") or 0.0
         dnu_d = sig_d = isat_d = None

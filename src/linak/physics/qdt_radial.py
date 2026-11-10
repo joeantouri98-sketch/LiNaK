@@ -357,7 +357,8 @@ def fit_numerov_scale_from_nist(qd: dict, nist_fosc: dict,
         return info
 
     arr = np.asarray(ratios, dtype=float)
-    info["median_ratio_raw"] = float(np.median(arr))
+    median_raw = float(np.median(arr))
+    info["median_ratio_raw"] = median_raw
     info["p16"] = float(np.percentile(arr, 16))
     info["p84"] = float(np.percentile(arr, 84))
 
@@ -369,7 +370,7 @@ def fit_numerov_scale_from_nist(qd: dict, nist_fosc: dict,
     if inliers.size < min_pairs:
         info["reason"] = "insufficient_inliers"
         return info
-    if not scale_lo <= info["median_ratio_raw"] <= scale_hi:
+    if not scale_lo <= median_raw <= scale_hi:
         # most pairs disagree with the model (Rb: raw median 0.19, 5 of 17 inside the window)
         info["reason"] = "median_outside_window"
         return info

@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import numpy as np
 from scipy.optimize import brentq
@@ -87,6 +87,8 @@ def polarization_term(form: str, r, alpha_d: float, rc: float, user: tuple[str, 
     kind = form[:1]
     if kind == "U":
         from .userform import evaluate
+        if user is None:
+            raise ValueError("A user-defined polarization form needs its formula and parameters.")
         return evaluate(user[0], user[1], r, alpha_d, rc)
     if kind == "N":
         return alpha_d / r**3 * (1 - np.exp(-((r / rc) ** 3)))
@@ -114,12 +116,12 @@ class ExactModel:
         self.element = element
         self.params = dict(params or species_params(element))
         self.hash = params_hash(element)
-        self.mp = {k: (list(v) if isinstance(v, list) else v) for k, v in MARINESCU[element].items()}
+        self.mp: dict[str, Any] = {k: (list(v) if isinstance(v, list) else v) for k, v in MARINESCU[element].items()}
         self.nl = self.params["nl"]
         self._atom = None
         self._bs: dict = {}
         self._f: dict = {}
-        self._sigma = None
+        self._sigma: float | None = None
         self._tuned = False
         self._cache_path = None
         d = cache_dir if cache_dir is not None else user_dir()
