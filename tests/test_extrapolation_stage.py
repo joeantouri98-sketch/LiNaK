@@ -77,14 +77,14 @@ def test_dialog_builds_and_saves(tmp_path):
     assert app is not None
 
 
-def test_dialog_refuses_fr(tmp_path):
+def test_dialog_refuses_unsupported_species(tmp_path):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PySide6.QtWidgets")
     from linak.gui import extrapolation_dialog as D
     from linak.physics.extrapolation import UnsupportedSpeciesError
 
     with pytest.raises(UnsupportedSpeciesError):
-        D.ExtrapolationDialog(None, tmp_path, "Fr", {}, {})
+        D.ExtrapolationDialog(None, tmp_path, "Ra", {}, {})
 
 
 def test_extrapolated_rows_are_tagged_in_the_lifetimes_json():
@@ -318,3 +318,58 @@ def test_published_values_outside_the_band_are_reported_not_replaced():
     msg = S.published_disagreements(res, lit)
     assert msg and f"{n}p3/2" in msg[0] and "kept" in msg[0]
     assert S.published_disagreements(res, {**lit, "model_j": set(lit["fosc_j"])}) == []   # a model row is replaced, not defended
+
+
+def test_blackbody_flag_is_in_the_parser_and_the_gui_stage():
+    from linak.gui.stages import STAGE_BY_ID
+    from linak.pipelines.blackbody import build_parser
+
+    assert build_parser().parse_args(["Rb", "--extrapolation", "x.json"]).extrapolation == "x.json"
+    assert build_parser().parse_args(["Rb"]).extrapolation is None
+    assert "--extrapolation" in {f["name"] for f in STAGE_BY_ID["blackbody"]["flags"]}
+
+
+def test_blackbody_reads_as_before_without_extrapolation_and_changes_only_the_filled_network(tmp_path):
+    from linak.pipelines.blackbody import _alpha_networks, build_parser
+    from linak.physics.polarizability_core import load_element
+
+    data_dir = str(reference_path("data_json", "Rb_rydberg.json").parent)
+    base = load_element("Rb", data_dir, verbose=False)
+    if base is None:
+        pytest.skip("Rb rydberg/transitions JSON not shipped")
+    cfg = tmp_path / "rb.json"
+    S.save_config(S.ExtrapolationConfig(mode="use", n_max=30), cfg)
+    ext = load_element("Rb", data_dir, verbose=False, extrapolation=str(cfg))
+    off_args = build_parser().parse_args(["Rb"])
+    assert off_args.extrapolation is None and base["extrapolation"] is None      # nothing requested: no block, no change
+    gs_off = _alpha_networks("Rb", base, str(tmp_path), None)[0]                   # empty dir: no cache, built from the data
+    gs_on = _alpha_networks("Rb", ext, str(tmp_path), None)[0]
+    assert not any(t["source"] == "extrapolated" for t in gs_off)
+    assert any(t["source"] == "extrapolated" for t in gs_on)
+    unchanged = {t["other_label"]: t["fosc"] for t in gs_off if t["source"] != "extrapolated"}
+    after = {t["other_label"]: t["fosc"] for t in gs_on if t["source"] != "extrapolated"}
+    assert all(abs(after[k] - v) <= 1e-12 * max(abs(v), 1) for k, v in unchanged.items() if k in after)
+
+
+def test_user_anchor_template_has_an_example_that_the_code_ignores(tmp_path):
+    from linak.gui import extrapolation_dialog as D
+
+    data = json.loads(D.USER_ANCHOR_TEMPLATE)
+    assert data["_example"]["anchors"] and data["_example"]["threshold"]["sigma_Mb"] > 0
+    f = tmp_path / "Fr_user_anchors.json"
+    f.write_text(D.USER_ANCHOR_TEMPLATE, encoding="utf-8")
+    assert D._read_user_file(f) == ([], None, "")                      # the example is never read as an anchor or threshold
+
+
+def test_an_existing_anchors_file_is_shown_with_the_example_and_keeps_its_content(tmp_path):
+    from linak.gui import extrapolation_dialog as D
+
+    mine = json.dumps({"anchors": [{"n": 10, "J": "3/2", "f": 0.002, "unc": 0.1}], "threshold": None})
+    shown = json.loads(D.with_user_anchor_example(mine))
+    assert shown["anchors"] == [{"n": 10, "J": "3/2", "f": 0.002, "unc": 0.1}] and "_example" in shown and "_help" in shown
+    assert D.with_user_anchor_example(D.USER_ANCHOR_TEMPLATE) == D.USER_ANCHOR_TEMPLATE
+    assert D.with_user_anchor_example("not json") == "not json"
+    f = tmp_path / "u.json"
+    f.write_text(D.with_user_anchor_example(mine), encoding="utf-8")
+    anchors, thr, problem = D._read_user_file(f)
+    assert len(anchors) == 1 and thr is None and problem == ""

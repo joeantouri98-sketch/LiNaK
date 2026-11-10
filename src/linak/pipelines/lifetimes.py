@@ -23,6 +23,7 @@ Output:
 
 from __future__ import annotations
 
+from linak.core import user_tables as _user_tables
 import argparse
 import glob
 import json
@@ -34,6 +35,7 @@ from dataclasses import asdict
 import numpy as np
 
 from linak.core.constants import ATOMIC_MASS_AMU
+from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.fileio import write_json
 from linak.core.paths import reference_path
@@ -50,6 +52,7 @@ from linak.physics.lifetimes_core import (
 )
 from linak.physics.qdt_radial import level_defects_from_rydberg
 from linak.physics.polarizability_core import (
+    NIST_F_SCALE,
     is_transition_metal_species,
     load_literature_fvalues,
     load_nist_fvalues,
@@ -62,7 +65,9 @@ KNOWN_LIFETIMES = {
     'Cs': {'6p': 34.9,  '7p': 248.0},
     'K':  {'4p': 26.4},
     'Rb': {'5p': 26.2},
+    'Fr': {'7d3/2': 73.6, '7d5/2': 67.7},
 }
+_user_tables.apply("lifetimes.known", KNOWN_LIFETIMES)
 
 # Dominant-channel sources reliable enough for the line-parameter tables
 _RELIABLE_SOURCES = ('NIST', 'ORCA', 'literature', 'Numerov', 'precision', 'NIST-extrap')
@@ -74,6 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
         description='Compute Einstein A and lifetimes')
     parser.add_argument('element',
                         help='Species id: symbol (Na) or ion stem (Mg_c1) with pipeline JSON')
+    for kind, what in (('rydberg', '<species>_rydberg.json'), ('transitions', '<species>_transitions.json'),
+                       ('orca', '<species>.json (the ORCA result)')):
+        parser.add_argument(f'--{kind}-file', default=None, metavar='FILE',
+                            help=f'{kind.capitalize()} data to read instead of {what} '
+                                 '(a path, or a name under the data folder).')
     parser.add_argument('--n-max', type=int, default=None,
                         help='Max principal quantum number for Rydberg transitions')
     parser.add_argument('--orca-only', action='store_true',
@@ -91,10 +101,10 @@ def build_parser() -> argparse.ArgumentParser:
 # INPUTS
 # ============================================================================
 
-def _load_pipeline_json(element, data_dir):
-    """(rydberg JSON, transitions JSON) of *element*."""
-    rydberg_file    = f"{data_dir}/{element}_rydberg.json"
-    transitions_file = f"{data_dir}/{element}_transitions.json"
+def _load_pipeline_json(element, data_dir, rydberg_file=None, transitions_file=None):
+    """(rydberg JSON, transitions JSON) of *element*; the files may be chosen instead of the defaults."""
+    rydberg_file    = rydberg_file or f"{data_dir}/{element}_rydberg.json"
+    transitions_file = transitions_file or f"{data_dir}/{element}_transitions.json"
     for f in [rydberg_file, transitions_file]:
         if not os.path.exists(f):
             raise MissingDataError(
@@ -174,7 +184,10 @@ def main(argv: list[str] | None = None) -> int:
     element = sp["species_id"]
     data_dir = str(Workspace.current().data_json_dir)
 
-    rydberg_data, trans_data = _load_pipeline_json(element, data_dir)
+    chosen = {kind: resolve_data_file(getattr(args, f"{kind}_file"), element, data_dir, kind.capitalize())
+              for kind in ("rydberg", "transitions", "orca")}
+    args.inputs = {k: os.path.basename(v) for k, v in chosen.items() if v}
+    rydberg_data, trans_data = _load_pipeline_json(element, data_dir, chosen["rydberg"], chosen["transitions"])
     nist = load_nist_fvalues(element, verbose=True)
     literature = load_literature_fvalues(element, verbose=True)
     extrap_result, extrap_entries = _run_extrapolation(element, args, nist, rydberg_data)
@@ -192,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # Metals: NIST lines only unless explicitly --orca-only
-    orca_file = _orca_file(element, data_dir)
+    orca_file = chosen["orca"] or _orca_file(element, data_dir)
     sources = FValueSources(nist=nist, literature=literature, nist_series_caveats=caveats,
                             nist_fit_exclusions=fit_excl)
     if os.path.exists(orca_file) and (args.orca_only or (
@@ -403,10 +416,35 @@ def _lifetime_json(lt: Lifetime) -> dict:
     }
 
 
+def apply_lifetime_overrides(lifetimes: list[dict], overrides: dict[str, float]) -> list[str]:
+    """Replace the lifetime of each state in *overrides* (ns) by the user's value; returns the states that were used.
+
+    The computed value stays in ``computed_lifetime_ns``. The decay channels and the quantities derived from the
+    total rate keep what the model gave.
+    """
+    used: set[str] = set()
+    for lt in lifetimes:
+        for key, ns in overrides.items():           # '3p' also covers the fine-structure levels '3p1/2', '3p3/2'
+            if lt['state'] == key or re.match(rf'^{re.escape(key)}\d/', lt['state']):
+                lt['computed_lifetime_ns'] = lt['lifetime_ns']
+                lt['lifetime_ns'] = ns
+                lt['lifetime_s'] = ns * 1e-9
+                lt['sigma_tau_ns'] = 0.0
+                lt['lifetime_source'] = 'user override'
+                used.add(key)
+                break
+    return sorted(used)
+
+
 def output_json(sp, args, IE, n_start, result: LifetimesResult) -> dict:
     """The ``<El>_lifetimes.json`` document."""
     drop_counts = _drop_counts(result)
     cal = result.numerov_calibration
+    table = [_lifetime_json(lt) for lt in result.lifetimes]
+    wanted = _user_tables.lifetime_overrides(KNOWN_LIFETIMES, sp["symbol"])
+    used = apply_lifetime_overrides(table, wanted)
+    for state in sorted(set(wanted) - set(used)):
+        print(f"  Note: no computed state {state} for {sp['symbol']}; the lifetime override was not used.")
     return {
         'species_id':        sp["species_id"],
         'element':           sp["symbol"],
@@ -416,9 +454,12 @@ def output_json(sp, args, IE, n_start, result: LifetimesResult) -> dict:
         'ionization_energy_eV': IE,
         'n_start':           n_start,
         'n_max':             args.n_max,
+        **({'inputs': args.inputs} if getattr(args, 'inputs', None) else {}),
         'n_states':          len(result.lifetimes),
         'n_transitions':     len(result.transitions),
-        'lifetimes':         [_lifetime_json(lt) for lt in result.lifetimes],
+        'lifetimes':         table,
+        'user_lifetime_overrides': {st: wanted[st] for st in used},
+        'nist_f_scale': _user_tables.ticked_values('nist.fscale', NIST_F_SCALE, sp['symbol']),
         'transitions':       [_transition_json(t) for t in result.transitions],
         'numerov_calibration': (None if cal is None else {
             'pooled': cal['global'],
@@ -519,6 +560,9 @@ def _print_lifetimes(element, lifetime_table) -> None:
         n_ch      = lt['n_decay_channels']
 
         exp = known.get(state)
+        if lt.get('lifetime_source') == 'user override':
+            print(f"  {state:>6}  {tau:9.3f}  (your value; computed {lt['computed_lifetime_ns']:.3f} ns)")
+            continue
         if exp:
             err_pct = (tau - exp) / exp * 100
             pull    = (tau - exp) / sigma_tau if sigma_tau > 0 else 0
@@ -554,6 +598,8 @@ def _print_lifetimes(element, lifetime_table) -> None:
                       f"{'-':>7}  {'-':>6}  not computed")
                 continue
             for lt in matches:
+                if lt.get('lifetime_source') == 'user override':
+                    continue                           # your own value is not checked against itself
                 st        = lt['state']
                 calc      = lt['lifetime_ns']
                 sigma_tau = lt['sigma_tau_ns']

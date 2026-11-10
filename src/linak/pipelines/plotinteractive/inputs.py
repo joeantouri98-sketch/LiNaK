@@ -37,6 +37,7 @@ class PlotInputs:
     # (upper, lower) pairs whose f came from the extrapolation module (both orders)
     extrapolated_pairs: frozenset = frozenset()
     extrapolated_overlay: tuple = ()
+    extrapolation: dict | None = None   # the lifetimes 'extrapolation' block (bands per channel)
 
     @property
     def species_label(self) -> str:
@@ -178,6 +179,14 @@ def _load_extra_excitations(path, element):
     }
 
 
+def _chosen(cli, attr, element, data_dir, what, default):
+    """The file picked with --<kind>-file, or *default* when none was."""
+    from linak.core.data_inputs import resolve_data_file
+
+    path = resolve_data_file(getattr(cli, attr, None), element, data_dir, what)
+    return (path or default).replace("\\", "/")
+
+
 def load_inputs(species, cli, data_dir) -> PlotInputs:
     """Read the ORCA (TD-DFT, SOC, --extra), rydberg, transitions and lifetimes JSON."""
     element = species["species_id"]
@@ -196,6 +205,7 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
     extrapolated_pairs  = set()  # pairs whose f is tagged 'extrapolated'
     extrapolated_overlay = []    # 'Show alongside' lines, drawn as a hidden legend group
     A_by_transition     = {}   # (upper_label, lower_label) -> A_s
+    extrapolation_block = None
 
     json_file = f"{data_dir}/{element}.json"
     soc_file = f"{data_dir}/{element}_soc.json"
@@ -208,6 +218,13 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
         if _soc_variants:
             soc_file = _soc_variants[0].replace("\\", "/")
             print(f"  (Using SOC data: {soc_file})")
+    soc_spec = getattr(cli, 'soc_file', None)
+    if soc_spec:                       # a chosen SOC run (e.g. a named one saved with "Save as")
+        chosen = _resolve_extra_json(soc_spec, element)
+        if chosen is None:
+            raise MissingDataError(f"--soc-file '{soc_spec}' not found for {element} (looked under data_json/)")
+        soc_file = chosen.replace("\\", "/")
+        print(f"  (Using SOC data: {soc_file})")
     use_soc_only = bool(cli.soc_only)
     if use_soc_only:
         if not os.path.exists(soc_file):
@@ -232,7 +249,9 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
                 excitations = deduplicate_excitations(excitations_raw)
                 print(f" Loaded {len(excitations_raw)} TD-DFT roots → "
                       f"{len(excitations)} levels for {element}")
-        if os.path.exists(soc_file):
+        if getattr(cli, 'no_soc_overlay', False):
+            print("  SOC overlay off (--no-soc-overlay)")
+        elif os.path.exists(soc_file):
             with open(soc_file, 'r', encoding='utf-8') as f:
                 soc_data = json.load(f)
             if soc_data.get("kind") == "ion":
@@ -265,7 +284,7 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
               + ', '.join(e['name'] for e in extra_overlays))
 
     # Try to load Rydberg data
-    rydberg_file = f"{data_dir}/{element}_rydberg.json"
+    rydberg_file = _chosen(cli, 'rydberg_file', element, data_dir, 'Rydberg', f"{data_dir}/{element}_rydberg.json")
 
     if os.path.exists(rydberg_file):
         try:
@@ -287,7 +306,8 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
             print(f"  Could not load Rydberg data: {e}")
 
     # Try to load transitions
-    transitions_file = f"{data_dir}/{element}_transitions.json"
+    transitions_file = _chosen(cli, 'transitions_file', element, data_dir, 'Transitions',
+                               f"{data_dir}/{element}_transitions.json")
 
     if os.path.exists(transitions_file):
         try:
@@ -309,7 +329,8 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
         print(f"  (No transitions file found , run linak --pipeline transitions {element} to generate)")
 
     # Try to load lifetimes data
-    lifetimes_file = f"{data_dir}/{element}_lifetimes.json"
+    lifetimes_file = _chosen(cli, 'lifetimes_file', element, data_dir, 'Lifetimes',
+                             f"{data_dir}/{element}_lifetimes.json")
 
     if os.path.exists(lifetimes_file):
         try:
@@ -336,6 +357,7 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
             # "Show alongside" extrapolation: one extra line per extrapolated level, kept apart from the measured
             # transitions so both can be drawn (the extrapolated ones form a legend group hidden by default).
             _ext = lt_raw.get('extrapolation') or {}
+            extrapolation_block = _ext or None
             if _ext.get('mode') == 'show':
                 from linak.physics.extrapolation.params import species_params
                 _gs = f"{species_params(element)['nl']}s"
@@ -369,4 +391,5 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
         pretty_by_label=pretty_by_label,
         extrapolated_pairs=frozenset(extrapolated_pairs),
         extrapolated_overlay=tuple(extrapolated_overlay),
+        extrapolation=extrapolation_block,
     )

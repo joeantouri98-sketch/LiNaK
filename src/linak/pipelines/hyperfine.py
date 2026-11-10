@@ -80,6 +80,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--B-points',  type=int,   default=500,
                         help='Number of B-field points (default: 500)')
     parser.add_argument('--data-dir',  default=str(Workspace.current().data_json_dir))
+    parser.add_argument('--no-plot', action='store_true',
+                        help='Write the data (JSON) only; skip the interactive plot.')
     parser.add_argument('--output-dir',default=None,
                         help='Output directory (default: .linak/plots/<element>)')
     parser.add_argument('--all',       action='store_true',
@@ -1047,8 +1049,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
 
         save_json(el, result, data_dir)
-        plot_hyperfine(el, result, out_dir)
-        plot_zeeman(el, result, out_dir)
+        if not args.no_plot:
+            plot_hyperfine(el, result, out_dir)
+            plot_zeeman(el, result, out_dir)
 
     if failed:
         print(f"\n  Failed: {', '.join(failed)}")

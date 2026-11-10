@@ -21,6 +21,7 @@ TREE_LABELS = {
     "data_json": "JSON data",
     "plots": "Plots",
     "orca_outputs": "ORCA runs",
+    "tables": "Imported and edited tables",
 }
 
 

@@ -18,6 +18,7 @@ record is defined here too: "absent" values are
 
 from __future__ import annotations
 
+from linak.core import user_tables as _user_tables
 from dataclasses import dataclass
 
 
@@ -102,6 +103,7 @@ LITERATURE = {
         'source': 'literature',
     },
 }
+_user_tables.apply("spectroscopy.dline", LITERATURE)
 
 
 def dline_transitions(element):

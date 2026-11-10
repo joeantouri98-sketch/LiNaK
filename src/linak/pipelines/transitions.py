@@ -42,6 +42,7 @@ import os
 from collections import Counter
 from dataclasses import asdict
 
+from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.fileio import write_json
 from linak.core.species import resolve_species
@@ -72,6 +73,9 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Maximum wavelength in nm (default: inf)')
     parser.add_argument('--n-max', type=int, default=None,
                         help='Maximum principal quantum number to include')
+    parser.add_argument('--rydberg-file', default=None, metavar='FILE',
+                        help='Rydberg data to read instead of <species>_rydberg.json '
+                             '(a path, or a name under the data folder).')
     parser.add_argument('--visible', action='store_true',
                         help='Filter to visible range 380-750 nm')
     parser.add_argument('--uv', action='store_true',
@@ -98,7 +102,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.ir:
         args.wl_min, args.wl_max = 750, 1e6
 
-    rydberg_file = f"{data_dir}/{element}_rydberg.json"
+    chosen = resolve_data_file(args.rydberg_file, element, data_dir, "Rydberg")
+    rydberg_file = chosen or f"{data_dir}/{element}_rydberg.json"
     if not os.path.exists(rydberg_file):
         raise MissingDataError(
             f"{rydberg_file} not found; run: linak --pipeline rydberg {element}")
@@ -123,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         'charge': sp["charge"],
         'ionization_energy_eV': IE,
     }
+    if chosen:
+        header['inputs'] = {'rydberg': os.path.basename(chosen)}
     if is_transition_metal_species(element) or 'no QDT' in (rydberg_data.get('method') or ''):
         return _metal_path(element, rydberg_data, IE, args, header, data_dir)
     return _qdt_path(rydberg_data, rydberg_file, IE, args, header, data_dir)

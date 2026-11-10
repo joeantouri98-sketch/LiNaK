@@ -249,7 +249,7 @@ def main_scaled(a, el, cfg, arc, ac):
         diag[let] = dict(ratios={n: round(ratios[n], 3) for n in pn}, R=round(Rm, 4), n_pub_max=pn[-1],
                          rel_unc=round(u_sc, 3))
         for (n, l), f in sorted(fpub.items()):
-            if l == lu and n not in listed and n > n0 - 1:
+            if l == lu and n not in listed:
                 src = '; '.join(sorted(pub[(n, l)]['refs']))
                 rows.append(dict(lower=lo_p, upper=f'{n}{let}', f_abs=float(f'{f:.5g}'), acc='B',
                                  ref=REFTXT_PUB.format(src=src, lo=lo_p, up=f'{n}{let}')))

@@ -823,7 +823,9 @@ def generate_rydberg_series(ionization_energy, quantum_defects, nist_lookup,
         if l not in min_nist_n or n < min_nist_n[l]:
             min_nist_n[l] = n
 
-    for n in range(n_start, n_max + 1):
+    # A series can start below the ground state's n: Cs 5d and 4f, Rb 4d, K 3d lie above 6s, 5s, 4s.
+    # They are the main decay route of the states above them.
+    for n in range(min([n_start, *min_nist_n.values()]), n_max + 1):
         for l_char in ['s', 'p', 'd', 'f', 'g']:
             l = l_to_int.get(l_char, -1)
             if l < 0 or l >= n:

@@ -44,6 +44,7 @@ from dataclasses import dataclass
 
 from linak.core.constants import E_FIELD_REF_T_K, E_FIELD_REF_V_M, EATOMIC_V_M, HARTREE_TO_HZ
 from linak.core.errors import MissingDataError
+from linak.core.data_inputs import resolve_data_file
 from linak.core.fileio import atomic_write_text, write_json
 from linak.core.workspace import Workspace
 from linak.physics.blackbody_core import (
@@ -91,25 +92,44 @@ class BlackbodyRun:
     rates: Rates | None
     continuum: Continuum | None
     rydberg: RydbergShifts | None
+    extrapolation: dict | None = None      # the 'extrapolation' block the f-values came with (None: not used)
+    inputs: dict | None = None             # upstream files chosen instead of the defaults (None: all default)
 
 
 # ============================================================================
 # INPUTS
 # ============================================================================
 
-def load_lifetimes_json(element, data_dir):
-    path = os.path.join(data_dir, f'{element}_lifetimes.json')
+def load_lifetimes_json(element, data_dir, path=None):
+    path = path or os.path.join(data_dir, f'{element}_lifetimes.json')
     if not os.path.exists(path):
         return None
     with open(path, encoding='utf-8') as f:
         return json.load(f)
 
 
-def _alpha_networks(element, data, data_dir, excited_label):
+def _uses_extrapolated_fills(data) -> bool:
+    block = data.get('extrapolation') or {}
+    return block.get('mode') == 'use' and bool(block.get('filled'))
+
+
+def _cache_has_extrapolated(cached) -> bool:
+    nets = (cached or {}).get('transitions_gs', []) + (cached or {}).get('transitions_ex', [])
+    return any(t.get('source') == 'extrapolated' for t in nets)
+
+
+def _alpha_networks(element, data, data_dir, excited_label, polarizability_file=None):
     """(ground network, excited label, excited network) — cached or built."""
     all_transitions = data['transitions']
     gs_label = data['gs_label']
-    cached = load_cached_transitions(element, data_dir)
+    cached = load_cached_transitions(element, data_dir, path=polarizability_file)
+    if polarizability_file and not cached:
+        raise MissingDataError(f"{os.path.basename(polarizability_file)} has no transition networks")
+    if cached and _uses_extrapolated_fills(data) and not _cache_has_extrapolated(cached):
+        print("  The cached polarizability networks carry no extrapolated values; building them from the "
+              "pipeline JSON with the extrapolation applied (run the Polarizability stage with the same "
+              "extrapolation to refresh the cache).")
+        cached = None
 
     if cached and cached.get('transitions_gs'):
         trans_gs = cached['transitions_gs']
@@ -144,6 +164,15 @@ def _alpha_networks(element, data, data_dir, excited_label):
     return trans_gs, excited_label, trans_ex
 
 
+def _note_lifetimes_extrapolation(element, data, life) -> None:
+    """The BBR rates and photoionisation come from lifetimes.json; say so when its extrapolation differs from ours."""
+    mine = (data.get('extrapolation') or {}).get('mode', 'off')
+    theirs = ((life or {}).get('extrapolation') or {}).get('mode', 'off')
+    if life is not None and mine != theirs:
+        print(f"  Note: the rates use {element}_lifetimes.json, made with extrapolation '{theirs}' "
+              f"(this run: '{mine}'). Re-run the Lifetimes stage with the same extrapolation to make them agree.")
+
+
 def _extra_states(args) -> list[str]:
     """The comma-separated ``--state`` labels."""
     if not args.state:
@@ -161,22 +190,26 @@ def run_element(element, args, data_dir) -> BlackbodyRun | None:
     print(f"  {element}  -  Blackbody Radiation (shifts + rates + PI)")
     print(f"{'='*65}")
 
-    data = load_element(element, data_dir)
+    data = load_element(element, data_dir, extrapolation=getattr(args, 'extrapolation', None))
     if data is None:
         return None
     gs_label = data['gs_label']
     T_K = args.T
     extra_states = _extra_states(args)
 
+    pol_file = resolve_data_file(getattr(args, 'polarizability_file', None), element, data_dir, "polarizability")
+    life_file = resolve_data_file(getattr(args, 'lifetimes_file', None), element, data_dir, "lifetimes")
+    inputs = {k: os.path.basename(v) for k, v in (("polarizability", pol_file), ("lifetimes", life_file)) if v}
     trans_gs, excited_label, trans_ex = _alpha_networks(
-        element, data, data_dir, args.excited)
+        element, data, data_dir, args.excited, pol_file)
     print("  Computing dynamic-corrected shift across T-sweep "
           "(validated against Farley-Wing high-n limit and Itano <E^2>_T)...")
     shifts = compute_shifts(trans_gs, trans_ex, T_K)
     _print_shifts(gs_label, excited_label, shifts)
 
-    life = load_lifetimes_json(element, data_dir)
+    life = load_lifetimes_json(element, data_dir, life_file)
     graph = build_lifetime_graph(life) if life is not None else None
+    _note_lifetimes_extrapolation(element, data, life)
 
     rates = None
     if not args.no_rates:
@@ -216,7 +249,8 @@ def run_element(element, args, data_dir) -> BlackbodyRun | None:
             _print_rydberg(rydberg)
 
     return BlackbodyRun(gs_label=gs_label, excited_label=excited_label, shifts=shifts,
-                        rates=rates, continuum=continuum, rydberg=rydberg)
+                        rates=rates, continuum=continuum, rydberg=rydberg,
+                        extrapolation=data.get('extrapolation'), inputs=inputs or None)
 
 
 # ============================================================================
@@ -479,6 +513,11 @@ def _rydberg_json(rs: RydbergShifts) -> dict:
             note += ' Dyn continuum/TRK completion skipped (--no-rydberg-cont).'
     else:
         note += ' dynamic Planck integral skipped (--no-rydberg-dyn).'
+    note += (' Series repair: QDT-model levels at the formula energy (not the 1e-6 eV rounding), '
+             'g-f pairs lost to tied rounded energies restored, synthetic h series (QDT energies, '
+             'Coulomb/Numerov f) added as g partners. static_valid=false where second-order theory fails '
+             '(coupling d.E_rms > 0.3 x gap) or over 10% of alpha(0) comes from partners below k_B T; '
+             'the dynamic shift is the one to use there.')
     if not rs.table:
         note += ' (--state only; n-table skipped)'
 
@@ -502,6 +541,9 @@ def _rydberg_json(rs: RydbergShifts) -> dict:
                 shift_stat_hz=_rounded(r.shift_stat_hz),
                 shift_dyn_hz=_rounded(r.shift_dyn_hz),
                 dyn_reliable=r.dyn_reliable,
+                static_valid=r.static_valid,
+                static_note=r.static_note,
+                max_coupling=None if r.max_coupling is None else float(f'{r.max_coupling:.3g}'),
                 n_transitions=r.n_transitions,
                 min_dE_au=(None if r.min_dE_au is None
                            else float(f'{r.min_dE_au:.6g}')),
@@ -550,6 +592,10 @@ def output_json(element, run: BlackbodyRun) -> dict:
               'Kramers continuum completion (Farley-Wing asymptote); '
               'for high-n labels (no dynamic integral).'),
     )
+    if run.extrapolation is not None:
+        out['extrapolation'] = run.extrapolation
+    if run.inputs:
+        out['inputs'] = run.inputs
     if run.rates is not None:
         out['rates'] = _rates_json(run.rates, run.continuum)
     if run.continuum is not None:
@@ -912,6 +958,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('element', nargs='?', default=None)
     parser.add_argument('--excited', default=None,
                         help='Excited state label e.g. 3p3/2')
+    parser.add_argument('--extrapolation', default=None, metavar='CONFIG.json',
+                        help='Extrapolation settings written by the GUI dialog (mode off/show/use). '
+                             "'use' fills ns->np gaps in the f-values behind the shifts, rates and "
+                             'photoionisation; without it the stage reads the data exactly as before.')
     parser.add_argument('--T', type=float, default=300.0,
                         help='Temperature for the point value (K, default: 300)')
     parser.add_argument('--n-min', type=int, default=None,
@@ -950,6 +1000,14 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Max |dn| for mix partners (default: 3)')
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir))
+    parser.add_argument('--polarizability-file', default=None, metavar='FILE',
+                        help='Polarizability data to read instead of <species>_polarizability.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--lifetimes-file', default=None, metavar='FILE',
+                        help='Lifetimes data to read instead of <species>_lifetimes.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--no-plot', action='store_true',
+                        help='Write the data (JSON) only; skip the interactive plot.')
     return parser
 
 
@@ -964,6 +1022,8 @@ def main(argv=None) -> int:
 
     from linak.physics.polarizability_core import require_alpha_species
 
+    if args.all and (args.polarizability_file or args.lifetimes_file):
+        parser.error("--polarizability-file / --lifetimes-file apply to one species; drop --all")
     if args.all:
         elements = get_available_elements(data_dir)
         if not elements:
@@ -992,7 +1052,8 @@ def main(argv=None) -> int:
             continue
         payload = output_json(el, run)
         save_json(payload, data_dir)
-        plot_blackbody(payload, run.shifts, el_out_dir)
+        if not args.no_plot:
+            plot_blackbody(payload, run.shifts, el_out_dir)
 
     if failed:
         print(f"  Failed: {', '.join(failed)}")

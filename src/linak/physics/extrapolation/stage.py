@@ -155,9 +155,40 @@ def collect_anchors(element: str, nist: dict, rydberg: dict) -> list[dict]:
             "source": "precision" if precision else "NIST", "tp_ref": tags.get((n, jstr), ""),
             "sys": cfg["ssys_by_type"]["precision" if precision else "nist"],
         })
+    bad = cfg.get("unreliable_tp_tags", {})
     for r in rows:
         flag_low_weight([r], element, r["J"])
+        # only above the ground-state series: the resonance line (n = nl) is fine and lies below the table anyway
+        r["unreliable"] = r["n"] > species_params(element)["nl"] and any(t in str(r["tp_ref"]) for t in bad)
+    rows = _with_precision_rows(element, rows, nus, rydberg)
     return sorted(rows, key=lambda r: (r["J"], r["n"]))
+
+
+def _with_precision_rows(element: str, rows: list[dict], nus: dict[str, float], rydberg: dict) -> list[dict]:
+    """Add the packaged precision matrix elements as anchors, for species whose NIST series cannot stand alone.
+
+    A precision row replaces a NIST row of the same level only when that row is marked unreliable.
+    """
+    cfg = anchor_config()
+    if element not in cfg.get("precision_in_stage", []):
+        return rows
+    nl = species_params(element)["nl"]
+    ry = float(rydberg.get("rydberg_constant_eV") or RY_FALLBACK_EV)
+    inv_gs = float(rydberg["ionization_energy_eV"]) / ry          # 1 / nu_gs^2
+    by_id = {r["id"]: r for r in rows}
+    for jstr, J in J_VALUES.items():
+        for n_s, (D, u) in cfg["precision_anchors"].get(element, {}).get(str(J), {}).items():
+            n = int(n_s)
+            nu = nus.get(f"{n}p{jstr}")
+            old = by_id.get(f"{n}p{jstr}")
+            if n <= nl or nu is None or (old is not None and not old.get("unreliable")):
+                continue
+            omega = 0.5 * (inv_gs - 1.0 / nu**2)
+            new = {"id": f"{n}p{jstr}", "n": n, "J": J, "jstr": jstr, "nu": nu, "f": omega * D**2 / 3, "unc": 2 * u,
+                   "acc": "precision", "source": "precision", "tp_ref": "", "sys": cfg["ssys_by_type"]["precision"],
+                   "unreliable": False}
+            rows = [r for r in rows if r is not old] + [new]
+    return rows
 
 
 def _num(v, default: float) -> float:
@@ -216,6 +247,11 @@ def _run_for_species(element: str, cfg: ExtrapolationConfig, nist: dict, rydberg
     warnings: list[str] = []
     anchors = collect_anchors(element, nist, rydberg) + _user_rows(element, cfg, nus, warnings)
     excluded_ids = set(cfg.excluded)
+    unreliable = [a for a in anchors if a.get("unreliable")]
+    if unreliable:                     # a source known to be wrong: never fitted, whatever the user ticked
+        excluded_ids |= {a["id"] for a in unreliable}
+        why = next(w for t, w in acfg["unreliable_tp_tags"].items() if t in str(unreliable[0]["tp_ref"]))
+        warnings.append(f"{len(unreliable)} NIST anchor(s) were left out of the fit: {why}.")
     if exact:
         warnings.append(
             "The shipped tables do not match the current model parameters, so the exact model calculation was used "
@@ -373,7 +409,7 @@ def output_block(result: dict, entries: list[dict] | None = None) -> dict:
 def apply_to_stage(element: str, config_path, nist: dict, literature: dict, rydberg: dict, *, log=print):
     """What a stage does with ``--extrapolation``: ``(result, entries, literature)``.
 
-    ``result`` is None when extrapolation is off, not requested, or the species is unsupported (Fr).
+    ``result`` is None when extrapolation is off, not requested, or the species is unsupported (e.g. Ra).
     In 'use' mode ``literature`` comes back with the gap-filling values added (tagged 'extrapolated');
     otherwise it is returned unchanged. Any stage that reads f-values can call this.
     """

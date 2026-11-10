@@ -38,6 +38,8 @@ def pipeline_env(workspace: Path) -> dict:
     """Environment that points LiNaK at an isolated workspace and the source tree."""
     env = os.environ.copy()
     env["LINAK_PROJECT_ROOT"] = str(workspace)
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
     src = str(REPO_ROOT / "src")
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     return env
@@ -51,6 +53,8 @@ def run_pipeline(args: list[str], workspace: Path, timeout: float = 900.0) -> su
         env=pipeline_env(workspace),
         capture_output=True,
         text=True,
+        encoding="utf-8",       # the pipelines print UTF-8; Windows would otherwise decode with cp1252
+        errors="replace",
         timeout=timeout,
     )
 

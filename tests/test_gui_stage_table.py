@@ -22,11 +22,6 @@ INTENTIONAL_DEFAULTS = {
     # Recorded in PHYSICS_BUGS.md: the GUI always sends 20 roots, also in
     # soc mode where the CLI uses the per-class default. Not changed here.
     ("runorca", "--nroots"),
-    # The GUI shows the grotrian sub-viewer's own defaults explicitly.
-    ("grotrian", "--orbital3d-n-max"),
-    ("grotrian", "--orbital3d-grid"),
-    ("grotrian", "--spectra-wl-min"),
-    ("grotrian", "--spectra-wl-max"),
     ("grotrian", "--transition-wl-min"),
     ("grotrian", "--transition-wl-max"),
     ("grotrian", "--orca-wl-min"),
@@ -54,7 +49,7 @@ def test_stage_flags_match_the_pipeline_parser(stage):
             continue  # GUI-only helper field
         assert name in actions, f"{stage['id']}: {name} is not a flag of the pipeline"
         action = actions[name]
-        if kind == "flag":
+        if kind in ("flag", "invflag"):
             assert action.nargs == 0, f"{stage['id']}: {name} takes a value"
             continue
         assert action.nargs != 0, f"{stage['id']}: {name} is a switch, not {kind}"
@@ -88,3 +83,59 @@ def test_stage_flags_match_the_pipeline_parser(stage):
 def test_every_stage_is_in_exactly_one_sidebar_group():
     grouped = [stage_id for _heading, stage_ids in STAGE_GROUPS for stage_id in stage_ids]
     assert sorted(grouped) == sorted(stage["id"] for stage in PIPELINE)
+
+
+def test_flag_section_groups_inputs_and_outputs():
+    from linak.gui.stages import flag_section
+
+    assert flag_section({"name": "--data-dir", "kind": "path"}) == "input"
+    assert flag_section({"name": "--lifetimes-file", "kind": "path"}) == "input"
+    assert flag_section({"name": "--output-dir", "kind": "path"}) == "output"
+    assert flag_section({"name": "--no-plot", "kind": "invflag"}) == "output"
+    assert flag_section({"name": "--outname", "kind": "str"}) == "output"
+    assert flag_section({"name": "__elements", "kind": "str"}) == "input"
+    assert flag_section({"name": "--temperature", "kind": "float"}) == "options"
+
+
+def test_blank_fields_hint_at_the_default_files():
+    from linak.gui.stages import STAGE_BY_ID, input_hint, output_hint
+
+    spec = {"name": "--rydberg-file", "kind": "path"}
+    assert input_hint(spec, "Na") == "Na_rydberg.json"
+    assert input_hint({"name": "--orca-file", "kind": "path"}, "Cs") == "Cs.json"
+    assert input_hint({"name": "--data-dir", "kind": "path"}, "Na") == ""
+    assert output_hint(STAGE_BY_ID["lifetimes"], "K") == "K_lifetimes.json"
+    assert output_hint(STAGE_BY_ID["polarizability"], "") == "<el>_polarizability.json"
+    # every input-file picker in the table has a hint, so none is left unexplained
+    for stage in STAGE_BY_ID.values():
+        for f in stage.get("flags", []):
+            if f["kind"] == "path" and f["name"].endswith("-file") and f["name"] != "--basis-file":
+                assert input_hint(f, "Na"), (stage["id"], f["name"])
+
+
+def test_refresh_default_hints_fills_placeholders():
+    from linak.gui.main_window import MainWindow
+    from linak.gui.stages import STAGE_BY_ID
+
+    class Edit:
+        def __init__(self):
+            self.text = ""
+
+        def setPlaceholderText(self, text):
+            self.text = text
+
+    class Fake:
+        current_species = "Na"
+        _selected_stage = staticmethod(lambda: STAGE_BY_ID["lifetimes"])
+
+    fake = Fake()
+    fake._flag_specs = {f["name"]: f for f in STAGE_BY_ID["lifetimes"]["flags"]}
+    fake._flag_widgets = {n: (s["kind"], Edit()) for n, s in fake._flag_specs.items()}
+    fake._save_as_edit = Edit()
+    MainWindow._refresh_default_hints(fake)
+    assert fake._flag_widgets["--rydberg-file"][1].text == "Na_rydberg.json"
+    assert fake._flag_widgets["--n-max"][1].text == ""
+    assert fake._save_as_edit.text == "Na_lifetimes.json"
+    fake.current_species = "K"
+    MainWindow._refresh_default_hints(fake)
+    assert fake._flag_widgets["--orca-file"][1].text == "K.json"

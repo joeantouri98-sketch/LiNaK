@@ -33,6 +33,20 @@
    "nu_min": 10.0,
    "sigma": 0.25,
    "why": "NIST measurements and all-order paper disagree up to 20% in D at n=12"
+  },
+  {
+   "species": "Fr",
+   "J": 0.5,
+   "nu_min": 9.0,
+   "sigma": 0.5,
+   "why": "no Fr anchor above 8p; a core pole between none and 9 eV changes 7s->np1/2 at n=20-40 by a factor of 2-3"
+  },
+  {
+   "species": "Fr",
+   "J": 1.5,
+   "nu_min": 9.0,
+   "sigma": 0.1,
+   "why": "no Fr anchor above 8p; core-pole choices change 7s->np3/2 by up to 10% at n=20-40"
   }
  ],
  "low_weight_tp_tags": [
@@ -59,7 +73,7 @@
   }
  },
  "precision_anchors": {
-  "src": "Tran Tan & Derevianko 2023, <6S||D||nP_J> (e a0), (D, relative unc in D); NOT yet verified against the PDF",
+  "src": "Tran Tan & Derevianko 2023, <6S||D||nP_J> (e a0), (D, relative unc in D); NOT yet verified against the PDF; Fr: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X final values (arXiv:2211.11134)",
   "Cs": {
    "0.5": {
     "6": [
@@ -121,6 +135,34 @@
      0.0095
     ]
    }
+  },
+  "Fr": {
+   "0.5": {
+    "7": [
+     4.2895,
+     0.00128
+    ],
+    "8": [
+     0.3041,
+     0.0263
+    ]
+   },
+   "1.5": {
+    "7": [
+     5.9065,
+     0.00144
+    ],
+    "8": [
+     0.907,
+     0.00937
+    ]
+   }
   }
- }
+ },
+ "unreliable_tp_tags": {
+  "T6898": "the Fr 7s->np rows of NIST source T6898 split each multiplet 1:2 between p1/2 and p3/2 and disagree with the all-order values (Roberts et al. 2023) by a factor 2 (8p3/2) to 2.2 (8p1/2), growing to 20x for p1/2 at n=20"
+ },
+ "precision_in_stage": [
+  "Fr"
+ ]
 }

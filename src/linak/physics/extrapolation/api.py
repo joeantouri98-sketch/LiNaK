@@ -54,7 +54,7 @@ def extrapolate(
 
     ``threshold='default'`` uses the packaged pseudo-anchor for the species (if any); pass
     ``None`` to switch it off or a dict ``{sigma_Mb, unc_Mb}`` to supply your own.
-    Raises ``UnsupportedSpeciesError`` for species without a validated model (e.g. Fr).
+    Raises ``UnsupportedSpeciesError`` for species without a validated model (e.g. Ra).
     """
     species_params(element)
     cfg = anchor_config()

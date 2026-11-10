@@ -35,6 +35,7 @@ import os
 import sys
 
 from linak.core.constants import HC_EV_NM as HC_NM
+from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.species import resolve_species
 from linak.core.spectroscopy import DLINES_FALLBACK
@@ -59,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("element",    nargs="?", default=None,
                         help="Species id: Na or ion stem Na_c1")
     parser.add_argument("--data-dir", default=str(Workspace.current().data_json_dir))
+    parser.add_argument("--lifetimes-file", default=None, metavar="FILE",
+                        help="Lifetimes data to read instead of <species>_lifetimes.json "
+                             "(a path, or a name under the data folder).")
+    parser.add_argument("--transitions-file", default=None, metavar="FILE",
+                        help="Transitions data to read instead of <species>_transitions.json "
+                             "(a path, or a name under the data folder).")
     parser.add_argument("--wl-min",   type=float, default=200.0)
     parser.add_argument("--wl-max",   type=float, default=900.0)
     return parser
@@ -87,11 +94,11 @@ def _fmt_trans_label(upper, lower):
     return f"{u} \u2192 {l}"
 
 
-def load_transitions(element, data_dir, is_ion):
+def load_transitions(element, data_dir, is_ion, lifetimes_file=None, transitions_file=None):
     lines = []
 
     # Source 1: lifetimes JSON (fosc + wavelength; NIST/ORCA/Numerov/Coulomb/...)
-    lt_file = os.path.join(data_dir, f"{element}_lifetimes.json")
+    lt_file = lifetimes_file or os.path.join(data_dir, f"{element}_lifetimes.json")
     if os.path.exists(lt_file):
         with open(lt_file, encoding="utf-8") as f:
             lt = json.load(f)
@@ -116,7 +123,7 @@ def load_transitions(element, data_dir, is_ion):
             return lines
 
     # Source 2: transitions JSON (wavelengths only, uniform fosc=1)
-    tr_file = os.path.join(data_dir, f"{element}_transitions.json")
+    tr_file = transitions_file or os.path.join(data_dir, f"{element}_transitions.json")
     if os.path.exists(tr_file):
         with open(tr_file, encoding="utf-8") as f:
             tr = json.load(f)
@@ -260,7 +267,10 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = os.path.join(Workspace.current().plots_dir, element)
 
     # ── DATA LOADING ─────────────────────────────────────────────────────────
-    lines_all = load_transitions(element, args.data_dir, is_ion)
+    lines_all = load_transitions(
+        element, args.data_dir, is_ion,
+        resolve_data_file(args.lifetimes_file, element, args.data_dir, "lifetimes"),
+        resolve_data_file(args.transitions_file, element, args.data_dir, "transitions"))
     if not lines_all:
         raise MissingDataError(f"no spectral data for {element} in {args.data_dir}")
 

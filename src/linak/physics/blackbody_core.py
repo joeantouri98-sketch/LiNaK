@@ -25,6 +25,7 @@ the α networks and the lifetimes JSON and passes them in.
 
 from __future__ import annotations
 
+from linak.core import user_tables as _user_tables
 import math
 import re
 from collections.abc import Iterable, Mapping, Sequence
@@ -246,6 +247,9 @@ class RydbergShift:
     min_dE_au: float | None
     fosc_sources: dict[str, int]
     completion: Completion | None       # None when the dynamic integral is skipped
+    static_valid: bool = True           # False: the quadratic static formula does not apply (see static_validity)
+    static_note: str = ''               # why, in a few words
+    max_coupling: float | None = None   # largest |d.E_rms| / |dE| over the valence partners
 
     @property
     def dyn_reliable(self) -> bool:
@@ -801,6 +805,155 @@ def compute_rates(graph: LifetimeGraph, T_K: float, n_min: int | None = None) ->
 
 # HIGH-n RYDBERG alpha(0) / STATIC BBR SHIFTS
 
+# SERIES REPAIR AND VALIDITY OF THE STATIC FORMULA
+
+QDT_ROUND_AU = 2.5e-8           # the Rydberg JSON rounds energies to 1e-6 eV: half a step is 1.84e-8 a.u.
+STATIC_COUPLING_MAX = 0.3       # |d E_rms| / |dE| above this: second-order theory is not valid
+STATIC_LOWFREQ_MAX = 0.1        # share of alpha(0) from partners with hbar w < k_B T above which "static" fails
+H_SERIES_N_MIN = 6              # lowest h state (l = 5 needs n >= 6)
+
+
+def refine_series_data(data):
+    """
+    A copy of *data* whose model Rydberg series are consistent for near-degenerate pairs.
+
+    1. Levels the Rydberg stage built from the quantum-defect formula ("QDT model") are taken at
+       the formula's own energy instead of its 1e-6 eV rounding. The f-g gap at n = 33 is 3.3e-8 a.u.,
+       the size of that rounding step; the stored gap was 0 or one step.
+    2. An E1 pair between such levels (n differing by at most 2) that the transitions list
+       lacks, because the rounded energies tied, is added with the same f-value code the other pairs use.
+    3. An l = 5 (h) series, absent from the data, is added from the quantum-defect formula
+       (hydrogenic when the h defect is unknown) so g states have their upward partners.
+       Without it a g state has f partners only, the signed f sum comes out near -1 and the dynamic
+       shift is wrong (-460 Hz at 25g against the 2417 Hz Farley-Wing limit).
+    Energies that differ from the formula by more than the rounding are left alone.
+    """
+    if data.get('_series_refined'):
+        return data
+    ryd = data.get('ryd') or {}
+    qd = data.get('qd') or {}
+    mass_factor = _rydberg_mass_factor(data)
+    energies = dict(data['state_energy_au'])
+    state_nl = dict(data.get('state_nl') or {})
+    model = {}
+    for ex in ryd.get('excitations') or []:
+        lab, n, l_char = ex.get('label'), ex.get('n'), ex.get('l')
+        if (ex.get('source') != 'QDT model' or ex.get('J') is not None or lab not in energies
+                or not n or l_char not in L_CHAR):
+            continue
+        E = _qdt_energy_au(n, l_char, qd, mass_factor)
+        if E is None or abs(E - energies[lab]) > QDT_ROUND_AU:
+            continue
+        energies[lab] = E
+        model[lab] = (int(n), l_char)
+    n_energy = len(model)
+
+    n_h = 0
+    synthetic = []
+    series_n_max = int(ryd.get('n_max') or 0)
+    if any(l == 'g' for _, l in model.values()) and not any(l == 'h' for _, l in state_nl.values()):
+        for n in range(H_SERIES_N_MIN, series_n_max + 1):
+            E = _qdt_energy_au(n, 'h', qd, mass_factor)
+            if E is None or E >= 0:
+                continue
+            lab = f'{n}h'
+            energies[lab] = E
+            state_nl[lab] = (n, 'h')
+            model[lab] = (n, 'h')
+            synthetic.append(lab)
+            n_h += 1
+
+    have = {frozenset((t['upper_label'], t['lower_label'])) for t in data['transitions']}
+    added = []
+
+    def _pair(a, na, la, ja, b, nb, lb, jb):
+        dE = energies[a] - energies[b]
+        if dE == 0:
+            return
+        if dE < 0:
+            a, na, la, ja, b, nb, lb, jb = b, nb, lb, jb, a, na, la, ja
+        if lb == 'h' and ja:
+            # Fine-structure g level above a collapsed h level: build_transitions_for_state takes the
+            # emission factor g_lo / g_up from the J degeneracies when both J are given and from the
+            # full nl degeneracies when either is missing.  Giving h the multiplet degeneracy
+            # 2 (2l + 1) = 22 (J = 21/2 stands for it) keeps the factor that of the g level.
+            jb = '21/2'
+        added.append(dict(
+            upper_label=a, lower_label=b, upper_n=na, lower_n=nb, upper_l=la, lower_l=lb,
+            upper_J=None if la == 'h' else ja, lower_J=None if lb == 'h' and not ja else jb,
+            delta_n=abs(na - nb), wavelength_nm=45.56335 / abs(dE),
+            upper_source='QDT model', lower_source='QDT model'))
+
+    labels = sorted(model)
+    for i, a in enumerate(labels):
+        na, la = model[a]
+        if la == 'h':
+            continue
+        for b in labels[i + 1:]:
+            nb, lb = model[b]
+            if lb == 'h' or abs(L_CHAR[la] - L_CHAR[lb]) != 1 or frozenset((a, b)) in have:
+                continue
+            if abs(na - nb) > 2:
+                continue
+            _pair(a, na, la, None, b, nb, lb, None)
+    if n_h:
+        jmap = {ex.get('label'): ex.get('J') for ex in ryd.get('excitations') or []}
+        h_labels = [lab for lab in synthetic]
+        for g_lab, (ng, lg) in state_nl.items():
+            if lg != 'g' or g_lab in synthetic or ng is None or g_lab not in energies:
+                continue
+            for h_lab in h_labels:
+                _pair(g_lab, ng, 'g', jmap.get(g_lab), h_lab, state_nl[h_lab][0], 'h', None)
+    out = dict(data)
+    out['state_energy_au'] = energies
+    out['state_nl'] = state_nl
+    out['transitions'] = list(data['transitions']) + added
+    out['_series_refined'] = dict(n_energy=n_energy, n_h=n_h, n_pairs=len(added), synthetic=frozenset(synthetic))
+    return out
+
+
+def _kT_au(T_K):
+    return KB_SI * T_K / (HARTREE_TO_HZ * H_SI)
+
+
+def static_validity(valence, T_K, L0=None):
+    """
+    (valid, note, max_coupling) for the static Itano shift -1/2 alpha(0) <E^2> of one state.
+
+    The formula needs (a) second-order perturbation theory: the coupling d.E_rms to every partner is much
+    smaller than its gap, here |d E_rms|/|dE| <= 0.3 with d_z^2 = f/(2 dE) from the absorption f;
+    and (b) transition energies far above k_B T, so the thermal field is quasi-static for that partner:
+    here at most 10% of alpha(0) may come from partners with dE < k_B T (Itano, Lewis and Wineland 1982).
+    Rydberg states usually fail (b); the dynamic Planck integral is then the shift to use.
+    """
+    E_rms = math.sqrt(mean_E_squared_au(T_K))
+    kT = _kT_au(T_K)
+    worst = 0.0
+    total = low = 0.0
+    for t in valence:
+        dE = abs(t['delta_E_au'])
+        f = t['fosc']
+        if dE <= 0 or f <= 0:
+            continue
+        f_abs = f
+        if t['sign'] < 0:       # stored emission f = f_abs g_lo / g_up with nl degeneracies
+            n_o, l_o = parse_nl_label(t.get('other_label'))
+            if L0 is not None and l_o in L_CHAR:
+                f_abs = f * (2 * L0 + 1) / (2 * L_CHAR[l_o] + 1)
+        worst = max(worst, math.sqrt(f_abs / (2.0 * dE)) * E_rms / dE)
+        w = f / dE ** 2
+        total += w
+        if dE < kT:
+            low += w
+    if worst > STATIC_COUPLING_MAX:
+        return False, f'coupling {worst:.2g} x gap: perturbation theory fails', worst
+    if total > 0 and low / total > STATIC_LOWFREQ_MAX:
+        return False, (f'{100 * low / total:.0f}% of alpha(0) from partners below k_BT: '
+                       f'not static, use the dynamic shift'), worst
+    return True, '', worst
+
+
+
 def parse_nl_label(label):
     """Return (n, l_char) from a state label, or (None, None)."""
     m = re.match(r'^(\d+)([spdfgh])', str(label).strip())
@@ -816,6 +969,7 @@ def rydberg_shift_for_state(label, data, T_K, do_dyn=True,
     BBR shift. Dynamic uses (by default) TRK + QDT-tail + Kramers continuum completion
     so high-n approaches the Farley-Wing asymptote.
     """
+    data = refine_series_data(data)
     all_transitions = data['transitions']
     if label not in data['state_energy_au']:
         return None
@@ -837,6 +991,7 @@ def rydberg_shift_for_state(label, data, T_K, do_dyn=True,
         src = t.get('source') or 'unknown'
         n_sources[src] = n_sources.get(src, 0) + 1
     shift_hz = bbr_static_shift_hz(alpha0, T_K)
+    s_valid, s_note, s_coupling = static_validity(valence, T_K, L_CHAR.get(l_char) if l_char else None)
     shift_dyn = None
     completion = None
     if do_dyn:
@@ -859,6 +1014,9 @@ def rydberg_shift_for_state(label, data, T_K, do_dyn=True,
         min_dE_au=min_dE,
         fosc_sources=n_sources,
         completion=completion,
+        static_valid=s_valid,
+        static_note=s_note,
+        max_coupling=s_coupling,
     )
 
 
@@ -876,6 +1034,7 @@ def compute_rydberg_shifts(data, T_K, *,
     Set table=False to compute only extra_states (CLI --state with
     --no-rydberg-shifts).
     """
+    data = refine_series_data(data)
     gs_n = int(data.get('gs_n') or 1)
     series_n_max = int(data.get('ryd', {}).get('n_max') or gs_n)
     if n_min is None:
@@ -884,9 +1043,10 @@ def compute_rydberg_shifts(data, T_K, *,
         n_max = max(n_min, series_n_max - int(n_pad))
 
     labels = set()
+    synthetic = (data.get('_series_refined') or {}).get('synthetic', ())
     if table:
         for lab, (n, _l) in data.get('state_nl', {}).items():
-            if n is None:
+            if n is None or lab in synthetic:
                 continue
             if n_min <= int(n) <= n_max:
                 labels.add(lab)
@@ -959,6 +1119,7 @@ QD_DIFF = {
     'Cs': {'s': 0.458701, 'p': 1.12661,   'd': 2.43295},
     'Fr': {'s': 0.46,     'p': 1.13,      'd': 2.4},  # Cs-like fallback
 }
+_user_tables.apply("blackbody.qd_diff", QD_DIFF)
 
 # Table 2: A_L scaling in eq. (27)/(30)
 A_L_TABLE = {
@@ -969,6 +1130,7 @@ A_L_TABLE = {
     'Cs': {'s': 0.85, 'p': 1.1,  'd': 0.35},
     'Fr': {'s': 0.85, 'p': 1.1,  'd': 0.35},
 }
+_user_tables.apply("blackbody.a_l", A_L_TABLE)
 
 
 def quantum_defect_for_l(qd_table, l_char):

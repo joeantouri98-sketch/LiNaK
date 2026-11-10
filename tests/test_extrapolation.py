@@ -1,4 +1,4 @@
-"""Extrapolation module: parity with the validated prototype, range guard, refusal of Fr, stale-table check."""
+"""Extrapolation module: parity with the validated prototype, range guard, refusal of unsupported species, stale-table check."""
 from __future__ import annotations
 
 import json
@@ -25,9 +25,9 @@ def test_matches_prototype(key):
     assert math.isclose(o["sigma_th_Mb"], g["sigma_th"], rel_tol=2e-3)
 
 
-def test_fr_refused():
-    with pytest.raises(E.UnsupportedSpeciesError, match="Fr"):
-        E.extrapolate("Fr", 0.5, [], [])
+def test_unsupported_species_refused():
+    with pytest.raises(E.UnsupportedSpeciesError, match="Ra"):
+        E.extrapolate("Ra", 0.5, [], [])
 
 
 @pytest.mark.parametrize("el", E.supported_species())

@@ -40,7 +40,7 @@ _INPUT_TREES = {"data_json": "data_json_dir"}
 _EXAMPLE_TREES = {"plots": "plots_dir", "orca_outputs": "orca_outputs_dir"}
 
 # The per-species parts of a workspace, by the name of their bundled tree.
-SPECIES_TREES = ("data_json", "plots", "orca_outputs")
+SPECIES_TREES = ("data_json", "plots", "orca_outputs", "tables")
 # Remembers species the user removed from this folder (see mark_removed).
 REMOVED_SPECIES_FILE = "removed_species.json"
 
@@ -151,6 +151,12 @@ def species_files(workspace: Workspace, species: str) -> dict[str, list[Path]]:
         found["data_json"] = sorted(
             path for path in data_dir.rglob("*.json")
             if _species_data_file(species, path.relative_to(data_dir)))
+    mine = workspace.runtime_root / "tables" / "files"               # files the user imported or edited
+    if mine.is_dir():
+        # By file name, not path: the folder names sort differently on Windows and Linux.
+        found["tables"] = sorted((p for p in mine.rglob("*")
+                                  if p.is_file() and stem_belongs_to_species(species, p.stem)),
+                                 key=lambda p: (p.name.lower(), str(p)))
     for tree, folder in (("plots", workspace.plots_dir),
                          ("orca_outputs", workspace.orca_outputs_dir)):
         if (folder / species).is_dir():

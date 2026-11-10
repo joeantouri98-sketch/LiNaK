@@ -137,6 +137,7 @@ def atomic_number(symbol: str) -> int | None:
 # Element families accepted wherever a list of elements is typed (the GUI"s
 # compare stage): family name or alias -> symbols.
 _ALKALI = ("Li", "Na", "K", "Rb", "Cs", "Fr")
+ALKALI_SYMBOLS = _ALKALI
 _ALKALINE_EARTH = ("Be", "Mg", "Ca", "Sr", "Ba", "Ra")
 _HALOGEN = ("F", "Cl", "Br", "I", "At", "Ts")
 _NOBLE_GASES = ("He", "Ne", "Ar", "Kr", "Xe", "Rn", "Og")

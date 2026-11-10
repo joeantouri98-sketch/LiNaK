@@ -46,6 +46,8 @@ what they wrote. Nothing is shared between pipelines except files.
                                                       │        ├─► tweezer ◄─────────┘
                                                       │        └─► feshbach (C₆) ◄── <El>_feshbach.json
                                                       ├─► hyperfine ◄── <El>_hf_constants.json, nuclear_data.json
+                                                      ├─► polarizability_page (render only: reads <El>_polarizability.json, <El>_lifetimes.json)
+                                                      ├─► blackbody_page (render only: reads <El>_blackbody.json, <El>_polarizability.json, <El>_lifetimes.json)
                                                       └─► orbital3d, spectra
 
  ORCA ─► runorca / orca_to_json ─► <El>.json, <El>_soc*.json ─► plotinteractive (Grotrian diagrams)
@@ -66,6 +68,14 @@ runs to `orca_outputs/<El>/<run_tag>/`.
   run (and, from the GUI, the example plots/ORCA runs). It never overwrites.
 - **Bundled data.** Always `reference_path("data_json", ...)` etc. It resolves inside the
   `linak` package in every build — checkout, wheel and the Nuitka bundle alike.
+- **User tables.** `core/user_tables.py`. Constant tables in the code (masses, core
+  polarizabilities, known lifetimes, D-line values, ...) can be edited, and rows added, from
+  the GUI; the changes live in `<output folder>/tables/` (`overrides.json`,
+  `additions.json`, edited copies under `files/`). Each module calls
+  `user_tables.apply("<id>", TABLE)` right after defining its dict, so a stage subprocess
+  sees the changes; this read at import is the one exception to "nothing happens at import".
+  A packaged row is never replaced by an added one. `core/species_data.py` lists what a
+  species with no bundled data needs and imports its NIST files.
 - **Pipeline contract.** `main(argv) -> int`; parse your own `argv`; no `input()`;
   nothing happens at import; a run's state lives in its functions, never in module
   globals, so a pipeline can run twice in one process. Bad arguments → `parser.error(...)` (exit 2); missing data →
@@ -83,7 +93,10 @@ runs to `orca_outputs/<El>/<run_tag>/`.
 each pipeline's parser by `tests/test_gui_stage_table.py`); `stage_process.py` builds
 and kills the subprocess (`linak --pipeline …`, or the bundle exe when frozen);
 `overview.py` is the Overview tab; `plot_cache.py` makes reports render offline in the
-web view; `dataset_editor.py` edits input JSON/CSV.
+web view; `dataset_editor.py` edits input JSON/CSV. Preferences > Tables and variables is
+`tables_page.py`; the same page limited to one element is `properties_dialog.py`, and
+`new_species_dialog.py` opens when a species with no data is set. `find_bar.py` is Ctrl+F;
+`tests_dialog.py` and `test_runner.py` are Run > Tests.
 
 ## Common tasks
 

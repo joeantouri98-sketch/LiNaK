@@ -1121,11 +1121,71 @@
   },
   "n_start": 5,
   "n_max": 50,
-  "num_states": 272,
+  "num_states": 276,
   "num_theoretical": 0,
   "excitations": [
     {
       "state_number": 1,
+      "n": 4,
+      "l": "d",
+      "J": "3/2",
+      "term": "2D",
+      "energy_eV": -1.777334,
+      "wavelength_nm": 516.6442,
+      "label": "4d3/2",
+      "label_pretty": "4d3/2",
+      "source": "NIST",
+      "method": "Quantum Defect Theory (NIST-derived)",
+      "theoretical": false,
+      "uncertainty_eV": 1.2e-06
+    },
+    {
+      "state_number": 2,
+      "n": 4,
+      "l": "d",
+      "J": "5/2",
+      "term": "2D",
+      "energy_eV": -1.777389,
+      "wavelength_nm": 516.6561,
+      "label": "4d5/2",
+      "label_pretty": "4d5/2",
+      "source": "NIST",
+      "method": "Quantum Defect Theory (NIST-derived)",
+      "theoretical": false,
+      "uncertainty_eV": 1.2e-06
+    },
+    {
+      "state_number": 3,
+      "n": 4,
+      "l": "f",
+      "J": "5/2",
+      "term": "2F*",
+      "energy_eV": -0.855329,
+      "wavelength_nm": 373.2435,
+      "label": "4f5/2",
+      "label_pretty": "4f5/2",
+      "source": "NIST",
+      "method": "Quantum Defect Theory (NIST-derived)",
+      "theoretical": false,
+      "uncertainty_eV": 1.2e-06
+    },
+    {
+      "state_number": 4,
+      "n": 4,
+      "l": "f",
+      "J": "7/2",
+      "term": "2F*",
+      "energy_eV": -0.855332,
+      "wavelength_nm": 373.2439,
+      "label": "4f7/2",
+      "label_pretty": "4f7/2",
+      "source": "NIST",
+      "method": "Quantum Defect Theory (NIST-derived)",
+      "theoretical": false,
+      "uncertainty_eV": 1.2e-06
+    },
+    {
+      "state_number": 5,
       "n": 5,
       "l": "p",
       "J": "1/2",
@@ -1140,7 +1200,7 @@
       "uncertainty_eV": 2.5e-07
     },
     {
-      "state_number": 2,
+      "state_number": 6,
       "n": 5,
       "l": "p",
       "J": "3/2",
@@ -1155,7 +1215,7 @@
       "uncertainty_eV": 2.5e-07
     },
     {
-      "state_number": 3,
+      "state_number": 7,
       "n": 5,
       "l": "d",
       "J": "3/2",
@@ -1170,7 +1230,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 4,
+      "state_number": 8,
       "n": 5,
       "l": "d",
       "J": "5/2",
@@ -1185,7 +1245,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 5,
+      "state_number": 9,
       "n": 5,
       "l": "f",
       "J": "5/2",
@@ -1200,7 +1260,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 6,
+      "state_number": 10,
       "n": 5,
       "l": "f",
       "J": "7/2",
@@ -1215,7 +1275,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 7,
+      "state_number": 11,
       "n": 5,
       "l": "g",
       "J": "7/2",
@@ -1230,7 +1290,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 8,
+      "state_number": 12,
       "n": 5,
       "l": "g",
       "J": "9/2",
@@ -1245,7 +1305,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 9,
+      "state_number": 13,
       "n": 6,
       "l": "s",
       "J": "1/2",
@@ -1260,7 +1320,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 10,
+      "state_number": 14,
       "n": 6,
       "l": "p",
       "J": "1/2",
@@ -1275,7 +1335,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 11,
+      "state_number": 15,
       "n": 6,
       "l": "p",
       "J": "3/2",
@@ -1290,7 +1350,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 12,
+      "state_number": 16,
       "n": 6,
       "l": "d",
       "J": "3/2",
@@ -1305,7 +1365,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 13,
+      "state_number": 17,
       "n": 6,
       "l": "d",
       "J": "5/2",
@@ -1320,7 +1380,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 14,
+      "state_number": 18,
       "n": 6,
       "l": "f",
       "J": "5/2",
@@ -1335,7 +1395,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 15,
+      "state_number": 19,
       "n": 6,
       "l": "f",
       "J": "7/2",
@@ -1350,7 +1410,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 16,
+      "state_number": 20,
       "n": 6,
       "l": "g",
       "J": null,
@@ -1364,7 +1424,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 17,
+      "state_number": 21,
       "n": 7,
       "l": "s",
       "J": "1/2",
@@ -1379,7 +1439,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 18,
+      "state_number": 22,
       "n": 7,
       "l": "p",
       "J": "1/2",
@@ -1394,7 +1454,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 19,
+      "state_number": 23,
       "n": 7,
       "l": "p",
       "J": "3/2",
@@ -1409,7 +1469,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 20,
+      "state_number": 24,
       "n": 7,
       "l": "d",
       "J": "3/2",
@@ -1424,7 +1484,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 21,
+      "state_number": 25,
       "n": 7,
       "l": "d",
       "J": "5/2",
@@ -1439,7 +1499,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 22,
+      "state_number": 26,
       "n": 7,
       "l": "f",
       "J": "5/2",
@@ -1454,7 +1514,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 23,
+      "state_number": 27,
       "n": 7,
       "l": "f",
       "J": "7/2",
@@ -1469,7 +1529,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 24,
+      "state_number": 28,
       "n": 7,
       "l": "g",
       "J": null,
@@ -1483,7 +1543,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 25,
+      "state_number": 29,
       "n": 8,
       "l": "s",
       "J": "1/2",
@@ -1498,7 +1558,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 26,
+      "state_number": 30,
       "n": 8,
       "l": "p",
       "J": "1/2",
@@ -1513,7 +1573,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 27,
+      "state_number": 31,
       "n": 8,
       "l": "p",
       "J": "3/2",
@@ -1528,7 +1588,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 28,
+      "state_number": 32,
       "n": 8,
       "l": "d",
       "J": "3/2",
@@ -1543,7 +1603,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 29,
+      "state_number": 33,
       "n": 8,
       "l": "d",
       "J": "5/2",
@@ -1558,7 +1618,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 30,
+      "state_number": 34,
       "n": 8,
       "l": "f",
       "J": "5/2",
@@ -1573,7 +1633,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 31,
+      "state_number": 35,
       "n": 8,
       "l": "f",
       "J": "7/2",
@@ -1588,7 +1648,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 32,
+      "state_number": 36,
       "n": 8,
       "l": "g",
       "J": null,
@@ -1602,7 +1662,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 33,
+      "state_number": 37,
       "n": 9,
       "l": "s",
       "J": "1/2",
@@ -1617,7 +1677,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 34,
+      "state_number": 38,
       "n": 9,
       "l": "p",
       "J": "1/2",
@@ -1632,7 +1692,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 35,
+      "state_number": 39,
       "n": 9,
       "l": "p",
       "J": "3/2",
@@ -1647,7 +1707,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 36,
+      "state_number": 40,
       "n": 9,
       "l": "d",
       "J": "3/2",
@@ -1662,7 +1722,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 37,
+      "state_number": 41,
       "n": 9,
       "l": "d",
       "J": "5/2",
@@ -1677,7 +1737,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 38,
+      "state_number": 42,
       "n": 9,
       "l": "f",
       "J": null,
@@ -1691,7 +1751,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 39,
+      "state_number": 43,
       "n": 9,
       "l": "g",
       "J": null,
@@ -1705,7 +1765,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 40,
+      "state_number": 44,
       "n": 10,
       "l": "s",
       "J": "1/2",
@@ -1720,7 +1780,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 41,
+      "state_number": 45,
       "n": 10,
       "l": "p",
       "J": "1/2",
@@ -1735,7 +1795,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 42,
+      "state_number": 46,
       "n": 10,
       "l": "p",
       "J": "3/2",
@@ -1750,7 +1810,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 43,
+      "state_number": 47,
       "n": 10,
       "l": "d",
       "J": "3/2",
@@ -1765,7 +1825,7 @@
       "uncertainty_eV": 5e-07
     },
     {
-      "state_number": 44,
+      "state_number": 48,
       "n": 10,
       "l": "d",
       "J": "5/2",
@@ -1780,7 +1840,7 @@
       "uncertainty_eV": 5e-07
     },
     {
-      "state_number": 45,
+      "state_number": 49,
       "n": 10,
       "l": "f",
       "J": null,
@@ -1794,7 +1854,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 46,
+      "state_number": 50,
       "n": 10,
       "l": "g",
       "J": null,
@@ -1808,7 +1868,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 47,
+      "state_number": 51,
       "n": 11,
       "l": "s",
       "J": "1/2",
@@ -1823,7 +1883,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 48,
+      "state_number": 52,
       "n": 11,
       "l": "p",
       "J": "1/2",
@@ -1838,7 +1898,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 49,
+      "state_number": 53,
       "n": 11,
       "l": "p",
       "J": "3/2",
@@ -1853,7 +1913,7 @@
       "uncertainty_eV": 1.2e-06
     },
     {
-      "state_number": 50,
+      "state_number": 54,
       "n": 11,
       "l": "d",
       "J": null,
@@ -1867,7 +1927,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 51,
+      "state_number": 55,
       "n": 11,
       "l": "f",
       "J": null,
@@ -1881,7 +1941,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 52,
+      "state_number": 56,
       "n": 11,
       "l": "g",
       "J": null,
@@ -1895,7 +1955,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 53,
+      "state_number": 57,
       "n": 12,
       "l": "s",
       "J": "1/2",
@@ -1910,7 +1970,7 @@
       "uncertainty_eV": 5e-07
     },
     {
-      "state_number": 54,
+      "state_number": 58,
       "n": 12,
       "l": "p",
       "J": "1/2",
@@ -1925,7 +1985,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 55,
+      "state_number": 59,
       "n": 12,
       "l": "p",
       "J": "3/2",
@@ -1940,7 +2000,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 56,
+      "state_number": 60,
       "n": 12,
       "l": "d",
       "J": null,
@@ -1954,7 +2014,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 57,
+      "state_number": 61,
       "n": 12,
       "l": "f",
       "J": null,
@@ -1968,7 +2028,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 58,
+      "state_number": 62,
       "n": 12,
       "l": "g",
       "J": null,
@@ -1982,7 +2042,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 59,
+      "state_number": 63,
       "n": 13,
       "l": "s",
       "J": null,
@@ -1996,7 +2056,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 60,
+      "state_number": 64,
       "n": 13,
       "l": "p",
       "J": "1/2",
@@ -2011,7 +2071,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 61,
+      "state_number": 65,
       "n": 13,
       "l": "p",
       "J": "3/2",
@@ -2026,7 +2086,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 62,
+      "state_number": 66,
       "n": 13,
       "l": "d",
       "J": null,
@@ -2040,7 +2100,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 63,
+      "state_number": 67,
       "n": 13,
       "l": "f",
       "J": null,
@@ -2054,7 +2114,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 64,
+      "state_number": 68,
       "n": 13,
       "l": "g",
       "J": null,
@@ -2068,7 +2128,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 65,
+      "state_number": 69,
       "n": 14,
       "l": "s",
       "J": null,
@@ -2082,7 +2142,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 66,
+      "state_number": 70,
       "n": 14,
       "l": "p",
       "J": "1/2",
@@ -2097,7 +2157,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 67,
+      "state_number": 71,
       "n": 14,
       "l": "p",
       "J": "3/2",
@@ -2112,7 +2172,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 68,
+      "state_number": 72,
       "n": 14,
       "l": "d",
       "J": null,
@@ -2126,7 +2186,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 69,
+      "state_number": 73,
       "n": 14,
       "l": "f",
       "J": null,
@@ -2140,7 +2200,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 70,
+      "state_number": 74,
       "n": 14,
       "l": "g",
       "J": null,
@@ -2154,7 +2214,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 71,
+      "state_number": 75,
       "n": 15,
       "l": "s",
       "J": null,
@@ -2168,7 +2228,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 72,
+      "state_number": 76,
       "n": 15,
       "l": "p",
       "J": "1/2",
@@ -2183,7 +2243,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 73,
+      "state_number": 77,
       "n": 15,
       "l": "p",
       "J": "3/2",
@@ -2198,7 +2258,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 74,
+      "state_number": 78,
       "n": 15,
       "l": "d",
       "J": null,
@@ -2212,7 +2272,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 75,
+      "state_number": 79,
       "n": 15,
       "l": "f",
       "J": null,
@@ -2226,7 +2286,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 76,
+      "state_number": 80,
       "n": 15,
       "l": "g",
       "J": null,
@@ -2240,7 +2300,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 77,
+      "state_number": 81,
       "n": 16,
       "l": "s",
       "J": null,
@@ -2254,7 +2314,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 78,
+      "state_number": 82,
       "n": 16,
       "l": "p",
       "J": "1/2",
@@ -2269,7 +2329,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 79,
+      "state_number": 83,
       "n": 16,
       "l": "p",
       "J": "3/2",
@@ -2284,7 +2344,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 80,
+      "state_number": 84,
       "n": 16,
       "l": "d",
       "J": null,
@@ -2298,7 +2358,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 81,
+      "state_number": 85,
       "n": 16,
       "l": "f",
       "J": null,
@@ -2312,7 +2372,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 82,
+      "state_number": 86,
       "n": 16,
       "l": "g",
       "J": null,
@@ -2326,7 +2386,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 83,
+      "state_number": 87,
       "n": 17,
       "l": "s",
       "J": null,
@@ -2340,7 +2400,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 84,
+      "state_number": 88,
       "n": 17,
       "l": "p",
       "J": "1/2",
@@ -2355,7 +2415,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 85,
+      "state_number": 89,
       "n": 17,
       "l": "p",
       "J": "3/2",
@@ -2370,7 +2430,7 @@
       "uncertainty_eV": 6e-06
     },
     {
-      "state_number": 86,
+      "state_number": 90,
       "n": 17,
       "l": "d",
       "J": null,
@@ -2384,7 +2444,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 87,
+      "state_number": 91,
       "n": 17,
       "l": "f",
       "J": null,
@@ -2398,7 +2458,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 88,
+      "state_number": 92,
       "n": 17,
       "l": "g",
       "J": null,
@@ -2412,7 +2472,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 89,
+      "state_number": 93,
       "n": 18,
       "l": "s",
       "J": null,
@@ -2426,7 +2486,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 90,
+      "state_number": 94,
       "n": 18,
       "l": "p",
       "J": "1/2",
@@ -2441,7 +2501,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 91,
+      "state_number": 95,
       "n": 18,
       "l": "p",
       "J": "3/2",
@@ -2456,7 +2516,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 92,
+      "state_number": 96,
       "n": 18,
       "l": "d",
       "J": null,
@@ -2470,7 +2530,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 93,
+      "state_number": 97,
       "n": 18,
       "l": "f",
       "J": null,
@@ -2484,7 +2544,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 94,
+      "state_number": 98,
       "n": 18,
       "l": "g",
       "J": null,
@@ -2498,7 +2558,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 95,
+      "state_number": 99,
       "n": 19,
       "l": "s",
       "J": null,
@@ -2512,7 +2572,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 96,
+      "state_number": 100,
       "n": 19,
       "l": "p",
       "J": "1/2",
@@ -2527,7 +2587,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 97,
+      "state_number": 101,
       "n": 19,
       "l": "p",
       "J": "3/2",
@@ -2542,7 +2602,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 98,
+      "state_number": 102,
       "n": 19,
       "l": "d",
       "J": null,
@@ -2556,7 +2616,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 99,
+      "state_number": 103,
       "n": 19,
       "l": "f",
       "J": null,
@@ -2570,7 +2630,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 100,
+      "state_number": 104,
       "n": 19,
       "l": "g",
       "J": null,
@@ -2584,7 +2644,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 101,
+      "state_number": 105,
       "n": 20,
       "l": "s",
       "J": null,
@@ -2598,7 +2658,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 102,
+      "state_number": 106,
       "n": 20,
       "l": "p",
       "J": "1/2",
@@ -2613,7 +2673,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 103,
+      "state_number": 107,
       "n": 20,
       "l": "p",
       "J": "3/2",
@@ -2628,7 +2688,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 104,
+      "state_number": 108,
       "n": 20,
       "l": "d",
       "J": null,
@@ -2642,7 +2702,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 105,
+      "state_number": 109,
       "n": 20,
       "l": "f",
       "J": null,
@@ -2656,7 +2716,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 106,
+      "state_number": 110,
       "n": 20,
       "l": "g",
       "J": null,
@@ -2670,7 +2730,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 107,
+      "state_number": 111,
       "n": 21,
       "l": "s",
       "J": null,
@@ -2684,7 +2744,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 108,
+      "state_number": 112,
       "n": 21,
       "l": "p",
       "J": "1/2",
@@ -2699,7 +2759,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 109,
+      "state_number": 113,
       "n": 21,
       "l": "p",
       "J": "3/2",
@@ -2714,7 +2774,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 110,
+      "state_number": 114,
       "n": 21,
       "l": "d",
       "J": null,
@@ -2728,7 +2788,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 111,
+      "state_number": 115,
       "n": 21,
       "l": "f",
       "J": null,
@@ -2742,7 +2802,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 112,
+      "state_number": 116,
       "n": 21,
       "l": "g",
       "J": null,
@@ -2756,7 +2816,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 113,
+      "state_number": 117,
       "n": 22,
       "l": "s",
       "J": null,
@@ -2770,7 +2830,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 114,
+      "state_number": 118,
       "n": 22,
       "l": "p",
       "J": "1/2",
@@ -2785,7 +2845,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 115,
+      "state_number": 119,
       "n": 22,
       "l": "p",
       "J": "3/2",
@@ -2800,7 +2860,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 116,
+      "state_number": 120,
       "n": 22,
       "l": "d",
       "J": null,
@@ -2814,7 +2874,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 117,
+      "state_number": 121,
       "n": 22,
       "l": "f",
       "J": null,
@@ -2828,7 +2888,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 118,
+      "state_number": 122,
       "n": 22,
       "l": "g",
       "J": null,
@@ -2842,7 +2902,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 119,
+      "state_number": 123,
       "n": 23,
       "l": "s",
       "J": null,
@@ -2856,7 +2916,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 120,
+      "state_number": 124,
       "n": 23,
       "l": "p",
       "J": "1/2",
@@ -2871,7 +2931,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 121,
+      "state_number": 125,
       "n": 23,
       "l": "p",
       "J": "3/2",
@@ -2886,7 +2946,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 122,
+      "state_number": 126,
       "n": 23,
       "l": "d",
       "J": null,
@@ -2900,7 +2960,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 123,
+      "state_number": 127,
       "n": 23,
       "l": "f",
       "J": null,
@@ -2914,7 +2974,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 124,
+      "state_number": 128,
       "n": 23,
       "l": "g",
       "J": null,
@@ -2928,7 +2988,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 125,
+      "state_number": 129,
       "n": 24,
       "l": "s",
       "J": null,
@@ -2942,7 +3002,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 126,
+      "state_number": 130,
       "n": 24,
       "l": "p",
       "J": "1/2",
@@ -2957,7 +3017,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 127,
+      "state_number": 131,
       "n": 24,
       "l": "p",
       "J": "3/2",
@@ -2972,7 +3032,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 128,
+      "state_number": 132,
       "n": 24,
       "l": "d",
       "J": null,
@@ -2986,7 +3046,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 129,
+      "state_number": 133,
       "n": 24,
       "l": "f",
       "J": null,
@@ -3000,7 +3060,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 130,
+      "state_number": 134,
       "n": 24,
       "l": "g",
       "J": null,
@@ -3014,7 +3074,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 131,
+      "state_number": 135,
       "n": 25,
       "l": "s",
       "J": null,
@@ -3028,7 +3088,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 132,
+      "state_number": 136,
       "n": 25,
       "l": "p",
       "J": "1/2",
@@ -3043,7 +3103,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 133,
+      "state_number": 137,
       "n": 25,
       "l": "p",
       "J": "3/2",
@@ -3058,7 +3118,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 134,
+      "state_number": 138,
       "n": 25,
       "l": "d",
       "J": null,
@@ -3072,7 +3132,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 135,
+      "state_number": 139,
       "n": 25,
       "l": "f",
       "J": null,
@@ -3086,7 +3146,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 136,
+      "state_number": 140,
       "n": 25,
       "l": "g",
       "J": null,
@@ -3100,7 +3160,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 137,
+      "state_number": 141,
       "n": 26,
       "l": "s",
       "J": null,
@@ -3114,7 +3174,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 138,
+      "state_number": 142,
       "n": 26,
       "l": "p",
       "J": "1/2",
@@ -3129,7 +3189,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 139,
+      "state_number": 143,
       "n": 26,
       "l": "p",
       "J": "3/2",
@@ -3144,7 +3204,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 140,
+      "state_number": 144,
       "n": 26,
       "l": "d",
       "J": null,
@@ -3158,7 +3218,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 141,
+      "state_number": 145,
       "n": 26,
       "l": "f",
       "J": null,
@@ -3172,7 +3232,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 142,
+      "state_number": 146,
       "n": 26,
       "l": "g",
       "J": null,
@@ -3186,7 +3246,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 143,
+      "state_number": 147,
       "n": 27,
       "l": "s",
       "J": null,
@@ -3200,7 +3260,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 144,
+      "state_number": 148,
       "n": 27,
       "l": "p",
       "J": "1/2",
@@ -3215,7 +3275,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 145,
+      "state_number": 149,
       "n": 27,
       "l": "p",
       "J": "3/2",
@@ -3230,7 +3290,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 146,
+      "state_number": 150,
       "n": 27,
       "l": "d",
       "J": null,
@@ -3244,7 +3304,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 147,
+      "state_number": 151,
       "n": 27,
       "l": "f",
       "J": null,
@@ -3258,7 +3318,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 148,
+      "state_number": 152,
       "n": 27,
       "l": "g",
       "J": null,
@@ -3272,7 +3332,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 149,
+      "state_number": 153,
       "n": 28,
       "l": "s",
       "J": null,
@@ -3286,7 +3346,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 150,
+      "state_number": 154,
       "n": 28,
       "l": "p",
       "J": "1/2",
@@ -3301,7 +3361,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 151,
+      "state_number": 155,
       "n": 28,
       "l": "p",
       "J": "3/2",
@@ -3316,7 +3376,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 152,
+      "state_number": 156,
       "n": 28,
       "l": "d",
       "J": null,
@@ -3330,7 +3390,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 153,
+      "state_number": 157,
       "n": 28,
       "l": "f",
       "J": null,
@@ -3344,7 +3404,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 154,
+      "state_number": 158,
       "n": 28,
       "l": "g",
       "J": null,
@@ -3358,7 +3418,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 155,
+      "state_number": 159,
       "n": 29,
       "l": "s",
       "J": null,
@@ -3372,7 +3432,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 156,
+      "state_number": 160,
       "n": 29,
       "l": "p",
       "J": "1/2",
@@ -3387,7 +3447,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 157,
+      "state_number": 161,
       "n": 29,
       "l": "p",
       "J": "3/2",
@@ -3402,7 +3462,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 158,
+      "state_number": 162,
       "n": 29,
       "l": "d",
       "J": null,
@@ -3416,7 +3476,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 159,
+      "state_number": 163,
       "n": 29,
       "l": "f",
       "J": null,
@@ -3430,7 +3490,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 160,
+      "state_number": 164,
       "n": 29,
       "l": "g",
       "J": null,
@@ -3444,7 +3504,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 161,
+      "state_number": 165,
       "n": 30,
       "l": "s",
       "J": null,
@@ -3458,7 +3518,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 162,
+      "state_number": 166,
       "n": 30,
       "l": "p",
       "J": "1/2",
@@ -3473,7 +3533,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 163,
+      "state_number": 167,
       "n": 30,
       "l": "p",
       "J": "3/2",
@@ -3488,7 +3548,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 164,
+      "state_number": 168,
       "n": 30,
       "l": "d",
       "J": null,
@@ -3502,7 +3562,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 165,
+      "state_number": 169,
       "n": 30,
       "l": "f",
       "J": null,
@@ -3516,7 +3576,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 166,
+      "state_number": 170,
       "n": 30,
       "l": "g",
       "J": null,
@@ -3530,7 +3590,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 167,
+      "state_number": 171,
       "n": 31,
       "l": "s",
       "J": null,
@@ -3544,7 +3604,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 168,
+      "state_number": 172,
       "n": 31,
       "l": "p",
       "J": "1/2",
@@ -3559,7 +3619,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 169,
+      "state_number": 173,
       "n": 31,
       "l": "p",
       "J": "3/2",
@@ -3574,7 +3634,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 170,
+      "state_number": 174,
       "n": 31,
       "l": "d",
       "J": null,
@@ -3588,7 +3648,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 171,
+      "state_number": 175,
       "n": 31,
       "l": "f",
       "J": null,
@@ -3602,7 +3662,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 172,
+      "state_number": 176,
       "n": 31,
       "l": "g",
       "J": null,
@@ -3616,7 +3676,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 173,
+      "state_number": 177,
       "n": 32,
       "l": "s",
       "J": null,
@@ -3630,7 +3690,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 174,
+      "state_number": 178,
       "n": 32,
       "l": "p",
       "J": "1/2",
@@ -3645,7 +3705,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 175,
+      "state_number": 179,
       "n": 32,
       "l": "p",
       "J": "3/2",
@@ -3660,7 +3720,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 176,
+      "state_number": 180,
       "n": 32,
       "l": "d",
       "J": null,
@@ -3674,7 +3734,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 177,
+      "state_number": 181,
       "n": 32,
       "l": "f",
       "J": null,
@@ -3688,7 +3748,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 178,
+      "state_number": 182,
       "n": 32,
       "l": "g",
       "J": null,
@@ -3702,7 +3762,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 179,
+      "state_number": 183,
       "n": 33,
       "l": "s",
       "J": null,
@@ -3716,7 +3776,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 180,
+      "state_number": 184,
       "n": 33,
       "l": "p",
       "J": "1/2",
@@ -3731,7 +3791,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 181,
+      "state_number": 185,
       "n": 33,
       "l": "p",
       "J": "3/2",
@@ -3746,7 +3806,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 182,
+      "state_number": 186,
       "n": 33,
       "l": "d",
       "J": null,
@@ -3760,7 +3820,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 183,
+      "state_number": 187,
       "n": 33,
       "l": "f",
       "J": null,
@@ -3774,7 +3834,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 184,
+      "state_number": 188,
       "n": 33,
       "l": "g",
       "J": null,
@@ -3788,7 +3848,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 185,
+      "state_number": 189,
       "n": 34,
       "l": "s",
       "J": null,
@@ -3802,7 +3862,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 186,
+      "state_number": 190,
       "n": 34,
       "l": "p",
       "J": "1/2",
@@ -3817,7 +3877,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 187,
+      "state_number": 191,
       "n": 34,
       "l": "p",
       "J": "3/2",
@@ -3832,7 +3892,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 188,
+      "state_number": 192,
       "n": 34,
       "l": "d",
       "J": null,
@@ -3846,7 +3906,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 189,
+      "state_number": 193,
       "n": 34,
       "l": "f",
       "J": null,
@@ -3860,7 +3920,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 190,
+      "state_number": 194,
       "n": 34,
       "l": "g",
       "J": null,
@@ -3874,7 +3934,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 191,
+      "state_number": 195,
       "n": 35,
       "l": "s",
       "J": null,
@@ -3888,7 +3948,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 192,
+      "state_number": 196,
       "n": 35,
       "l": "p",
       "J": "1/2",
@@ -3903,7 +3963,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 193,
+      "state_number": 197,
       "n": 35,
       "l": "p",
       "J": "3/2",
@@ -3918,7 +3978,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 194,
+      "state_number": 198,
       "n": 35,
       "l": "d",
       "J": null,
@@ -3932,7 +3992,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 195,
+      "state_number": 199,
       "n": 35,
       "l": "f",
       "J": null,
@@ -3946,7 +4006,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 196,
+      "state_number": 200,
       "n": 35,
       "l": "g",
       "J": null,
@@ -3960,7 +4020,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 197,
+      "state_number": 201,
       "n": 36,
       "l": "s",
       "J": null,
@@ -3974,7 +4034,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 198,
+      "state_number": 202,
       "n": 36,
       "l": "p",
       "J": "1/2",
@@ -3989,7 +4049,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 199,
+      "state_number": 203,
       "n": 36,
       "l": "p",
       "J": "3/2",
@@ -4004,7 +4064,7 @@
       "uncertainty_eV": 7e-06
     },
     {
-      "state_number": 200,
+      "state_number": 204,
       "n": 36,
       "l": "d",
       "J": null,
@@ -4018,7 +4078,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 201,
+      "state_number": 205,
       "n": 36,
       "l": "f",
       "J": null,
@@ -4032,7 +4092,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 202,
+      "state_number": 206,
       "n": 36,
       "l": "g",
       "J": null,
@@ -4046,7 +4106,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 203,
+      "state_number": 207,
       "n": 37,
       "l": "s",
       "J": null,
@@ -4060,7 +4120,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 204,
+      "state_number": 208,
       "n": 37,
       "l": "p",
       "J": null,
@@ -4074,7 +4134,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 205,
+      "state_number": 209,
       "n": 37,
       "l": "d",
       "J": null,
@@ -4088,7 +4148,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 206,
+      "state_number": 210,
       "n": 37,
       "l": "f",
       "J": null,
@@ -4102,7 +4162,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 207,
+      "state_number": 211,
       "n": 37,
       "l": "g",
       "J": null,
@@ -4116,7 +4176,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 208,
+      "state_number": 212,
       "n": 38,
       "l": "s",
       "J": null,
@@ -4130,7 +4190,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 209,
+      "state_number": 213,
       "n": 38,
       "l": "p",
       "J": null,
@@ -4144,7 +4204,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 210,
+      "state_number": 214,
       "n": 38,
       "l": "d",
       "J": null,
@@ -4158,7 +4218,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 211,
+      "state_number": 215,
       "n": 38,
       "l": "f",
       "J": null,
@@ -4172,7 +4232,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 212,
+      "state_number": 216,
       "n": 38,
       "l": "g",
       "J": null,
@@ -4186,7 +4246,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 213,
+      "state_number": 217,
       "n": 39,
       "l": "s",
       "J": null,
@@ -4200,7 +4260,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 214,
+      "state_number": 218,
       "n": 39,
       "l": "p",
       "J": null,
@@ -4214,7 +4274,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 215,
+      "state_number": 219,
       "n": 39,
       "l": "d",
       "J": null,
@@ -4228,7 +4288,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 216,
+      "state_number": 220,
       "n": 39,
       "l": "f",
       "J": null,
@@ -4242,7 +4302,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 217,
+      "state_number": 221,
       "n": 39,
       "l": "g",
       "J": null,
@@ -4256,7 +4316,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 218,
+      "state_number": 222,
       "n": 40,
       "l": "s",
       "J": null,
@@ -4270,7 +4330,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 219,
+      "state_number": 223,
       "n": 40,
       "l": "p",
       "J": null,
@@ -4284,7 +4344,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 220,
+      "state_number": 224,
       "n": 40,
       "l": "d",
       "J": null,
@@ -4298,7 +4358,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 221,
+      "state_number": 225,
       "n": 40,
       "l": "f",
       "J": null,
@@ -4312,7 +4372,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 222,
+      "state_number": 226,
       "n": 40,
       "l": "g",
       "J": null,
@@ -4326,7 +4386,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 223,
+      "state_number": 227,
       "n": 41,
       "l": "s",
       "J": null,
@@ -4340,7 +4400,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 224,
+      "state_number": 228,
       "n": 41,
       "l": "p",
       "J": null,
@@ -4354,7 +4414,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 225,
+      "state_number": 229,
       "n": 41,
       "l": "d",
       "J": null,
@@ -4368,7 +4428,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 226,
+      "state_number": 230,
       "n": 41,
       "l": "f",
       "J": null,
@@ -4382,7 +4442,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 227,
+      "state_number": 231,
       "n": 41,
       "l": "g",
       "J": null,
@@ -4396,7 +4456,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 228,
+      "state_number": 232,
       "n": 42,
       "l": "s",
       "J": null,
@@ -4410,7 +4470,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 229,
+      "state_number": 233,
       "n": 42,
       "l": "p",
       "J": null,
@@ -4424,7 +4484,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 230,
+      "state_number": 234,
       "n": 42,
       "l": "d",
       "J": null,
@@ -4438,7 +4498,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 231,
+      "state_number": 235,
       "n": 42,
       "l": "f",
       "J": null,
@@ -4452,7 +4512,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 232,
+      "state_number": 236,
       "n": 42,
       "l": "g",
       "J": null,
@@ -4466,7 +4526,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 233,
+      "state_number": 237,
       "n": 43,
       "l": "s",
       "J": null,
@@ -4480,7 +4540,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 234,
+      "state_number": 238,
       "n": 43,
       "l": "p",
       "J": null,
@@ -4494,7 +4554,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 235,
+      "state_number": 239,
       "n": 43,
       "l": "d",
       "J": null,
@@ -4508,7 +4568,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 236,
+      "state_number": 240,
       "n": 43,
       "l": "f",
       "J": null,
@@ -4522,7 +4582,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 237,
+      "state_number": 241,
       "n": 43,
       "l": "g",
       "J": null,
@@ -4536,7 +4596,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 238,
+      "state_number": 242,
       "n": 44,
       "l": "s",
       "J": null,
@@ -4550,7 +4610,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 239,
+      "state_number": 243,
       "n": 44,
       "l": "p",
       "J": null,
@@ -4564,7 +4624,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 240,
+      "state_number": 244,
       "n": 44,
       "l": "d",
       "J": null,
@@ -4578,7 +4638,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 241,
+      "state_number": 245,
       "n": 44,
       "l": "f",
       "J": null,
@@ -4592,7 +4652,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 242,
+      "state_number": 246,
       "n": 44,
       "l": "g",
       "J": null,
@@ -4606,7 +4666,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 243,
+      "state_number": 247,
       "n": 45,
       "l": "s",
       "J": null,
@@ -4620,7 +4680,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 244,
+      "state_number": 248,
       "n": 45,
       "l": "p",
       "J": null,
@@ -4634,7 +4694,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 245,
+      "state_number": 249,
       "n": 45,
       "l": "d",
       "J": null,
@@ -4648,7 +4708,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 246,
+      "state_number": 250,
       "n": 45,
       "l": "f",
       "J": null,
@@ -4662,7 +4722,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 247,
+      "state_number": 251,
       "n": 45,
       "l": "g",
       "J": null,
@@ -4676,7 +4736,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 248,
+      "state_number": 252,
       "n": 46,
       "l": "s",
       "J": null,
@@ -4690,7 +4750,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 249,
+      "state_number": 253,
       "n": 46,
       "l": "p",
       "J": null,
@@ -4704,7 +4764,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 250,
+      "state_number": 254,
       "n": 46,
       "l": "d",
       "J": null,
@@ -4718,7 +4778,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 251,
+      "state_number": 255,
       "n": 46,
       "l": "f",
       "J": null,
@@ -4732,7 +4792,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 252,
+      "state_number": 256,
       "n": 46,
       "l": "g",
       "J": null,
@@ -4746,7 +4806,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 253,
+      "state_number": 257,
       "n": 47,
       "l": "s",
       "J": null,
@@ -4760,7 +4820,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 254,
+      "state_number": 258,
       "n": 47,
       "l": "p",
       "J": null,
@@ -4774,7 +4834,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 255,
+      "state_number": 259,
       "n": 47,
       "l": "d",
       "J": null,
@@ -4788,7 +4848,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 256,
+      "state_number": 260,
       "n": 47,
       "l": "f",
       "J": null,
@@ -4802,7 +4862,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 257,
+      "state_number": 261,
       "n": 47,
       "l": "g",
       "J": null,
@@ -4816,7 +4876,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 258,
+      "state_number": 262,
       "n": 48,
       "l": "s",
       "J": null,
@@ -4830,7 +4890,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 259,
+      "state_number": 263,
       "n": 48,
       "l": "p",
       "J": null,
@@ -4844,7 +4904,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 260,
+      "state_number": 264,
       "n": 48,
       "l": "d",
       "J": null,
@@ -4858,7 +4918,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 261,
+      "state_number": 265,
       "n": 48,
       "l": "f",
       "J": null,
@@ -4872,7 +4932,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 262,
+      "state_number": 266,
       "n": 48,
       "l": "g",
       "J": null,
@@ -4886,7 +4946,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 263,
+      "state_number": 267,
       "n": 49,
       "l": "s",
       "J": null,
@@ -4900,7 +4960,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 264,
+      "state_number": 268,
       "n": 49,
       "l": "p",
       "J": null,
@@ -4914,7 +4974,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 265,
+      "state_number": 269,
       "n": 49,
       "l": "d",
       "J": null,
@@ -4928,7 +4988,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 266,
+      "state_number": 270,
       "n": 49,
       "l": "f",
       "J": null,
@@ -4942,7 +5002,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 267,
+      "state_number": 271,
       "n": 49,
       "l": "g",
       "J": null,
@@ -4956,7 +5016,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 268,
+      "state_number": 272,
       "n": 50,
       "l": "s",
       "J": null,
@@ -4970,7 +5030,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 269,
+      "state_number": 273,
       "n": 50,
       "l": "p",
       "J": null,
@@ -4984,7 +5044,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 270,
+      "state_number": 274,
       "n": 50,
       "l": "d",
       "J": null,
@@ -4998,7 +5058,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 271,
+      "state_number": 275,
       "n": 50,
       "l": "f",
       "J": null,
@@ -5012,7 +5072,7 @@
       "uncertainty_eV": null
     },
     {
-      "state_number": 272,
+      "state_number": 276,
       "n": 50,
       "l": "g",
       "J": null,

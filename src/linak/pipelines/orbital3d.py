@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import argparse, json, os
 
+from linak.core.data_inputs import resolve_data_file
 from linak.core.fileio import atomic_write_text
 from linak.core.errors import MissingDataError
 from linak.physics.rydberg import label_to_unicode
@@ -65,6 +66,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="linak --pipeline orbital3d")
     p.add_argument("element",    nargs="?", default=None)
     p.add_argument("--data-dir", default=str(Workspace.current().data_json_dir))
+    p.add_argument("--rydberg-file", default=None, metavar="FILE",
+                   help="Rydberg data to read instead of <species>_rydberg.json "
+                        "(a path, or a name under the data folder).")
+    p.add_argument("--lifetimes-file", default=None, metavar="FILE",
+                   help="Lifetimes data to read instead of <species>_lifetimes.json "
+                        "(a path, or a name under the data folder).")
     p.add_argument("--n-max",    type=int,   default=10)
     p.add_argument("--render",   choices=["volume", "isosurface"], default="volume",
                    help="volume (default): WebGL2 raymarched volume | "
@@ -149,7 +156,8 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = os.path.join(Workspace.current().plots_dir, element)
 
     # ── Load ──────────────────────────────────────────────────────────────────
-    ryd_file = os.path.join(args.data_dir, f"{element}_rydberg.json")
+    ryd_file = (resolve_data_file(args.rydberg_file, element, args.data_dir, "rydberg")
+                or os.path.join(args.data_dir, f"{element}_rydberg.json"))
     if not os.path.exists(ryd_file):
         raise MissingDataError(f"{ryd_file} not found; run: linak --pipeline rydberg {element}")
     with open(ryd_file, encoding="utf-8") as f: rydberg = json.load(f)
@@ -160,7 +168,8 @@ def main(argv: list[str] | None = None) -> int:
     # Same rule as lifetimes.py: z_core from the rydberg JSON, else charge + 1.
     Z_CORE = float(rydberg.get("z_core") or (_species.get("charge", 0) + 1) or 1)
 
-    lt_file = os.path.join(args.data_dir, f"{element}_lifetimes.json")
+    lt_file = (resolve_data_file(args.lifetimes_file, element, args.data_dir, "lifetimes")
+               or os.path.join(args.data_dir, f"{element}_lifetimes.json"))
     tau_by_label = {}
     if os.path.exists(lt_file):
         with open(lt_file, encoding="utf-8") as f: lt_data = json.load(f)

@@ -58,17 +58,34 @@ MODE_TIPS = {
     "show": "Add extrapolated values as a separate group that can be toggled in the plots.",
     "use": "Also fill levels that have no measured or published value (tagged 'extrapolated').",
 }
-# Empty on purpose: the file only holds what you add yourself. Nothing here is used until you fill it in.
-USER_ANCHOR_TEMPLATE = (
-    '{\n'
-    '  "_help": "anchors: your own ns->np f-values. n = upper level, J = \\"1/2\\" or \\"3/2\\", '
-    'f = absorption oscillator strength, unc = relative uncertainty (0.05 = 5%); add \\"nu\\" only for levels '
-    'that are not in the Rydberg list. threshold: your own photoionization cross-section at threshold, '
-    'sigma_Mb with uncertainty unc_Mb (both in Mb) and src = where it comes from; it replaces the packaged one.",\n'
-    '  "anchors": [],\n'
-    '  "threshold": null\n'
-    '}'
+# The file only holds what you add yourself: "anchors" and "threshold" start empty, so nothing is used until you fill them in.
+# JSON has no comments, so "_help" and "_example" are ordinary keys that the code never reads (it only reads "anchors" and
+# "threshold"). "_example" shows one filled-in entry of each kind; the values are illustrative, not data. Copy it, do not rely on it.
+_USER_ANCHOR_HELP = (
+    "anchors: your own ns->np f-values. n = upper level, J = \"1/2\" or \"3/2\", f = absorption oscillator strength, "
+    "unc = relative uncertainty (0.05 = 5%); add \"nu\" only for levels that are not in the Rydberg list. "
+    "threshold: your own photoionization cross-section at threshold, sigma_Mb with uncertainty unc_Mb (both in Mb) and "
+    "src = where it comes from; it replaces the packaged one. \"_example\" is ignored: copy its entries into "
+    "\"anchors\" / \"threshold\" and change the values."
 )
+_USER_ANCHOR_EXAMPLE = {
+    "anchors": [{"n": 9, "J": "1/2", "f": 0.0012, "unc": 0.05}, {"n": 9, "J": "3/2", "f": 0.0031, "unc": 0.05}],
+    "threshold": {"sigma_Mb": 1.1, "unc_Mb": 0.2, "src": "Author et al. (2024)"},
+}
+USER_ANCHOR_TEMPLATE = json.dumps(
+    {"_help": _USER_ANCHOR_HELP, "_example": _USER_ANCHOR_EXAMPLE, "anchors": [], "threshold": None}, indent=2)
+
+
+def with_user_anchor_example(text: str) -> str:
+    """An existing anchors file shown with the help and example added when it lacks them (nothing is written until you save)."""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return text
+    if not isinstance(data, dict) or "_example" in data:
+        return text
+    head = {"_help": data.get("_help", _USER_ANCHOR_HELP), "_example": _USER_ANCHOR_EXAMPLE}
+    return json.dumps(head | {k: v for k, v in data.items() if k not in head}, indent=2)
 
 
 class _CopyTable(QTableWidget):
@@ -176,7 +193,7 @@ class ExtrapolationDialog(QDialog):
         self.setSizeGripEnabled(True)
         self._tick_dir = QTemporaryDir()
         self.setStyleSheet(_tick_stylesheet(self, self._tick_dir.path()))
-        species_params(element)  # raises UnsupportedSpeciesError (e.g. Fr) before anything is built
+        species_params(element)  # raises UnsupportedSpeciesError (e.g. Ra) before anything is built
         saved = config_path(self.root, element)
         try:
             self.cfg = load_config(saved) if saved.is_file() else ExtrapolationConfig(mode="show")
@@ -264,7 +281,7 @@ class ExtrapolationDialog(QDialog):
         self.threshold_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         rv.addWidget(self.threshold_label)
         split.addWidget(right)
-        split.setSizes([430, 620])
+        split.setSizes([300, 900])        # the plot gets three quarters; the table only needs its columns
         outer.addWidget(split, stretch=1)
 
         outer.addWidget(QLabel("Warnings"))
@@ -346,7 +363,12 @@ class ExtrapolationDialog(QDialog):
             self.table.setItem(i, 0, blank)
             box = QCheckBox()  # a real checkbox so the application theme styles it (item check marks ignore it)
             box.setChecked(a["included"])
-            box.setToolTip("Tick to use this anchor in the fit")
+            if a.get("unreliable"):          # the stage never fits these, so the box must not pretend to
+                box.setChecked(False)
+                box.setEnabled(False)
+                box.setToolTip("Left out of the fit: this source is known to be wrong for this species (see the warning below)")
+            else:
+                box.setToolTip("Tick to use this anchor in the fit")
             box.toggled.connect(lambda checked, ident=a["id"]: self._on_anchor_toggled(ident, checked))
             holder = QWidget()
             hl = QHBoxLayout(holder)
@@ -443,7 +465,7 @@ class ExtrapolationDialog(QDialog):
 
     def _edit_datasets(self):
         path = user_anchor_path(self.root, self.element)
-        text = path.read_text(encoding="utf-8") if path.is_file() else USER_ANCHOR_TEMPLATE
+        text = with_user_anchor_example(path.read_text(encoding="utf-8")) if path.is_file() else USER_ANCHOR_TEMPLATE
         dlg = DatasetEditorDialog(self, dataset_name=f"{self.element}_user_anchors", dataset_type="json",
                                   initial_text=text, default_path=path, file_path=path, root=self.root)
         dlg.exec()

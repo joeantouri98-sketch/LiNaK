@@ -9,10 +9,12 @@ pipeline or physics imports.
 
 from __future__ import annotations
 
+import tempfile
 from dataclasses import asdict, dataclass, replace
+from pathlib import Path
 
-from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QImage, QPainter, QPalette, QPen
+from PySide6.QtCore import QPointF, Qt
 from PySide6.QtWidgets import QApplication
 
 SYSTEM = "system"
@@ -227,7 +229,7 @@ QLineEdit, QPlainTextEdit, QTextEdit {{ background: {surface}; color: {text};
     border: 1px solid {border_strong}; border-radius: 6px; padding: 4px 6px;
     selection-background-color: {text_select}; selection-color: {text_select_text}; }}
 QLineEdit:focus {{ border-color: {accent_ink}; }}
-QComboBox {{ min-height: 24px; }}
+QComboBox {{ min-height: 24px; combobox-popup: 0; }}
 QComboBox QAbstractItemView {{ background: {surface}; color: {text}; border: 1px solid {border};
     selection-background-color: {selection}; selection-color: {text}; outline: none; }}
 QPlainTextEdit#console, QPlainTextEdit#jsonView {{ border: none; border-radius: 0; padding: 8px; }}
@@ -235,7 +237,7 @@ QPlainTextEdit#console, QPlainTextEdit#jsonView {{ border: none; border-radius: 
 QCheckBox::indicator {{ width: 14px; height: 14px; border: 1px solid {border_strong};
     border-radius: 3px; background: {surface}; }}
 QCheckBox::indicator:hover {{ border-color: {accent_ink}; }}
-QCheckBox::indicator:checked {{ background: {accent_ink}; border-color: {accent_ink}; }}
+QCheckBox::indicator:checked {{ background: {accent_ink}; border-color: {accent_ink}; {check_image} }}
 QCheckBox::indicator:disabled {{ background: {bg}; border-color: {border}; }}
 
 QListWidget {{ background: transparent; border: none; outline: none; }}
@@ -289,9 +291,35 @@ QHeaderView::section {{ background: {raised}; color: {text_muted}; border: none;
 """
 
 
+def _check_image(colour: str) -> str:
+    """QSS ``image:`` line for a check mark in *colour* ('' if the picture cannot be written).
+
+    A stylesheet cannot draw a tick, only fill the box, so the mark is a small picture written once per colour.
+    """
+    try:
+        path = Path(tempfile.gettempdir()) / "linak-ui" / f"check_{colour.lstrip('#').lower()}.png"
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            image = QImage(14, 14, QImage.Format_ARGB32)
+            image.fill(Qt.transparent)
+            painter = QPainter(image)
+            painter.setRenderHint(QPainter.Antialiasing)
+            pen = QPen(QColor(colour), 2.0)
+            pen.setCapStyle(Qt.RoundCap)
+            pen.setJoinStyle(Qt.RoundJoin)
+            painter.setPen(pen)
+            painter.drawPolyline([QPointF(3.2, 7.2), QPointF(5.8, 9.8), QPointF(10.8, 4.4)])
+            painter.end()
+            if not image.save(str(path)):
+                return ""
+        return f"image: url({path.as_posix()});"
+    except OSError:
+        return ""
+
+
 def build_stylesheet(t: Tokens) -> str:
     """The application stylesheet for tokens *t*."""
-    return _STYLESHEET.format(**asdict(t))
+    return _STYLESHEET.format(**asdict(t), check_image=_check_image(_readable_on(t.accent_ink)))
 
 
 def apply_theme(app: QApplication, name: str) -> Tokens:

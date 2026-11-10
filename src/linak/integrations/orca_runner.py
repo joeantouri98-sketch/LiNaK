@@ -67,60 +67,63 @@ from linak.integrations.orca_parser import (
 )
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
-parser = argparse.ArgumentParser(
-    prog="linak --pipeline runorca",
-    description="Run ORCA and save the parsed results under data/")
-parser.add_argument("target", nargs="?", default=None,
-                    help="Element symbol, Z, or ion species id "
-                         "(e.g. Mg_c1, Na_a1); omit for all neutrals")
-parser.add_argument("--mode", choices=["auto", "tddft", "alkali", "soc", "alkali-soc", "casscf"],
-                    default="auto",
-                    help="Calculation template (auto: alkali TD-DFT; soc: CASSCF/NEVPT2+SOC)")
-parser.add_argument("--soc-recipe", choices=["casscf", "nevpt2"], default="nevpt2",
-                    help="SOC correlation level (soc mode only): casscf=bare CASSCF+DoSOC, nevpt2=SC-NEVPT2+DoSOC")
-parser.add_argument("--nroots", type=int, default=None,
-                    help="Excited-state roots (default: 20)")
-parser.add_argument("--soc-norb", type=int, default=None,
-                    help="Override CAS norb for SOC (soc mode only)")
-parser.add_argument("--functional", default=DEFAULT_FUNCTIONAL,
-                    help=f"DFT functional for GS+EX (default: {DEFAULT_FUNCTIONAL})")
-parser.add_argument("--functional-gs", default=None,
-                    help="Override functional for the ground-state job only "
-                         "(default: value of --functional)")
-parser.add_argument("--functional-ex", default=None,
-                    help="Override functional for the TD-DFT excited-state job only "
-                         "(default: value of --functional)")
-parser.add_argument("--relativistic", default="auto",
-                    choices=["auto", "ecp", "dkh", "x2c"],
-                    help="Relativistic/basis recipe")
-parser.add_argument("--scf-tightness",
-                    choices=["loose", "normal", "tight", "verytight"],
-                    default=None,
-                    help="Override SCF convergence preset on the ! line "
-                         "(default: alkali GS+EX VeryTightSCF, other TD-DFT TightSCF, "
-                         "SOC/CASSCF VeryTightSCF)")
-parser.add_argument("--basis-tightness",
-                    choices=["vdz", "vtz", "vqz"],
-                    default=None,
-                    help="ANO-RCC basis tier for Z>=87 (vdz/vtz/vqz); takes precedence "
-                         "over the BSE path. Ignored for lighter elements.")
-parser.add_argument("--pick-basis", action="store_true",
-                    help="Use a basis_set_exchange basis for every element (default: "
-                         "Z>=87 only): lists the available ones and embeds --basis NAME, "
-                         "or the recipe default, as inline NewGTO.")
-parser.add_argument("--basis", default=None, metavar="NAME",
-                    help="basis_set_exchange basis name for the BSE path "
-                         "(see --pick-basis); default: the recipe default.")
-parser.add_argument("--basis-file", default=None, metavar="PATH",
-                    help="External basis file (GAMESS-US or ORCA format from "
-                    "basissetexchange.org). Resolves under resources/Basis sets/ "
-                         "when given a bare name/stem. Overrides --pick-basis "
-                         "and embeds as inline NewGTO + AutoAux.")
-parser.add_argument("--outname", default=None, metavar="SUFFIX",
-                    help="Suffix for the JSON output: data/<El>_<SUFFIX>.json "
-                         "(e.g. --outname UKS -> Na_UKS.json). Also appended to the "
-                         "orca_outputs/<El>/<run_tag>/ folder name. Overrides default "
-                         "JSON names including SOC auto tags. Strip a trailing .json if given.")
+def build_parser() -> argparse.ArgumentParser:
+    """The ``runorca`` command line."""
+    parser = argparse.ArgumentParser(
+        prog="linak --pipeline runorca",
+        description="Run ORCA and save the parsed results under data/")
+    parser.add_argument("target", nargs="?", default=None,
+                        help="Element symbol, Z, or ion species id "
+                             "(e.g. Mg_c1, Na_a1); omit for all neutrals")
+    parser.add_argument("--mode", choices=["auto", "tddft", "alkali", "soc", "alkali-soc", "casscf"],
+                        default="auto",
+                        help="Calculation template (auto: alkali TD-DFT; soc: CASSCF/NEVPT2+SOC)")
+    parser.add_argument("--soc-recipe", choices=["casscf", "nevpt2"], default="nevpt2",
+                        help="SOC correlation level (soc mode only): casscf=bare CASSCF+DoSOC, nevpt2=SC-NEVPT2+DoSOC")
+    parser.add_argument("--nroots", type=int, default=None,
+                        help="Excited-state roots (default: 20)")
+    parser.add_argument("--soc-norb", type=int, default=None,
+                        help="Override CAS norb for SOC (soc mode only)")
+    parser.add_argument("--functional", default=DEFAULT_FUNCTIONAL,
+                        help=f"DFT functional for GS+EX (default: {DEFAULT_FUNCTIONAL})")
+    parser.add_argument("--functional-gs", default=None,
+                        help="Override functional for the ground-state job only "
+                             "(default: value of --functional)")
+    parser.add_argument("--functional-ex", default=None,
+                        help="Override functional for the TD-DFT excited-state job only "
+                             "(default: value of --functional)")
+    parser.add_argument("--relativistic", default="auto",
+                        choices=["auto", "ecp", "dkh", "x2c"],
+                        help="Relativistic/basis recipe")
+    parser.add_argument("--scf-tightness",
+                        choices=["loose", "normal", "tight", "verytight"],
+                        default=None,
+                        help="Override SCF convergence preset on the ! line "
+                             "(default: alkali GS+EX VeryTightSCF, other TD-DFT TightSCF, "
+                             "SOC/CASSCF VeryTightSCF)")
+    parser.add_argument("--basis-tightness",
+                        choices=["vdz", "vtz", "vqz"],
+                        default=None,
+                        help="ANO-RCC basis tier for Z>=87 (vdz/vtz/vqz); takes precedence "
+                             "over the BSE path. Ignored for lighter elements.")
+    parser.add_argument("--pick-basis", action="store_true",
+                        help="Use a basis_set_exchange basis for every element (default: "
+                             "Z>=87 only): lists the available ones and embeds --basis NAME, "
+                             "or the recipe default, as inline NewGTO.")
+    parser.add_argument("--basis", default=None, metavar="NAME",
+                        help="basis_set_exchange basis name for the BSE path "
+                             "(see --pick-basis); default: the recipe default.")
+    parser.add_argument("--basis-file", default=None, metavar="PATH",
+                        help="External basis file (GAMESS-US or ORCA format from "
+                        "basissetexchange.org). Resolves under resources/Basis sets/ "
+                             "when given a bare name/stem. Overrides --pick-basis "
+                             "and embeds as inline NewGTO + AutoAux.")
+    parser.add_argument("--outname", default=None, metavar="SUFFIX",
+                        help="Suffix for the JSON output: data/<El>_<SUFFIX>.json "
+                             "(e.g. --outname UKS -> Na_UKS.json). Also appended to the "
+                             "orca_outputs/<El>/<run_tag>/ folder name. Overrides default "
+                             "JSON names including SOC auto tags. Strip a trailing .json if given.")
+    return parser
 
 
 def normalize_outname(raw):
@@ -253,7 +256,7 @@ ANO_RCC_BASIS_TIERS = {
 def _set_cli_state(argv=None):
     """Parse CLI arguments and rebind the module-level state used by helpers."""
     global args, TARGET, FUNCTIONAL_GS, FUNCTIONAL_EX, SPLIT_FUNCTIONALS, OUTNAME_SUFFIX
-    args = parser.parse_args(argv or [])
+    args = build_parser().parse_args(argv or [])
     TARGET = args.target
     FUNCTIONAL_GS = args.functional_gs or args.functional
     FUNCTIONAL_EX = args.functional_ex or args.functional

@@ -110,3 +110,15 @@ def test_damaged_record_is_ignored(ws, bundled, text):
     seed_bundled_data(ws)
     assert (ws.data_json_dir / "Na.json").exists()
     assert hidden_species(ws) == set()
+
+
+def test_imported_and_edited_tables_belong_to_their_species(tmp_path):
+    ws = Workspace(root=tmp_path)
+    base = ws.runtime_root / "tables" / "files"
+    for rel in ("NIST Levels/Mg.csv", "f_values/Mg_lines.csv", "NIST Levels/Mg_c1.csv", "f_values/Na_lines.csv"):
+        (base / rel).parent.mkdir(parents=True, exist_ok=True)
+        (base / rel).write_text("x", encoding="utf-8")
+    assert [p.name for p in species_files(ws, "Mg")["tables"]] == ["Mg.csv", "Mg_lines.csv"]
+    assert [p.name for p in species_files(ws, "Mg_c1")["tables"]] == ["Mg_c1.csv"]
+    assert [p.name for p in species_files(ws, "Na")["tables"]] == ["Na_lines.csv"]
+    assert species_files(ws, "Ca")["tables"] == []

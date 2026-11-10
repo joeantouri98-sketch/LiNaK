@@ -25,6 +25,7 @@ Usage:
 
 __version__ = '1.0'
 
+from linak.core import user_tables as _user_tables
 import argparse
 import json
 import math
@@ -33,6 +34,7 @@ from dataclasses import asdict
 
 from linak.core.constants import ATOMIC_MASS_AMU
 from linak.core.errors import MissingDataError
+from linak.core.data_inputs import resolve_data_file
 from linak.core.fileio import write_json
 from linak.core.workspace import Workspace
 from linak.physics.polarizability_core import (
@@ -56,6 +58,7 @@ DEFAULT_WL_NM = {
     'Li': 1064.0, 'Na': 1064.0, 'K': 1064.0,
     'Rb': 1064.0, 'Cs': 1064.0, 'Fr': 1064.0,
 }
+_user_tables.apply("tweezer.default_wavelength", DEFAULT_WL_NM)
 DEFAULT_I_KWCM2 = 50.0
 DEFAULT_WAIST_UM = 1.0
 
@@ -64,17 +67,19 @@ DEFAULT_WAIST_UM = 1.0
 # INPUTS
 # ============================================================================
 
-def load_ground_transitions(element, data_dir):
+def load_ground_transitions(element, data_dir, polarizability_file=None):
     """(ground-state label, transition network), or None without the data.
 
     Prefers the network cached by the polarizability pipeline; otherwise
     rebuilds it from the rydberg + transitions JSON.
     """
-    cached = load_cached_transitions(element, data_dir)
+    cached = load_cached_transitions(element, data_dir, path=polarizability_file)
+    if polarizability_file and not (cached and cached.get('transitions_gs')):
+        raise MissingDataError(f"{os.path.basename(polarizability_file)} has no ground-state transitions")
     if cached and cached.get('transitions_gs'):
         gs_label = cached.get('gs_label') or '?'
         print(f"  Ground {gs_label}: {len(cached['transitions_gs'])} cached transitions "
-              f"from _polarizability.json")
+              f"from {os.path.basename(polarizability_file or element + '_polarizability.json')}")
         return gs_label, cached['transitions_gs']
     data = load_element(element, data_dir)
     if data is None:
@@ -86,9 +91,9 @@ def load_ground_transitions(element, data_dir):
     return gs_label, transitions
 
 
-def load_upper_state_rates(element, data_dir):
+def load_upper_state_rates(element, data_dir, lifetimes_file=None):
     """({state label: A_total in s⁻¹}, atomic mass in amu or None) from lifetimes."""
-    path = os.path.join(data_dir, f"{element}_lifetimes.json")
+    path = lifetimes_file or os.path.join(data_dir, f"{element}_lifetimes.json")
     if not os.path.exists(path):
         print(f"  ! {path} not found — scattering needs upper-state Γ")
         return {}, None
@@ -112,7 +117,7 @@ def load_upper_state_rates(element, data_dir):
 
 def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
                 waist_um=DEFAULT_WAIST_UM, wl_min=400.0, wl_max=1600.0,
-                n_grid=1500, data_dir=None):
+                n_grid=1500, data_dir=None, polarizability_file=None, lifetimes_file=None):
     """(ground-state label, TweezerResult) for *element*, or None without data."""
     if data_dir is None:
         data_dir = str(Workspace.current().data_json_dir)
@@ -120,11 +125,11 @@ def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
     print(f"  {element}  —  Optical tweezer scattering & heating")
     print(f"{'='*65}")
 
-    loaded = load_ground_transitions(element, data_dir)
+    loaded = load_ground_transitions(element, data_dir, polarizability_file)
     if loaded is None:
         return None
     gs_label, transitions = loaded
-    rates, mass_lt = load_upper_state_rates(element, data_dir)
+    rates, mass_lt = load_upper_state_rates(element, data_dir, lifetimes_file)
     mass = mass_lt or ATOMIC_MASS_AMU.get(element, 1.0)
     if wl_nm is None:
         wl_nm = DEFAULT_WL_NM.get(element, 1064.0)
@@ -313,7 +318,7 @@ def _clean(obj):
     return obj
 
 
-def save_json(element, gs_label, result, data_dir):
+def save_json(element, gs_label, result, data_dir, inputs=None):
     out = dict(
         element=element,
         gs_label=gs_label,
@@ -331,6 +336,8 @@ def save_json(element, gs_label, result, data_dir):
             'Conservative depth/freqs also in polarizability.py AC Stark panel.'
         ),
     )
+    if inputs:                       # only when a file other than the default was chosen
+        out['inputs'] = inputs
     path = os.path.join(data_dir, f"{element}_tweezer.json")
     write_json(path, out)
     print(f"  ✓ {path}")
@@ -353,6 +360,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--n-grid', type=int, default=1500)
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir))
+    parser.add_argument('--polarizability-file', default=None, metavar='FILE',
+                        help='Polarizability data to read instead of <species>_polarizability.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--lifetimes-file', default=None, metavar='FILE',
+                        help='Lifetimes data to read instead of <species>_lifetimes.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--no-plot', action='store_true',
+                        help='Write the data (JSON) only; skip the interactive plot.')
     return parser
 
 
@@ -386,10 +401,16 @@ def main(argv=None) -> int:
             )
         elements = [require_alpha_species(args.element, "tweezer.py")["species_id"]]
 
+    if args.all and (args.polarizability_file or args.lifetimes_file):
+        parser.error("--polarizability-file / --lifetimes-file apply to one species; drop --all")
     failed = []
     for el in elements:
         el_out = os.path.join(plots_dir, el)
         os.makedirs(el_out, exist_ok=True)
+        pol_file = resolve_data_file(args.polarizability_file, el, data_dir, "polarizability")
+        life_file = resolve_data_file(args.lifetimes_file, el, data_dir, "lifetimes")
+        inputs = {k: os.path.basename(v) for k, v in
+                  (("polarizability", pol_file), ("lifetimes", life_file)) if v}
         try:
             result = run_element(
                 el,
@@ -400,6 +421,7 @@ def main(argv=None) -> int:
                 wl_max=args.wl_max,
                 n_grid=args.n_grid,
                 data_dir=data_dir,
+                polarizability_file=pol_file, lifetimes_file=life_file,
             )
         except MissingDataError as exc:
             if not args.all:
@@ -410,8 +432,9 @@ def main(argv=None) -> int:
             failed.append(el)
             continue
         gs_label, tweezer = result
-        save_json(el, gs_label, tweezer, data_dir)
-        plot_tweezer(el, gs_label, tweezer, el_out)
+        save_json(el, gs_label, tweezer, data_dir, inputs)
+        if not args.no_plot:
+            plot_tweezer(el, gs_label, tweezer, el_out)
     if failed:
         print(f"  Failed: {', '.join(failed)}")
     return 1 if failed else 0

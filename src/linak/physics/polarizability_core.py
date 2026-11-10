@@ -8,6 +8,7 @@ scripts (e.g. tweezer.py).  No argparse or plotting — safe to import.
 
 __version__ = '1.0'
 
+from linak.core import user_tables as _user_tables
 import csv
 import functools
 import io
@@ -18,7 +19,7 @@ import re
 
 import numpy as np
 
-from linak.core.paths import reference_path
+from linak.core.paths import bundled_file, reference_path
 from linak.physics.rydberg import unwrap_asd_field
 from linak.physics.qdt_radial import level_defect, level_defects_from_rydberg
 
@@ -37,7 +38,7 @@ from linak.core.constants import (
 
 # ELEMENT / SPECTROSCOPY TABLES 
 
-L_CHAR = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
+L_CHAR = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5}
 
 CORE_CONFIG = {
     'Li': '1s2', 'Na': '2p6', 'K': '3p6',
@@ -49,6 +50,7 @@ ACC_UNCERTAINTY = {
     'B+':  0.07,  'B':  0.10, 'C+': 0.18, 'C':  0.25,
     'D+':  0.35,  'D':  0.50, 'E':  0.70,
 }
+_user_tables.apply("uncertainty.accuracy_grade", ACC_UNCERTAINTY)
 
 # Precision D-line oscillator strengths (J-resolved, absorption)
 # Only Fr is active: NIST ASD D1 gA sits ~5% off the MOT lifetime
@@ -66,6 +68,18 @@ ACC_UNCERTAINTY = {
 PRECISION_FOSC_J = {
     'Fr': {('7s', '7p'): {'1/2': 0.3400, '3/2': 0.7357}},
 }
+_user_tables.apply("polarizability.precision_fosc", PRECISION_FOSC_J)
+
+# Factor on every NIST gA / f of the lines that END in a level (its decays), per element and fine-structure
+# level. A row applies only while its Override box is ticked (Tables and variables).
+# Fr 7d: the NIST 7p-7d lines (source T6898) give 53.0 ns and 77.0 ns; the measured lifetimes are 73.6(3) ns
+# and 67.7(29) ns (Grossman et al., PRA 62, 062502 (2000)). One factor per level puts the total decay rate on the
+# measurement: s = (1/tau - A_other) / A_NIST, A_other being the model's small 8p channels. The split between the
+# 7p1/2 and 7p3/2 channels stays NIST's (it follows the angular ratios already).
+NIST_F_SCALE = {
+    'Fr': {'7d3/2': 0.7165, '7d5/2': 1.1375},
+}
+_user_tables.apply("nist.fscale", NIST_F_SCALE)
 
 # Ionic core polarizabilities (au) 
 # RRPA / relativistic coupled-cluster + experiment (Mitroy, Safronova & Clark
@@ -78,7 +92,9 @@ ALPHA_CORE_AU = {
     'Li': 0.1894, 'Na': 0.9947, 'K': 5.354,
     'Rb': 9.076,  'Cs': 15.644, 'Fr': 20.38,
 }
+_user_tables.apply("polarizability.alpha_core", ALPHA_CORE_AU)
 CORE_ELECTRONS = {'Li': 2, 'Na': 10, 'K': 18, 'Rb': 36, 'Cs': 54, 'Fr': 86}
+_user_tables.apply("polarizability.core_electrons", CORE_ELECTRONS)
 
 # CONVERSIONS & HELPERS
 
@@ -207,7 +223,7 @@ def find_nist_lines_file(element, f_values_dir=None):
     if f_values_dir is None:
         f_values_dir = reference_path("f_values")
     for ext in ('.csv', '.txt'):
-        path = os.path.join(f_values_dir, f"{element}_lines{ext}")
+        path = bundled_file("f_values", f_values_dir, f"{element}_lines{ext}")
         if os.path.exists(path):
             return path
     return None
@@ -533,6 +549,7 @@ def load_nist_fvalues(element, f_values_dir=None, verbose=True,
     _nist_jt_accs = {}
     _nist_jt_fik  = {}
     _L_LOCAL      = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
+    _f_scale = _user_tables.ticked_values("nist.fscale", NIST_F_SCALE, element)
 
     with open(nist_file, 'r', encoding='utf-8', errors='ignore') as _f:
         _raw = _f.read()
@@ -609,6 +626,10 @@ def load_nist_fvalues(element, f_values_dir=None, verbose=True,
             else:
                 _key  = (_nl_k, _nl_i)
                 _J_up = _Ji
+            _s = _f_scale.get(f"{_key[1]}{_J_up}")
+            if _s:                                   # a ticked row of NIST_F_SCALE: this level's decays
+                _gA *= _s
+                _fik = _fik * _s if _fik is not None else None
             if _key not in _nist_Ju_gA:
                 _nist_Ju_gA[_key]   = {}
                 _nist_Ju_var[_key]  = {}
@@ -879,11 +900,13 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
       fosc    (lower_nl, upper_nl) -> absorption f (multiplet / no-J)
       fosc_j  (lower_nl, upper_nl, J_upper) -> J-resolved absorption f
       acc_j   parallel Acc / note strings
+      fosc_jl (lower_nl, upper_nl, J_upper, J_lower) -> (f, acc) of one line, for rows giving both J
     """
     if f_values_dir is None:
         f_values_dir = reference_path("f_values")
-    path = os.path.join(f_values_dir, f"{element}_literature.json")
-    empty = dict(fosc={}, fosc_j={}, acc_j={}, model_j=set(), model=set(), n_rows=0, path=None)
+    path = bundled_file("f_values", f_values_dir, f"{element}_literature.json")
+    empty = dict(fosc={}, fosc_j={}, acc_j={}, fosc_jl={}, model_j=set(), model=set(), n_rows=0,
+                 path=None)
     if not os.path.exists(path):
         if verbose:
             print(f"  {element}: no literature overlay at {path}")
@@ -895,6 +918,7 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
     fosc = {}
     fosc_j = {}
     acc_j = {}
+    fosc_jl = {}
     model_j = set()   # rows that are model-potential values (ARC), not measurements or published tables
     model = set()
     for row in raw.get('transitions', []):
@@ -917,7 +941,9 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
         key = (lo, up)
         Ju = row.get('upper_J')
         acc = row.get('acc') or 'literature'
-        if Ju:
+        if Ju and row.get('lower_J'):
+            fosc_jl[(lo, up, str(Ju), str(row['lower_J']))] = (f, acc)
+        elif Ju:
             jkey = (lo, up, str(Ju))
             fosc_j[jkey] = f
             acc_j[jkey] = acc
@@ -931,22 +957,23 @@ def load_literature_fvalues(element, f_values_dir=None, verbose=True):
     if verbose:
         print(f"  {element}: literature overlay {len(raw.get('transitions', []))} rows "
               f"({len(fosc_j)} J-resolved, {len(fosc)} multiplet) from {path}")
-    return dict(fosc=fosc, fosc_j=fosc_j, acc_j=acc_j, model_j=model_j, model=model,
+    return dict(fosc=fosc, fosc_j=fosc_j, acc_j=acc_j, fosc_jl=fosc_jl, model_j=model_j, model=model,
                 n_rows=len(raw.get('transitions', [])), path=path)
 
 
 
 # ELEMENT DATA LOADER
 
-def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrapolation=None):
+def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrapolation=None,
+                 rydberg_file=None, transitions_file=None):
     """
-    Load rydberg + transitions JSON for one element.
+    Load rydberg + transitions JSON for one element (``rydberg_file`` / ``transitions_file`` pick other files).
     Returns a dict with everything needed for polarizability calculations.
     """
     if data_dir is None:
         data_dir = _default_data_dir()
-    ryd_file   = os.path.join(data_dir, f"{element}_rydberg.json")
-    trans_file = os.path.join(data_dir, f"{element}_transitions.json")
+    ryd_file   = rydberg_file or os.path.join(data_dir, f"{element}_rydberg.json")
+    trans_file = transitions_file or os.path.join(data_dir, f"{element}_transitions.json")
 
     if not os.path.exists(ryd_file):
         if verbose:
@@ -1039,6 +1066,7 @@ def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrap
         literature_fosc = lit['fosc'],
         literature_fosc_j = lit['fosc_j'],
         literature_acc_j  = lit['acc_j'],
+        literature_fosc_jl = lit['fosc_jl'],
         numerov_scale   = float(numerov_cal['scale']),
         numerov_cal     = numerov_cal,
         nist_fosc_jl    = nist_fosc_jl_,
@@ -1086,15 +1114,16 @@ def require_alpha_species(raw, context="this script"):
     return sp
 
 
-def load_cached_transitions(element, data_dir=None):
+def load_cached_transitions(element, data_dir=None, path=None):
     """
     Load precomputed transitions_gs / transitions_ex from
-    data_json/<element>_polarizability.json if present.
+    data_json/<element>_polarizability.json (or the file given as *path*) if present.
     Returns None if the file is missing or has no transition networks.
     """
     if data_dir is None:
         data_dir = _default_data_dir()
-    path = os.path.join(data_dir, f"{element}_polarizability.json")
+    if path is None:
+        path = os.path.join(data_dir, f"{element}_polarizability.json")
     if not os.path.exists(path):
         return None
     with open(path, encoding='utf-8') as f:
@@ -1322,6 +1351,13 @@ def _ls_state_term(t, state_label, data):
                 lines[(jl, ju)] = hit[0]
                 src_line = 'NIST'
                 continue
+            _ju, _jl = f"{ju}/2", f"{jl}/2"
+            _lit_line = (data.get('literature_fosc_jl') or {}).get((lo_nl, up_nl, _ju, _jl))
+            if _lit_line and not (data['nist_fosc'].get((lo_nl, up_nl))
+                                  or data['nist_fosc'].get((up_nl, lo_nl))):
+                lines[(jl, ju)] = _lit_line[0]
+                src_line = 'literature'
+                continue
             if Ll == 0 and not (data['nist_fosc'].get((lo_nl, up_nl)) or data['nist_fosc'].get((up_nl, lo_nl))):
                 # (never ahead of a NIST multiplet value, same order as the lifetimes stage)
                 # extrapolated ns -> np_J value (the only J-resolved literature rows this path takes)
@@ -1365,6 +1401,7 @@ SOURCE_REL_UNCERTAINTY = {
     'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'extrapolated': 0.20, 'ORCA': 0.25,
     'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
 }
+_user_tables.apply("uncertainty.source", SOURCE_REL_UNCERTAINTY)
 
 
 def fosc_rel_uncertainty(src, acc=None):

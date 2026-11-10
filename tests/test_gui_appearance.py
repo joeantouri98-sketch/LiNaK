@@ -116,7 +116,7 @@ def test_opening_an_output_shows_the_viewer(window, tmp_path):
     window.center_tabs.setCurrentWidget(window.overview_view)
     window._load_output(tmp_path / "out" / "data" / "Fe.json", "JSON")
     assert window.center_tabs.currentWidget() is window.viewer_stack
-    assert window.viewer_stack.currentWidget() is window.json_view
+    assert window.viewer_stack.currentWidget() is window.json_view_box
 
 
 def _drag_shut(splitter, index):

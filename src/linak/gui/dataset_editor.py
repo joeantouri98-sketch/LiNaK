@@ -25,6 +25,7 @@ from linak.core.fileio import atomic_write_text
 from linak.core.workspace import default_workspace
 
 from .dataset_templates import CSV_DATASET_TEMPLATES
+from .find_bar import with_find_bar
 from .project_io import ensure_project_safe_path
 
 
@@ -63,7 +64,7 @@ class DatasetEditorDialog(QDialog):
             self.editor = QPlainTextEdit()
             self.editor.setLineWrapMode(QPlainTextEdit.NoWrap)
             self.editor.setPlainText(initial_text if initial_text is not None else "{}")
-            layout.addWidget(self.editor, stretch=1)
+            layout.addWidget(with_find_bar(self.editor), stretch=1)
         else:
             self.table = QTableWidget()
             self.table.setAlternatingRowColors(True)
@@ -79,7 +80,7 @@ class DatasetEditorDialog(QDialog):
             self._populate_csv_table(
                 initial_text if initial_text is not None else CSV_DATASET_TEMPLATES["new"]
             )
-            layout.addWidget(self.table, stretch=1)
+            layout.addWidget(with_find_bar(self.table), stretch=1)
             self._build_table_buttons(layout)
 
         self._build_action_buttons(layout)

@@ -531,6 +531,16 @@ def _line_row(t, c: _Context) -> TransitionA | str:
                     fosc, g_upper, g_lower = _resolved
 
     # Priority 1b: curated literature overlay
+    literature_fosc_jl = c.sources.literature.get('fosc_jl')
+    if fosc is None and literature_fosc_jl and not c.orca_only:
+        # a published line, given for both J: an s level's single J is not in its label
+        _line = literature_fosc_jl.get((_ll_nl, _ul_nl, _J_up or default_lower_J(lu_char), _J_lo))
+        if _line:
+            fosc, fosc_acc = _line
+            fosc_source = 'literature'
+            fosc_delta  = ACC_UNCERTAINTY.get(fosc_acc, 0.20)
+            g_upper = J_degeneracy(_J_up or default_lower_J(lu_char)) or g_upper
+            g_lower = J_degeneracy(_J_lo) or g_lower
     if fosc is None and (literature_fosc_j or literature_fosc) and not c.orca_only:
         if _J_up and literature_fosc_j:
             _jkey = (_ll_nl, _ul_nl, _J_up)

@@ -3,6 +3,8 @@ name = "LiNak"
 dynamic = ["version"]
 description = "An integrated computational toolkit for alkali-atom AMO physics"
 readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 authors = [
     { name = "Youssef Antoury", email = "Joeantouri98@gmail.com" },
@@ -28,7 +30,7 @@ linak = "linak.cli:main"
 linak-gui = "linak.gui.app:main"
 
 [build-system]
-requires = ["setuptools>=68", "setuptools-scm>=8"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

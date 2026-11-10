@@ -43,6 +43,18 @@ def isolated_user_data(tmp_path_factory) -> Path:
 
 
 @pytest.fixture(autouse=True)
+def unpinned_workspace(monkeypatch) -> None:
+    """No test starts with a workspace pinned by an earlier one.
+
+    A pinned workspace (a MainWindow test, say) wins over LINAK_PROJECT_ROOT, so a later test that points the
+    environment at its own folder would silently read the real tables / data instead.
+    """
+    from linak.core import workspace
+
+    monkeypatch.setattr(workspace, "_ACTIVE", None)
+
+
+@pytest.fixture(autouse=True)
 def isolated_gui_settings(tmp_path, monkeypatch) -> None:
     """Give each test its own settings file.
 

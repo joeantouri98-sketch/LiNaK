@@ -39,6 +39,8 @@ IMPLEMENTATIONS = {
     "feshbach": "linak.pipelines.feshbach",
     "plotinteractive": "linak.pipelines.plotinteractive",
     "spectra": "linak.pipelines.spectra",
+    "polarizability_page": "linak.pipelines.polarizability_page",
+    "blackbody_page": "linak.pipelines.blackbody_page",
     "orbital3d": "linak.pipelines.orbital3d",
     "compare_elements": "linak.pipelines.compare_elements",
     "scattering_rate": "linak.pipelines.scattering_rate",

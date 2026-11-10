@@ -41,7 +41,7 @@ def test_pipeline_modules_expose_build_parser_and_main(name):
     ``main``, which only calls ``build_parser().parse_args(argv)``. With no
     arguments the parser either fills its defaults or exits 2 for a required
     positional. ``runorca``'s implementation lives under ``integrations/`` (a
-    different layer), so only it is exempt from the ``build_parser`` half.
+    different layer) and follows the same shape.
     """
     import argparse
     import importlib
@@ -51,8 +51,6 @@ def test_pipeline_modules_expose_build_parser_and_main(name):
 
     main_fn = getattr(impl, "main", None)
     assert callable(main_fn), f"{module_name} must expose main(argv)"
-    if not module_name.startswith("linak.pipelines."):
-        pytest.skip("implementation is outside pipelines/ (different layer)")
 
     build = getattr(impl, "build_parser", None)
     assert callable(build), f"{module_name} must expose build_parser()"

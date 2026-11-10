@@ -86,6 +86,8 @@ class HelpDialog(QDialog):
                     default = default(self.root)
                 if kind == "flag":
                     default_display = "off"
+                elif kind == "invflag":
+                    default_display = "on"
                 elif kind == "choice":
                     default_display = escape(str(default))
                     for choice in spec["choices"]:
@@ -120,36 +122,78 @@ class HelpDialog(QDialog):
     def _about_html():
         return """
         <h2>About this panel</h2>
-        <p>This is a thin control panel over the LiNaK pipelines. It runs
-        each stage as a <code>linak --pipeline</code> subprocess and displays
-        the JSON, CSV, and HTML files it produces. It does not reimplement
-        the physics.</p>
+        <p>This is a control panel over the LiNaK pipelines. It runs each
+        stage as a <code>linak --pipeline</code> subprocess and displays the
+        JSON, CSV, and HTML files it produces. It does not reimplement the
+        physics. LiNaK is free software under the GNU GPL v3 or later.</p>
         <h3>Output folder</h3>
         <p>Results go to LiNaK's per-user data folder unless another folder is
         chosen with <i>File &gt; Open output folder...</i> (<i>Use default
         output folder</i> goes back). The bundled data and example results
         are copied into the folder in use; existing files are never
-        overwritten. A LiNaK source checkout keeps its outputs under
-        <code>.linak/</code>.</p>
-        <h3>Species IDs</h3>
+        overwritten, so after an update re-run a stage to refresh its plot
+        or delete the old file first. A LiNaK source checkout keeps its
+        outputs under <code>.linak/</code>.</p>
+        <h3>Species IDs and new species</h3>
         <p>Bare element symbols such as <code>Na</code> and <code>Cs</code>
         represent neutral atoms. Ion IDs such as <code>Na_c1</code>,
-        <code>Mg_c1</code>, and <code>Na_a1</code> are accepted when registered.</p>
+        <code>Mg_c1</code>, and <code>Na_a1</code> are accepted when registered.
+        Choosing an atom with no bundled data (for example Mg) opens a dialog
+        to import its NIST levels and lines and type its numbers.
+        <i>Edit &gt; Species properties...</i> shows one element's built-in
+        values and data files and flags what is missing.</p>
+        <h3>Grotrian diagram</h3>
+        <p>The stage needs ORCA data (TD-DFT or SOC) for the species; run the
+        ORCA stage first. The page shows levels in columns by orbital l, with
+        fine-structure bars where J is known. Use the panel on the left to
+        filter by spectral region, level class, f-value source and grade, n,
+        wavelength, minimum f, and ground or excited lower level; click a
+        section title to fold it. Click a line or table row to select it,
+        shift-click to add, double-click to isolate, right-click for
+        <i>View more</i> (every value for that transition, including the
+        extrapolation model f with its 68% and 95% bands). Click a level or
+        an ORCA marker to pin it. <i>Export</i> saves the diagram as SVG, PNG
+        or PDF on a light background, or the matching transitions as CSV.
+        ORCA markers are drawn at their exact energy, in the column of the
+        nearest NIST multiplet.</p>
+        <h3>Extrapolated f-values</h3>
+        <p>For the supported alkalis the Lifetimes stage can extrapolate the
+        ns&rarr;np oscillator strengths to high n (<code>--extrapolation</code>,
+        set up in <i>Edit &gt; Preferences &gt; Extrapolator</i>). <i>Show</i>
+        records them next to the measured values; <i>Use</i> fills the gaps,
+        tagged <code>extrapolated</code>, and the polarizability and blackbody
+        stages follow. Run the later stages with the same setting.</p>
+        <h3>Tables and variables</h3>
+        <p><i>Edit &gt; Preferences &gt; Tables and variables</i> lists the
+        built-in constants and data files. Edits are kept in the
+        <code>tables/</code> folder of the output folder and never replace
+        the bundled values; Restore Defaults brings them back. Add... and
+        Remove work on the open lists.</p>
+        <h3>Save as</h3>
+        <p>The <i>Save as</i> field under a stage's output options files that
+        run's results under a name, so another run with different settings
+        does not overwrite them.</p>
         <h3>Offline plot rendering</h3>
         <p>Plots render offline with the bundled plotly.js. The GUI never
-        modifies the report files in the output folder.</p>
+        modifies the report files in the output folder. Exports from the
+        viewer ask where to save.</p>
         <h3>ORCA stages</h3>
         <p>The ORCA stages require ORCA to be installed and callable as
         <code>orca</code> on the system PATH, or named by the
         <code>ORCA_EXE</code> environment variable. SOC and NEVPT2 calculations can
         take a long time. Use Stop if a running subprocess must be cancelled.</p>
-        <h3>Grotrian diagram prerequisite</h3>
-        <p>The Grotrian diagram requires ORCA data to already exist for the
-        selected species. Run the ORCA stage first.</p>
-        <h3>Console and command preview</h3>
+        <h3>Console, find and tests</h3>
         <p>The command preview shows the command that will be executed. The
-        Console tab shows stdout and stderr from the running subprocess.</p>
+        Console tab shows stdout and stderr from the running subprocess.
+        Ctrl+F opens a find bar in the JSON viewer, the data editor and the
+        tables page. <i>Run &gt; Tests...</i> runs the test suite with
+        progress and details.</p>
         <h3>Custom dataset editor</h3>
         <p>The Edit menu provides editors for JSON and CSV datasets. JSON is
         validated before saving, and CSV headers and row widths are checked.</p>
+        <h3>Licence and credits</h3>
+        <p>GPL-3.0-or-later. Plotly.js (MIT) is bundled for the offline plots.
+        ARC (BSD-3-Clause) is an optional dependency. ORCA is separate software
+        with its own licence. Cite LiNaK and your data sources (NIST ASD and
+        others); see <code>REFERENCES.md</code>.</p>
         """

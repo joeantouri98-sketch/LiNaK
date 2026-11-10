@@ -3838,12 +3838,11 @@ p {
     </p>
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.8">
       <li><code>*_grotrian.html</code>: primary Grotrian; ionization line always drawn (0&nbsp;eV Absolute, IE Excitation)</li>
-      <li><code>*_ee_grotrian.html</code>: excited↔excited by $l$ column</li>
       <li><code>*_spectrum_levels.html</code></li>
     </ul>
     <p>
-      <code>--plots N</code> writes plots 1..N only (1=grotrian, 2=+spectrum_levels,
-      3=+ee_grotrian; default all). Useful for quick method comparisons.
+      <code>--plots N</code> writes plots 1..N only (1=grotrian, 2=+spectrum_levels;
+      default all). Useful for quick method comparisons.
     </p>
     <p>
       <code>--extra</code> / <code>-e</code> (repeatable) overlays additional
@@ -4539,7 +4538,6 @@ linak --pipeline scattering_rate --element Na --line D2
     <table class="def-table">
       <tr><th>File</th><th>What it shows</th></tr>
       <tr><td><code>Na_grotrian.html</code></td><td>Levels + E1 arrows; ionization line at IE in Excitation mode</td></tr>
-      <tr><td><code>Na_ee_grotrian.html</code></td><td>$l$-column excited↔excited Grotrian</td></tr>
       <tr><td><code>Na_spectrum_levels.html</code></td><td>Interactive spectrum / levels</td></tr>
       <tr><td><code>Na_spectra.html</code></td><td>Absorption / emission bars</td></tr>
       <tr><td><code>Na_orbital3d.html</code></td><td>Orbital viewer (QDT radial; volume or isosurface)</td></tr>
@@ -4572,7 +4570,7 @@ linak --pipeline scattering_rate --element Na --line D2
       <div class="card">
         <h4>plots/Na/ (selected)</h4>
         <ul style="font-size:12px;color:var(--text2);padding-left:18px;line-height:1.7;font-family:var(--mono)">
-          <li>Na_grotrian.html · Na_ee_grotrian.html</li>
+          <li>Na_grotrian.html</li>
           <li>Na_spectrum_levels.html</li>
           <li>Na_polarizability.html · Na_tweezer.html</li>
           <li>Na_hyperfine.html · Na_zeeman.html</li>

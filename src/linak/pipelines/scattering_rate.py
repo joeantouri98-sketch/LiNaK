@@ -24,6 +24,7 @@ Usage:
 
 from __future__ import annotations
 
+from linak.core import user_tables as _user_tables
 import argparse
 import json
 import os
@@ -66,6 +67,7 @@ FALLBACK = {
            'D1':{'wl':817.165,'A':3.286e7,'Isat':3.880,'tau':30.431,'vrec':0.220,'Erec': 83.3},
            'D2':{'wl':718.183,'A':4.254e7,'Isat':4.010,'tau':23.505,'vrec':0.250,'Erec': 83.3}},
 }
+_user_tables.apply("scattering.fallback", FALLBACK)
 
 EL_NAMES = ['Li','Na','K','Rb','Cs','Fr']
 
@@ -160,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
         elements = FALLBACK
         print("comparison_table.json not found — using fallback data")
 
-    el_names = [e for e in EL_NAMES if e in elements]
+    el_names = [e for e in EL_NAMES if e in elements] + [e for e in elements if e not in EL_NAMES]   # a user-added element follows the six
     default_el = require_neutral_species(args.element, "scattering_rate")["species_id"]
     if default_el not in el_names:
         raise MissingDataError(

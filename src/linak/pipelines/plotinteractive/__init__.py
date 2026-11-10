@@ -8,7 +8,6 @@ Features:
 - Grotrian diagram with allowed E1 transition arrows
 - ORCA TD-DFT excitations overlaid for comparison
 - ORCA CASSCF/SOC D-lines overlaid automatically when data_json/<element>_soc.json exists
-- Plot 3: excited→excited Grotrian by orbital l (NIST / Numerov / Coulomb)
 - Interactive spectrum
 - Export to HTML
 
@@ -19,12 +18,12 @@ Usage: linak --pipeline plotinteractive <SPECIES_ID> [options]
       --extra / -e  overlay another ORCA-format JSON (repeatable); source
                     name is the filename stem after species_ (e.g. Na_BLY3P.json -> BLY3P).
                     Default: extras must share the same species_id prefix.
-      --plots N     write plots 1..N only (1=grotrian, 2=+spectrum_levels,
-                    3=+ee_grotrian). Example: --plots 1
+      --plots N     write plots 1..N only (1=grotrian, 2=+spectrum_levels).
+                    Example: --plots 1
 
 Layout: ``inputs`` reads the data folder, ``view`` applies the energy axis and
-the display choices, then one module per plot writes its report (``grotrian``,
-``spectrum``, ``ee_grotrian``).
+the display choices, then one module per plot writes its report (``grotrian_page``,
+``spectrum``).
 """
 
 from __future__ import annotations
@@ -36,18 +35,17 @@ from collections import defaultdict
 from linak.core.species import resolve_species
 from linak.core.workspace import Workspace
 
-from .ee_grotrian import plot_ee_grotrian
-from .grotrian import plot_grotrian
+from .grotrian_page import plot_grotrian
 from .inputs import load_inputs
 from .spectrum import plot_spectrum
 from .view import View, prepare_view
 
 
 def _parse_plots_max(spec):
-    """Return highest plot index to generate (1..3); argparse ``type=``."""
+    """Return highest plot index to generate (1..2); argparse ``type=``."""
     spec = (spec or 'all').strip().lower()
-    if spec in ('all', '*', '1-3', '1,2,3'):
-        return 3
+    if spec in ('all', '*', '1-2', '1,2'):
+        return 2
     wanted = set()
     for part in spec.split(','):
         part = part.strip()
@@ -64,9 +62,9 @@ def _parse_plots_max(spec):
                 wanted.add(int(part))
             except ValueError:
                 raise argparse.ArgumentTypeError(
-                    f"invalid value {part!r} (use 1..3, e.g. --plots 1)") from None
-    if not wanted or any(n < 1 or n > 3 for n in wanted):
-        raise argparse.ArgumentTypeError("select plot numbers in 1..3 (e.g. --plots 1)")
+                    f"invalid value {part!r} (use 1..2, e.g. --plots 1)") from None
+    if not wanted or any(n < 1 or n > 2 for n in wanted):
+        raise argparse.ArgumentTypeError("select plot numbers in 1..2 (e.g. --plots 1)")
     return max(wanted)
 
 
@@ -81,15 +79,23 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Species id: symbol (Na) or ion stem (Mg_c1, Na_a1)')
     _parser.add_argument('--soc-only', '--soc', action='store_true',
                         help='Plot only data/<species>_soc.json (skip TD-DFT)')
+    for _kind, _what in (('rydberg', 'Rydberg'), ('transitions', 'Transitions'), ('lifetimes', 'Lifetimes')):
+        _parser.add_argument(f'--{_kind}-file', default=None, metavar='FILE',
+                             help=f'{_what} data to read instead of <species>_{_kind}.json '
+                                  '(a path, or a name under the data folder).')
+    _parser.add_argument('--soc-file', default=None, metavar='FILE',
+                        help='SOC data to overlay (or plot with --soc-only). Bare name or stem resolves '
+                             'under data_json/; default: <species>_soc.json. Must share the species id.')
+    _parser.add_argument('--no-soc-overlay', action='store_true',
+                        help='Do not overlay the SOC levels on the TD-DFT diagram.')
     _parser.add_argument('--extra', '-e', action='append', default=[],
                         metavar='FILE',
                         help='ORCA-format JSON to overlay (repeatable). '
                              'Bare name or stem resolves under data_json/. '
                              'Must share the same species_id prefix.')
     _parser.add_argument('--plots', default='all', metavar='N', type=_parse_plots_max,
-                        help='Highest plot to write: 1=grotrian only, 2=+spectrum, '
-                             '3=+ee_grotrian (default: all). '
-                             'Also accepts 1,2 or 1-3 (max number wins).')
+                        help='Highest plot to write: 1=grotrian only, 2=+spectrum '
+                             '(default: all). Also accepts 1,2 or 1-2 (max number wins).')
 
     # Energy reference for the ORCA/SOC level axis.
     _parser.add_argument('--energy-shift', choices=('1', '2', '3'), default='1',
@@ -129,12 +135,6 @@ def build_parser() -> argparse.ArgumentParser:
                          help='Lower wavelength bound (nm) when --orca-display is 4.')
     _parser.add_argument('--orca-wl-max', type=float, default=None,
                          help='Upper wavelength bound (nm) when --orca-display is 4.')
-
-    # Plot 3 (excited-to-excited Grotrian) display.
-    _parser.add_argument('--plot3-choice', choices=('1', '2', '3', '4'), default='1',
-                         help='Plot 3 transitions: 1=NIST only (default), '
-                              '2=NIST + Numerov (n ≤ 8), 3=NIST + Numerov (n ≤ 12), '
-                              '4=all theoretical (capped at 300 strongest).')
 
     # Optional sub-launches (further pipeline stages run from here).
     _parser.add_argument('--also-orbital3d', action='store_true',
@@ -218,9 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     element = species["species_id"]  # stem used for all data_json / plot paths
     if species["kind"] == "ion":
         print(f" Species: {element} ({species['label']}, ion)")
-    if cli.plots < 3:
-        print(f" --plots: writing plots 1..{cli.plots} only "
-              f"(skipping {', '.join(str(n) for n in range(cli.plots + 1, 4))})")
+    if cli.plots < 2:
+        print(" --plots: writing plot 1 only (skipping 2)")
     # Workspace roots for this run, resolved now
     data_dir = str(Workspace.current().data_json_dir)
     plots_dir = Workspace.current().plots_dir
@@ -233,8 +232,6 @@ def main(argv: list[str] | None = None) -> int:
     plot_grotrian(inputs, view, output_dir)
     if cli.plots >= 2:
         plot_spectrum(inputs, view, output_dir)
-    if cli.plots >= 3:
-        plot_ee_grotrian(inputs, view, cli.plot3_choice, output_dir)
     _print_summary(element, view, cli.plots, output_dir)
 
     _run_extra_viewers(cli, element, inputs.rydberg, data_dir, plots_dir)
@@ -242,40 +239,27 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _print_summary(element, view: View, plots_max, output_dir) -> None:
-    if plots_max <= 2:
-        print("\n" + "=" * 70)
-        print(f" INTERACTIVE PLOTS CREATED (--plots {plots_max})" if plots_max == 1
-              else f"INTERACTIVE PLOTS CREATED (--plots {plots_max})")
-        print("=" * 70)
-        print(f"\n Saved in: {os.path.abspath(output_dir)}/")
-        if plots_max == 1:
-            print(f"   1. {element}_grotrian.html          - Grotrian diagram + transitions")
-        print({1: "   (plots 2-3 skipped)", 2: "   (plot 3 skipped)"}[plots_max])
-        print("=" * 70)
-        return
-
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" INTERACTIVE PLOTS CREATED")
-    print("="*70)
-    print(f"\n📂 All files saved in: {output_dir}/")
+    print("=" * 70)
+    print(f"\n All files saved in: {os.path.abspath(output_dir)}/")
     print("\n Interactive HTML files:")
     print(f"   1. {element}_grotrian.html          - Grotrian diagram + transitions")
-    print(f"   2. {element}_spectrum_levels.html   - Spectrum + energy levels")
-    print(f"   3. {element}_ee_grotrian.html        - Grotrian by l (gs + ee transitions)")
+    if plots_max >= 2:
+        print(f"   2. {element}_spectrum_levels.html   - Spectrum + energy levels")
+    else:
+        print("   (plot 2 skipped)")
     print("\n INTERACTIVE FEATURES:")
-    print("   - Hover over levels/arrows → See energy, wavelength, label")
-    print("   - Click legend → Toggle series on/off")
-    print("   - Plot 1 (Grotrian) → Toggle transitions by spectral region")
-    print("   - Plot 3 → l-column Grotrian, region-coloured arrows, filter + isolate")
-    print("   - Click and drag → Zoom | Double-click → Reset")
+    print("   - Hover over levels/arrows -> energy, wavelength, f, A, lifetimes")
+    print("   - Grotrian: filter by region, source, f, n; ground / excited lower level;")
+    print("     right-click a transition for 'View more' (incl. 68% / 95% extrapolation bands)")
+    print("   - Click and drag -> Zoom | Double-click -> Reset")
 
     if view.use_transitions:
-        print(f"\n TRANSITIONS: {len(view.visible_transitions)} displayed")
+        print(f"\n TRANSITIONS: {len(view.visible_transitions)} available")
         rc = defaultdict(int)
         for t in view.visible_transitions:
             rc[t['region']] += 1
         for region, count in rc.items():
             print(f"   {region:15s}: {count}")
-
-    print(f"\n💾 File location: {os.path.abspath(output_dir)}")
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)

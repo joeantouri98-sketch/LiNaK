@@ -1,0 +1,466 @@
+<meta charset="utf-8"><title>$!TITLE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --bg:#fcfcfb; --panel:#f3f2ef; --edge:#dedcd6; --ink:#161513; --ink2:#55534e; --muted:#7d7a73; --grid:#e8e6e1;
+  --nist:#2a78d6; --soc:#eb6834; --td:#6250d6; --line:#6b6963; --band:#e5f1ec; --cont:#efeeea; --sel:#0e9f6e; --hl:#fff3c4;
+  --r-xray:#6b2fd6; --r-vuv:#7a3fe0; --r-uv:#2a5bd6; --r-vis:#e8710a; --r-nir:#c8261c; --r-mir:#7a7770; --r-mic:#9a978f; --qdt:#7fa6dc; --theo:#b03aa8; --ov3:#2e8b57; --ov4:#a23b72; --ov5:#c08a00; --ov6:#4a7a96;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;margin:0;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:12px}
+h1{font-size:21px;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--edge);border-radius:4px;padding:1px 6px}
+.hdr-btns{margin-left:auto;display:flex;gap:8px}
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);gap:14px;align-items:start}
+.app.closed{grid-template-columns:minmax(0,1fr)}
+.app.closed .rail{display:none}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.rail h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0;min-width:0}
+.row label{flex:1;min-width:0;cursor:pointer}
+.row .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chip{width:12px;height:12px;border-radius:3px;flex:none}
+.bar{width:16px;height:0;border-top:3px solid;flex:none;border-radius:2px}
+input[type=checkbox],input[type=radio]{accent-color:var(--nist);margin:0}
+input[type=range]{width:100%;accent-color:var(--nist)}
+input[type=number],input[type=search],input[type=text]{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;min-width:0;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lbl{font-size:12px;color:var(--ink2);margin:6px 0 3px}
+.sl{margin:6px 0}.sl .top{display:flex;justify-content:space-between;color:var(--ink2);font-size:12.5px}
+.sl .v{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.seg{display:flex;border:1px solid var(--edge);border-radius:6px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:var(--ink2);border:0;padding:5px 2px;font:inherit;font-size:12.5px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--edge)}
+.seg button[aria-pressed=true]{background:var(--nist);color:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:4px 12px}
+.checks label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px}
+.hint{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+.main{min-width:0;display:flex;flex-direction:column;gap:10px}
+.plot{border:1px solid var(--edge);border-radius:8px;background:var(--bg);overflow:hidden}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px 0;flex-wrap:wrap}
+.count{font-size:12.5px;color:var(--ink2)}
+#plot{width:100%;height:680px}
+.note{color:var(--ink2);font-size:12.5px;line-height:1.5;max-width:100ch;margin:0}
+.card{border:1px solid var(--edge);border-radius:8px;padding:10px 12px;min-width:0}
+.card .bar2{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.card .bar2 b{font-size:13px;font-weight:600;margin-right:auto}
+.btn{background:transparent;color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--nist);border-color:var(--nist);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 12px 4px 0;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11.5px;cursor:pointer;user-select:none}
+th.nosort{cursor:default}
+th .arr{font-size:9px;margin-left:3px}
+td.m{font-family:var(--mono);font-size:12px}
+tbody tr.t{cursor:pointer;user-select:none;-webkit-user-select:none}
+#plot,.ptop{user-select:none;-webkit-user-select:none}
+tbody tr.t:hover{background:var(--panel)}
+tbody tr.sel{background:var(--hl)}
+.empty{color:var(--muted);font-size:12.5px}
+.pager{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.j{font-size:.85em;vertical-align:sub;line-height:0}
+.cm{position:fixed;z-index:50;background:var(--bg);border:1px solid var(--edge);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:4px;min-width:200px}
+.cm button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-radius:5px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.cm button:hover{background:var(--panel)}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:10px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dlg h3{margin:0 0 2px;font-size:17px}
+.dlg h4{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dlg .g{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:2px 12px;font-size:13px}
+.dlg .g span:nth-child(odd){color:var(--ink2)}
+.dlg .g span:nth-child(even){font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:4px;padding:0 4px}
+.rail h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.rail h2::before{content:'▾';font-size:10px;width:10px;display:inline-block;transition:transform .12s}
+.rail section.shut>h2::before{transform:rotate(-90deg)}
+.rail section.shut>*:not(h2){display:none}
+.rail section.shut>h2{margin-bottom:0}
+.rail h2:focus-visible{outline:2px solid var(--nist);outline-offset:2px;border-radius:3px}
+.railtools{display:flex;gap:8px}.railtools .btn{flex:1}
+@media print{header,.rail,.note,.card,.ptop button,.cm,.ov{display:none!important}.app{display:block}body{background:#fff}}
+</style>
+
+<header>
+  <h1 id="h1"></h1>
+  <span class="sub" id="sub"></span>
+  <div class="hdr-btns">
+    <button class="btn" id="exportbtn" aria-haspopup="menu">Export ▾</button>
+    <button class="btn" id="railbtn" aria-expanded="true">Hide filters</button>
+    <button class="btn" id="theme" aria-label="Switch theme">Theme: auto</button>
+  </div>
+</header>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Filters">
+    <section class="railtools"><button class="btn" id="colall">Collapse all</button><button class="btn" id="expall">Expand all</button></section>
+    <section><h2>Data sources</h2><div id="srcs"></div><div class="row" id="orcalines-row" style="display:none"><input type="checkbox" id="orcalines"><label for="orcalines">ORCA lines from the ground state</label></div></section>
+    <section><h2>Spectral region</h2>
+      <div id="regions"></div>
+      <div class="row" style="gap:6px"><button class="btn" id="reg-all">All</button><button class="btn" id="reg-none">None</button>
+        <div class="seg" style="margin-left:auto;width:132px" id="colmode" role="group" aria-label="Colour lines by"><button data-m="region" aria-pressed="true">Region</button><button data-m="mono" aria-pressed="false">Mono</button></div></div>
+    </section>
+    <section><h2>Lower level</h2><div class="checks"><label><input type="checkbox" data-g="kind" value="gs" checked>Ground state</label><label><input type="checkbox" data-g="kind" value="ee" checked>Excited → excited</label></div></section>
+    <section><h2>Orbital type, lower to upper</h2><div class="checks" id="pairs"></div></section>
+    <section><h2>f-value source</h2><div id="fsrcs"></div></section>
+    <section><h2>Levels, upper–lower</h2><div id="lsrcs"></div></section>
+    <section><h2>f accuracy grade</h2><div class="checks" id="accs"></div></section>
+    <section><h2>Ranges</h2>
+      <div class="lbl">Wavelength (nm, vacuum)</div><div class="two"><input type="number" id="wl-min" placeholder="min" aria-label="Minimum wavelength"><input type="number" id="wl-max" placeholder="max" aria-label="Maximum wavelength"></div>
+      <div class="lbl">ΔE (meV)</div><div class="two"><input type="number" id="de-min" placeholder="min" aria-label="Minimum energy difference"><input type="number" id="de-max" placeholder="max" aria-label="Maximum energy difference"></div>
+      <div class="lbl">Upper level n</div><div class="two"><input type="number" id="un-min" placeholder="min" aria-label="Minimum upper n"><input type="number" id="un-max" placeholder="max" aria-label="Maximum upper n"></div>
+      <div class="lbl">Lower level n</div><div class="two"><input type="number" id="ln-min" placeholder="min" aria-label="Minimum lower n"><input type="number" id="ln-max" placeholder="max" aria-label="Maximum lower n"></div>
+      <div class="lbl">Δn (upper − lower)</div><div class="two"><input type="number" id="dn-min" placeholder="min" aria-label="Minimum delta n"><input type="number" id="dn-max" placeholder="max" aria-label="Maximum delta n"></div>
+      <div class="lbl">Minimum f</div><input type="number" id="fmin" placeholder="0" min="0" step="any" aria-label="Minimum oscillator strength">
+      <div class="sl"><div class="top"><span>Min A</span><span class="v" id="v-mina"></span></div><input type="range" id="mina" step="0.05" aria-label="Minimum A"></div>
+      <div class="lbl">State label search</div><input type="search" id="lsearch" placeholder="e.g. 3p, 5s, d3/2" aria-label="State label search">
+      <div class="hint">Matches the upper or the lower label.</div>
+    </section>
+    <section><h2>Arrows</h2>
+      <div class="seg" id="dirmode" role="group" aria-label="Arrow direction"><button data-d="none" aria-pressed="false">Line</button><button data-d="abs" aria-pressed="true">↑ Abs</button><button data-d="emis" aria-pressed="false">↓ Emis</button><button data-d="both" aria-pressed="false">Both</button></div>
+      <div class="sl"><div class="top"><span>Draw at most</span><span class="v" id="v-cap"></span></div><input type="range" id="cap" min="10" max="3000" step="10" value="60" aria-label="Maximum lines drawn"></div>
+      <div class="hint">The strongest lines are drawn first, with a fair share per region. The table lists every match.</div>
+      <div class="row"><input type="checkbox" id="lbl" checked><label for="lbl">Wavelength labels, strongest 10</label></div>
+    </section>
+    <section><h2>Levels</h2>
+      <div class="sl"><div class="top"><span>Highest n</span><span class="v" id="v-nmax"></span></div><input type="range" id="nmax" min="2" max="50" step="1" value="8" aria-label="Highest n"></div>
+      <div class="row"><input type="checkbox" id="tau" checked><label for="tau">Lifetime on right bar</label></div>
+      <div class="row"><input type="checkbox" id="hideno"><label for="hideno">Hide levels with no visible transitions</label></div>
+    </section>
+    <section><h2>Axis</h2>
+      <div class="seg" id="unitmode" role="group" aria-label="Energy unit"><button data-u="eV" aria-pressed="true">eV</button><button data-u="cm" aria-pressed="false">cm⁻¹</button><button data-u="THz" aria-pressed="false">THz</button></div>
+    </section>
+    <section><button class="btn" id="reset" style="width:100%">Reset all filters</button></section>
+  </aside>
+  <div class="main">
+    <div class="plot">
+      <div class="ptop"><span class="count" id="count"></span></div>
+      <div id="plot"></div>
+    </div>
+    <p class="note">Levels sit in columns by orbital l. NIST levels with a known J are drawn as side-by-side fine-structure bars, not to scale. QDT-model levels have no J and are drawn dotted at full width. Line weight follows log f. Wavelengths are vacuum values. ORCA markers are drawn at their exact energy, in the column of the nearest NIST multiplet. Click a line to select it, shift-click to add, double-click to isolate. Click a level or an ORCA marker to pin it. Drag on the plot to zoom into the dense Rydberg region and double-click to reset.</p>
+    <div class="card">
+      <div class="bar2"><b>Matching transitions</b>
+        <input type="search" id="tsearch" placeholder="Search matches, e.g. 3p, 589, Vis" style="max-width:240px" aria-label="Search matching transitions">
+        <button class="btn pri" id="isolate" disabled>Isolate selected</button>
+        <button class="btn" id="clearsel" disabled>Clear selection</button>
+        <button class="btn" id="copyT">Copy CSV</button></div>
+      <div class="hint" id="selinfo" style="margin:0 0 6px"></div>
+      <div class="tw"><table id="ttab"><thead></thead><tbody></tbody></table></div>
+      <div class="pager" style="margin-top:8px"><button class="btn" id="pprev">◀</button><span id="pinfo"></span><button class="btn" id="pnext">▶</button></div>
+    </div>
+    <div class="card"><div class="bar2"><b>Pinned levels and markers</b><button class="btn" id="copy">Copy CSV</button><button class="btn" id="clear">Clear</button></div><div class="tw" id="pintable"></div></div>
+  </div>
+</div>
+<script>
+const D=$!DATA_JS;
+const F={eV:1,cm:8065.544,THz:241.7989}, UL={eV:'Energy (eV)',cm:'Wavenumber (cm⁻¹)',THz:'Frequency (THz)'};
+const LORDER='spdfghik';
+const REG=[['X-ray',10,'--r-xray'],['Vacuum UV',200,'--r-vuv'],['UV',380,'--r-uv'],['Visible',750,'--r-vis'],['Near-IR',2500,'--r-nir'],['Mid/Far-IR',1e5,'--r-mir'],['Microwave',Infinity,'--r-mic']];
+const regionOf=w=>(REG.find(r=>w<r[1])||REG[REG.length-1])[0];
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fr=s=>{const [a,b]=s.split('/');return b?a/b:+a};
+const sci=x=>{if(!(x>0))return '–';const e=Math.floor(Math.log10(x));return (x/10**e).toFixed(2)+'×10^'+e};
+const fmtF=f=>f==null?'–':f>=0.01?f.toFixed(4):f.toExponential(2);
+const gradeOf=a=>a==null?'–':String(a).startsWith('extrap')?'extrap':a;
+const num=id=>{const v=$(id).value;return v===''?null:+v};
+const rng=(v,lo,hi)=>(lo==null||v>=lo)&&(hi==null||v<=hi);
+const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+// ---- columns: one per orbital letter present in the levels
+const lets=[...new Set(D.levels.map(l=>l.l||'?'))].sort((a,b)=>{const x=LORDER.indexOf(a),y=LORDER.indexOf(b);return (x<0?99:x)-(y<0?99:y)});
+const COL={};lets.forEach((l,i)=>COL[l]=i);
+const lcol=l=>COL[l.l||'?'];
+const XR=[-.65,lets.length-.3];
+const lowJ={};lets.forEach(l=>{const i=LORDER.indexOf(l);if(i>0)lowJ[l]=(2*i-1)+'/2'});
+const L={};D.levels.forEach(l=>{l.g=l.J?l.J.split(',').reduce((s,j)=>s+2*fr(j)+1,0):null;l.nl=(l.n!=null?l.n:'')+(l.l||'');l.nn=l.n==null?0:l.n;L[l.k]=l});
+const full=l=>!l.J||l.l==='s'||l.J.includes(',')||!l.l;
+function span(l){const x=lcol(l);if(full(l))return [x-.31,x+.31];return l.J===lowJ[l.l]?[x-.31,x-.01]:[x+.01,x+.3]}
+const mid=l=>{const [a,b]=span(l);return (a+b)/2};
+const lab=l=>l.pl||l.k;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const nice=l=>lab(l);
+const nh=l=>{const m=/^(.*?)(\d+\/\d+)$/.exec(lab(l));return m?esc(m[1])+'<span class="j">'+m[2]+'</span>':esc(lab(l))};
+const cls=l=>l.src==='NIST'?(l.th?'NIST theo.':'NIST'):(l.src==='NIST'||l.src==null?'NIST':(l.src==='QDT model'?'QDT':l.src));
+// ---- transitions: [u,l,wl,A,f,fsrc,facc,sigmaA,fdelta]; extras sparse
+const T=D.trans.map((r,i)=>{const u=L[r[0]],lo=L[r[1]];
+  return {id:i,u:r[0],l:r[1],wl:r[2],A:r[3],f:r[4],fs:r[5]||'–',fa:r[6],grade:gradeOf(r[6]),sA:r[7],fd:r[8],ex:D.extra[i]||{},ls:cls(u)+'–'+cls(lo),up:u,lo:lo,
+    region:regionOf(r[2]),dn:(u.nn&&lo.nn)?u.nn-lo.nn:0,pair:(lo.l||'?')+'→'+(u.l||'?'),dE:(u.E-lo.E)*1000,kind:r[1]===D.gs?'gs':'ee'}});
+const hasA=T.some(t=>t.A>0), hasF=T.some(t=>t.f>0);
+function branch(t){return t.A>0&&t.up.At>0?100*t.A/t.up.At:null}
+// ---- overlays
+const OVC=['--soc','--td','--ov3','--ov4','--ov5','--ov6'], OVS=['line-ew-open','diamond-open','square-open','cross-open','triangle-up-open','x-open'];
+const mult={};D.levels.filter(l=>l.src==='NIST'&&l.nn&&l.nn<=8).forEach(l=>{(mult[l.nl]=mult[l.nl]||{k:l.nl,l:l.l,n:l.nn,Es:[]}).Es.push(l.E)});
+Object.values(mult).forEach(m=>m.E=m.Es.reduce((a,b)=>a+b)/m.Es.length);
+function match(E){let b=null;Object.values(mult).forEach(m=>{if(!b||Math.abs(m.E-E)<Math.abs(b.E-E))b=m});return b}
+const OV=D.overlays.map((o,i)=>({...o,i,ci:OVC[i%OVC.length],sym:OVS[i%OVS.length],dx:.46+.16*(i%4),levels:o.levels.map((x,j)=>({...x,id:i*100000+j,m:match(x.E)}))}));
+const OVID={};OV.forEach(o=>o.levels.forEach(x=>OVID[x.id]=[o,x]));
+
+const S={unit:'eV',theme:'auto',dir:'abs',col:'region',sel:new Set(),isolate:false,page:0,sort:{k:'wl',d:1},tq:'',rail:true};
+let pins=[];
+// ---- header + filter controls
+$('h1').textContent=D.label+' Grotrian diagram';
+$('sub').textContent=D.levels.length.toLocaleString()+' levels, '+T.length.toLocaleString()+' transitions'+(D.shiftLabel!=='Excitation'?' · '+D.shiftLabel+' energy axis':'');
+const cnt=k=>{const m={};T.forEach(t=>m[t[k]]=(m[t[k]]||0)+1);return m};
+const chk=(g,v,labl,n,extra='')=>`<div class="row"><input type="checkbox" data-g="${g}" id="${g}-${String(v).replace(/\W/g,'_')}" value="${esc(v)}" checked>${extra}<label for="${g}-${String(v).replace(/\W/g,'_')}">${esc(labl)}</label><span class="n">${n}</span></div>`;
+$('srcs').innerHTML=`<div class="row"><input type="checkbox" id="s-lv" checked><span class="chip" style="background:var(--nist)"></span><label for="s-lv">Levels</label><span class="n">${D.levels.length}</span></div>`+
+  OV.map(o=>`<div class="row"><input type="checkbox" data-ov="${o.i}" id="s-ov${o.i}" checked><span class="chip" style="background:var(${o.ci})"></span><label for="s-ov${o.i}">${esc(o.name)}</label><span class="n">${o.levels.length}</span></div>`).join('');
+if(OV.length)$('orcalines-row').style.display='';
+const rc=cnt('region'),regionsPresent=REG.filter(r=>rc[r[0]]);
+$('regions').innerHTML=regionsPresent.map(r=>chk('reg',r[0],r[0],rc[r[0]],`<span class="bar" style="border-color:var(${r[2]})"></span>`)).join('');
+const fsc=cnt('fs'),lsc=cnt('ls'),pairs=[...new Set(T.map(t=>t.pair))].sort(),accs=[...new Set(T.map(t=>t.grade))].sort();
+$('fsrcs').innerHTML=Object.keys(fsc).map(k=>chk('fs',k,k,fsc[k])).join('');
+$('lsrcs').innerHTML=Object.keys(lsc).map(k=>chk('ls',k,k,lsc[k])).join('');
+$('pairs').innerHTML=pairs.map(v=>`<label><input type="checkbox" data-g="pair" value="${esc(v)}" checked>${esc(v.replace('→','–'))}</label>`).join('');
+$('accs').innerHTML=accs.map(v=>`<label><input type="checkbox" data-g="acc" value="${esc(v)}" checked>${esc(v)}</label>`).join('');
+const logA=T.filter(t=>t.A>0).map(t=>Math.log10(t.A));
+const aMin=logA.length?Math.floor(Math.min(...logA)*10)/10:0,aMax=logA.length?Math.ceil(Math.max(...logA)*10)/10:1;
+$('mina').min=aMin;$('mina').max=aMax;$('mina').value=aMin;
+if(!hasA){$('mina').closest('.sl').style.display='none'}
+if(!hasF){$('fmin').style.display='none';$('fmin').previousElementSibling.style.display='none'}
+const nTop=Math.max(3,...D.levels.map(l=>l.nn));
+$('nmax').max=nTop;$('nmax').value=Math.min(8,nTop);
+const nDef=Math.min(8,nTop);
+const checked=g=>new Set([...document.querySelectorAll(`input[data-g="${g}"]:checked`)].map(i=>i.value));
+function ctrl(){return {mina:10**+$('mina').value,aAll:!hasA||+$('mina').value<=aMin+1e-9,nmax:+$('nmax').value,cap:+$('cap').value,
+  lv:$('s-lv').checked,ovOn:OV.map(o=>$('s-ov'+o.i).checked),orcal:$('orcalines').checked,lbl:$('lbl').checked,tau:$('tau').checked,hideno:$('hideno').checked,
+  reg:checked('reg'),pair:checked('pair'),acc:checked('acc'),fs:checked('fs'),ls:checked('ls'),kind:checked('kind'),fmin:num('fmin'),
+  wl:[num('wl-min'),num('wl-max')],de:[num('de-min'),num('de-max')],un:[num('un-min'),num('un-max')],ln:[num('ln-min'),num('ln-max')],dn:[num('dn-min'),num('dn-max')],q:$('lsearch').value.trim().toLowerCase()}}
+function pass(t,c){
+  if(t.up.nn>c.nmax||t.lo.nn>c.nmax)return false;
+  if(!c.reg.has(t.region)||!c.pair.has(t.pair)||!c.acc.has(t.grade)||!c.fs.has(t.fs)||!c.ls.has(t.ls)||!c.kind.has(t.kind))return false;
+  if(!c.aAll&&!(t.A>=c.mina))return false;
+  if(c.fmin&&!(t.f>=c.fmin))return false;
+  if(!rng(t.wl,...c.wl)||!rng(t.dE,...c.de)||!rng(t.up.nn,...c.un)||!rng(t.lo.nn,...c.ln)||!rng(t.dn,...c.dn))return false;
+  if(c.q&&!(t.u.toLowerCase().includes(c.q)||t.l.toLowerCase().includes(c.q)))return false;
+  return true}
+const matching=c=>T.filter(t=>pass(t,c));
+function importance(t){const f=t.f||0;return (t.up.nn<=6&&t.lo.nn<=6?1000:0)+(f>=.05?500:0)+f*100-(t.up.nn+t.lo.nn)}
+function pick(mt,cap){
+  if(mt.length<=cap)return mt;
+  const by={};mt.forEach(t=>(by[t.region]=by[t.region]||[]).push(t));
+  const regs=Object.keys(by),per=Math.max(50,Math.floor(cap/Math.max(regs.length,1))),seen=new Set(),out=[];
+  regs.forEach(r=>{by[r].sort((a,b)=>importance(b)-importance(a)).slice(0,per).forEach(t=>{seen.add(t.id);out.push(t)})});
+  if(out.length>cap){out.sort((a,b)=>importance(b)-importance(a));out.length=cap}
+  else if(out.length<cap){mt.filter(t=>!seen.has(t.id)).sort((a,b)=>importance(b)-importance(a)).slice(0,cap-out.length).forEach(t=>out.push(t))}
+  return out}
+function shown(c,mt){ if(S.isolate&&S.sel.size)return [...S.sel].map(i=>T[i]);
+  const d=pick(mt,c.cap).slice(); if(S.sel.size){const ids=new Set(d.map(t=>t.id));S.sel.forEach(i=>{if(!ids.has(i))d.push(T[i])})} return d}
+const rcol=t=>S.col==='mono'?css('--line'):css(REG.find(r=>r[0]===t.region)[2]);
+const NB=4;
+function levelHover(l){return `<b>${esc(nice(l))}</b> · ${esc(l.nl)}${l.term?' · '+esc(l.term):''} · ${cls(l)}<br>E = ${l.E.toFixed(5)} eV (${(l.E*8065.544).toFixed(2)} cm⁻¹)<br>Ionisation-relative ${(l.E-D.IE).toFixed(5)} eV`+(l.g?`<br>g = ${l.g}`:'<br>g = n/a (no J)')+(l.unc?`<br>σ(E) = ${l.unc} eV`:'')+
+  (l.th?'<br><i>NIST theoretical level [ ], excluded from the QD fit</i>':'')+
+  (l.tau?`<br>──────<br>τ = ${l.tau.toFixed(2)} ± ${l.stau.toFixed(2)} ns<br>A_total = ${sci(l.At)} ± ${sci(l.sAt)} s⁻¹<br>Dominant: ${esc(l.ds)}${l.da?' ['+esc(l.da)+']':''} · overall ${esc(l.qa||'–')} (±${Math.round((l.qd||0)*100)}%)<br>${l.nch} decay channels, main → ${esc(l.dd)}<br>Δν_nat = ${l.nat.toPrecision(4)} MHz`:'<br>no lifetime data')+`<br><i>click to pin</i>`}
+function bandTxt(x){return `<br>──────<br>Extrapolation model: f = ${fmtF(x.f)}<br>68%: ${fmtF(x.lo68)} – ${fmtF(x.hi68)}<br>95%: ${fmtF(x.lo95)} – ${fmtF(x.hi95)}`}
+function lineHover(t){const e=t.ex,ul=t.up,ll=t.lo,br=branch(t);
+  return `<b>${esc(nice(ul))} ↔ ${esc(nice(ll))}</b> · ${t.region}<br>λ(vac) = ${t.wl.toFixed(4)} nm · ν = ${(299792.458/t.wl).toFixed(3)} THz<br>ΔE = ${t.dE.toFixed(3)} meV (${(t.dE*8.065544).toFixed(2)} cm⁻¹)`+
+   `<br>──────<br>f = ${fmtF(t.f)}${t.fd!=null?' ± '+(t.fd*100).toFixed(0)+'%':''} · ${esc(t.fs)}${t.fa?' ['+esc(t.grade)+']':''}<br>A = ${sci(t.A)}${t.sA?' ± '+sci(t.sA):''} s⁻¹<br>Branching ${br==null?'–':br.toFixed(2)+'% of '+esc(nice(ul))}<br>g(up) ${ul.g||'–'} · g(low) ${ll.g||'–'}`+
+   (t.fa&&String(t.fa).startsWith('extrap')?`<br><i>${esc(t.fa)}</i>`:'')+(e.fm!=null?`<br>Model f = ${fmtF(e.fm)} (${esc(e.fms)})`:'')+(e.nmr!=null?`<br>NIST/model = ${e.nmr}`:'')+(e.mu?'<br><b>model unreliable for this line</b>':'')+(e.cav?`<br><i>${esc(e.cav)}</i>`:'')+
+   (e.xb?bandTxt(e.xb):'')+
+   `<br>──────<br>Levels: ${esc(t.ls)}<br>τ(${esc(nice(ul))}) = ${ul.tau?ul.tau.toFixed(2)+' ns':'–'}${ll.tau?' · τ('+esc(nice(ll))+') = '+ll.tau.toFixed(2)+' ns':''}<br><i>click to select · right-click for more</i>`}
+function build(){
+  const c=ctrl(); const f=F[S.unit],u=S.unit,sh=D.shift;
+  $('v-mina').textContent=c.aAll?'all':sci(c.mina)+' s⁻¹'; $('v-nmax').textContent='≤ '+c.nmax; $('v-cap').textContent=c.cap;
+  const ink=css('--ink'),ink2=css('--ink2'),muted=css('--muted'),grid=css('--grid'),bg=css('--bg');
+  const cNist=css('--nist'),cQdt=css('--qdt'),cSel=css('--sel');
+  const ovs=OV.filter((o,i)=>c.ovOn[i]);
+  const mt=matching(c), tr=shown(c,mt);
+  const used=new Set(); tr.forEach(t=>{used.add(t.u);used.add(t.l)});
+  const selLv=new Set();S.sel.forEach(i=>{selLv.add(T[i].u);selLv.add(T[i].l)});
+  const lv=D.levels.filter(l=>selLv.has(l.k)||(!S.isolate&&l.nn<=c.nmax&&(!c.hideno||used.has(l.k)))||(S.isolate&&S.sel.size===0&&l.nn<=c.nmax));
+  const pos={}; lv.forEach(l=>pos[l.k]=l);
+  const Y=e=>(e+sh)*f;
+  const traces=[],shapes=[],ann=[]; const hasSel=S.sel.size>0&&!S.isolate;
+  const lf=tr.map(t=>t.f>0?Math.log10(t.f):null).filter(x=>x!=null),lo=Math.min(...lf,-6),hi=Math.max(...lf,0);
+  const sz=S.dir==='none'?0:8, dirEm=S.dir==='emis', both=S.dir==='both';
+  const groups={}; const selLines=[];
+  tr.forEach(t=>{const a=pos[t.l],b=pos[t.u]; if(!a||!b)return;
+    const bin=t.f>0?Math.min(NB-1,Math.max(0,Math.floor(NB*(Math.log10(t.f)-lo)/(hi-lo+1e-9)))):0; const key=(S.col==='mono'?'m':t.region)+'|'+bin+'|'+(t.fs==='extrapolated'?'x':'');
+    (groups[key]=groups[key]||{t:t,bin:bin,items:[]}).items.push({t,a,b});
+    if(S.sel.has(t.id))selLines.push({t,a,b})});
+  function lineTrace(items,colr,w,op,dash){
+    const x=[],y=[],tx=[],cd=[],ms=[];
+    items.forEach(({t,a,b})=>{const xl=mid(a),xu=mid(b),yl=Y(a.E),yu=Y(b.E),xm=(xl+xu)/2,ym=(yl+yu)/2;
+      const hov=lineHover(t);
+      const pts=dirEm?[[xu,yu],[xm,ym],[xl,yl]]:[[xl,yl],[xm,ym],[xu,yu]];
+      pts.forEach((p,i)=>{x.push(p[0]);y.push(p[1]);tx.push(hov);cd.push(['t',t.id]);ms.push(i===2?sz:0)});
+      x.push(null);y.push(null);tx.push('');cd.push(null);ms.push(0)});
+    return {x,y,text:tx,customdata:cd,mode:'lines+markers',line:{color:colr,width:w,dash:dash||'solid'},opacity:op,hovertemplate:'%{text}<extra></extra>',
+      marker:{symbol:'arrow',angleref:'previous',size:ms,color:colr},showlegend:false,connectgaps:false};
+  }
+  Object.keys(groups).sort().forEach(k=>{const g=groups[k];const w=.7+2.4*(g.bin/(NB-1));traces.push(lineTrace(g.items,rcol(g.t),w,hasSel?.22:.8,g.t.fs==='extrapolated'?'dash':'solid'))});
+  if(both){const x2=[],y2=[],m2=[];tr.forEach(t=>{const a=pos[t.l],b=pos[t.u];if(!a||!b)return;const xl=mid(a),xu=mid(b),yl=Y(a.E),yu=Y(b.E);x2.push((xl+xu)/2,xl,null);y2.push((yl+yu)/2,yl,null);m2.push(0,sz,0)});
+    traces.push({x:x2,y:y2,mode:'markers',marker:{symbol:'arrow',angleref:'previous',size:m2,color:css('--line')},opacity:.6,hoverinfo:'skip',showlegend:false})}
+  if(selLines.length)traces.push(lineTrace(selLines,cSel,3.6,1));
+  if(c.lbl){const seen=new Set();[...tr].sort((p,q)=>(q.f||0)-(p.f||0)).filter(t=>{if(!pos[t.u]||!pos[t.l]||t.dE<300)return false;const k=t.wl.toFixed(0);if(seen.has(k))return false;seen.add(k);return true}).slice(0,10).forEach(t=>{const a=pos[t.l],b=pos[t.u];
+    ann.push({x:(mid(a)+mid(b))/2,y:(Y(a.E)+Y(b.E))/2,text:t.wl.toFixed(1),showarrow:false,font:{size:10,color:ink,family:css('--mono')},bgcolor:bg,borderpad:1,opacity:.92})})}
+  if(c.lv){
+    [['NIST','NIST level',cNist,5,'solid'],['NIST theo.','NIST theoretical [ ]',css('--theo'),4,'dashdot'],['QDT','QDT-model level (no J)',cQdt,3,'dot']].forEach(([src,name,colr,w,dash])=>{
+      const items=lv.filter(l=>cls(l)===src); if(!items.length)return;
+      const x=[],y=[],tx=[],cd=[];
+      items.forEach(l=>{const [a,b]=span(l),yy=Y(l.E),hov=levelHover(l);
+        [a,(a+b)/2,b,null].forEach(xx=>{x.push(xx);y.push(xx==null?null:yy);tx.push(xx==null?'':hov);cd.push(xx==null?null:['l',l.k])})});
+      traces.push({x,y,text:tx,customdata:cd,mode:'lines',line:{color:colr,width:w,dash},name,legendgroup:'lv'+src,hovertemplate:'%{text}<extra></extra>',connectgaps:false});
+    });
+    lv.forEach(l=>{ if(l.nn>8&&l.nn)return; const [a,b]=span(l),yy=Y(l.E); const left=full(l)||l.J===lowJ[l.l];const short=l.n!=null&&l.l?l.nl:lab(l);
+      const tauT=(c.tau&&l.tau)?l.tau.toFixed(l.tau<100?1:0)+' ns':'';
+      if(full(l)||left)ann.push({x:a,y:yy,text:short,showarrow:false,xanchor:'right',yanchor:'middle',xshift:-4,font:{size:10,color:ink2}});
+      if(tauT&&(full(l)||!left))ann.push({x:b,y:yy,text:tauT,showarrow:false,xanchor:'left',yanchor:'middle',xshift:4,font:{size:10,color:ink2}}) });
+  }
+  const gsE=(D.gs&&L[D.gs])?L[D.gs].E:0;
+  ovs.forEach(o=>{const pts=o.levels.filter(x=>x.m&&x.m.n<=c.nmax);const col=css(o.ci);
+    traces.push({x:pts.map(x=>COL[x.m.l]!=null?COL[x.m.l]+o.dx:o.dx),y:pts.map(x=>Y(x.E+(o.off||0))),mode:'markers',marker:{symbol:o.sym,size:12,color:col,line:{width:2,color:col}},name:o.name,legendgroup:'ov'+o.i,
+      hovertemplate:pts.map(x=>`<b>${esc(o.name)}</b>${x.label?' · '+esc(x.label):''}<br>E = ${x.E.toFixed(4)} eV${x.f!=null?'<br>f = '+fmtF(x.f):''}${x.nd>1?' · '+x.nd+' roots':''}<br>drawn in the column of ${x.m.k}<br><i>click to pin</i><extra></extra>`),
+      customdata:pts.map(x=>['o',x.id])});
+    if(c.orcal){const xs=[],ys=[],tx=[];pts.filter(x=>x.f>0).forEach(x=>{const xx=COL[x.m.l]+o.dx;const de=x.E-gsE;const hv=`<b>${esc(o.name)} line</b><br>λ = ${(1239.84198/de).toFixed(2)} nm<br>ΔE = ${de.toFixed(4)} eV<br>f = ${fmtF(x.f)}`;xs.push(xx,xx,null);ys.push(Y(gsE),Y(x.E+(o.off||0)),null);tx.push(hv,hv,'')});
+      traces.push({x:xs,y:ys,text:tx,mode:'lines',line:{color:col,width:1.4,dash:'dot'},opacity:.8,hovertemplate:'%{text}<extra></extra>',showlegend:false,legendgroup:'ov'+o.i})}});
+  const ie=Y(D.IE), ymaxE=Math.max(D.IE+.45,...lv.map(l=>l.E+.1)), top=(ymaxE+sh)*f;
+  shapes.push({type:'rect',xref:'x domain',yref:'y',x0:0,x1:1,y0:ie,y1:ie+1e4*f,fillcolor:css('--cont'),line:{width:0},layer:'below'});
+  shapes.push({type:'line',xref:'x domain',yref:'y',x0:0,x1:1,y0:ie,y1:ie,line:{color:ink2,width:1,dash:'dash'}});
+  ann.push({xref:'x domain',x:.99,y:ie,text:D.ieText,showarrow:false,xanchor:'right',yanchor:'bottom',font:{size:11,color:ink2}});
+  ann.push({xref:'x domain',x:.01,y:ie,text:'continuum',showarrow:false,xanchor:'left',yanchor:'bottom',font:{size:11,color:muted}});
+  lets.forEach((t,i)=>ann.push({x:i,y:Y(gsE)-.15*f,text:`<b>${t==='?'?'other':t.toUpperCase()}</b>`,showarrow:false,yanchor:'top',font:{size:13,color:ink}}));
+  const ax=(extra)=>Object.assign({gridcolor:grid,zerolinecolor:grid,linecolor:ink2,tickfont:{color:ink2,size:11},ticks:'outside',tickcolor:ink2},extra);
+  const y0=(gsE+sh-.15)*f,y1=top;
+  const layout={paper_bgcolor:bg,plot_bgcolor:bg,margin:{l:64,r:24,t:20,b:36},font:{family:css('--sans'),color:ink},hovermode:'closest',
+    hoverlabel:{bgcolor:css('--panel'),bordercolor:css('--edge'),font:{color:ink,family:css('--sans'),size:12}},
+    xaxis:ax({domain:[0,1],range:XR,autorange:false,fixedrange:true,showgrid:false,zeroline:false,showticklabels:false,ticks:''}),
+    yaxis:ax({title:{text:D.shiftLabel+' '+UL[u].charAt(0).toLowerCase()+UL[u].slice(1),font:{color:ink2,size:12}},range:[y0,y1],autorange:false,minallowed:y0-.2*f,maxallowed:y1+.2*f,showline:true}),
+    shapes,annotations:ann,legend:{orientation:'h',x:0,y:1.06,font:{size:12,color:ink2}},uirevision:S.unit+c.nmax,dragmode:'zoom'};
+  const done=Plotly.react('plot',traces,layout,{displaylogo:false,responsive:true,modeBarButtonsToRemove:['lasso2d','select2d'],toImageButtonOptions:{format:'svg',filename:D.element+'_grotrian'}});
+  window._yfull=[y0,y1];
+  $('count').textContent=`${tr.length.toLocaleString()} lines drawn · ${mt.length.toLocaleString()} match (n ≤ ${c.nmax}) · ${T.length.toLocaleString()} in the data`+(S.sel.size?` · ${S.sel.size} selected`:'')+(S.isolate?' · isolated':'');
+  renderTable(mt);
+  return done;
+}
+// ---- context menu and detail window
+let cmT=null;
+function closeCM(){const m=$('cm');if(m)m.remove()}
+function openCM(x,y,t){closeCM();cmT=t;const m=document.createElement('div');m.className='cm';m.id='cm';
+  m.innerHTML=`<button data-a="more">View more…</button><button data-a="sel">${S.sel.has(t.id)?'Deselect':'Select'}</button><button data-a="iso">Isolate this line</button><button data-a="zoom">Zoom to this line</button><button data-a="cp">Copy row</button><button data-a="cw">Copy wavelength (nm)</button>`;
+  document.body.appendChild(m);const w=m.offsetWidth,h=m.offsetHeight;m.style.left=Math.min(x,innerWidth-w-8)+'px';m.style.top=Math.min(y,innerHeight-h-8)+'px';
+  m.onclick=e=>{const a=e.target.dataset.a;if(!a)return;closeCM();
+    if(a==='more')showMore(t);
+    if(a==='sel'){S.sel.has(t.id)?S.sel.delete(t.id):S.sel.add(t.id);if(!S.sel.size)S.isolate=false;build()}
+    if(a==='iso'){S.sel.clear();S.sel.add(t.id);S.isolate=true;build()}
+    if(a==='zoom'){const f=F[S.unit],lo=(Math.min(t.up.E,t.lo.E)+D.shift)*f,hi=(Math.max(t.up.E,t.lo.E)+D.shift)*f,pad=Math.max((hi-lo)*.15,.05*f);Plotly.relayout('plot',{'yaxis.range':[lo-pad,hi+pad]})}
+    if(a==='cp')copy($('copyT'),rowCsv(t));
+    if(a==='cw')copy($('copyT'),String(t.wl))}}
+document.addEventListener('click',e=>{if(!e.target.closest('.cm'))closeCM()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCM();closeMore()}});
+addEventListener('scroll',closeCM,true);
+function rowCsv(t){return [t.u,t.l,t.wl,t.dE.toFixed(3),t.f==null?'':t.f.toExponential(4),t.A==null?'':t.A.toExponential(4),t.fs,t.grade,t.ls,t.region].join(',')}
+function closeMore(){const o=$('ov');if(o)o.remove()}
+function showMore(t){closeMore();const e=t.ex,ul=t.up,ll=t.lo,xb=e.xb,br=branch(t);
+  const kv=a=>'<div class="g">'+a.map(([k,v])=>`<span>${k}</span><span>${v}</span>`).join('')+'</div>';
+  const lev=l=>kv([['Label',nh(l)+' · '+esc(l.nl)],['Term',esc(l.term||'–')],['Class',cls(l)+(l.th?' (ASD theoretical level)':'')],['E',l.E.toFixed(6)+' eV · '+(l.E*8065.544).toFixed(2)+' cm⁻¹'],['E (ionisation-relative)',(l.E-D.IE).toFixed(6)+' eV'],['σ(E)',l.unc?l.unc+' eV':'–'],['g = 2J+1',l.g||'n/a'],
+    ['Lifetime τ',l.tau?l.tau.toFixed(3)+' ± '+l.stau.toFixed(3)+' ns':'none'],['A_total',l.tau?sci(l.At)+' ± '+sci(l.sAt)+' s⁻¹':'–'],['Dominant source',l.tau?esc(l.ds)+(l.da?' ['+esc(l.da)+']':''):'–'],['Overall grade',l.tau?esc(l.qa||'–')+' (±'+Math.round((l.qd||0)*100)+'%)':'–'],['Decay channels',l.tau?l.nch+', main → '+esc(l.dd):'–'],['Natural linewidth',l.tau?l.nat.toPrecision(4)+' MHz':'–']]);
+  const o=document.createElement('div');o.className='ov';o.id='ov';
+  o.innerHTML=`<div class="dlg" role="dialog" aria-label="Transition details"><div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1"><h3>${nh(ul)} ↔ ${nh(ll)}</h3><div class="hint" style="margin:0">${t.wl.toFixed(4)} nm (vacuum) · ${t.region}</div></div><button class="btn" id="dcopy">Copy as text</button><button class="btn" id="dclose">Close</button></div>
+  <h4>Transition</h4>${kv([['Wavelength (vacuum)',t.wl.toFixed(5)+' nm'],['Wavenumber',(1e7/t.wl).toFixed(3)+' cm⁻¹'],['Frequency',(299792.458/t.wl).toFixed(4)+' THz'],['ΔE',t.dE.toFixed(4)+' meV · '+(t.dE/1000).toFixed(6)+' eV'],['Spectral region',t.region],['Orbital type',esc(t.pair.replace('→',' → '))+(t.dn?' (Δn = '+t.dn+')':'')],['Level classes',esc(t.ls)]])}
+  <h4>Strength</h4>${kv([['Oscillator strength f',fmtF(t.f)+(t.fd!=null?' (± '+(t.fd*100).toFixed(1)+'%)':'')],['f source',esc(t.fs)],['Accuracy / note',esc(t.fa||'–')],['A (Einstein)',t.A>0?sci(t.A)+(t.sA?' ± '+sci(t.sA):'')+' s⁻¹':'–'],['Branching from upper',br==null?'–':br.toFixed(3)+' %'],['g(upper) · g(lower)',(ul.g||'n/a')+' · '+(ll.g||'n/a')],['Model f',e.fm!=null?fmtF(e.fm)+' ('+esc(e.fms)+')':'–'],['NIST / model',e.nmr!=null?String(e.nmr):'–'],['Model unreliable',e.mu?'yes':'no'],['Series caveat',esc(e.cav||'–')]])}
+  ${xb?'<h4>Extrapolation model</h4>'+kv([['Extrapolated f',fmtF(xb.f)],['Model f (table)',fmtF(xb.fm)],['68% band',fmtF(xb.lo68)+' – '+fmtF(xb.hi68)],['95% band',fmtF(xb.lo95)+' – '+fmtF(xb.hi95)],['Measured f in fit',xb.fmeas!=null?fmtF(xb.fmeas):'none'],['Used for this line',t.fs==='extrapolated'?'yes (value shown above)':'no (shown for comparison)']]):''}
+  <h4>Upper level</h4>${lev(ul)}<h4>Lower level</h4>${lev(ll)}</div>`;
+  document.body.appendChild(o);
+  o.onclick=ev=>{if(ev.target===o)closeMore()};$('dclose').onclick=closeMore;
+  $('dcopy').onclick=()=>copy($('dcopy'),[...o.querySelectorAll('.g')].map(g=>[...g.children].map((c,i)=>i%2?c.textContent+'\n':c.textContent+': ').join('')).join('\n'));
+}
+// ---- matching table
+const COLS=[['reg','Reg',t=>`<span class="bar" style="border-color:${css(REG.find(r=>r[0]===t.region)[2])};display:inline-block;vertical-align:middle;margin-right:6px"></span>${t.region}`,t=>t.wl],
+ ['up','Upper',t=>nh(t.up),t=>t.up.E],['lo','Lower',t=>nh(t.lo),t=>t.lo.E],['wl','λ (nm)',t=>t.wl.toFixed(3),t=>t.wl],
+ ['dE','ΔE (meV)',t=>t.dE.toFixed(2),t=>t.dE],['f','f',t=>fmtF(t.f),t=>t.f==null?-1:t.f],['A','A (s⁻¹)',t=>t.A>0?sci(t.A):'–',t=>t.A==null?-1:t.A],['fs','f source',t=>esc(t.fs),t=>t.fs],['acc','Grade',t=>esc(t.grade),t=>t.grade],['ls','Levels',t=>esc(t.ls),t=>t.ls]];
+const PS=12;
+function rowText(t){return [t.u,t.l,nice(t.up),nice(t.lo),t.wl.toFixed(1),t.region,t.fs,t.grade].join(' ').toLowerCase()}
+let lastRows=[];
+function renderTable(mt){
+  const qq=S.tq.toLowerCase(); let rows=qq?mt.filter(t=>rowText(t).includes(qq)):mt.slice();
+  const col=COLS.find(c=>c[0]===S.sort.k)||COLS[3]; rows.sort((a,b)=>{const x=col[3](a),y=col[3](b);return (x<y?-1:x>y?1:0)*S.sort.d});
+  lastRows=rows; const pages=Math.max(1,Math.ceil(rows.length/PS)); S.page=Math.min(S.page,pages-1);
+  $('ttab').tHead.innerHTML='<tr>'+COLS.map(c=>`<th data-k="${c[0]}">${c[1]}${S.sort.k===c[0]?`<span class="arr">${S.sort.d>0?'▲':'▼'}</span>`:''}</th>`).join('')+'</tr>';
+  $('ttab').tBodies[0].innerHTML=rows.slice(S.page*PS,S.page*PS+PS).map(t=>`<tr class="t${S.sel.has(t.id)?' sel':''}" data-id="${t.id}">`+COLS.map((c,i)=>`<td class="${i>=3&&i<=6?'m':''}">${c[2](t)}</td>`).join('')+'</tr>').join('')||`<tr><td colspan="10" class="empty">No transitions match the current filters.</td></tr>`;
+  $('pinfo').textContent=`${rows.length?(S.page*PS+1).toLocaleString():0}–${Math.min(rows.length,S.page*PS+PS).toLocaleString()} of ${rows.length.toLocaleString()}`+(qq?` (search) · ${mt.length.toLocaleString()} filtered`:'');
+  $('pprev').disabled=S.page<=0; $('pnext').disabled=S.page>=pages-1;
+  $('isolate').disabled=!S.sel.size; $('clearsel').disabled=!S.sel.size; $('isolate').textContent=S.isolate?'Show all matches':'Isolate selected';
+  const sel=[...S.sel].map(i=>T[i]); const sA=sel.reduce((a,t)=>a+(t.A||0),0);
+  $('selinfo').textContent=sel.length?`Selected: ${sel.length} line${sel.length>1?'s':''}`+(sel.length<=6?' ('+sel.map(t=>t.wl.toFixed(1)+' nm').join(', ')+')':'')+(hasA?` · ΣA = ${sci(sA)} s⁻¹`:''):'Click a row or a line to select. Shift-click adds. Double-click isolates one.';
+}
+function selectT(id,add){ if(add){S.sel.has(id)?S.sel.delete(id):S.sel.add(id)} else {S.sel.clear();S.sel.add(id)} if(!S.sel.size)S.isolate=false; build()}
+$('ttab').tBodies[0].addEventListener('mousedown',e=>{if(e.shiftKey||e.detail>1)e.preventDefault()});
+$('plot').addEventListener('mousedown',e=>{if(e.shiftKey)e.preventDefault()},true);
+$('ttab').tBodies[0].addEventListener('contextmenu',e=>{const r=e.target.closest('tr.t');if(r){e.preventDefault();openCM(e.clientX,e.clientY,T[+r.dataset.id])}});
+$('ttab').tBodies[0].addEventListener('click',e=>{const r=e.target.closest('tr.t');if(r)selectT(+r.dataset.id,e.shiftKey||e.ctrlKey||e.metaKey)});
+$('ttab').tBodies[0].addEventListener('dblclick',e=>{const r=e.target.closest('tr.t');if(r){S.sel.clear();S.sel.add(+r.dataset.id);S.isolate=true;build()}});
+$('ttab').tHead.addEventListener('click',e=>{const th=e.target.closest('th');if(!th)return;const k=th.dataset.k;S.sort=S.sort.k===k?{k,d:-S.sort.d}:{k,d:1};build()});
+$('tsearch').addEventListener('input',e=>{S.tq=e.target.value.trim();S.page=0;renderTable(matching(ctrl()))});
+$('pprev').onclick=()=>{S.page--;renderTable(matching(ctrl()))}; $('pnext').onclick=()=>{S.page++;renderTable(matching(ctrl()))};
+$('isolate').onclick=()=>{S.isolate=!S.isolate;build()}; $('clearsel').onclick=()=>{S.sel.clear();S.isolate=false;build()};
+async function copy(btn,txt){let ok=true;try{await navigator.clipboard.writeText(txt)}catch(e){ok=false}const o=btn.textContent;btn.textContent=ok?'Copied':'Copy blocked';setTimeout(()=>btn.textContent=o,1500)}
+$('copyT').onclick=()=>copy($('copyT'),'upper,lower,wavelength_nm_vacuum,dE_meV,f,A_s-1,f_source,grade,level_sources,region\n'+lastRows.slice(0,5000).map(t=>[t.u,t.l,t.wl,t.dE.toFixed(3),t.f==null?'':t.f.toExponential(4),t.A==null?'':t.A.toExponential(4),t.fs,t.grade,t.ls,t.region].map(q).join(',')).join('\n'));
+let lastHov=null;
+function wire(){const p=$('plot');
+  p.on('plotly_hover',ev=>{const cd=ev.points[0].customdata;lastHov=cd&&cd[0]==='t'?cd[1]:null});p.on('plotly_unhover',()=>{lastHov=null});
+  p.addEventListener('contextmenu',e=>{if(lastHov!=null){e.preventDefault();openCM(e.clientX,e.clientY,T[lastHov])}});
+  p.on('plotly_doubleclick',()=>{Plotly.relayout('plot',{'yaxis.range':window._yfull,'yaxis.autorange':false});return false});
+  p.on('plotly_click',ev=>{const pt=ev.points[0],cd=pt.customdata; if(!cd)return; const [k,id]=cd;
+    if(k==='t'){selectT(id,ev.event.shiftKey);return}
+    let row=null;
+    if(k==='l'){const o=L[id];row={what:'Level',name:nh(o),a:o.E.toFixed(5)+' eV',b:o.tau?o.tau.toFixed(2)+' ns':'',c:(o.g?'g='+o.g+', ':'')+esc(o.src||'')+(o.unc?', σ '+o.unc+' eV':'')}}
+    if(k==='o'){const [ov,x]=OVID[id];row={what:'Overlay',name:esc(ov.name)+' '+esc(x.label||'')+' '+x.E.toFixed(4),a:x.E.toFixed(4)+' eV',b:'',c:x.m?'drawn beside '+x.m.k:''}}
+    if(row&&!pins.some(r=>r.name===row.name&&r.what===row.what)){pins.push(row);renderPins()}});
+}
+function renderPins(){const t=$('pintable');
+  if(!pins.length){t.innerHTML='<div class="empty">Click a level or an overlay marker in the plot to pin it here.</div>';return}
+  t.innerHTML='<table><thead><tr><th class="nosort">Type</th><th class="nosort">Item</th><th class="nosort">Value</th><th class="nosort">Lifetime</th><th class="nosort">Detail</th></tr></thead><tbody>'+
+   pins.map(r=>`<tr><td>${r.what}</td><td>${r.name}</td><td class="m">${r.a}</td><td class="m">${r.b}</td><td>${r.c}</td></tr>`).join('')+'</tbody></table>'}
+$('clear').onclick=()=>{pins=[];renderPins()};
+$('copy').onclick=()=>copy($('copy'),'type,item,value,lifetime,detail\n'+pins.map(r=>[r.what,r.name,r.a,r.b,r.c].map(q).join(',')).join('\n'));
+function seg(id,attr,key){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{S[key]=b.dataset[attr];document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));build()})}
+seg('unitmode','u','unit'); seg('dirmode','d','dir'); seg('colmode','m','col');
+$('railbtn').onclick=()=>{S.rail=!S.rail;$('app').classList.toggle('closed',!S.rail);$('railbtn').textContent=S.rail?'Hide filters':'Show filters';$('railbtn').setAttribute('aria-expanded',S.rail);setTimeout(()=>Plotly.Plots.resize('plot'),30)};
+$('theme').onclick=()=>{const o=['auto','light','dark'];S.theme=o[(o.indexOf(S.theme)+1)%3];const h=document.documentElement;S.theme==='auto'?h.removeAttribute('data-theme'):h.setAttribute('data-theme',S.theme);$('theme').textContent='Theme: '+S.theme};
+$('reg-all').onclick=()=>{document.querySelectorAll('input[data-g=reg]').forEach(i=>i.checked=true);S.page=0;build()};
+$('reg-none').onclick=()=>{document.querySelectorAll('input[data-g=reg]').forEach(i=>i.checked=false);S.page=0;build()};
+$('reset').onclick=()=>{document.querySelectorAll('.rail input[type=checkbox]').forEach(i=>i.checked=!['hideno','orcalines'].includes(i.id));
+  document.querySelectorAll('.rail input[type=number],.rail input[type=search]').forEach(i=>i.value='');
+  $('mina').value=aMin;$('nmax').value=nDef;$('cap').value=60;S.sel.clear();S.isolate=false;S.page=0;S.tq='';$('tsearch').value='';build()};
+document.querySelectorAll('.rail input').forEach(i=>i.addEventListener('input',()=>{S.page=0;build()}));
+// ---- collapsible rail sections (state is remembered per browser when storage is available)
+const SK='linak-grotrian-rail-v2'; let shut={}; try{shut=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+const secs=[...document.querySelectorAll('.rail section')].filter(x=>x.querySelector(':scope>h2'));
+const saveShut=()=>{try{localStorage.setItem(SK,JSON.stringify(shut))}catch(e){}};
+secs.forEach((sec,idx)=>{const h=sec.querySelector(':scope>h2'),key=h.textContent.trim();h.tabIndex=0;h.setAttribute('role','button');
+  const set=v=>{sec.classList.toggle('shut',v);h.setAttribute('aria-expanded',String(!v));shut[key]=v};
+  set(shut[key]===undefined?idx<secs.length-3:!!shut[key]);const tog=()=>{set(!sec.classList.contains('shut'));saveShut()};
+  h.onclick=tog;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}}});
+$('colall').onclick=()=>{secs.forEach(x=>{x.classList.add('shut');x.querySelector('h2').setAttribute('aria-expanded','false');shut[x.querySelector('h2').textContent.trim()]=true});saveShut()};
+$('expall').onclick=()=>{secs.forEach(x=>{x.classList.remove('shut');x.querySelector('h2').setAttribute('aria-expanded','true');shut[x.querySelector('h2').textContent.trim()]=false});saveShut()};
+// ---- export: SVG / PNG / PDF (print) / CSV, always on a light background
+async function lightly(fn){const h=document.documentElement,prev=h.getAttribute('data-theme');h.setAttribute('data-theme','light');
+  try{await build();await fn()}finally{prev==null?h.removeAttribute('data-theme'):h.setAttribute('data-theme',prev);build()}}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const csvAll=()=>'upper,lower,wavelength_nm_vacuum,dE_meV,f,A_s-1,f_source,grade,level_sources,region\n'+lastRows.map(t=>[t.u,t.l,t.wl,t.dE.toFixed(3),t.f==null?'':t.f.toExponential(4),t.A==null?'':t.A.toExponential(4),t.fs,t.grade,t.ls,t.region].map(q).join(',')).join('\n');
+$('exportbtn').onclick=e=>{e.stopPropagation();closeCM();const b=e.currentTarget.getBoundingClientRect(),m=document.createElement('div');m.className='cm';m.id='cm';
+  m.innerHTML='<button data-a="svg">Diagram as SVG (vector)</button><button data-a="png">Diagram as PNG (high resolution)</button><button data-a="pdf">Diagram as PDF (print dialog)</button><button data-a="csv">Matching transitions as CSV</button>';
+  document.body.appendChild(m);m.style.top=(b.bottom+4)+'px';m.style.left=Math.max(8,Math.min(b.left,innerWidth-m.offsetWidth-8))+'px';
+  m.onclick=ev=>{const a=ev.target.dataset.a;if(!a)return;closeCM();const nm=D.element+'_grotrian',o={width:1600,height:1000,filename:nm};
+    if(a==='svg')lightly(()=>Plotly.downloadImage('plot',{...o,format:'svg'}));
+    if(a==='png')lightly(()=>Plotly.downloadImage('plot',{...o,format:'png',scale:3}));
+    if(a==='pdf')lightly(async()=>{window.print();await new Promise(r=>setTimeout(r,2000))});
+    if(a==='csv')dl(nm+'_transitions.csv',csvAll(),'text/csv')}};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',build);
+new MutationObserver(build).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+build();wire();renderPins();
+</script>

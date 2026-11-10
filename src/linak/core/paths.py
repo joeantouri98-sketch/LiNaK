@@ -45,8 +45,8 @@ def is_checkout(path: Path) -> bool:
     return (path / "pyproject.toml").is_file() and (path / "src/linak").is_dir()
 
 
-def user_data_root() -> Path:
-    """Return LiNaK's per-user data home, creating it if needed."""
+def user_data_root(create: bool = True) -> Path:
+    """Return LiNaK's per-user data home, creating it if needed (unless *create* is False)."""
     if sys.platform == "win32":
         base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData/Local"))
     elif sys.platform == "darwin":
@@ -54,7 +54,8 @@ def user_data_root() -> Path:
     else:
         base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
     root = base / "LiNaK"
-    root.mkdir(parents=True, exist_ok=True)
+    if create:
+        root.mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -75,6 +76,28 @@ def resource_root() -> Path:
     return Path(__file__).resolve().parents[1] / RESOURCES_DIR
 
 
+# Trees whose files the user may replace with an edited copy (Preferences > Tables and variables).
+OVERRIDABLE_TREES = ("f_values", "NIST Levels", "Moments", "extrapolation")
+
+
 def reference_path(*parts: str) -> Path:
-    """Return a read-only reference asset from the bundled resources."""
+    """Return a reference asset: the user's edited copy if there is one, else the bundled original."""
+    if parts and parts[0] in OVERRIDABLE_TREES and not (len(parts) > 1 and parts[1] == "tables"):
+        try:
+            from linak.core import user_tables
+            mine = user_tables.file_override(parts)
+        except Exception:                      # an unreadable override never breaks a run
+            mine = None
+        if mine is not None:
+            return mine
     return resource_root().joinpath(*parts)
+
+
+def bundled_file(tree: str, folder: str | os.PathLike, name: str) -> str:
+    """``folder/name``; when *folder* is the bundled *tree*, the user's edited copy of *name* wins."""
+    try:
+        if Path(folder).resolve() == (resource_root() / tree).resolve():
+            return str(reference_path(tree, name))
+    except OSError:
+        pass
+    return os.path.join(folder, name)

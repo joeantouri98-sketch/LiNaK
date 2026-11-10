@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from . import theme
 from .extrapolator_settings import ExtrapolatorSettingsPage
+from .tables_page import TablesPage
 
 KEY = "appearance/colors/{theme}/{token}"
 
@@ -51,7 +52,7 @@ def save_overrides(settings, theme_name: str, colours: dict[str, str]) -> None:
 class PreferencesDialog(QDialog):
     """Colours for the theme in use, and the extrapolator settings; Apply shows colours at once, OK keeps everything."""
 
-    TABS = ("appearance", "extrapolator")
+    TABS = ("appearance", "extrapolator", "tables")
 
     def __init__(self, parent, theme_name: str, settings, apply_callback, root=None, species=None, start_tab=None,
                  set_theme=None):
@@ -124,11 +125,16 @@ class PreferencesDialog(QDialog):
         self._add_page(appearance, "Appearance")
 
         self.extrapolator = None
+        self.tables = None
         if root is not None:
             self.extrapolator = ExtrapolatorSettingsPage(root, species)
             self._add_page(self.extrapolator, "Extrapolator")
             if start_tab == "extrapolator":
                 self.nav.setCurrentRow(1)
+            self.tables = TablesPage(root)
+            self._add_page(self.tables, "Tables and variables")
+            if start_tab == "tables":
+                self.nav.setCurrentRow(2)
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Apply | QDialogButtonBox.Cancel | QDialogButtonBox.RestoreDefaults)
         buttons.accepted.connect(self._ok)
@@ -169,6 +175,9 @@ class PreferencesDialog(QDialog):
         if self.extrapolator is not None and self.pages.currentWidget() is self.extrapolator:
             self.extrapolator.reset_all()
             return
+        if self.tables is not None and self.pages.currentWidget() is self.tables:
+            self.tables.reset_all()
+            return
         for colours in self.chosen.values():
             colours.clear()
         self._refresh()
@@ -184,6 +193,10 @@ class PreferencesDialog(QDialog):
             left_out = self.extrapolator.apply()
             if left_out:
                 QMessageBox.warning(self, "Extrapolator", "Not saved:\n- " + "\n- ".join(left_out))
+        if self.tables is not None:
+            left_out = self.tables.apply()
+            if left_out:
+                QMessageBox.warning(self, "Tables and variables", "Not saved:\n- " + "\n- ".join(left_out))
 
     def _ok(self):
         self._apply()

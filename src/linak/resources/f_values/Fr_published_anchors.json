@@ -1,0 +1,76 @@
+{
+ "element": "Fr",
+ "note": "Published reduced electric-dipole matrix elements |D| (a.u.) of Fr I, transcribed from the cited table. tools/make_published_fvalues.py turns them into line-level PUBLISHED rows of Fr_literature.json; ARC has no francium model.",
+ "transitions": [
+  {
+   "lower": "7p1/2",
+   "upper": "6d3/2",
+   "D": 7.204,
+   "D_unc": 0.039,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p3/2",
+   "upper": "6d3/2",
+   "D": 3.314,
+   "D_unc": 0.02,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p3/2",
+   "upper": "6d5/2",
+   "D": 10.18,
+   "D_unc": 0.069,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p1/2",
+   "upper": "8s",
+   "D": 4.231,
+   "D_unc": 0.023,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p3/2",
+   "upper": "8s",
+   "D": 7.455,
+   "D_unc": 0.019,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d3/2",
+   "upper": "8p1/2",
+   "D": 2.514,
+   "D_unc": 0.071,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d3/2",
+   "upper": "8p3/2",
+   "D": 0.777,
+   "D_unc": 0.029,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d5/2",
+   "upper": "8p3/2",
+   "D": 2.54,
+   "D_unc": 0.11,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "8s",
+   "upper": "8p1/2",
+   "D": 10.079,
+   "D_unc": 0.016,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "8s",
+   "upper": "8p3/2",
+   "D": 13.338,
+   "D_unc": 0.024,
+   "ref": "Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  }
+ ]
+}

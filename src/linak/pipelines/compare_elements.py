@@ -18,7 +18,7 @@ whose pipeline has not been run yet.
 
 Outputs:
   data_json/comparison_table.json    — machine-readable summary
-  .linak/plots/comparison_table.html — interactive sortable HTML table
+  .linak/plots/comparison_table.html — interactive sortable HTML table (only with --html)
 
 Usage:
   linak --pipeline compare_elements
@@ -101,6 +101,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--elements', nargs='+',
                         default=['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'],
                         help='Elements to include (default: all 6 alkalis)')
+    parser.add_argument('--html', action='store_true',
+                        help='Also write the interactive HTML table (the viewer table and the '
+                             'JSON are always produced)')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir),
                         help='Directory containing JSON data files (default: data_json)')
     parser.add_argument('--output-dir', default=str(Workspace.current().plots_dir),
@@ -474,6 +477,18 @@ def build_table(elements, data_dir, T_K):
 # BUILD INTERACTIVE HTML TABLE
 
 
+def merge_with_existing(new_rows, json_path):
+    """*new_rows* added to (or replacing the same elements in) the rows already saved
+    in *json_path*. An unreadable or missing file means no earlier rows."""
+    try:
+        with open(json_path, encoding='utf-8') as f:
+            old = [ElementData(**rec) for rec in json.load(f).get('elements', [])]
+    except (OSError, ValueError, TypeError):
+        old = []
+    replaced = {row.element for row in new_rows}
+    return [row for row in old if row.element not in replaced] + list(new_rows)
+
+
 def build_html(table_data, T_K):
     return render_template(
         'compare_table.html',
@@ -506,16 +521,16 @@ def main(argv: list[str] | None = None) -> int:
             f"none of {', '.join(elements)} has the D-line data the table needs in "
             f"{data_dir} (run rydberg, transitions and lifetimes first)")
 
-    # JSON under the data dir; the HTML under --output-dir.
+    # Elements already in the table stay; the requested ones are added or replaced.
     json_out = os.path.join(data_dir, 'comparison_table.json')
+    table_data = merge_with_existing(table_data, json_out)
     write_json(json_out, {'T_K': T_K, 'elements': [asdict(row) for row in table_data]})
     print(f"\nSaved JSON: {json_out}")
 
-    html = build_html(table_data, T_K)
-    html_out = os.path.join(out_dir, 'comparison_table.html')
-    atomic_write_text(html_out, html)
-
-    print(f"Saved HTML: {html_out}")
+    if args.html:
+        html_out = os.path.join(out_dir, 'comparison_table.html')
+        atomic_write_text(html_out, build_html(table_data, T_K))
+        print(f"Saved HTML: {html_out}")
     print(f"\n{'='*70}")
     print("  Summary (D2 line, natural broadening):")
     print(f"  {'Element':>8}  {'wl_D2(nm)':>10}  {'tau(ns)':>8}  "

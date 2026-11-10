@@ -2,6 +2,8 @@
 """Inputs of the high-n network: which NIST levels are used, and where Numerov is scaled."""
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from linak.physics.qdt_radial import (
@@ -12,7 +14,12 @@ from linak.physics.qdt_radial import (
     numerov_fosc,
     numerov_scale_for,
 )
-from linak.physics.rydberg import Ry, fit_ritz_defects, screen_nist_levels
+from linak.physics.rydberg import (
+    Ry,
+    fit_ritz_defects,
+    generate_rydberg_series,
+    screen_nist_levels,
+)
 
 IE = 5.0
 
@@ -169,3 +176,49 @@ def test_an_imprecise_level_takes_the_series_value():
                                    uncertainty_eV=4e-5))
     qd = level_defects_from_rydberg(ryd)
     assert level_defect(qd, 35, "p") == pytest.approx(2.65 + 0.3 / (35 - 2.65) ** 2)
+
+
+def test_a_series_starts_at_its_lowest_nist_level():
+    lookup = {(5, "d", "5/2", "2D"): dict(energy_eV=-2.0),
+              (6, "p", "1/2", "2P*"): dict(energy_eV=-2.5)}
+    states = generate_rydberg_series(IE, {"s": 4.0, "p": 3.6, "d": 2.5}, lookup, 6, 7)
+    labels = [(st["n"], st["l"]) for st in states]
+    assert (5, "d") in labels
+    assert (5, "p") not in labels   # never modelled below the measured series
+
+
+@pytest.mark.parametrize("element,state,low,high", [
+    ("K", "4f5/2", 50, 80),      # ARC 62.5 ns; 11 us without 3d
+    ("Rb", "4d3/2", 75, 95),     # measured 86(6) ns, Safronova 2004
+    ("Rb", "5g9/2", 200, 290),   # ARC 232 ns
+    ("Cs", "6g9/2", 330, 470),   # ARC 384 ns; 54 ms without 5f
+])
+def test_levels_below_the_ground_n_set_these_lifetimes(data_dir, element, state, low, high):
+    rows = json.loads((data_dir / f"{element}_lifetimes.json").read_text(encoding="utf-8"))
+    tau = {r["state"]: r["lifetime_ns"] for r in rows["lifetimes"]}
+    assert low < tau[state] < high
+
+
+@pytest.mark.parametrize("element,low,high", [("K", 550, 650), ("Rb", 750, 860), ("Cs", 1250, 1500)])
+def test_d1_upper_state_polarizability_includes_the_lower_d_level(data_dir, element, low, high):
+    bb = json.loads((data_dir / f"{element}_blackbody.json").read_text(encoding="utf-8"))
+    assert low < bb["alpha0_ex_au"] < high
+
+
+def test_published_fr_lines_set_the_8s_and_6d_lifetimes(data_dir):
+    rows = json.loads((data_dir / "Fr_lifetimes.json").read_text(encoding="utf-8"))
+    tau = {r["state"]: r["lifetime_ns"] for r in rows["lifetimes"]}
+    assert tau["8s"] == pytest.approx(53.30, abs=1.0)   # measured 53.30(44) ns
+    assert 500 < tau["6d3/2"] < 650
+    assert 1600 < tau["6d5/2"] < 2000
+    assert rows["dropped_transitions"]["n_total"] == 0
+
+
+def test_a_literature_line_with_both_j_keeps_them_apart(tmp_path):
+    from linak.physics.polarizability_core import load_literature_fvalues
+    row = dict(lower="7p", lower_J="3/2", upper="6d", upper_J="5/2", f_abs=0.2, acc="B",
+               ref="PUBLISHED: test")
+    (tmp_path / "Fr_literature.json").write_text(json.dumps({"transitions": [row]}), "utf-8")
+    lit = load_literature_fvalues("Fr", str(tmp_path), verbose=False)
+    assert lit["fosc_jl"][("7p", "6d", "5/2", "3/2")] == (0.2, "B")
+    assert not lit["fosc_j"] and not lit["fosc"]

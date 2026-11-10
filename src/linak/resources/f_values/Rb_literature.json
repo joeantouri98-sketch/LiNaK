@@ -358,6 +358,13 @@
   },
   {
    "lower": "5p",
+   "upper": "4d",
+   "f_abs": 0.65768,
+   "acc": "B",
+   "ref": "PUBLISHED: Safronova, Safronova & Clark, Phys. Rev. A 83, 052508 (2011), Table II (recommended). Multiplet-averaged absorption f from the J-resolved reduced matrix elements, 5p->4d; NIST lists no f for this transition"
+  },
+  {
+   "lower": "5p",
    "upper": "5d",
    "f_abs": 0.056928,
    "acc": "B",

@@ -100,7 +100,11 @@ def test_settings_page_and_preferences_tab(tmp_path):
     assert page.values() == {}
     dlg = P.PreferencesDialog(None, "dark", QSettings(str(tmp_path / "s.ini"), QSettings.IniFormat), lambda: None,
                               root=tmp_path, species="Rb", start_tab="extrapolator")
-    assert dlg.pages.currentWidget() is dlg.extrapolator and dlg.nav.count() == 2
+    assert dlg.pages.currentWidget() is dlg.extrapolator and dlg.nav.count() == 3
+    assert [dlg.nav.item(i).text() for i in range(3)] == ["Appearance", "Extrapolator", "Tables and variables"]
+    dlg2 = P.PreferencesDialog(None, "dark", QSettings(str(tmp_path / "s2.ini"), QSettings.IniFormat), lambda: None,
+                               root=tmp_path, start_tab="tables")
+    assert dlg2.pages.currentWidget() is dlg2.tables
     assert app is not None
 
 

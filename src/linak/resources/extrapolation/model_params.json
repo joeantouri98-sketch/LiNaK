@@ -45,9 +45,16 @@
    "lam": 1.026,
    "wcore_eV": 10.8,
    "so_scale": 0.95
+  },
+  "Fr": {
+   "nl": 7,
+   "singor_alpha_D": 20.41,
+   "singor_rc": 4.2,
+   "lam": 1.0,
+   "wcore_eV": null,
+   "so_scale": 1.2965,
+   "note": "Derived for LiNaK: Marinescu s and p parameters fitted to the NIST levels; SO scale from the 7p splitting; lam = 1; Fr+ alpha_D from RRPA; the dipole cutoff rc (4.2) fitted to the Roberts-Fairhall-Ginges 7s-7p and 7s-8p matrix elements (no measured Fr threshold or high-n anchor exists)"
   }
  },
- "unsupported": {
-  "Fr": "No Marinescu model-potential parameters, no independent anchors, and the NIST ns->np rows are a single ungraded source (T6898)."
- }
+ "unsupported": {}
 }

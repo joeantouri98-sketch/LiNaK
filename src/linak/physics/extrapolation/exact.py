@@ -59,10 +59,19 @@ MARINESCU = {
                a1=[3.49546309, 4.69366096, 4.32466196, 3.01048361], a2=[1.47533800, 1.71398344, 1.61365288, 1.40000001],
                a3=[-9.72143084, -24.65624280, -6.70128850, -3.20036138], a4=[0.02629242, -0.09543125, -0.74095193, 0.00034538],
                rc=[1.92046930, 2.13383095, 0.93007296, 1.99969677]),
+    # Fr is not in ARC: s and p fitted to the NIST levels (7s-14s, 7p-14p, residuals < 1 cm-1 for s), d and f are not fitted
+    # (Cs values; ns->np does not use them). alphaC is the RRPA Fr+ polarizability, 20.41 a.u. (arXiv:physics/9812028).
+    "Fr": dict(Z=87, alphaC=20.41,
+               a1=[3.64449, 6.39165954, 4.32466196, 3.01048361], a2=[1.34869, 1.99314567, 1.61365288, 1.40000001],
+               a3=[-9.11641, -51.17561712, -6.7012885, -3.20036138], a4=[0.01777, -0.0963569, -0.74095193, 0.00034538],
+               rc=[2.33234, 1.69989162, 0.93007296, 1.99969677]),
 }
 
 
 def _arc_class(element: str):
+    if element == "Fr":
+        from .frlevels import FrAtom
+        return FrAtom
     try:
         import arc
     except ImportError as exc:

@@ -138,7 +138,7 @@ def test_gui_nroots_default_blank():
 def test_plotinteractive_fixes_present():
     from linak.core.constants import HC_EV_NM, KB_EV
     from linak.physics import spectrum_core
-    from linak.pipelines.plotinteractive import common, ee_grotrian
+    from linak.pipelines.plotinteractive import common, grotrian_page
     from linak.report_templates import load as load_template
     # P34: the Doppler width is a standard deviation, not the FWHM
     mc2 = 23 * 931.494e6
@@ -152,8 +152,8 @@ def test_plotinteractive_fixes_present():
     assert spectrum_core.line_gamma_nm(r, lifetimes) == spectrum_core.natural_gamma_nm('3p', 589.0, lifetimes)
     assert common.ionization_energy_eV({}) == 0.0                         # P37
     assert common.ionization_energy_eV({'ionization_energy_eV': 5.1}) == 5.1
-    src = inspect.getsource(ee_grotrian)
-    assert "_ee_nxt" in src and "'NIST-extrap': 'dash'" in src            # P38 (plot 3)
+    tpl = load_template('plotinteractive_grotrian.html')
+    assert "fs==='extrapolated'?'dash'" in tpl and callable(grotrian_page.plot_grotrian)   # P38: extrapolated lines dashed
 
 
 def test_spectra_coulomb_approx_colour_distinct():

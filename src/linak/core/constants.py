@@ -10,6 +10,7 @@ Usage:
 
 __version__ = '1.0'
 
+from linak.core import user_tables as _user_tables
 import math
 
 
@@ -137,6 +138,7 @@ ALKALI_MASS_AMU = {
     'Li': 7.016004, 'Na': 22.989769, 'K': 38.963707,
     'Rb': 86.909180, 'Cs': 132.905452, 'Fr': 223.019736,
 }
+_user_tables.apply("constants.alkali_mass", ALKALI_MASS_AMU)
 
 
 # Natural isotopic abundance (atom %, IUPAC / NIST). Used to pick the DEFAULT isotope when the
@@ -148,6 +150,7 @@ NATURAL_ABUNDANCE_PCT = {
     ('Rb', 85): 72.17, ('Rb', 87): 27.83,
     ('Cs', 133): 100.0,
 }
+_user_tables.apply("constants.abundance", NATURAL_ABUNDANCE_PCT)
 # Elements with no primordial isotope: the isotope the shipped constants files cover.
 DEFAULT_ISOTOPE_NO_ABUNDANCE = {'Fr': 210}
 
@@ -173,11 +176,13 @@ ALPHA0_EXPT = {
     'K':  290.6,  'Ca': 160.8,  'Rb': 318.8,  'Sr': 197.2,
     'Cs': 401.0,  'Ba': 268.0,  'Fr': 317.8,
 }
+_user_tables.apply("constants.alpha0_expt", ALPHA0_EXPT)
 
 C6_EXPT = {
     'Li': 1393.0,  'Na': 1556.0,  'K':  3897.0,
     'Rb': 4691.0,  'Cs': 6851.0,  'Fr': 5500.0,
 }
+_user_tables.apply("constants.c6_expt", C6_EXPT)
 
 
 

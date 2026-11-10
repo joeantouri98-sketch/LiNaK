@@ -31,6 +31,7 @@ import shutil
 import sys
 import tempfile
 import time
+from html import escape
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -38,6 +39,7 @@ from PySide6.QtCore import (
     QProcess,
     QProcessEnvironment,
     QSettings,
+    QSize,
     Qt,
     QThread,
     QTimer,
@@ -50,6 +52,7 @@ from PySide6.QtGui import (
     QColor,
     QDesktopServices,
     QKeySequence,
+    QPainter,
     QShortcut,
     QTextCursor,
 )
@@ -84,6 +87,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from linak.core import species_data
 from linak.core.elements import expand_element_families
 from linak.core.paths import PROJECT_ROOT_ENV, is_frozen_app
 from linak.core.species import resolve_species
@@ -96,15 +100,21 @@ from linak.core.workspace import (
     species_files,
 )
 
+from .compare_table_view import CompareTableView
 from .dataset_editor import DatasetEditorDialog
+from .find_bar import with_find_bar
 from .extrapolation_dialog import active_config_path
 from . import wheel_guard
+from .save_as import OutputSnapshot, sanitize
+from .web_downloads import attach_web_downloads
 from .preferences_dialog import PreferencesDialog, load_overrides as load_colour_overrides
 from .extrapolation_dialog import open_for_species as open_extrapolation_dialog
 from .dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
 from .help_dialog import HelpDialog
 from .overview import SpeciesOverviewWidget
 from .plot_cache import local_plot_copy
+from .new_species_dialog import NewSpeciesDialog
+from .properties_dialog import PropertiesDialog
 from .species_delete import DeleteSpeciesDialog, delete_permanently, move_to_trash
 from .project_io import (
     open_pipeline_overview_html,
@@ -126,6 +136,9 @@ from .stages import (
     STAGE_BY_ID,
     STAGE_GROUPS,
     STAGE_PHYSICS,
+    flag_section,
+    input_hint,
+    output_hint,
     isotope_prerequisite_issues,
     stage_argv,
     stage_has_output,
@@ -182,6 +195,27 @@ class _SeedWorker(QThread):
             self.failed.emit(f"Could not copy the bundled data into {self.root}: {exc}")
 
 
+NO_SAVE_AS = ("runorca", "orca_to_json")
+
+
+class _OptionLabel(QLabel):
+    """A one-line label for the options form: it never asks for more width than the panel has (no sideways scrolling)
+    and shortens its text with an ellipsis only when the panel really is too narrow."""
+
+    def minimumSizeHint(self):
+        return QSize(0, super().minimumSizeHint().height())
+
+    def paintEvent(self, event):
+        text = self.text()
+        shown = self.fontMetrics().elidedText(text, Qt.ElideRight, self.width())
+        if shown == text:
+            super().paintEvent(event)
+            return
+        painter = QPainter(self)
+        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.drawText(self.rect(), int(self.alignment()) | Qt.AlignVCenter, shown)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -193,6 +227,9 @@ class MainWindow(QMainWindow):
         self.current_species = ""
         self.process: QProcess | None = None
         self.current_stage = None
+        self._snapshot = None            # outputs before a run filed under a name (Save as)
+        self._snapshot_name = None
+        self._save_as_edit = None
         self.fallback_path: Path | None = None
         self._flag_widgets: dict = {}
         self._basis_picker_checkbox = None
@@ -220,6 +257,8 @@ class MainWindow(QMainWindow):
             kill_process_tree(self.process)
             self.process.waitForFinished(3000)
         self.process = None
+        if getattr(self, "_tests_dialog", None) is not None:
+            self._tests_dialog.shutdown()
         # A QThread destroyed while running aborts the process; copies are
         # atomic, so waiting for them is the only safe exit.
         for worker in list(self._seed_workers):
@@ -288,6 +327,9 @@ class MainWindow(QMainWindow):
         )
         edit_menu.addAction(open_existing_action)
 
+        properties_action = QAction("Species properties...", self)
+        properties_action.triggered.connect(lambda: self._open_properties())
+        edit_menu.addAction(properties_action)
         delete_species_action = QAction("Delete species...", self)
         delete_species_action.triggered.connect(lambda: self._delete_species())
         edit_menu.addAction(delete_species_action)
@@ -370,6 +412,10 @@ class MainWindow(QMainWindow):
         stop_action.setShortcut("Shift+F5")
         stop_action.triggered.connect(self._stop_stage)
         run_menu.addAction(stop_action)
+        run_menu.addSeparator()
+        tests_action = QAction("Tests...", self)
+        tests_action.triggered.connect(self._open_tests)
+        run_menu.addAction(tests_action)
 
         help_menu = self.menuBar().addMenu("&Help")
 
@@ -397,14 +443,21 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def _show_about(self):
+        from linak import __version__
+
         QMessageBox.about(
-            self, "About LiNaK Control Panel",
-            "LiNaK Desktop Control Panel\n\n"
-            "A plain Qt front-end for the LiNaK alkali-atom AMO pipeline. "
-            "Runs your existing scripts as subprocesses and displays their "
-            "output; no physics is reimplemented here.\n\n"
-            "See Help > Help contents for a flags reference and short "
-            "physics notes per stage.",
+            self, "About LiNaK",
+            f"<h3>LiNaK {escape(__version__)}</h3>"
+            "<p>An alkali-atom AMO pipeline: NIST / quantum-defect levels, transitions, lifetimes, "
+            "polarizability, blackbody shifts, optical tweezers, hyperfine and Feshbach, with interactive "
+            "plots and optional ORCA and ARC bridges. This panel runs the pipelines and displays their "
+            "output; the physics lives in the pipelines.</p>"
+            "<p>Author: Youssef Antoury<br>"
+            "Licence: GNU GPL v3 or later<br>"
+            "Source: <a href='https://github.com/joeantouri98-sketch/LiNaK'>github.com/joeantouri98-sketch/LiNaK</a><br>"
+            "Cite: <a href='https://doi.org/10.5281/zenodo.21821149'>doi:10.5281/zenodo.21821149</a></p>"
+            "<p>Plotly.js (MIT) is bundled for offline plots. See Help &gt; Help contents for the flags "
+            "reference and short physics notes per stage.</p>",
         )
 
     def _new_dataset_dialog(self):
@@ -696,6 +749,7 @@ class MainWindow(QMainWindow):
         self.viewer_stack = QStackedWidget()
         if HAS_WEBENGINE:
             self.web_view = QWebEngineView()
+            attach_web_downloads(self.web_view, self)
             self.viewer_stack.addWidget(self.web_view)
         else:
             self.web_view = None
@@ -705,7 +759,8 @@ class MainWindow(QMainWindow):
         self.json_view.setObjectName("jsonView")
         self.json_view.setReadOnly(True)
         self.json_view.setFont(mono_font())
-        self.viewer_stack.addWidget(self.json_view)  # index 1
+        self.json_view_box = with_find_bar(self.json_view)
+        self.viewer_stack.addWidget(self.json_view_box)  # index 1
 
         fallback = QWidget()
         fb = QVBoxLayout(fallback)
@@ -729,6 +784,10 @@ class MainWindow(QMainWindow):
         placeholder.setObjectName("emptyState")
         placeholder.setAlignment(Qt.AlignCenter)
         self.viewer_stack.addWidget(placeholder)  # index 3
+        self.compare_view = CompareTableView()
+        self.compare_view.add_requested.connect(self._add_compare_elements)
+        self.compare_view.raw_requested.connect(self._show_compare_json)
+        self.viewer_stack.addWidget(self.compare_view)  # index 4
         self.viewer_stack.setCurrentIndex(3)
         self.center_tabs.addTab(self.viewer_stack, "Viewer")
 
@@ -806,6 +865,7 @@ class MainWindow(QMainWindow):
         flags_scroll.setWidget(flags_holder)
         flags_scroll.setWidgetResizable(True)
         flags_scroll.setFrameShape(QFrame.NoFrame)
+        flags_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)   # fields shrink to the panel instead
         layout.addWidget(flags_scroll, stretch=1)
 
         layout.addWidget(self._section_title("Command"))
@@ -940,15 +1000,33 @@ class MainWindow(QMainWindow):
         if species and restore_species(Workspace(root=self.root), species):
             self._seed_root()
         self._set_species(species)
+        self._offer_setup(species)
+
+    def _offer_setup(self, species: str):
+        """A species with no bundled levels or lines: open the dialog that imports them and shows what they enable."""
+        if species and species_data.needs_setup(species):
+            NewSpeciesDialog(self.root, species, self).exec()
+            self._refresh_stage_markers()
+            self._refresh_default_hints()
 
     def _species_context_menu(self, position):
         item = self.species_list.itemAt(position)
         if item is None:
             return
         menu = QMenu(self.species_list)
+        props_action = menu.addAction("Properties...")
         delete_action = menu.addAction(f"Delete {item.text()}...")
-        if menu.exec(self.species_list.mapToGlobal(position)) is delete_action:
+        chosen = menu.exec(self.species_list.mapToGlobal(position))
+        if chosen is props_action:
+            self._open_properties(item.text())
+        elif chosen is delete_action:
             self._delete_species(item.text())
+
+    def _open_properties(self, species: str = ""):
+        """The built-in numbers and data files of one species, for viewing, editing and adding."""
+        species = species or self.current_species
+        if species:
+            PropertiesDialog(self.root, species, self).exec()
 
     def _delete_highlighted_species(self):
         item = self.species_list.currentItem()
@@ -1036,6 +1114,7 @@ class MainWindow(QMainWindow):
         self._refresh_species_outputs()
         self._refresh_overview()
         self._update_stage_desc()
+        self._refresh_default_hints()
         self._update_cmd_preview()
 
     # stage selection
@@ -1058,12 +1137,15 @@ class MainWindow(QMainWindow):
             self.flags_form.removeRow(0)
         # removeRow() deleted every widget, the basis picker's included.
         self._flag_widgets = {}
+        self._flag_specs = {}
+        self._save_as_edit = None
         self._basis_picker_checkbox = None
         self._basis_picker_combo = None
         if stage is None:
             self.cmd_preview.setText("")
             return
 
+        rows = {"input": [], "output": [], "options": []}
         for spec in stage.get("flags", []):
             kind = spec["kind"]
             help_text = spec.get("help", "")
@@ -1072,12 +1154,16 @@ class MainWindow(QMainWindow):
                 # e.g. workspace_data_dir: resolved against the current folder.
                 default = default(self.root)
 
-            if kind == "flag":
+            if kind in ("flag", "invflag"):
                 value_widget = QCheckBox()
+                value_widget.setChecked(kind == "invflag")      # "invflag": ticked = on, the flag is sent when unticked
                 value_widget.stateChanged.connect(self._update_cmd_preview)
                 row_widget = value_widget
             elif kind == "choice":
                 value_widget = QComboBox()
+                # a long choice must not make the whole panel wider than its window
+                value_widget.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+                value_widget.setMinimumContentsLength(8)
                 for choice in spec["choices"]:
                     cval, shown = choice if isinstance(choice, tuple) else (choice, choice)
                     value_widget.addItem(shown, userData=cval)
@@ -1092,8 +1178,22 @@ class MainWindow(QMainWindow):
                 value_widget = QLineEdit(default)
                 value_widget.textChanged.connect(self._update_cmd_preview)
                 browse_btn = QPushButton("Browse...")
+                mode = spec.get("browse")
                 browse_btn.clicked.connect(
-                    lambda _checked=False, le=value_widget: self._browse_for_path(le))
+                    lambda _checked=False, le=value_widget, m=mode: self._browse_for_path(le, mode=m))
+                container = QWidget()
+                hl = QHBoxLayout(container)
+                hl.setContentsMargins(0, 0, 0, 0)
+                hl.addWidget(value_widget, stretch=1)
+                hl.addWidget(browse_btn)
+                row_widget = container
+            elif kind == "pathlist":
+                value_widget = QLineEdit(default)
+                value_widget.setPlaceholderText("files separated by ;")
+                value_widget.textChanged.connect(self._update_cmd_preview)
+                browse_btn = QPushButton("Add files...")
+                browse_btn.clicked.connect(
+                    lambda _checked=False, le=value_widget: self._add_files_to(le))
                 container = QWidget()
                 hl = QHBoxLayout(container)
                 hl.setContentsMargins(0, 0, 0, 0)
@@ -1121,9 +1221,10 @@ class MainWindow(QMainWindow):
             row_widget.setToolTip(help_text or spec["label"])
             value_widget.setToolTip(help_text or spec["label"])
             self._flag_widgets[spec["name"]] = (kind, value_widget)
-            label = QLabel(spec["label"])
+            self._flag_specs[spec["name"]] = spec
+            label = _OptionLabel(spec["label"])
             label.setToolTip(help_text or spec["label"])
-            self.flags_form.addRow(label, row_widget)
+            rows[flag_section(spec)].append((label, row_widget))
 
         if stage["id"] == "runorca":
             self._basis_picker_checkbox = QCheckBox("Basis picker")
@@ -1138,10 +1239,59 @@ class MainWindow(QMainWindow):
             self._basis_picker_combo.setPlaceholderText("Select basis set")
             self._basis_picker_combo.currentIndexChanged.connect(self._apply_selected_basis)
 
-            self.flags_form.addRow(QLabel("Basis picker"), self._basis_picker_checkbox)
-            self.flags_form.addRow(QLabel("Basis set"), self._basis_picker_combo)
+            rows["input"].append((QLabel("Basis picker"), self._basis_picker_checkbox))
+            rows["input"].append((QLabel("Basis set"), self._basis_picker_combo))
 
+        if stage["id"] not in NO_SAVE_AS:          # the ORCA stages have their own output name suffix
+            self._save_as_edit = QLineEdit()
+            self._save_as_edit.setPlaceholderText("optional")
+            rows["output"].append((QLabel("Save as:"), self._save_as_edit))
+
+        # Input first, then Outputs, then the rest; a heading only where there is more than one kind of row.
+        titles = (("input", "Input"), ("output", "Output"), ("options", "Options"))
+        shown = [key for key, _title in titles if rows[key]]
+        for key, title in titles:
+            if not rows[key]:
+                continue
+            if len(shown) > 1:
+                self.flags_form.addRow(self._form_heading(title))
+            for label, widget in rows[key]:
+                self.flags_form.addRow(label, widget)
+
+        self._refresh_default_hints()
         self._update_cmd_preview()
+
+    def _refresh_default_hints(self):
+        """Grey hints in blank fields: the files the stage reads and writes by default for the current species."""
+        stage = self._selected_stage()
+        species = self.current_species
+        for name, (kind, widget) in getattr(self, "_flag_widgets", {}).items():
+            hint = input_hint(self._flag_specs[name], species) if kind == "path" else ""
+            if hint:
+                widget.setPlaceholderText(hint)
+        if self._save_as_edit is not None and stage is not None:
+            hint = output_hint(stage, species)
+            self._save_as_edit.setPlaceholderText(
+                hint or "optional")
+
+    @staticmethod
+    def _form_heading(text: str) -> QWidget:
+        """A section title with a line beneath it, like the Theme colors title in Preferences."""
+        box = QWidget()
+        lay = QVBoxLayout(box)
+        lay.setContentsMargins(0, 8, 0, 2)
+        lay.setSpacing(2)
+        title = QLabel(text)
+        font = title.font()
+        font.setPointSizeF(font.pointSizeF() + 1)
+        font.setBold(True)
+        title.setFont(font)
+        lay.addWidget(title)
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Plain)
+        lay.addWidget(line)
+        return box
 
     def _open_extrapolation_dialog(self):
         element = self.current_species
@@ -1264,10 +1414,33 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Basis export failed", str(exc))
 
 
-    def _browse_for_path(self, line_edit: QLineEdit):
-        path, _filter = QFileDialog.getOpenFileName(self, "Select file", str(self.root))
+    def _add_files_to(self, line_edit: QLineEdit):
+        """Append the files picked in a dialog (several at once) to a ';'-separated field."""
+        start = Workspace(root=self.root).data_json_dir
+        paths, _filter = QFileDialog.getOpenFileNames(self, "Select files", str(start), "JSON (*.json);;All files (*)")
+        if paths:
+            current = [p.strip() for p in line_edit.text().split(";") if p.strip()]
+            line_edit.setText("; ".join(current + [str(p) for p in paths if str(p) not in current]))
+
+    def _browse_for_path(self, line_edit: QLineEdit, mode: str | None = None):
+        """Fill *line_edit* from a dialog. *mode*: None = any file, "data" = a file from the data folder,
+        "dir" = a folder, "orca_run" = a run folder of this species (the field takes its name)."""
+        ws = Workspace(root=self.root)
+        if mode in ("dir", "orca_run"):
+            current = line_edit.text().strip()
+            start = ws.orca_outputs_dir / (self.current_species or "") if mode == "orca_run" else self.root
+            if mode == "dir" and current and Path(current).is_dir():
+                start = Path(current)
+            if not Path(start).is_dir():
+                start = self.root
+            path = QFileDialog.getExistingDirectory(self, "Select folder", str(start))
+            if path and mode == "orca_run":
+                path = Path(path).name
+        else:
+            start = ws.data_json_dir if mode == "data" else self.root
+            path, _filter = QFileDialog.getOpenFileName(self, "Select file", str(start))
         if path:
-            line_edit.setText(path)
+            line_edit.setText(str(path))
 
     def _compare_elements_from_form(self):
         entry = self._flag_widgets.get("__elements")
@@ -1292,6 +1465,9 @@ class MainWindow(QMainWindow):
             elif kind == "flag":
                 if w.isChecked():
                     args.append(name)
+            elif kind == "invflag":
+                if not w.isChecked():
+                    args.append(name)
             elif kind == "choice":
                 value = w.currentData()
                 if value not in (None, ""):
@@ -1301,6 +1477,10 @@ class MainWindow(QMainWindow):
                 if text:
                     args.append(name)
                     args += text.split()
+            elif kind == "pathlist":            # a repeatable option: --extra a --extra b
+                for item in w.text().split(";"):
+                    if item.strip():
+                        args += [name, item.strip()]
             else:  # int, float, str, path
                 text = w.text().strip()
                 if text:
@@ -1381,7 +1561,18 @@ class MainWindow(QMainWindow):
             return
         if not self._confirm_isotope_data(stage, pipeline_args):
             return
+        save_name = sanitize(self._save_as_edit.text()) if self._save_as_edit is not None else ""
+        if save_name and "--all" in pipeline_args:
+            QMessageBox.information(self, "Save as",
+                                    "Save as works for one species at a time; untick \"Run all available elements\" "
+                                    "or clear the name.")
+            return
         program, args = stage_program(pipeline_args)
+        self._snapshot, self._snapshot_name = None, save_name
+        if save_name:
+            ws = Workspace(root=self.root)
+            self._snapshot = OutputSnapshot(
+                [ws.output_path(t.format(el=self.current_species or "")) for t in stage["outputs"]])
 
         self.console.clear()
         self._show_console()
@@ -1512,16 +1703,55 @@ class MainWindow(QMainWindow):
             # FailedToStart emits no finished() signal, so the run controls
             # must be reset here or the UI stays stuck on "Busy".
             self.statusBar().showMessage(f"{self.current_stage['label']}: {message}")
+            self._file_named_run(False)
             self._reset_process_state()
+
+    def _file_named_run(self, ok: bool) -> None:
+        """After a run with a Save as name: keep its outputs under the name, put the usual files back."""
+        snapshot, self._snapshot = self._snapshot, None
+        if snapshot is None:
+            return
+        kept = snapshot.finish(self._snapshot_name, ok=ok)
+        if kept:
+            self._log("Saved as: " + ", ".join(p.name for p in kept))
+        elif ok:
+            self._log("Save as: the stage wrote no output files.")
 
     def _on_finished(self, stage, code, _status):
         ok = code == 0
+        self._file_named_run(ok)
         self._log(f"\n{'done.' if ok else f'exited with code {code}.'}")
         self.statusBar().showMessage(
             f"{stage['label']}: {'finished' if ok else f'failed (exit {code})'}"
         )
         self._reset_process_state()
         self._refresh_all()
+        if ok and stage["id"] == "compare":
+            self._show_compare_table()
+
+    def _compare_json_path(self) -> Path:
+        return Workspace(root=self.root).output_path("data/comparison_table.json")
+
+    def _show_compare_table(self):
+        path = self._compare_json_path()
+        if path.is_file():
+            self._load_output(path, "JSON")
+
+    def _show_compare_json(self):
+        path = self._compare_json_path()
+        self._load_output(path, "JSON", raw=True)
+
+    def _add_compare_elements(self, text: str):
+        """Run the Compare stage for *text* (typed in the table's Add box)."""
+        for i in range(self.stage_list.count()):
+            if self.stage_list.item(i).data(Qt.UserRole) == "compare":
+                self.stage_list.setCurrentRow(i)
+                break
+        entry = self._flag_widgets.get("__elements")
+        if entry is None:
+            return
+        entry[1].setText(text)
+        self._run_stage()
 
     def _log(self, text: str, newline=True):
         cursor = self.console.textCursor()
@@ -1614,6 +1844,17 @@ class MainWindow(QMainWindow):
     def _update_status(self):
         self.statusBar().showMessage(f"Output folder: {self.root}")
 
+    def _open_tests(self) -> None:
+        """Run > Tests...: one window, kept so a running suite survives closing and reopening it."""
+        from .tests_dialog import TestsDialog
+
+        dlg = getattr(self, "_tests_dialog", None)
+        if dlg is None:
+            dlg = self._tests_dialog = TestsDialog(self)
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+
     def _output_context_menu(self, output_list: QListWidget, position) -> None:
         """Right-click on a Plots / Data / Shared entry: Edit (json, csv) and Delete."""
         item = output_list.itemAt(position)
@@ -1671,10 +1912,13 @@ class MainWindow(QMainWindow):
         path = Path(path_str)
         self._load_output(path, kind)
 
-    def _load_output(self, path: Path, kind: str):
+    def _load_output(self, path: Path, kind: str, raw: bool = False):
         self.center_tabs.setCurrentWidget(self.viewer_stack)
         self._shown_path = path
-        if kind == "PLOT":
+        if kind == "JSON" and path.name == "comparison_table.json" and not raw:
+            self.viewer_stack.setCurrentIndex(4)
+            self.compare_view.load(path)
+        elif kind == "PLOT":
             if HAS_WEBENGINE:
                 self.viewer_stack.setCurrentIndex(0)
                 self.web_view.load(

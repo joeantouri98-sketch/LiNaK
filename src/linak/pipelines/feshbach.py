@@ -75,6 +75,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--all', action='store_true',
                         help='Run every element that has *_feshbach.json')
     parser.add_argument('--data-dir', default=None)
+    parser.add_argument('--no-plot', action='store_true',
+                        help='Write the data (JSON) only; skip the interactive plot.')
     parser.add_argument('--output-dir', default=None,
                         help='Plot directory (default: plots/<element> under the output folder)')
     parser.add_argument('--B-max', type=float, default=None,
@@ -429,7 +431,8 @@ def run_one(element, args):
               f"Delta={r.Delta_G:6.3f} G  [{r.channel}]")
 
     out_dir = args.output_dir or os.path.join(Workspace.current().plots_dir, element)
-    plot_feshbach(inputs, result, out_dir)
+    if not args.no_plot:
+        plot_feshbach(inputs, result, out_dir)
     write_output_json(inputs, result, args.data_dir)
     return result
 

@@ -16,7 +16,7 @@ keywords:
   - optical tweezers
 version: "0.1.0"
 date-released: "2026-08-06"
-license: MIT
+license: GPL-3.0-or-later
 abstract: >-
   LiNaK is a Python NIST/QDT toolkit for neutral alkali atoms (Li–Fr):
   levels, transitions, lifetimes, polarizability, BBR, tweezers, hyperfine,

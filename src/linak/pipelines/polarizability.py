@@ -76,6 +76,7 @@ import os
 
 import numpy as np
 from linak.core.fileio import write_json
+from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.workspace import Workspace
 from linak.core.spectroscopy import Transition
@@ -329,7 +330,8 @@ def find_magic_wavelengths(trans_ground, trans_excited,
 def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
-                data_dir=None, isotope_A=None, extrapolation=None):
+                data_dir=None, isotope_A=None, extrapolation=None,
+                rydberg_file=None, transitions_file=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
@@ -340,7 +342,8 @@ def run_element(element, excited_label=None,
     print(f"  {element}")
     print(f"{'='*65}")
 
-    data = load_element(element, data_dir=data_dir, extrapolation=extrapolation)
+    data = load_element(element, data_dir=data_dir, extrapolation=extrapolation,
+                        rydberg_file=rydberg_file, transitions_file=transitions_file)
     if data is None:
         return None
 
@@ -506,6 +509,7 @@ def run_element(element, excited_label=None,
     result = dict(
         element          = element,
         extrapolation    = data.get('extrapolation'),
+        inputs           = {k: os.path.basename(v) for k, v in (('rydberg', rydberg_file), ('transitions', transitions_file)) if v} or None,
         gs_label         = gs_label,
         excited_label    = excited_used,
         alpha0_au        = round(alpha0, 4),
@@ -1230,6 +1234,7 @@ def save_json(result, data_dir=None):
         I_ref_kWcm2=result.get('I_ref_kWcm2'),
         point_result=result.get('point_result'),
         extrapolation=result.get('extrapolation'),
+        **({'inputs': result['inputs']} if result.get('inputs') else {}),
         transitions_gs=_trim_transitions(result['transitions_gs']),
         transitions_ex=_trim_transitions(result['transitions_ex']),
     )
@@ -1249,6 +1254,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--heteronuclear', action='store_true')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir))
+    parser.add_argument('--rydberg-file', default=None, metavar='FILE',
+                        help='Rydberg data to read instead of <species>_rydberg.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--transitions-file', default=None, metavar='FILE',
+                        help='Transitions data to read instead of <species>_transitions.json '
+                             '(a path, or a name under the data folder).')
+    parser.add_argument('--no-plot', action='store_true',
+                        help='Write the data (JSON) only; skip the interactive plot.')
     parser.add_argument('--n-grid', type=int, default=2000)
     parser.add_argument('--extrapolation', default=None, metavar='CONFIG.json',
                         help='Extrapolated ns->np f-values (same config as the lifetimes stage; '
@@ -1274,11 +1287,16 @@ def main(argv=None) -> int:
 
     from linak.physics.polarizability_core import require_alpha_species
 
+    if args.all and (args.rydberg_file or args.transitions_file):
+        parser.error("--rydberg-file / --transitions-file apply to one species; drop --all")
+
     if args.state:
         if args.element is None:
             parser.error("--state requires an element, e.g. `polarizability Na --state 20s`")
         el = require_alpha_species(args.element, "polarizability.py")["species_id"]
-        data = load_element(el, data_dir, extrapolation=args.extrapolation)
+        data = load_element(el, data_dir, extrapolation=args.extrapolation,
+                            rydberg_file=resolve_data_file(args.rydberg_file, el, data_dir, "Rydberg"),
+                            transitions_file=resolve_data_file(args.transitions_file, el, data_dir, "Transitions"))
         if data is None:
             raise MissingDataError(f"No polarizability data for {el} in {data_dir}")
         lab = args.state.strip()
@@ -1323,6 +1341,8 @@ def main(argv=None) -> int:
                 data_dir=data_dir,
                 isotope_A=args.isotope,
                 extrapolation=args.extrapolation,
+                rydberg_file=resolve_data_file(args.rydberg_file, el, data_dir, "Rydberg"),
+                transitions_file=resolve_data_file(args.transitions_file, el, data_dir, "Transitions"),
             )
         except MissingDataError as exc:
             if not args.all:
@@ -1333,12 +1353,15 @@ def main(argv=None) -> int:
             failed.append(el)
             continue
         save_json(result, data_dir)
-        plot_polarizability(result, el_out_dir)
-        if result["magic_wavelengths"]:
-            plot_magic_wavelengths(result, el_out_dir)
+        if not args.no_plot:
+            plot_polarizability(result, el_out_dir)
+            if result["magic_wavelengths"]:
+                plot_magic_wavelengths(result, el_out_dir)
         all_results.append(result)
 
-    if len(all_results) > 1:
+    if args.no_plot:
+        pass
+    elif len(all_results) > 1:
         print("\n" + "=" * 65)
         print(f"  Generating cross-element plots → {plots_dir}/")
         print("=" * 65)

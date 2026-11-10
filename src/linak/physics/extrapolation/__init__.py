@@ -1,7 +1,7 @@
 """Physically motivated extrapolation of alkali ns->np oscillator strengths.
 
 Pure functions, no GUI or file-writing; any pipeline stage can call :func:`extrapolate`.
-Supported species: see :func:`supported_species` (Fr is refused with an explanation).
+Supported species: see :func:`supported_species` (others are refused with an explanation).
 """
 
 from .api import extrapolate, flag_low_weight, precision_rows

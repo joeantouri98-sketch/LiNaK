@@ -13,7 +13,7 @@ import os
 
 from linak.core.errors import InvalidSpeciesError, MissingDataError
 from linak.core.fileio import write_json
-from linak.core.paths import reference_path
+from linak.core.paths import bundled_file, reference_path
 from linak.core.workspace import Workspace
 from linak.physics.rydberg import (
     build_nist_lookup,
@@ -36,7 +36,7 @@ from linak.physics.rydberg import (
 def find_nist_levels_file(element, data_dir):
     """Prefer <element>.csv (full ASD export), fall back to .txt."""
     for ext in ('.csv', '.txt'):
-        path = os.path.join(data_dir, f"{element}{ext}")
+        path = bundled_file("NIST Levels", data_dir, f"{element}{ext}")
         if os.path.exists(path):
             return path
     return None
@@ -351,7 +351,9 @@ def main(argv=None) -> int:
 
     # 3d metals: term/config NIST overlay only — do not invent QDT series.
     from linak.integrations.orca_templates import TRANSITION_METAL_3D, get_element_class, ElementClass
-    nist_only = bool(args.nist_only) or (
+    from linak.core.elements import ALKALI_SYMBOLS
+    other_neutral = sp["kind"] == "neutral" and sp["symbol"] not in ALKALI_SYMBOLS and sp["symbol"] != "H"
+    nist_only = bool(args.nist_only) or other_neutral or (
         sp["symbol"] in TRANSITION_METAL_3D
         or get_element_class(sp["symbol"], sp["charge"], sp["multiplicity"])
         == ElementClass.TRANSITION_METAL

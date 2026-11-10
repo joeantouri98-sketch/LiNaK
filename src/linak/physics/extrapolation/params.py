@@ -91,7 +91,7 @@ def packaged_species_params(element: str) -> dict:
 
 
 def species_params(element: str) -> dict:
-    """Parameters for ``element`` or a clear refusal (e.g. Fr); the user's model settings are applied when active."""
+    """Parameters for ``element`` or a clear refusal (e.g. Ra); the user's model settings are applied when active."""
     mp = model_params()
     if element in mp["species"]:
         base = mp["species"][element]

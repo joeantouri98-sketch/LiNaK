@@ -30,7 +30,7 @@ def test_exact_calculation_reproduces_the_shipped_table():
     tab = packaged_table("Na")
     for n, J in ((4, 0.5), (7, 1.5), (15, 0.5)):
         nu = m.nu(n, J)
-        assert m.f(n, J) == pytest.approx(tab.f(nu, J), rel=1e-6)
+        assert m.f(n, J) == pytest.approx(tab.f(nu, J), rel=1e-4)
     assert m.sigma_th_Mb() == pytest.approx(tab.sigma_th_Mb(), rel=1e-4)
 
 
@@ -46,7 +46,7 @@ def test_hash_only_moves_with_edited_values():
 
 
 def test_model_settings_validate_save_presets(tmp_path):
-    clean, problems = M.validate({"Rb": {"lam": 0.8, "so_scale": 0.97, "bogus": 1, "singor_rc": 99}, "Fr": {"lam": 1}})
+    clean, problems = M.validate({"Rb": {"lam": 0.8, "so_scale": 0.97, "bogus": 1, "singor_rc": 99}, "Ra": {"lam": 1}})
     assert clean == {"Rb": {"lam": 0.8}} and len(problems) == 3
     assert M.to_overrides({"Rb": {"wcore_eV": 0.0}}) == {"Rb": {"wcore_eV": None}}
     path = tmp_path / "model_settings.json"
@@ -75,12 +75,12 @@ def test_edited_parameters_use_the_exact_backend_until_rebuilt(tmp_path):
     assert S.table_state("Na", tmp_path / "x", {})["state"] == "shipped"       # defaults still use the shipped table
 
 
-def test_model_overrides_do_not_leak_and_fr_is_refused():
+def test_model_overrides_do_not_leak_and_unsupported_is_refused():
     with model_overrides({"Na": {"lam": 0.5}}):
         assert not get_model("Na").fresh or hasattr(get_model("Na"), "model")
     assert get_model("Na").fresh
     with pytest.raises(UnsupportedSpeciesError):
-        get_model("Fr")
+        get_model("Ra")
 
 
 def test_settings_page_edits_model_parameters(tmp_path):

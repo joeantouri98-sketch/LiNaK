@@ -1,2 +1,108 @@
-{"note":"Fr: curated NIST fit exclusions only (no literature rows yet).","nist_fit_exclusions":[
-{"lower":"7p3/2","upper_l":"d","J":"5/2","n":[13,14,18],"ref":"NIST 7p3/2->nd5/2 f*n*^3 = 14.8, 14.3, 13.7 at n=13, 14, 18 versus 4.6-5.1 at all other n=12-20 (factor ~3 outliers); points left out of the extrapolation fit only"}]}
+{
+ "note": "Fr: curated NIST fit exclusions, and PUBLISHED line-level rows from Fr_published_anchors.json, used only where NIST lists no f.",
+ "nist_fit_exclusions": [
+  {
+   "lower": "7p3/2",
+   "upper_l": "d",
+   "J": "5/2",
+   "n": [
+    13,
+    14,
+    18
+   ],
+   "ref": "NIST 7p3/2->nd5/2 f*n*^3 = 14.8, 14.3, 13.7 at n=13, 14, 18 versus 4.6-5.1 at all other n=12-20 (factor ~3 outliers); points left out of the extrapolation fit only"
+  }
+ ],
+ "transitions": [
+  {
+   "lower": "7p",
+   "lower_J": "1/2",
+   "upper": "6d",
+   "upper_J": "3/2",
+   "f_abs": 0.31469,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p",
+   "lower_J": "3/2",
+   "upper": "6d",
+   "upper_J": "3/2",
+   "f_abs": 0.019231,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p",
+   "lower_J": "3/2",
+   "upper": "6d",
+   "upper_J": "5/2",
+   "f_abs": 0.19719,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p",
+   "lower_J": "1/2",
+   "upper": "8s",
+   "upper_J": "1/2",
+   "f_abs": 0.20398,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "7p",
+   "lower_J": "3/2",
+   "upper": "8s",
+   "upper_J": "1/2",
+   "f_abs": 0.24546,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d",
+   "lower_J": "3/2",
+   "upper": "8p",
+   "upper_J": "1/2",
+   "f_abs": 0.033035,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d",
+   "lower_J": "3/2",
+   "upper": "8p",
+   "upper_J": "3/2",
+   "f_abs": 0.0034057,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "6d",
+   "lower_J": "5/2",
+   "upper": "8p",
+   "upper_J": "3/2",
+   "f_abs": 0.02361,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "8s",
+   "lower_J": "1/2",
+   "upper": "8p",
+   "upper_J": "1/2",
+   "f_abs": 0.52041,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  },
+  {
+   "lower": "8s",
+   "lower_J": "1/2",
+   "upper": "8p",
+   "upper_J": "3/2",
+   "f_abs": 1.0587,
+   "acc": "B",
+   "ref": "PUBLISHED: Roberts, Fairhall & Ginges, Phys. Rev. A 107, 052812 (2023), Table X (final)"
+  }
+ ]
+}

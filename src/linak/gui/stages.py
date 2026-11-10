@@ -94,7 +94,7 @@ PIPELINE = [
               "without re-running ORCA (e.g. after hand-editing an input file).",
          positional=lambda el: [el],
          flags=[
-             dict(name="--run", kind="str", label="ORCA run tag (folder name)", default="",
+             dict(name="--run", kind="path", browse="orca_run", label="ORCA run tag (folder name)", default="",
                   help="orca_outputs/<species>/<TAG>/ to re-parse. Required if more than "
                        "one tagged run exists for this species."),
              dict(name="--outname", kind="str", label="Output name suffix", default="",
@@ -110,8 +110,8 @@ PIPELINE = [
                   help="Maximum principal quantum number for the Rydberg series."),
              dict(name="--nist-only", kind="flag", label="NIST-only (no QDT model)",
                   help="Write NIST ASD term levels only, no quantum-defect series. "
-                       "Auto-enabled for 3d transition metals regardless."),
-             dict(name="--nist-dir", kind="str", label="NIST levels directory (override)",
+                       "Always on for neutral atoms that are not alkalis."),
+             dict(name="--nist-dir", kind="path", browse="dir", label="NIST levels directory (override)",
                   default="",
                   help="Override the 'NIST Levels/' folder the script reads from. "
                        "Leave blank to use the bundled NIST levels."),
@@ -122,6 +122,8 @@ PIPELINE = [
          desc="Applies electric-dipole selection rules to the level set.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
+                  help="Rydberg file to read. Blank: <species>_rydberg.json."),
              dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="",
                   help="Only keep transitions above this wavelength."),
              dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="",
@@ -141,6 +143,12 @@ PIPELINE = [
          desc="Einstein A coefficients and radiative lifetimes.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
+                  help="Rydberg file to read. Blank: <species>_rydberg.json."),
+             dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
+                  help="Transitions file to read. Blank: <species>_transitions.json."),
+             dict(name="--orca-file", kind="path", browse="data", label="ORCA results", default="",
+                  help="ORCA result file for the TD-DFT f-values. Blank: <species>.json."),
              dict(name="--n-max", kind="int", label="Max n (Rydberg cutoff)", default="",
                   help="Max principal quantum number for Rydberg transitions."),
              dict(name="--orca-only", kind="flag", label="ORCA oscillator strengths only",
@@ -149,17 +157,21 @@ PIPELINE = [
                   help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
              dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
                   default="",
-                  help="Physics-based extrapolation of ns->np oscillator strengths. "
-                       "Use the Extrapolation... button to choose options; the file it "
-                       "writes is passed here."),
+                  help="Extrapolation of ns->np oscillator strengths. "
+                       "Set it with the Extrapolation... button."),
          ],
          outputs=["data/{el}_lifetimes.json"]),
 
     dict(id="polarizability", label="Polarizability", symbol="α(ω)",
          pipeline="polarizability",
-         desc="Dynamic polarizability, C6, magic wavelengths, AC Stark.",
+         desc="Dynamic polarizability, C6, magic wavelengths, AC Stark. Data only: the plots are on the Polarizability page (Visualise).",
+         always=["--no-plot"],
          positional=lambda el: [el],
          flags=[
+             dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
+                  help="Rydberg file to read. Blank: <species>_rydberg.json."),
+             dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
+                  help="Transitions file to read. Blank: <species>_transitions.json."),
              dict(name="--excited", kind="str", label="Excited state label", default="",
                   help="e.g. 3p3/2. Default: lowest dipole-allowed state from ground."),
              dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)",
@@ -186,18 +198,17 @@ PIPELINE = [
                   help="Example: 20s. Prints alpha(0) for one state and exits."),
              dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
                   default="",
-                  help="Physics-based extrapolation of ns->np oscillator strengths. "
-                       "Use the Extrapolation... button to choose options; the file it "
-                       "writes is passed here."),
+                  help="Extrapolation of ns->np oscillator strengths. "
+                       "Set it with the Extrapolation... button."),
          ],
-         outputs=["data/{el}_polarizability.json",
-                  "plots/{el}/{el}_polarizability.html",
-                  "plots/{el}/{el}_magic_wavelengths.html"]),
+         outputs=["data/{el}_polarizability.json"]),
 
     dict(id="blackbody", label="Blackbody (BBR)", symbol="BBR", pipeline="blackbody",
          desc="Static + dynamic BBR shifts, depopulation, photoionization.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--no-plot", kind="invflag", label="Generate plot",
+                  help="Untick to write the data only and skip the plot."),
              dict(name="--excited", kind="str", label="Excited state label", default="",
                   help="e.g. 3p3/2. Default: auto (first fine-structure partner)."),
              dict(name="--T", kind="float", label="Temperature (K)", default="300",
@@ -228,15 +239,24 @@ PIPELINE = [
              dict(name="--t2", kind="float", label="Mix ion-gate end (s)", default="0.0000021"),
              dict(name="--mix-dn-max", kind="int", label="Max |delta n| for mix partners",
                   default="3"),
+             dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
+                  default="",
+                  help="Extrapolation of ns->np oscillator strengths, applied to the f-values "
+                       "behind the shifts, rates and photoionization."),
+             dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
+                  help="Polarizability file to read. Blank: <species>_polarizability.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Process every element with a valid BBR dataset."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
          ],
          outputs=["data/{el}_blackbody.json",
                   "plots/{el}/{el}_blackbody.html"]),
 
     dict(id="tweezer", label="Optical tweezer", symbol="R_sc", pipeline="tweezer",
-         desc="Tweezer photon scattering rate & recoil heating.",
+         desc="Tweezer photon scattering rate & recoil heating. Data only: the plots are on the Polarizability page (Visualise).",
+         always=["--no-plot"],
          positional=lambda el: [el],
          flags=[
              dict(name="--wl", kind="float", label="Trap wavelength (nm)", default="",
@@ -246,17 +266,22 @@ PIPELINE = [
              dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)", default="400"),
              dict(name="--wl-max", kind="float", label="Scan max wavelength (nm)", default="1600"),
              dict(name="--n-grid", kind="int", label="Wavelength grid points", default="1500"),
+             dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
+                  help="Polarizability file to read. Blank: <species>_polarizability.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Run the tweezer tool for every element with both polarizability and lifetimes."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
          ],
-         outputs=["data/{el}_tweezer.json",
-                  "plots/{el}/{el}_tweezer.html"]),
+         outputs=["data/{el}_tweezer.json"]),
 
     dict(id="hyperfine", label="Hyperfine / Zeeman", symbol="F", pipeline="hyperfine",
          desc="Breit-Rabi diagonalization; needs {el}_hf_constants.json.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--no-plot", kind="invflag", label="Generate plot",
+                  help="Untick to write the data only and skip the plot."),
              dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
                   help="Default: most abundant natural isotope (Fr: 210)."),
              dict(name="--states", kind="strlist", label="States (e.g. 3s1/2 3p1/2 3p3/2)",
@@ -272,8 +297,8 @@ PIPELINE = [
                   help="CSV file for magnetic moments. Blank: the bundled IAEA table."),
              dict(name="--elec-csv", kind="path", label="Electric moment CSV", default="",
                   help="CSV file for electric moments. Blank: the bundled IAEA table."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
-             dict(name="--output-dir", kind="str", label="Output directory", default=""),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=""),
          ],
          outputs=["data/{el}_hyperfine.json",
                   "plots/{el}/{el}_hyperfine.html",
@@ -283,6 +308,8 @@ PIPELINE = [
          desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
          positional=lambda el: [el],
          flags=[
+             dict(name="--no-plot", kind="invflag", label="Generate plot",
+                  help="Untick to write the data only and skip the plot."),
              dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
                   help="Default: auto from the resonances in the JSON file."),
              dict(name="--B-points", kind="int", label="B-field sample points", default="2000"),
@@ -294,17 +321,22 @@ PIPELINE = [
                   help="Default: isotope_A from the feshbach JSON."),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Process every element with a valid *_feshbach.json file."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
-             dict(name="--output-dir", kind="str", label="Output directory", default=""),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=""),
          ],
          outputs=["data/{el}_feshbach_out.json",
                   "plots/{el}/{el}_feshbach.html"]),
 
     dict(id="grotrian", label="Grotrian diagram", symbol="hν", pipeline="plotinteractive",
-         desc="Interactive level diagram (plotinteractive). Needs ORCA data already "
-              "generated (the ORCA stage above) for this species.",
+         desc="Needs ORCA data already generated (the ORCA stage above) for this species.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
+                  help="Rydberg file to read. Blank: <species>_rydberg.json."),
+             dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
+                  help="Transitions file to read. Blank: <species>_transitions.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
              dict(name="--energy-shift", kind="choice",
                   label="Energy reference",
                   choices=[
@@ -383,59 +415,21 @@ PIPELINE = [
                   default="2000",
                   help="Used when ORCA transitions is custom range."),
 
-             dict(name="--plot3-choice", kind="choice",
-                  label="Plot 3 transitions",
-                  choices=[
-                      ("1", "NIST only"),
-                      ("2", "NIST + Numerov, n ≤ 8"),
-                      ("3", "NIST + Numerov, n ≤ 12"),
-                      ("4", "All theoretical"),
-                  ],
-                  default="1",
-                  help="Which theoretical transitions paper 3 (excited↔excited "
-                       "Grotrian) may draw."),
-
-             dict(name="--also-orbital3d", kind="flag",
-                  label="Launch orbital viewer",
-                  help="After the plots are written, run linak --pipeline orbital3d for this species."),
-
-             dict(name="--orbital3d-n-max", kind="int",
-                  label="Orbital viewer max n",
-                  default="10",
-                  help="Used when Launch orbital viewer is checked "
-                       "(default: 10, or the Rydberg data n_max if the field is cleared)."),
-
-             dict(name="--orbital3d-grid", kind="int",
-                  label="Orbital viewer grid",
-                  default="55",
-                  help="Grid points per axis - higher = smoother, slower. "
-                       "Used when Launch orbital viewer is checked."),
-
-             dict(name="--also-spectra", kind="flag",
-                  label="Launch spectra viewer",
-                  help="After the plots are written, run linak --pipeline spectra for this species."),
-
-             dict(name="--spectra-wl-min", kind="float",
-                  label="Spectra min wavelength (nm)",
-                  default="200",
-                  help="Used when Launch spectra viewer is checked."),
-
-             dict(name="--spectra-wl-max", kind="float",
-                  label="Spectra max wavelength (nm)",
-                  default="900",
-                  help="Used when Launch spectra viewer is checked."),
-
              dict(name="--plots", kind="choice", label="Plots to generate",
                   choices=[
                       ("1", "Grotrian diagram only"),
-                      ("2", "Grotrian + Spectrum"),
-                      ("3", "All three, incl. Excited\u2194excited Grotrian (default)"),
+                      ("2", "Grotrian + Spectrum (default)"),
                   ],
-                  default="3",
+                  default="2",
                   help="Cumulative, not exclusive: each option always includes every "
                        "plot below it too, so '2' already writes both the Grotrian "
-                       "diagram and the Spectrum. Matches the script's own default "
-                       "of generating all three."),
+                       "diagram and the Spectrum. Matches the script's own default."),
+             dict(name="--soc-file", kind="path", browse="data", label="SOC data to overlay", default="",
+                  help="SOC data file to draw over the TD-DFT levels."),
+             dict(name="--extra", kind="pathlist", browse="data", label="Extra data to overlay", default="",
+                  help="More ORCA-format data files to draw over the levels; separate files with ;"),
+             dict(name="--no-soc-overlay", kind="flag", label="No SOC overlay",
+                  help="Draw the TD-DFT levels only."),
              dict(name="--soc-only", kind="flag", label="SOC-only (skip TD-DFT)",
                   help="Plot only the CASSCF/SOC data, skip the TD-DFT levels."),
          ],
@@ -445,16 +439,89 @@ PIPELINE = [
          desc="Absorption + emission spectral bar chart.",
          positional=lambda el: [el],
          flags=[
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
+             dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
+                  help="Transitions file to read. Blank: <species>_transitions.json."),
              dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="200"),
              dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="900"),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
          ],
          outputs=["plots/{el}/{el}_spectra.html"]),
+
+    dict(id="response", label="Polarizability page", symbol="α·U", pipeline="polarizability_page",
+         desc="One tabbed page: polarizability, magic wavelengths and optical tweezer. "
+              "Needs the Polarizability stage run first; the tweezer tab also needs lifetimes data.",
+         positional=lambda el: [el],
+         flags=[
+             dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
+                  help="Polarizability file to read. Blank: <species>_polarizability.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
+             dict(name="--no-polarizability", kind="invflag", label="Polarizability",
+                  help="Tab with alpha(omega) of both states and the contributions table."),
+             dict(name="--no-magic", kind="invflag", label="Magic wavelengths",
+                  help="Tab with the differential polarizability and the magic wavelengths."),
+             dict(name="--no-tweezer", kind="invflag", label="Optical tweezer",
+                  help="Tab with scattering, heating and trap numbers. Needs lifetimes data."),
+             dict(name="--units", kind="choice", label="Units when it opens",
+                  choices=[("au", "Atomic units"), ("hz", "Hz per W/cm\u00b2"), ("uk", "\u00b5K per kW/cm\u00b2")],
+                  default="au", help="Switchable on the page."),
+             dict(name="--scale", kind="choice", label="Vertical scale when it opens",
+                  choices=[("asinh", "asinh (poles and small values)"), ("lin", "Linear")],
+                  default="asinh", help="Switchable on the page."),
+             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="300"),
+             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="1800"),
+             dict(name="--cursor-wl", kind="float", label="Cursor wavelength (nm)", default="1064",
+                  help="Where the cursor starts; click the plot to move it."),
+             dict(name="--intensity", kind="float", label="Trap intensity (kW/cm\u00b2)", default="10"),
+             dict(name="--waist", kind="float", label="Beam waist (\u00b5m)", default="1"),
+         ],
+         outputs=["plots/{el}/{el}_response.html"]),
+
+    dict(id="bbr", label="Blackbody page", symbol="BBR", pipeline="blackbody_page",
+         desc="One tabbed page: BBR shifts versus temperature, depopulation, photoionization and Rydberg shifts. "
+              "Needs the Blackbody stage run first; shifts need polarizability data, channels need lifetimes data.",
+         positional=lambda el: [el],
+         flags=[
+             dict(name="--blackbody-file", kind="path", browse="data", label="Blackbody data", default="",
+                  help="Blackbody file to read. Blank: <species>_blackbody.json."),
+             dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
+                  help="Polarizability file to read. Blank: <species>_polarizability.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
+             dict(name="--no-shifts", kind="invflag", label="Shifts vs T",
+                  help="Tab with static and dynamic BBR shifts versus temperature."),
+             dict(name="--no-depopulation", kind="invflag", label="Depopulation",
+                  help="Tab with thermal depopulation rates and their channels. Needs lifetimes data."),
+             dict(name="--no-photoionization", kind="invflag", label="Photoionization",
+                  help="Tab with direct and field photoionization rates."),
+             dict(name="--no-rydberg", kind="invflag", label="Rydberg shifts",
+                  help="Tab with static and dynamic shifts of the Rydberg states."),
+             dict(name="--units", kind="choice", label="Shift units when it opens",
+                  choices=[("hz", "Hz"), ("frac", "Fractional (\u0394\u03bd/\u03bd\u2080)")],
+                  default="hz", help="Switchable on the page."),
+             dict(name="--temperature", kind="float", label="Cursor temperature (K)", default="",
+                  help="Blank: the temperature of the Blackbody run."),
+             dict(name="--t-min", kind="float", label="Min temperature (K)", default="10"),
+             dict(name="--t-max", kind="float", label="Max temperature (K)", default="1000"),
+             dict(name="--field", kind="float", label="Field for field ionization (V/cm)", default="",
+                  help="Blank: the field of the Blackbody run, else 100."),
+         ],
+         outputs=["plots/{el}/{el}_blackbody_page.html"]),
 
     dict(id="orbital3d", label="Orbital viewer", symbol="|ψ|²", pipeline="orbital3d",
          desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
          positional=lambda el: [el],
          flags=[
+             dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
+                  help="Rydberg file to read. Blank: <species>_rydberg.json."),
+             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
+                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
              dict(name="--render", kind="choice", label="Rendering",
                   choices=["volume", "isosurface"], default="volume",
                   help="volume: WebGL2 raymarched volume (default, works offline). "
@@ -463,23 +530,24 @@ PIPELINE = [
              dict(name="--grid", kind="int", label="Grid points per axis", default="",
                   help="Blank = 96 (volume, max 128) or 55 (isosurface, max 75)."),
              dict(name="--isovalue", kind="float", label="Lowest level / outer isovalue", default="0.04"),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
          ],
          outputs=["plots/{el}/{el}_orbital3d.html"]),
 
     dict(id="compare", label="Compare elements", symbol="Σ",
          pipeline="compare_elements",
-         desc="Adds selected element(s) to the cross-element CompTable.",
+         desc="Adds selected element(s) to the cross-element table shown in the viewer.",
          positional=lambda el: [],
          flags=[
              dict(name="__elements", kind="str", label="Elements / families",
                   default="alkali",
                   help="Examples: alkali, Li,Na,K, Mg, alkaline_earth."),
              dict(name="--T", kind="float", label="Temperature (K)", default="300",
-                  help="Temperature for Doppler broadening in the CompTable."),
+                  help="Temperature for Doppler broadening in the table."),
+             dict(name="--html", kind="flag", label="Generate HTML",
+                  help="Also write plots/comparison_table.html."),
          ],
-         outputs=["data/comparison_table.json",
-                  "plots/comparison_table.html"]),
+         outputs=["data/comparison_table.json"]),
 
     dict(id="scattering", label="Scattering rate", symbol="R(D)",
          pipeline="scattering_rate",
@@ -490,8 +558,8 @@ PIPELINE = [
                   label="Line shown when the plot first opens",
                   choices=["D1", "D2"], default="D2",
                   help="Both D1 and D2 are selectable inside the generated plot."),
-             dict(name="--data-dir", kind="str", label="Data directory", default=workspace_data_dir),
-             dict(name="--output-dir", kind="str", label="Output directory", default=workspace_plots_dir),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
          ],
          outputs=["plots/scattering_rate.html"]),
 
@@ -502,7 +570,7 @@ STAGE_GROUPS = (
     ("Quantum chemistry", ("runorca", "orca_to_json")),
     ("Atomic structure", ("rydberg", "transitions", "lifetimes")),
     ("Atomic response", ("polarizability", "blackbody", "tweezer", "hyperfine", "feshbach")),
-    ("Visualise", ("grotrian", "spectra", "orbital3d")),
+    ("Visualise", ("grotrian", "response", "bbr", "spectra", "orbital3d")),
     ("Compare", ("compare", "scattering")),
 )
 
@@ -578,8 +646,29 @@ STAGE_PHYSICS = {
     ),
     "grotrian": (
         "Builds the interactive energy-level (Grotrian) diagram from the "
-        "Rydberg, transitions, and ORCA data, with clickable filtering by "
-        "spectral region, data source, and wavelength window."
+        "Rydberg, transitions, lifetimes, and ORCA data: levels in columns by "
+        "orbital l with J fine-structure bars, line weight by oscillator "
+        "strength, filters (region, source, grade, n, wavelength, minimum f, "
+        "ground or excited lower level), a matching-transitions table with a "
+        "right-click View more (including extrapolation bands), and export "
+        "to SVG, PNG, PDF and CSV."
+    ),
+    "response": (
+        "Puts the polarizability, the magic wavelengths and the optical-tweezer "
+        "numbers on one tabbed page. alpha(omega) is summed in the browser from "
+        "the stored transition list, so units (a.u., Hz per W/cm^2, uK per kW/cm^2), "
+        "wavelength range, trap intensity and cursor wavelength change live; the "
+        "contributions table shows which lines make up alpha at the cursor. "
+        "Render only: it reads the Polarizability and lifetimes data and runs no "
+        "new physics."
+    ),
+    "bbr": (
+        "Puts the blackbody-radiation results on one tabbed page: static and dynamic "
+        "BBR shifts versus temperature, thermal depopulation with the channels behind "
+        "each rate, direct and field photoionization, and the Rydberg-state shifts. "
+        "Temperature, units, n range and field change live in the browser. Render only: "
+        "it reads the Blackbody, Polarizability and lifetimes data; the Blackbody stage "
+        "keeps its own plots."
     ),
     "spectra": (
         "Renders the absorption and emission line spectrum as colored bars "
@@ -604,9 +693,53 @@ STAGE_PHYSICS = {
 }
 
 
+OUTPUT_FLAGS = ("--output-dir", "--no-plot", "--outname")
+
+
+def flag_section(spec: dict) -> str:
+    """Where an option sits in the options form: "input" (files and folders the stage reads),
+    "output" (what it writes and where) or "options" (everything else)."""
+    if spec["name"] in OUTPUT_FLAGS:
+        return "output"
+    if spec["kind"] in ("path", "pathlist") or spec["name"] == "__elements":
+        return "input"
+    return "options"
+
+
+# The file a stage reads when the input field is left blank.
+DEFAULT_INPUT_FILES = {
+    "--rydberg-file": "{el}_rydberg.json",
+    "--transitions-file": "{el}_transitions.json",
+    "--lifetimes-file": "{el}_lifetimes.json",
+    "--blackbody-file": "{el}_blackbody.json",
+    "--polarizability-file": "{el}_polarizability.json",
+    "--orca-file": "{el}.json",
+    "--soc-file": "none",
+    "--magn-csv": "bundled IAEA table",
+    "--elec-csv": "bundled IAEA table",
+}
+
+
+def input_hint(spec: dict, species: str) -> str:
+    """Grey text for a blank input field: what the stage reads then ("" when unknown)."""
+    pattern = DEFAULT_INPUT_FILES.get(spec["name"])
+    if pattern is None:
+        return ""
+    return pattern.format(el=species or '<el>')
+
+
+def output_hint(stage: dict, species: str) -> str:
+    """Grey text for the Save as field: the file the stage writes when no name is given."""
+    outputs = stage.get("outputs") or []
+    if not outputs:
+        return ""
+    return outputs[0].format(el=species or '<el>').rsplit('/', 1)[-1]
+
+
 def stage_argv(stage: dict, species: str, extra_args: list[str]) -> list[str]:
     """``linak --pipeline`` arguments for *stage*: name, positionals, options."""
-    return [str(value) for value in (stage["pipeline"], *stage["positional"](species), *extra_args)]
+    return [str(value) for value in (stage["pipeline"], *stage["positional"](species), *extra_args,
+                                     *stage.get("always", ()))]
 
 
 def stage_has_output(stage: dict, workspace: Workspace, species: str) -> bool:
