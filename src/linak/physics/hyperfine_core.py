@@ -96,8 +96,11 @@ class HyperfineState:
     extrapolated_from: str | None   # the measured state A, B, C were scaled from
     constants_missing: bool         # not in the table and nothing to scale from: A = B = C = 0
     levels: list[FLevel]
-    BR_energies: np.ndarray         # (B point, level) Breit-Rabi eigenvalues, MHz
+    BR_energies: np.ndarray         # (B point, level) Breit-Rabi eigenvalues, MHz; column = one level
     BR_labels: list[tuple[float, float]]   # (F, m_F) of each level at B = 0
+    BR_high_field: list[tuple[float, float]] | None = None   # (m_J, m_I) of each level as B → ∞
+    BR_slopes: np.ndarray | None = None     # dE/dB (MHz/G) on the same grid, exact (Hellmann–Feynman)
+    zeeman: ZeemanSystem | None = None      # the Hamiltonian, for field-dependent lines
 
 
 @dataclass(frozen=True)
@@ -133,6 +136,8 @@ class HyperfineResult:
     clock: MicrowaveClock | None    # of the ground state
     cycling: CyclingLine | None
     skipped: list[str]              # labels that are not of the form '3p3/2'
+    microwave: list[MicrowaveLine] | None = None   # ground-state ΔF = ±1 lines vs B
+    optical: list[OpticalLine] | None = None       # ground → each p state, Zeeman-resolved
 
 
 # ============================================================================
@@ -227,24 +232,28 @@ def hyperfine_energy(F, I, J, A_MHz, B_MHz=0.0, C_kHz=0.0):
     return _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, 1.0)
 
 
-def lande_gJ(L, S, J, gJ_exp=None):
-    """
-    Landé g_J factor.
-    g_J = 1 + [J(J+1) + S(S+1) − L(L+1)] / [2J(J+1)]
+G_S = 2.00231930436256     # free-electron |g| (CODATA 2018)
+ELECTRON_MASS_U = 5.48579909065e-4
 
-    For non-alkali atoms or when higher accuracy is needed, pass
-    gJ_exp (experimental value from NIST or literature) to override
-    the Landé formula. This handles:
-      - Heavy atoms where LS coupling breaks down (jj coupling)
-      - Multi-electron atoms (Yb, Sr, Ca, Hg, etc.)
-      - States where QED corrections matter (>0.1% level)
-    For J=0 returns 0 regardless.
+
+def lande_gJ(L, S, J, gJ_exp=None, mass_u=None):
+    """
+    Landé g_J with the free-electron spin g factor and the reduced-mass orbital g factor:
+
+        g_J = g_L [J(J+1) − S(S+1) + L(L+1)] / [2J(J+1)] + g_S [J(J+1) + S(S+1) − L(L+1)] / [2J(J+1)],
+        g_S = 2.00231930436 (CODATA 2018),  g_L = 1 − m_e / M_atom (1 when mass_u is not given).
+
+    With g_S = 2 the ground state of every alkali would read g_J = 2 instead of ≈2.0023, a 0.1% error
+    in every Zeeman slope. A measured value (gJ_exp) overrides the formula; it also carries the
+    remaining many-body corrections (Cs 6s: 2.002542 against 2.002319). J = 0 returns 0.
     """
     if J < 1e-9:
         return 0.0
     if gJ_exp is not None:
         return float(gJ_exp)
-    return 1.0 + (J*(J+1) + S*(S+1) - L*(L+1)) / (2*J*(J+1))
+    gL = 1.0 - (ELECTRON_MASS_U / mass_u if mass_u else 0.0)
+    JJ, SS, LL = J*(J+1), S*(S+1), L*(L+1)
+    return gL * (JJ - SS + LL) / (2*JJ) + G_S * (JJ + SS - LL) / (2*JJ)
 
 
 def gF_factor(F, I, J, gJ, gI=0.0):
@@ -268,91 +277,117 @@ def gF_factor(F, I, J, gJ, gI=0.0):
 # BREIT-RABI DIAGONALISATION
 # ============================================================================
 
+class ZeemanSystem:
+    """H_hf + H_Z of one state in the |m_I, m_J⟩ basis, solved per m_F block.
+
+    m_F = m_I + m_J is exact at every field, so H is block-diagonal in m_F. Within a block levels
+    only have avoided crossings, so the k-th lowest eigenvalue of a block is the same level at every
+    B: each level keeps its identity, its B = 0 label |F, m_F⟩ and its high-field label |m_J, m_I⟩.
+    (Sorting all eigenvalues together, as before, swapped levels at every crossing of different m_F:
+    Na 3p3/2 has 22 such crossings below 100 G.)
+
+    Level order (index k) is by zero-field energy, then m_F.
+    """
+
+    def __init__(self, I, J, A_MHz, B_MHz, gJ, gI, C_kHz=0.0):
+        self.I, self.J = I, J
+        dim_I, dim_J = round(2*I + 1), round(2*J + 1)
+        self.dim = dim_I * dim_J
+        mI = np.array([-I + i for i in range(dim_I)])
+        mJ = np.array([-J + j for j in range(dim_J)])
+        self.basis = [(float(mJ[j]), float(mI[i])) for i in range(dim_I) for j in range(dim_J)]   # (m_J, m_I)
+        dim = self.dim
+        IJ = np.zeros((dim, dim))
+        for i, mi in enumerate(mI):
+            for j, mj in enumerate(mJ):
+                r = i * dim_J + j
+                IJ[r, r] += mi * mj
+                if i + 1 < dim_I and j - 1 >= 0:
+                    r2 = (i + 1) * dim_J + (j - 1)
+                    me = math.sqrt((I - mi)*(I + mi + 1)) * math.sqrt((J + mj)*(J - mj + 1))
+                    IJ[r2, r] += 0.5 * me
+                    IJ[r, r2] += 0.5 * me
+        K = 2.0 * IJ
+        self.H_hf = _hf_polynomial(K, I, J, A_MHz, B_MHz, C_kHz, np.eye(dim))
+        # H_Z = (g_J μ_B m_J − g_I μ_N m_I) B, MHz per gauss
+        self.Hz = np.array([gJ * MU_B_MHz_G * mj - gI * MU_N_MHz_G * mi for mj, mi in self.basis])
+        mF = np.array([mj + mi for mj, mi in self.basis])
+        F2 = (I*(I+1) + J*(J+1)) * np.eye(dim) + K
+        Fs = F_levels(I, J)
+        self.blocks = []               # (basis indices, mF)
+        levels = []                    # (E0, mF, block, rank, F, mJ_hf, mI_hf)
+        for m in sorted(set(np.round(2 * mF).astype(int) / 2)):
+            idx = np.where(np.abs(mF - m) < 1e-9)[0]
+            b = len(self.blocks)
+            self.blocks.append((idx, float(m)))
+            Hh = self.H_hf[np.ix_(idx, idx)]
+            # F labels: a tiny <F^2> tie-breaker keeps F a good label even for degenerate levels (A = 0)
+            e0, v0 = np.linalg.eigh(Hh + 1e-7 * F2[np.ix_(idx, idx)])
+            Fv = [float(v0[:, k] @ F2[np.ix_(idx, idx)] @ v0[:, k]) for k in range(len(idx))]
+            Flab = [min((F for F in Fs if F + 1e-9 >= abs(m)), key=lambda F_: abs(F_*(F_+1) - f2)) for f2 in Fv]
+            # high-field labels: the k-th lowest level of a block ends on the k-th lowest |m_J, m_I⟩
+            hf_order = sorted(range(len(idx)), key=lambda r: self.Hz[idx[r]] * 1e9 + Hh[r, r])
+            for k in range(len(idx)):
+                mj_hf, mi_hf = self.basis[idx[hf_order[k]]]
+                levels.append((float(e0[k]), float(m), b, k, Flab[k], mj_hf, mi_hf))
+        levels.sort(key=lambda t: (round(t[0], 9), t[1]))
+        self.levels = levels
+        self.labels = [(t[4], t[1]) for t in levels]          # (F, m_F) at B = 0
+        self.high_field = [(t[5], t[6]) for t in levels]      # (m_J, m_I) as B → ∞
+        self._pos = {(t[2], t[3]): n for n, t in enumerate(levels)}
+
+    def solve(self, B_G, vectors=False):
+        """Energies (MHz) of every level at field B (gauss), in level order; with vectors, also the
+        |⟨m_J, m_I|level⟩|² composition rows (dim × dim, columns in basis order) and the eigenvectors."""
+        E = np.empty(self.dim)
+        V = np.zeros((self.dim, self.dim)) if vectors else None
+        for b, (idx, _m) in enumerate(self.blocks):
+            H = self.H_hf[np.ix_(idx, idx)] + np.diag(self.Hz[idx] * B_G)
+            if vectors:
+                e, v = np.linalg.eigh(H)
+            else:
+                e, v = np.linalg.eigvalsh(H), None
+            for k in range(len(idx)):
+                n = self._pos[(b, k)]
+                E[n] = e[k]
+                if vectors:
+                    V[n, idx] = v[:, k]
+        return (E, V) if vectors else E
+
+    def energies(self, B_array):
+        return np.array([self.solve(float(B)) for B in B_array])
+
+    def slopes(self, B_G):
+        """dE/dB (MHz/G) of every level at B, exact by Hellmann–Feynman: ⟨level|H_Z per gauss|level⟩.
+        −dE/dB is the level's magnetic moment along the field; dE/dB > 0 is a low-field seeker."""
+        _E, V = self.solve(float(B_G), vectors=True)
+        return (V * V) @ self.Hz
+
+    def energies_and_slopes(self, B_array):
+        E = np.empty((len(B_array), self.dim))
+        S = np.empty((len(B_array), self.dim))
+        for k, B in enumerate(B_array):
+            E[k], V = self.solve(float(B), vectors=True)
+            S[k] = (V * V) @ self.Hz
+        return E, S
+
+
 def breit_rabi_energies(I, J, A_MHz, B_MHz_quad, gJ, gI,
                         B_gauss_array, C_kHz=0.0):
     """
-    Exact Breit-Rabi diagonalisation for arbitrary B field.
+    Exact Breit-Rabi levels of H = H_hf + (g_J μ_B J_z − g_I μ_N I_z) B on a field grid.
 
-    Builds the full (2I+1)(2J+1) × (2I+1)(2J+1) Hamiltonian H = H_hf + H_Z and diagonalises it at
-    every B.
-
-    H_hf is the EXACT hyperfine operator (dipole + quadrupole + octupole, no approximation): the
-    operator K = 2 I·J is built in the |m_I, m_J⟩ basis (I_zJ_z + ½(I_+J_- + I_-J_+)) and the same
-    polynomial in K that gives the analytic F-level energies (`_hf_polynomial`) is applied to the
-    matrix. At B = 0 the eigenvalues therefore equal `hyperfine_energy` exactly, with (2F+1)-fold
-    degeneracy.
-    H_Z = (g_J μ_B m_J − g_I μ_N m_I) B  (diagonal in |m_I, m_J⟩).
-
-    Basis index: idx = (m_I index)·(2J+1) + (m_J index), m = −I..+I, −J..+J.
+    H_hf is the exact hyperfine operator (dipole + quadrupole + octupole): the polynomial of
+    `_hf_polynomial` applied to the operator K = 2 I·J in the |m_I, m_J⟩ basis, so at B = 0 the
+    eigenvalues equal `hyperfine_energy` with (2F+1)-fold degeneracy. The levels are tracked per
+    m_F block (see `ZeemanSystem`): column k is the same level at every B.
 
     Returns:
-      energies[B_idx, level_idx]  — sorted eigenvalues in MHz
-      labels[level_idx]           — approximate (F, m_F) label at B→0
+      energies[B_idx, level_idx]  — MHz, level order by zero-field energy then m_F
+      labels[level_idx]           — (F, m_F) at B = 0
     """
-    dim_I = round(2*I + 1)
-    dim_J = round(2*J + 1)
-    dim   = dim_I * dim_J
-
-    mI_vals = np.array([-I + i for i in range(dim_I)])
-    mJ_vals = np.array([-J + j for j in range(dim_J)])
-
-    def idx(mi_i, mj_i):
-        return mi_i * dim_J + mj_i
-
-    # K = 2 I·J 
-    # ⟨m_I, m_J|I_zJ_z|m_I, m_J⟩ = m_I m_J
-    # ⟨m_I+1, m_J−1|I_+J_-|m_I, m_J⟩ = sqrt[(I−m_I)(I+m_I+1)] sqrt[(J+m_J)(J−m_J+1)]
-    IJ = np.zeros((dim, dim))
-    for mi_i, mI in enumerate(mI_vals):
-        for mj_i, mJ in enumerate(mJ_vals):
-            r = idx(mi_i, mj_i)
-            IJ[r, r] += mI * mJ
-            if mi_i + 1 < dim_I and mj_i - 1 >= 0:
-                r2 = idx(mi_i + 1, mj_i - 1)
-                me = (math.sqrt((I - mI)*(I + mI + 1)) *
-                      math.sqrt((J + mJ)*(J - mJ + 1)))
-                IJ[r2, r] += 0.5 * me
-                IJ[r, r2] += 0.5 * me
-    K_mat = 2.0 * IJ
-    H_hf = _hf_polynomial(K_mat, I, J, A_MHz, B_MHz_quad, C_kHz, np.eye(dim))
-
-    # H_Z diagonal (per Gauss)
-    H_Z_diag = np.array([
-        gJ * MU_B_MHz_G * mJ_vals[mj_i]
-        - gI * MU_N_MHz_G * mI_vals[mi_i]
-        for mi_i in range(dim_I)
-        for mj_i in range(dim_J)
-    ])
-
-    #(F, m_F) labels at B = 0 
-    # A vanishing probe field along z splits each (2F+1)-fold level by m_F so that the eigenvectors
-    # are m_F eigenstates (H_hf commutes with F_z = m_I + m_J); it is far below any energy scale.
-    mF_diag = np.array([mI_vals[i] + mJ_vals[j] for i in range(dim_I) for j in range(dim_J)])
-    # F² = I(I+1) + J(J+1) + 2 I·J is added as a tiny tie-breaker so that F is a good label even when
-    # the hyperfine levels are degenerate (A = B = C = 0): the labels then come from <F²>, not from
-    # the nearest F energy (which is arbitrary when every F has the same energy).
-    F2_mat = (I*(I+1) + J*(J+1)) * np.eye(dim) + K_mat
-    evals0, evecs0 = np.linalg.eigh(H_hf + np.diag(1e-9 * mF_diag) + 1e-7 * F2_mat)
-    Fs = F_levels(I, J)
-    labels = []
-    for k in range(dim):
-        v      = evecs0[:, k]
-        dom_r  = int(np.argmax(np.abs(v)**2))
-        mI     = mI_vals[dom_r // dim_J]
-        mJ     = mJ_vals[dom_r %  dim_J]
-        mF_approx = round(2*(mI + mJ)) / 2   # m_F = m_I + m_J
-        F2_exp = float(np.real(v.conj() @ F2_mat @ v))
-        best_F = min(Fs, key=lambda F_: abs(F_*(F_+1) - F2_exp))
-        labels.append((best_F, mF_approx))
-
-    # Diagonalise at each B 
-    all_energies = np.zeros((len(B_gauss_array), dim))
-    for bi, B in enumerate(B_gauss_array):
-        H = H_hf.copy()
-        np.fill_diagonal(H, H.diagonal() + H_Z_diag * B)
-        all_energies[bi] = np.linalg.eigvalsh(H)
-
-    return all_energies, labels
+    zs = ZeemanSystem(I, J, A_MHz, B_MHz_quad, gJ, gI, C_kHz)
+    return zs.energies(B_gauss_array), zs.labels
 
 
 # ============================================================================
@@ -458,7 +493,7 @@ def compute_state(label: str, nucleus: Nucleus, constants: Mapping[str, HfConsta
     hfc = constants.get(label)
     gJ_exp = hfc.gJ_exp if hfc else None
     S = hfc.S_exp if hfc and hfc.S_exp is not None else 0.5   # electron spin
-    gJ = lande_gJ(L_CHAR.get(l_char, 0), S, J, gJ_exp=gJ_exp)
+    gJ = lande_gJ(L_CHAR.get(l_char, 0), S, J, gJ_exp=gJ_exp, mass_u=float(nucleus.A) or None)
 
     A_MHz, B_MHz, C_kHz = (hfc.A_MHz, hfc.B_MHz, hfc.C_kHz) if hfc else (0.0, 0.0, 0.0)
     source = None
@@ -476,7 +511,8 @@ def compute_state(label: str, nucleus: Nucleus, constants: Mapping[str, HfConsta
                mF=[round((F-k)*2)/2 for k in range(round(2*F)+1)])
         for F in F_levels(I, J)
     ]
-    BR_energies, BR_labels = breit_rabi_energies(I, J, A_MHz, B_MHz, gJ, gI, B_G, C_kHz)
+    zs = ZeemanSystem(I, J, A_MHz, B_MHz, gJ, gI, C_kHz)
+    BR_E, BR_S = zs.energies_and_slopes(B_G)
     return HyperfineState(
         label=label, n=n, l=l_char, J=J,
         gJ=gJ,
@@ -485,14 +521,189 @@ def compute_state(label: str, nucleus: Nucleus, constants: Mapping[str, HfConsta
         extrapolated_from=source,
         constants_missing=missing,
         levels=levels,
-        BR_energies=BR_energies,
-        BR_labels=BR_labels,
+        BR_energies=BR_E,
+        BR_labels=zs.labels,
+        BR_high_field=zs.high_field,
+        BR_slopes=BR_S,
+        zeeman=zs,
     )
+
+
+# ============================================================================
+# FIELD-DEPENDENT LINES: GROUND MICROWAVE AND ZEEMAN-RESOLVED OPTICAL
+# ============================================================================
+
+@dataclass(frozen=True)
+class FieldPoint:
+    """A field where a line frequency is stationary (dν/dB = 0): a field-insensitive ("magic") point."""
+
+    B_G: float
+    nu_MHz: float
+    curvature_Hz_per_G2: float      # ½ d²ν/dB² there
+
+
+@dataclass(frozen=True)
+class MicrowaveLine:
+    """|F, m_F⟩ → |F', m_F'⟩ within the ground state, ΔF = ±1. kind: 'M1' for |Δm_F| ≤ 1 (single
+    magnetic-dipole photon), 'two-photon' for |Δm_F| = 2 (e.g. the 87Rb |1,−1⟩ ↔ |2,+1⟩ qubit)."""
+
+    state: str
+    F_lower: float
+    mF_lower: float
+    F_upper: float
+    mF_upper: float
+    kind: str
+    nu0_MHz: float                  # zero field
+    linear_Hz_per_G: float          # dν/dB at B = 0
+    quadratic_Hz_per_G2: float      # ½ d²ν/dB² at B = 0
+    nu_MHz: np.ndarray              # on the result's field grid
+    stationary: list[FieldPoint]
+
+
+@dataclass(frozen=True)
+class OpticalComponent:
+    lower: int                      # level index in the ground state's level order
+    upper: int                      # level index in the excited state's level order
+    q: int                          # +1 σ+, 0 π, −1 σ− (absorption: m_F' = m_F + q)
+    detuning_MHz: np.ndarray        # relative to the line's zero-field centroid, on B_G
+    strength: np.ndarray            # (2J+1)|⟨e|d_q|g⟩|²/|⟨J'||d||J⟩|²: sums to 1 over each ground level
+
+
+@dataclass(frozen=True)
+class OpticalLine:
+    lower: str
+    upper: str
+    B_G: np.ndarray
+    components: list[OpticalComponent]
+    strengths_F: dict[tuple[float, float], float]   # zero-field S_FF' (sum over F' = 1 for each F)
+
+
+def _quadratic_fit(f, h):
+    """(f0, slope, ½ curvature) at 0 from f(0), f(h), f(2h)."""
+    f0, f1, f2 = f(0.0), f(h), f(2 * h)
+    b = (f2 - 2 * f1 + f0) / (2 * h * h)
+    return f0, (f1 - f0) / h - b * h, b
+
+
+def microwave_lines(state: HyperfineState, B_G: np.ndarray, max_dmF: int = 2) -> list[MicrowaveLine]:
+    """Every ΔF = ±1 line between the two highest F manifolds of *state* (the ground hyperfine
+    doublet), |Δm_F| ≤ max_dmF, with its field dependence and its stationary (magic) fields."""
+    from scipy.optimize import brentq
+
+    zs = state.zeeman
+    if zs is None:
+        return []
+    Fs = sorted({F for F, _ in zs.labels})
+    if len(Fs) < 2:
+        return []
+    Fu, Fl = Fs[-1], Fs[-2]
+    E = state.BR_energies
+    lines = []
+    for iu, (F1, m1) in enumerate(zs.labels):
+        if abs(F1 - Fu) > 1e-9:
+            continue
+        for il, (F2, m2) in enumerate(zs.labels):
+            if abs(F2 - Fl) > 1e-9 or abs(m1 - m2) > max_dmF + 1e-9:
+                continue
+
+            def nu(B, iu=iu, il=il):
+                e = zs.solve(B)
+                return e[iu] - e[il]
+
+            def dnu(B, iu=iu, il=il):
+                sl = zs.slopes(B)
+                return sl[iu] - sl[il]
+
+            curve = E[:, iu] - E[:, il]
+            f0, _a, _b = _quadratic_fit(nu, 0.05)
+            a = dnu(0.0)                                   # exact slope at B = 0
+            h = 1e-3
+            b = (dnu(h) - a) / (2 * h)                     # ½ d²ν/dB², from exact slopes
+            stat = []
+            dc = np.array([dnu(float(B)) for B in B_G])
+            for k in range(1, len(B_G) - 1):
+                if dc[k] == 0.0 or dc[k] * dc[k + 1] < 0:
+                    Bs = float(brentq(dnu, B_G[k], B_G[k + 1], xtol=1e-9)) if dc[k] != 0.0 else float(B_G[k])
+                    curv = (dnu(Bs + h) - dnu(max(Bs - h, 0.0))) / (2 * h) / 2
+                    stat.append(FieldPoint(Bs, float(nu(Bs)), float(curv * 1e6)))
+            lines.append(MicrowaveLine(
+                state=state.label, F_lower=Fl, mF_lower=m2, F_upper=Fu, mF_upper=m1,
+                kind='M1' if abs(m1 - m2) <= 1 + 1e-9 else 'two-photon',
+                nu0_MHz=float(f0), linear_Hz_per_G=float(a * 1e6), quadratic_Hz_per_G2=float(b * 1e6),
+                nu_MHz=curve, stationary=stat))
+    return lines
+
+
+def hyperfine_line_strengths(I, J, Jp) -> dict[tuple[float, float], float]:
+    """Zero-field relative strengths S_FF' = (2F'+1)(2J+1){J J' 1; F' F I}² of the hyperfine
+    components of a J → J' line (Steck's convention: sum over F' is 1 for every F)."""
+    from linak.physics.atomic_structure.angular import sixj2
+    out = {}
+    for F in F_levels(I, J):
+        for Fp in F_levels(I, Jp):
+            s6 = sixj2(round(2 * J), round(2 * Jp), 2, round(2 * Fp), round(2 * F), round(2 * I))
+            v = (2 * Fp + 1) * (2 * J + 1) * s6 * s6
+            if v > 1e-14:
+                out[(F, Fp)] = v
+    return out
+
+
+def optical_line(ground: HyperfineState, excited: HyperfineState, B_G: np.ndarray,
+                 min_strength: float = 1e-6) -> OpticalLine | None:
+    """Zeeman-resolved E1 components ground → excited on a field grid. The nuclear spin is a spectator:
+    ⟨J' m_J' m_I'|d_q|J m_J m_I⟩ = δ_{m_I m_I'} (−1)^{J'−m_J'} (J' 1 J; −m_J' q m_J) ⟨J'||d||J⟩."""
+    from linak.physics.atomic_structure.angular import threej2
+    zg, ze = ground.zeeman, excited.zeeman
+    if zg is None or ze is None or abs(abs(L_CHAR.get(ground.l, 0) - L_CHAR.get(excited.l, 0)) - 1) > 0:
+        return None
+    J, Jp = ground.J, excited.J
+    if abs(J - Jp) > 1 + 1e-9:
+        return None
+    Dq = {}
+    for q in (-1, 0, 1):
+        D = np.zeros((ze.dim, zg.dim))
+        for a, (mjp, mip) in enumerate(ze.basis):
+            for b, (mj, mi) in enumerate(zg.basis):
+                if abs(mip - mi) > 1e-9:
+                    continue
+                ph = -1.0 if round(Jp - mjp) % 2 else 1.0
+                D[a, b] = ph * threej2(round(2 * Jp), 2, round(2 * J), round(-2 * mjp), 2 * q, round(2 * mj))
+        Dq[q] = D
+    nB = len(B_G)
+    det = {}
+    st = {}
+    for k, B in enumerate(B_G):
+        Eg, Vg = zg.solve(float(B), vectors=True)
+        Ee, Ve = ze.solve(float(B), vectors=True)
+        for q, D in Dq.items():
+            amp = Ve @ D @ Vg.T                                   # (excited level, ground level)
+            r = (2 * J + 1) * amp * amp
+            for e_i, g_i in zip(*np.nonzero(r > min_strength)):
+                key = (int(g_i), int(e_i), q)
+                if key not in st:
+                    st[key] = np.zeros(nB)
+                    det[key] = np.full(nB, np.nan)
+                st[key][k] = r[e_i, g_i]
+        for key in st:
+            g_i, e_i, _q = key
+            det[key][k] = Ee[e_i] - Eg[g_i]
+    comps = []
+    for key in sorted(st):
+        g_i, e_i, q = key
+        # fill detunings at fields where the component was below threshold (keeps the curve continuous)
+        if np.isnan(det[key]).any():
+            for k, B in enumerate(B_G):
+                if np.isnan(det[key][k]):
+                    det[key][k] = ze.solve(float(B))[e_i] - zg.solve(float(B))[g_i]
+        comps.append(OpticalComponent(g_i, e_i, q, det[key], st[key]))
+    return OpticalLine(ground.label, excited.label, np.asarray(B_G, float), comps,
+                       hyperfine_line_strengths(zg.I, J, Jp))
 
 
 def compute(
     nucleus: Nucleus, constants: Mapping[str, HfConstants], state_labels: Sequence[str],
     quantum_defects: Mapping[str, float], *, B_max: float = 500.0, B_points: int = 500,
+    lines: bool = False, optical_points: int = 121,
 ) -> HyperfineResult:
     """Every state's hyperfine structure on 0..B_max G, plus the ground state's clock and,
     with a p state in the run, the cycling line to its highest-J p state (the D2 line for
@@ -516,5 +727,12 @@ def compute(
             pair = cycling_transition(allowed_transitions(Fs_gs, [lv.F for lv in ex.levels]), Fs_gs)
             if pair is not None:
                 cycling = CyclingLine(lower=gs.label, upper=ex.label, F_lower=pair[0], F_upper=pair[1])
+    microwave = optical = None
+    if lines and states:
+        gs = ground_state(states)
+        microwave = microwave_lines(gs, B_G)
+        B_opt = np.linspace(0, B_max, max(2, min(B_points, optical_points)))
+        optical = [ol for ex in states if ex is not gs
+                   for ol in [optical_line(gs, ex, B_opt)] if ol is not None]
     return HyperfineResult(nucleus=nucleus, B_G=B_G, states=states, clock=clock,
-                           cycling=cycling, skipped=skipped)
+                           cycling=cycling, skipped=skipped, microwave=microwave, optical=optical)

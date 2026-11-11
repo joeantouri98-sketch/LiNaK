@@ -2,7 +2,6 @@
 """Regression tests for the fork-review fixes (P18, P28, P33, P39-P45)."""
 from __future__ import annotations
 
-import inspect
 import json
 import math
 
@@ -46,13 +45,6 @@ def test_breit_rabi_labels_degenerate_levels():
     assert sum(1 for F, _ in labels if F == 1.0) == 3 and sum(1 for F, _ in labels if F == 2.0) == 5
 
 
-def test_mF_color_never_invalid():
-    for m, F in [(4, 1), (-4, 1), (0, 0), (1, 2)]:
-        rgb = hf_pipeline.mF_color(m, F)
-        vals = [int(x) for x in rgb[4:-1].split(',')] if rgb.startswith('rgb') else [0]
-        assert all(0 <= v <= 255 for v in vals)
-
-
 # ── P40: clock transition comes from the lowest state, whatever the order ─────
 def test_clock_state_independent_of_state_order(data_dir):
     nuclear = hf_pipeline.load_nuclear_index(data_dir / 'nuclear_data.json')
@@ -82,14 +74,12 @@ def test_gamess_L_shell_becomes_S_and_P():
 # ── P18: one D-line table ────────────────────────────────────────────────────
 def test_dline_tables_share_one_source():
     from linak.core import spectroscopy
-    from linak.pipelines import compare_elements, spectra
+    from linak.pipelines import compare_elements
     for el, rec in spectroscopy.LITERATURE.items():
         tr = {t['label'].split('→')[0]: t for t in spectroscopy.dline_transitions(el)}
         assert tr[rec['np'] + '3/2']['fosc'] == rec['fosc_D2']
         assert tr[rec['np'] + '1/2']['fosc'] == rec['fosc_D1']
-    assert spectra.DLINES_FALLBACK is spectroscopy.DLINES_FALLBACK
     assert compare_elements.LITERATURE is spectroscopy.LITERATURE
-    assert '"fosc": 0.' not in inspect.getsource(spectra)
 
 
 # ── P28: non-LS downward channel carries g_lower/g_upper ─────────────────────
@@ -136,20 +126,15 @@ def test_gui_nroots_default_blank():
 
 # ── P19/P20/P34/P35/P36/P37/P38: plotting fixes ──────────────────────────────
 def test_plotinteractive_fixes_present():
-    from linak.core.constants import HC_EV_NM, KB_EV
+    from linak.core.constants import AMU_KG, C_SI, KB_SI
     from linak.physics import spectrum_core
     from linak.pipelines.plotinteractive import common, grotrian_page
     from linak.report_templates import load as load_template
     # P34: the Doppler width is a standard deviation, not the FWHM
-    mc2 = 23 * 931.494e6
-    sigma_E = (HC_EV_NM / 589.0) * math.sqrt(KB_EV * 300.0 / mc2)
-    assert spectrum_core.doppler_sigma_nm(589.0, mc2, 300.0) == pytest.approx(589.0**2 / HC_EV_NM * sigma_E)
-    js = load_template('plotinteractive_spectrum_panel.js')
-    assert 'Math.sqrt(kB * T_K / mc2)' in js and '$!kb_eV' in js        # P34 / P20: JS sigma, injected kB
-    # P35: the panel's natural width is hbar/tau of the upper state
-    lifetimes = {'3p': {'lifetime_s': 16e-9}}
-    r = {'ul': '3p', 'wl': 589.0, 'A': 1.0}
-    assert spectrum_core.line_gamma_nm(r, lifetimes) == spectrum_core.natural_gamma_nm('3p', 589.0, lifetimes)
+    nu = C_SI / 589e-9
+    assert spectrum_core.doppler_sigma_hz(nu, 23.0, 300.0) == pytest.approx(nu * math.sqrt(KB_SI * 300 / (23 * AMU_KG * C_SI**2)))
+    # P35: the natural width is (1/τ_u + 1/τ_l)/2π, a ground lower level adding nothing
+    assert spectrum_core.natural_fwhm_hz(16e-9, None) == pytest.approx(1 / (2 * math.pi * 16e-9))
     assert common.ionization_energy_eV({}) == 0.0                         # P37
     assert common.ionization_energy_eV({'ionization_energy_eV': 5.1}) == 5.1
     tpl = load_template('plotinteractive_grotrian.html')
@@ -157,8 +142,9 @@ def test_plotinteractive_fixes_present():
 
 
 def test_spectra_coulomb_approx_colour_distinct():
-    from linak.pipelines.spectra import SRC_COLORS
-    assert SRC_COLORS["Coulomb(approx)"] == "#52be80"                     # P36
+    from linak.report_templates import load as load_template
+    page = load_template('spectrum_page.html')                              # P36: its own colour
+    assert "Coulomb:'--sel','Coulomb(approx)':'--ov6'" in page
 
 
 # ── P22: peak cross-section = Lorentzian peak (lambda^2/2pi)(g_u/g_l)(A_dom/A_tot) ───────────

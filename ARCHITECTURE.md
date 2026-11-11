@@ -47,10 +47,15 @@ what they wrote. Nothing is shared between pipelines except files.
                                                       │        └─► feshbach (C₆) ◄── <El>_feshbach.json
                                                       ├─► hyperfine ◄── <El>_hf_constants.json, nuclear_data.json
                                                       ├─► polarizability_page (render only: reads <El>_polarizability.json, <El>_lifetimes.json)
-                                                      ├─► blackbody_page (render only: reads <El>_blackbody.json, <El>_polarizability.json, <El>_lifetimes.json)
-                                                      └─► orbital3d, spectra
+                                                      ├─► (the blackbody stage also writes plots/<El>/<El>_blackbody.html, via pipelines/blackbody_report.py)
+                                                      ├─► spectra (render only: <El>_lifetimes.json, <El>_hf_constants.json ─► plots/<El>/<El>_spectrum.html)
+                                                      └─► orbital3d
 
  ORCA ─► runorca / orca_to_json ─► <El>.json, <El>_soc*.json ─► plotinteractive (Grotrian diagrams)
+
+ NIST levels (optional) ─┬─► dhf ───────► <El>_dhf.json ───────┐
+                         └─► brueckner ─► <El>_brueckner.json ─┴─► lifetimes, polarizability (--model-f):
+                                          f-values where NIST and literature have none
 
  several elements' rydberg + lifetimes ─► compare_elements ─► comparison_table.json ─► scattering_rate
 ```

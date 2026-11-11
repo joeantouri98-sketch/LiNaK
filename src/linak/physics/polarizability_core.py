@@ -21,7 +21,7 @@ import numpy as np
 
 from linak.core.paths import bundled_file, reference_path
 from linak.physics.rydberg import unwrap_asd_field
-from linak.physics.qdt_radial import level_defect, level_defects_from_rydberg
+from linak.physics.qdt_radial import level_defect, level_defects_from_rydberg, parse_J2_set
 
 from linak.core.constants import (
     EV_TO_HARTREE,
@@ -1336,6 +1336,7 @@ def _ls_state_term(t, state_label, data):
     src_mult = 'unknown'
     lines = {}
     src_line = None
+    dhf_used = False
     # Priority 1 (same as get_fosc): lifetime-derived precision D-line f, per J_upper, s -> p only.
     prec = (data.get('precision_fosc_j') or {}).get((lo_nl, up_nl)) if Ll == 0 else None
     for jl in JL:
@@ -1367,6 +1368,14 @@ def _ls_state_term(t, state_label, data):
                     lines[(jl, ju)] = float(_lit[_jk])
                     src_line = 'extrapolated'
                     continue
+            _dhf = data.get('dhf_lines')
+            if _dhf is not None:
+                # structure model (DHF or Brueckner, opt-in): this line's dipole at its energy
+                _fd = _dhf.f_absorption(lo_nl, up_nl, [jl], [ju], omega_au_from_nm(t['wavelength_nm']))
+                if _fd:
+                    lines[(jl, ju)] = _fd
+                    dhf_used = True
+                    continue
             if f_mult is None:
                 _qd = data['qd']
                 _nsu = t['upper_n'] - level_defect(_qd, t['upper_n'], t['upper_l'])
@@ -1382,7 +1391,9 @@ def _ls_state_term(t, state_label, data):
             lines[(jl, ju)] = ls_line_f(f_mult, Lu, ju, Ll, jl) if f_mult else 0.0
     gL = sum(j + 1 for j in JL)
     gU = sum(j + 1 for j in JU)
-    src = src_mult if (f_mult is not None) else (src_line or 'NIST')
+    # a DHF line labels the term DHF: nist_line_f answers a forbidden |dJ| = 2 component with
+    # a zero "NIST" hit, which must not pass an ab initio value off as measured
+    src = src_mult if (f_mult is not None) else (data['dhf_lines'].source if dhf_used else (src_line or 'NIST'))
     if ul == state_label:
         f = sum((jl + 1) / gU * f_line for (jl, ju), f_line in lines.items())
         return f, src, -1
@@ -1400,6 +1411,8 @@ def _ls_state_term(t, state_label, data):
 SOURCE_REL_UNCERTAINTY = {
     'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'extrapolated': 0.20, 'ORCA': 0.25,
     'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
+    'DHF': 0.05,     # atomic_structure.dhf_lines.DHF_REL_UNCERTAINTY
+    'Brueckner': 0.05,
 }
 _user_tables.apply("uncertainty.source", SOURCE_REL_UNCERTAINTY)
 
@@ -1509,12 +1522,24 @@ def build_transitions_for_state(state_label, data, all_transitions):
                               numerov_scale=numerov_scale)
             sign = +1
 
+        dhf_f = None
+        if src in ('Numerov', 'Coulomb') and data.get('dhf_lines') is not None:
+            # a structure model (DHF or Brueckner, opt-in) replaces the model sources, never a measured value
+            _JL2 = parse_J2_set(t.get('lower_J'), L_CHAR.get(ll_char, 0))
+            _JU2 = parse_J2_set(upper_J, L_CHAR.get(lu, 0))
+            dhf_f = data['dhf_lines'].f_absorption(parse_state_nl(ll), parse_state_nl(ul), _JL2, _JU2,
+                                                   omega_au_from_nm(t['wavelength_nm']))
+            if dhf_f:
+                f, src = dhf_f, data['dhf_lines'].source
+                if sign == -1:   # emission: -(g_L/g_U) f with the group degeneracies used above
+                    f = f * sum(j + 1 for j in _JL2) / sum(j + 1 for j in _JU2)
+
         if f <= 0:
             continue
         if src == 'literature' and _transition_acc(src, data, ll, ul, upper_J) == 'extrapolated':
             src = 'extrapolated'
 
-        if sign == -1:
+        if sign == -1 and not dhf_f:
             # The state is the UPPER level: its emission strength is f_nk = -(g_k/g_n) f_kn, with f_kn
             # the tabulated absorption value (Mitroy, Safronova & Clark 2010). The LS path already
             # includes this factor; without it a 3p3/2 -> 3s channel is 2x too large (g_k/g_n = 2/4).

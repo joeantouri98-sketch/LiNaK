@@ -166,10 +166,10 @@ def main() -> int:
 
     print("=== spectra ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
-        p = plots_dir / el / f"{el}_spectra.html"
+        p = plots_dir / el / f"{el}_spectrum.html"
         check(
             p.exists() and p.stat().st_size > 1000,
-            f"{el} spectra.html size={p.stat().st_size if p.exists() else 0}",
+            f"{el} spectrum.html size={p.stat().st_size if p.exists() else 0}",
         )
 
     print("\n=== SUMMARY ===")

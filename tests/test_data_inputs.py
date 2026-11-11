@@ -118,10 +118,9 @@ def test_browse_modes_fill_the_field(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("stage_id,flags", [
     ("grotrian", ("rydberg", "transitions", "lifetimes")),
-    ("spectra", ("lifetimes", "transitions")),
+    ("spectra", ("lifetimes", "hf")),
     ("orbital3d", ("rydberg", "lifetimes")),
     ("response", ("polarizability", "lifetimes")),
-    ("bbr", ("blackbody", "polarizability", "lifetimes")),
 ])
 def test_plot_stages_offer_their_input_files(stage_id, flags):
     import importlib

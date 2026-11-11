@@ -605,7 +605,7 @@ p {
   <h1>The Physics Behind<br><span>LiNaK</span></h1>
   <p class="hero-sub">
     <b>LiNaK</b>: an alkali-atom AMO pipeline. Every formula, every approximation, every physical assumption used across the full alkali track:
-    <code style="font-family:var(--mono);font-size:13px;color:var(--blue)">runorca → rydberg → transitions → lifetimes → polarizability → blackbody → tweezer → hyperfine → feshbach → plots / compare</code>,
+    <code style="font-family:var(--mono);font-size:13px;color:var(--blue)">runorca → rydberg → transitions → lifetimes → polarizability → tweezer → blackbody → hyperfine → feshbach → plots / compare</code>,
     derived from first principles. 
     <br> - Shared SI/CODATA values live in
     <span class="file-badge">constants.py</span>.
@@ -3695,8 +3695,14 @@ p {
       $$K=F(F+1)-I(I+1)-J(J+1)$$
     </div>
     <p>
-      Landé $g_J$ defaults from the fine-structure formula; $g_I$ and nuclear
-      moments come from <code>nuclear_data.json</code> (rebuildable via
+      $g_J$ is the measured value where <code>&lt;el&gt;_hf_constants.json</code> gives one
+      (<code>gJ_exp</code>; the alkali ground states), otherwise Landé with the free-electron
+      $g_S=2.00231930436$ and the reduced-mass $g_L=1-m_e/M$:
+      $g_J=g_Lrac{J(J+1)-S(S+1)+L(L+1)}{2J(J+1)}+g_Srac{J(J+1)+S(S+1)-L(L+1)}{2J(J+1)}$.
+      $g_I$ is the measured atomic value $g_I'$ where the file gives it
+      (<code>_gI_prime</code>, which includes the diamagnetic shielding of the
+      electron cloud, 0.4% for Rb), otherwise the bare $\mu_I/I$ from
+      <code>nuclear_data.json</code> (rebuildable via
       <code>--build-nuclear-data</code>). For $^{23}$Na ground state:
       $I=3/2$, $A=885.813$&nbsp;MHz, clock $F=2\leftrightarrow F=1$ at
       $1771.626$&nbsp;MHz. For $^{133}$Cs: $I=7/2$,
@@ -3714,11 +3720,13 @@ p {
       <code>special.microwave_clock</code> in
       <code>&lt;el&gt;_hyperfine.json</code>: frequency in MHz / GHz / Hz and
       free-space wavelength. The $m_F=0$ component is first-order
-      $B$-insensitive (the usual clock / fountain transition). The hyperfine
-      HTML annotates that interval on the ground column, highlights it in the
-      splittings bar chart, and exposes a <b>Clock frequency</b> panel
-      (dropdown) with the numeric card. Full Zeeman / Breit-Rabi curves stay
-      in <code>&lt;el&gt;_zeeman.html</code>.
+      $B$-insensitive (the usual clock / fountain transition); its second-order
+      shift $\Delta\nu=K B^2$ is reported with every other $\Delta F=\pm1$ line
+      (single photon, $|\Delta m_F|\le1$, and two-photon, $|\Delta m_F|=2$) on the
+      page's Transitions tab: $K$ is 575.15&nbsp;Hz/G² for $^{87}$Rb and
+      427.45&nbsp;Hz/G² for $^{133}$Cs. Fields where a line is stationary in $B$
+      (field-insensitive points, from the exact slopes) are listed, e.g. the
+      $^{87}$Rb $|1,-1\rangle\leftrightarrow|2,+1\rangle$ two-photon line at 3.2289&nbsp;G.
     </p>
   </div>
 
@@ -3726,17 +3734,26 @@ p {
     <h3>Breit-Rabi Zeeman diagram</h3>
     <p>
       At finite $B$ the good quantum numbers are $m_F$ (weak field) then
-      $m_I,m_J$ (Paschen-Back). The code diagonalizes
-      $H_{\rm hf}+H_Z$ on a $B$-grid (default $0\to500$&nbsp;G) and writes
-      interactive HTML. Isotope selection: <code>--isotope A</code> (defaults to
-      the most abundant stable isotope; Li defaults to $^7$Li for hyperfine).
+      $m_I,m_J$ (Paschen-Back); $m_F=m_I+m_J$ stays exact at every field. The code
+      diagonalizes $H_{\rm hf}+H_Z$ block by block in $m_F$ on a $B$-grid (default
+      $0\to500$&nbsp;G). Within a block levels only have avoided crossings, so each
+      curve is one level at every field and keeps its labels $|F,m_F\rangle$ (weak
+      field) and $|m_J,m_I\rangle$ (strong field); levels of different $m_F$ cross
+      freely. Slopes $dE/dB$ are exact (Hellmann–Feynman), which gives each level's
+      magnetic moment and whether it is a low-field seeker. The optical lines are
+      Zeeman resolved with $\langle J'm_J'm_I'|d_q|Jm_Jm_I\rangle=\delta_{m_Im_I'}
+      (-1)^{J'-m_J'}\bigl(\begin{smallmatrix}J'&1&J\\-m_J'&q&m_J\end{smallmatrix}\bigr)
+      \langle J'\|d\|J\rangle$; at $B=0$ they reduce to the hyperfine strengths
+      $S_{FF'}=(2F'+1)(2J+1)\{J\,J'\,1;F'\,F\,I\}^2$. Isotope selection:
+      <code>--isotope A</code> (defaults to the most abundant stable isotope; Li defaults
+      to $^7$Li for hyperfine).
     </p>
     <div class="annotation">
       <span class="icon">→</span>
       <p>
-        Outputs: <code>data_json/&lt;el&gt;_hyperfine.json</code>,
-        <code>plots/&lt;el&gt;/&lt;el&gt;_hyperfine.html</code>,
-        <code>plots/&lt;el&gt;/&lt;el&gt;_zeeman.html</code>.
+        Outputs: <code>data_json/&lt;el&gt;_hyperfine.json</code> and one tabbed page,
+        <code>plots/&lt;el&gt;/&lt;el&gt;_hyperfine.html</code> (Levels, Breit–Rabi,
+        Transitions, Constants).
         See the Na walkthrough Step&nbsp;8.
       </p>
     </div>
@@ -3828,21 +3845,20 @@ p {
   </div>
 
   <div class="subsection">
-    <h3>plotinteractive.py: Grotrian, spectrum</h3>
+    <h3>plotinteractive.py: Grotrian</h3>
     <p>
       Usage:
-      <code>linak --pipeline plotinteractive Na [--soc-only] [--extra FILE …] [--plots N]</code>.
-      Reads ORCA JSON + Rydberg + transitions + lifetimes. Interactive prompts
+      <code>linak --pipeline plotinteractive Na [--soc-only] [--extra FILE …]</code>.
+      Reads Rydberg + transitions + lifetimes, and the ORCA JSON when present (an overlay; the stage runs without it). Interactive prompts
       choose energy zero (Excitation / Absolute / custom), continuum filtering,
       and optional wavelength windows. Writes under <code>plots/&lt;el&gt;/</code>:
     </p>
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.8">
       <li><code>*_grotrian.html</code>: primary Grotrian; ionization line always drawn (0&nbsp;eV Absolute, IE Excitation)</li>
-      <li><code>*_spectrum_levels.html</code></li>
     </ul>
     <p>
-      <code>--plots N</code> writes plots 1..N only (1=grotrian, 2=+spectrum_levels;
-      default all). Useful for quick method comparisons.
+      The spectrum is the Spectrum stage's own page (<span class="file-badge">spectra.py</span>, below);
+      the old <code>--plots</code> option is still accepted and writes the Grotrian page only.
     </p>
     <p>
       <code>--extra</code> / <code>-e</code> (repeatable) overlays additional
@@ -3857,12 +3873,12 @@ p {
       (<code>legendonly</code>); the Plot&nbsp;1 filter panel adds an unchecked
       source checkbox that Apply uses to show/hide that series. Missing or
       wrong-format files warn and skip; the rest of the plot still builds.
-      Spectrum / ee Grotrian are unchanged by <code>--extra</code> in this version.
+      The ee Grotrian is unchanged by <code>--extra</code> in this version.
     </p>
     <div class="code-block">
-linak --pipeline plotinteractive Rb -e v13 --plots 1
+linak --pipeline plotinteractive Rb -e v13
 linak --pipeline plotinteractive Na --extra Na_BLY3P.json
-linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
+linak --pipeline plotinteractive Na -e BLY3P -e PBE0
     </div>
     <p>
       Optional follow-on prompts can launch <span class="file-badge">orbital3d.py</span>
@@ -3899,16 +3915,30 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       so. J-resolved levels are drawn as spin-summed $|\ell,j,m_j\rangle$ densities
       (Clebsch&ndash;Gordan weights); spin-free levels offer a complex ($L_z$ eigenstate)
       or real $m_\ell$ basis. Axes are in &Aring;ngstr&ouml;m, $z$ is the quantisation axis.
-      <span class="file-badge">spectra.py</span> draws absorption and emission
-      bars from the lifetimes / transitions network over a chosen wavelength window.
+    </p>
+    <p>
+      <span class="file-badge">spectra.py</span> writes the Spectrum page
+      (<code>plots/&lt;el&gt;/&lt;el&gt;_spectrum.html</code>) from the lifetimes data. Every line is a
+      Voigt profile, $\sigma(\nu)=\pi r_e c f\,\mathrm{Re}\,w(z)/(\sigma_D\sqrt{2\pi})$, with the Doppler width
+      at the gas temperature (combined with an optional instrument Gaussian) and the natural width
+      $(1/\tau_u+1/\tau_l)/2\pi$ plus an optional pressure or laser width; the Faddeeva function $w$ also
+      gives the refractive index. The page recomputes everything live. Tabs: <b>Absorption</b>
+      (cross-section per atom with Boltzmann lower-level populations, optical depth or transmission of a
+      cell whose density follows the vapour pressure of Alcock et&nbsp;al. 1984, or $n-1$),
+      <b>Emission</b> (optically thin, $N_u A h\nu$ with Boltzmann upper levels at an excitation
+      temperature), <b>D lines</b> (hyperfine components of D1/D2 with the natural isotope mix and
+      measured isotope shifts; Doppler-broadened or saturated absorption with Lamb dips and crossovers),
+      <b>Curve of growth</b> (equivalent width against column density), <b>Strip</b> (colour bands) and
+      <b>Lines</b> (air and vacuum wavelengths, $f$, $A$, widths, CSV). Air wavelengths use standard air
+      (NIST's formula) above 200&nbsp;nm.
     </p>
     <div class="annotation amber">
       <span class="icon">!</span>
       <p>
         <b>Ions.</b> Both scripts accept registered ion ids (e.g.
-        <code>Na_c1</code>). For closed-shell ions, choose an EUV wavelength
-        window on spectra – Na&nbsp;II resonance lines sit near 30–40&nbsp;nm,
-        so the default alkali 200–900&nbsp;nm range misses them. Orbital
+        <code>Na_c1</code>). The Spectrum page opens on the ground-state resonance lines
+        (Na&nbsp;II: 29–39&nbsp;nm); for ions there is no vapour pressure, so set the
+        density on the page. Orbital
         radials use the core charge $Z$ from <code>z_core</code> in the species
         Rydberg JSON (or charge&nbsp;+&nbsp;1): $R(r)=f(Zr)$, so the box and $r_c$ scale as
         $1/Z$ (Na<sup>+</sup>: $Z=2$). Still a single-electron QDT picture: useful
@@ -3942,7 +3972,7 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
       hyperfine, Feshbach, and visualization artifacts. Execution order:
       <code style="font-family:var(--mono);font-size:12px;color:var(--blue)">
         runorca → orca_to_json → rydberg → transitions → lifetimes →
-        polarizability → blackbody → tweezer → spectra → hyperfine → feshbach →
+        polarizability → tweezer → blackbody → spectra → hyperfine → feshbach →
         orbital3d → plotinteractive → compare_elements / scattering_rate
       </code>
     </p>
@@ -4414,7 +4444,7 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
   </div>
 
   <div class="subsection">
-    <h3>Step 7: Trap branch: polarizability → blackbody → tweezer</h3>
+    <h3>Step 7: Trap branch: polarizability → tweezer → blackbody</h3>
     <p>
       After cooling parameters (Steps 5-6), the trap branch reuses the same
       transition network. Commands:
@@ -4422,10 +4452,10 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0 --plots 1
     <div class="code-block">
 <span class="comment"># α(ω), C₆, magic wavelengths, AC Stark panel</span>
 linak --pipeline polarizability Na --wl 1064 --intensity 50 --waist 1
-<span class="comment"># BBR at 300 K (default excited = first fine-structure partner)</span>
-linak --pipeline blackbody Na --T 300
 <span class="comment"># Far-detuned scattering &amp; heating spectrum</span>
 linak --pipeline tweezer Na --wl 1064 --intensity 50 --waist 1
+<span class="comment"># BBR at 300 K (default excited = first fine-structure partner)</span>
+linak --pipeline blackbody Na --T 300
     </div>
 
     <h4>Polarizability checkpoints</h4>
@@ -4486,8 +4516,8 @@ linak --pipeline hyperfine Na
     </div>
     <p>
       Outputs: <code>data_json/Na_hyperfine.json</code>,
-      <code>plots/Na/Na_hyperfine.html</code>, <code>plots/Na/Na_zeeman.html</code>
-      (Breit-Rabi diagram to $B_{\rm max}=500$&nbsp;G by default). See
+      <code>plots/Na/Na_hyperfine.html</code>
+      (Breit-Rabi curves to $B_{\rm max}=500$&nbsp;G by default). See
       <a href="#sec13">Section 13</a>.
     </p>
   </div>
@@ -4529,7 +4559,7 @@ linak --pipeline spectra Na
 linak --pipeline orbital3d Na                       <span class="comment"># GPU volume view (default)</span>
 linak --pipeline orbital3d Na --render isosurface   <span class="comment"># Plotly isosurfaces instead (no WebGL2 needed)</span>
 linak --pipeline plotinteractive Na
-<span class="comment"># optional: linak --pipeline plotinteractive Na -e v13 --plots 1</span>
+<span class="comment"># optional: linak --pipeline plotinteractive Na -e v13</span>
 <span class="comment"># defaults: --energy-shift 1 (Excitation), --filter-ie y</span>
 linak --pipeline compare_elements --elements Na
 linak --pipeline scattering_rate --element Na --line D2
@@ -4538,8 +4568,7 @@ linak --pipeline scattering_rate --element Na --line D2
     <table class="def-table">
       <tr><th>File</th><th>What it shows</th></tr>
       <tr><td><code>Na_grotrian.html</code></td><td>Levels + E1 arrows; ionization line at IE in Excitation mode</td></tr>
-      <tr><td><code>Na_spectrum_levels.html</code></td><td>Interactive spectrum / levels</td></tr>
-      <tr><td><code>Na_spectra.html</code></td><td>Absorption / emission bars</td></tr>
+      <tr><td><code>Na_spectrum.html</code></td><td>Spectrum page: absorption, emission, hyperfine D lines, curve of growth, line list</td></tr>
       <tr><td><code>Na_orbital3d.html</code></td><td>Orbital viewer (QDT radial; volume or isosurface)</td></tr>
       <tr><td><code>Na_polarizability.html</code> / <code>Na_tweezer.html</code> / <code>Na_hyperfine.html</code> / <code>Na_feshbach.html</code></td><td>Module-specific interactive plots</td></tr>
     </table>
@@ -4571,10 +4600,9 @@ linak --pipeline scattering_rate --element Na --line D2
         <h4>plots/Na/ (selected)</h4>
         <ul style="font-size:12px;color:var(--text2);padding-left:18px;line-height:1.7;font-family:var(--mono)">
           <li>Na_grotrian.html</li>
-          <li>Na_spectrum_levels.html</li>
           <li>Na_polarizability.html · Na_tweezer.html</li>
-          <li>Na_hyperfine.html · Na_zeeman.html</li>
-          <li>Na_feshbach.html · Na_spectra.html</li>
+          <li>Na_hyperfine.html</li>
+          <li>Na_feshbach.html · Na_spectrum.html</li>
           <li>Na_orbital3d.html · comparison / scatter widgets</li>
         </ul>
       </div>
@@ -4635,14 +4663,14 @@ linak --pipeline spectra Na
 linak --pipeline hyperfine Na
 linak --pipeline feshbach Na                   <span class="comment"># skip Fr</span>
 linak --pipeline orbital3d Na
-linak --pipeline plotinteractive Na            <span class="comment"># prompts; -e SUFFIX overlays; --plots 1 = grotrian only</span>
+linak --pipeline plotinteractive Na            <span class="comment"># prompts; -e SUFFIX overlays</span>
 linak --pipeline compare_elements --elements Na
 linak --pipeline scattering_rate --element Na --line D2
     </div>
     <div class="code-block">
 <span class="comment"># Method comparison example (keep default JSON; write a tagged variant)</span>
 linak --pipeline runorca Rb --mode alkali --functional-gs B3LYP --functional-ex CAM-B3LYP --nroots 30 --scf-tightness tight --outname v13
-linak --pipeline plotinteractive Rb -e v13 --plots 1
+linak --pipeline plotinteractive Rb -e v13
     </div>
   </div>
 
@@ -4725,10 +4753,10 @@ linak --pipeline plotinteractive Rb -e v13 --plots 1
 
     <h4>Recommended ion sequence (levels and plots)</h4>
     <p style="font-size:13.5px;color:var(--text2)">
-      The spectra window below is for the <b>ground-state resonance</b> band of
-      Na&nbsp;II (gs&nbsp;→&nbsp;X near 26–38&nbsp;nm). The full transition network
-      also has thousands of excited–excited lines from the VUV through the IR;
-      widen <code>--wl-min</code> / <code>--wl-max</code> (or omit them) to see those.
+      The Spectrum page opens on the <b>ground-state resonance</b> band of
+      Na&nbsp;II (2p<sup>6</sup>&nbsp;→&nbsp;2p<sup>5</sup>3s, 3d near 29–39&nbsp;nm). The full
+      transition network also has thousands of excited–excited lines from the VUV through the IR;
+      the page's "All lines" button (or <code>--wl-min</code> / <code>--wl-max</code>) shows those.
     </p>
     <div class="code-block">
 linak --pipeline runorca Na_c1 --mode soc
@@ -4737,13 +4765,13 @@ linak --pipeline rydberg Na_c1 --n-max 30
 linak --pipeline transitions Na_c1
 linak --pipeline lifetimes Na_c1
 linak --pipeline plotinteractive Na_c1               <span class="comment"># Absolute; ground = -IE</span>
-linak --pipeline spectra Na_c1 --wl-min 25 --wl-max 50   <span class="comment"># gs→X EUV only; widen for ee / IR</span>
+linak --pipeline spectra Na_c1                       <span class="comment"># opens on the gs→X EUV lines</span>
 linak --pipeline orbital3d Na_c1
 <span class="comment"># polarizability / blackbody / tweezer / hyperfine / feshbach: unsupported for ions</span>
     </div>
     <div class="code-block">
 linak --pipeline runorca Mg_c1
-linak --pipeline plotinteractive Mg_c1 --plots 1
+linak --pipeline plotinteractive Mg_c1
     </div>
   </div>
 
@@ -4802,13 +4830,13 @@ linak --pipeline rydberg Fe
 linak --pipeline transitions Fe
 linak --pipeline lifetimes Fe --nist-only
 linak --pipeline runorca Fe --mode soc --soc-recipe nevpt2
-linak --pipeline plotinteractive Fe --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -7.9024 eV</span>
+linak --pipeline plotinteractive Fe --soc-only   <span class="comment"># Absolute; ground ≈ -7.9024 eV</span>
 
 linak --pipeline rydberg Cr
 linak --pipeline transitions Cr
 linak --pipeline lifetimes Cr --nist-only
 linak --pipeline runorca Cr --mode soc --soc-recipe nevpt2
-linak --pipeline plotinteractive Cr --soc-only --plots 1   <span class="comment"># Absolute; ground ≈ -6.7665 eV</span>
+linak --pipeline plotinteractive Cr --soc-only   <span class="comment"># Absolute; ground ≈ -6.7665 eV</span>
     </div>
   </div>
 
@@ -4854,8 +4882,8 @@ linak --pipeline runorca Fr --mode soc --soc-recipe nevpt2 --nroots 6 --basis-ti
 linak --pipeline runorca Fe --mode soc --soc-recipe casscf --nroots 5
 linak --pipeline runorca Fe --mode soc --soc-recipe nevpt2 --nroots 5
 linak --pipeline runorca Cr --mode soc --soc-recipe nevpt2
-linak --pipeline plotinteractive Fe --soc-only --plots 1
-linak --pipeline plotinteractive Cr --soc-only --plots 1
+linak --pipeline plotinteractive Fe --soc-only
+linak --pipeline plotinteractive Cr --soc-only
     </div>
     <p style="font-size:13px;color:var(--text2);margin-top:8px">
       Alkali SOC CAS size grows with <code>--soc-recipe</code> (e.g. Fr
@@ -4906,7 +4934,7 @@ orca Na_ex.inp
 <span class="comment"># ORCA writes Na_gs.out / Na_ex.out beside the inputs</span>
 cd ../../..
 linak --pipeline orca_to_json Na --run my_custom_run --outname custom
-<span class="comment"># → data_json/Na_custom.json  (plot with: plotinteractive.py Na -e custom --plots 1)</span>
+<span class="comment"># → data_json/Na_custom.json  (plot with: plotinteractive.py Na -e custom)</span>
     </div>
     <p style="font-size:13px;color:var(--text2)">
       <code>--run</code> selects the folder name under
@@ -5072,9 +5100,9 @@ python -m linak.integrations.arc Sr --n-max 40
     <h3>spectra.py · orbital3d.py · plotinteractive.py</h3>
     <table class="def-table">
       <tr><th>Script</th><th>Flags</th><th>Notes</th></tr>
-      <tr><td><code>spectra.py</code></td><td><code>[element] --data-dir --wl-min --wl-max</code></td><td>Absorption / emission bars</td></tr>
+      <tr><td><code>spectra.py</code></td><td><code>&lt;element&gt; [--T K] [--cell-length cm] [--density cm⁻³] [--t-exc K|inf] [--instrument-pm] [--units nm|air|cm|eV|THz] [--wl-min --wl-max] [--lifetimes-file] [--hf-file] [--no-tab-…]</code></td><td>Spectrum page: absorption, emission, hyperfine D lines (Doppler or saturated absorption), curve of growth, colour strip, line list</td></tr>
       <tr><td><code>orbital3d.py</code></td><td><code>[element] --data-dir --n-max --render {volume,isosurface} --grid --isovalue</code></td><td><code>--render</code> default <code>volume</code>; <code>--n-max</code> default 10; <code>--grid</code> blank = 96 (volume, max 128) or 55 (isosurface, max 75); <code>--isovalue</code> 0.04 = display floor (volume) / outer level (isosurface)</td></tr>
-      <tr><td><code>plotinteractive.py</code></td><td><code>&lt;element&gt; [--soc-only] [--extra FILE …] [--plots SPEC]</code></td><td>Further prompts: energy mode, continuum filter, λ windows, launch orbital/spectra. Main ORCA source is always <code>data_json/&lt;el&gt;.json</code>. <code>--extra</code>/<code>-e</code>: overlay other ORCA-format JSONs (path, <code>data_json/</code> file, or stem → <code>&lt;el&gt;_&lt;stem&gt;.json</code>); source name from filename after <code>Element_</code>; default hidden. <code>--plots</code>: <code>N</code>, <code>1-3</code>, <code>1,2</code>, or <code>all</code> - highest index wins, writes plots 1..max (1=grotrian, 2=spectrum, 3=ee_grotrian, 4=3d)</td></tr>
+      <tr><td><code>plotinteractive.py</code></td><td><code>&lt;element&gt; [--soc-only] [--extra FILE …]</code></td><td>Further prompts: energy mode, continuum filter, λ windows, launch orbital/spectra. Main ORCA source is always <code>data_json/&lt;el&gt;.json</code>. <code>--extra</code>/<code>-e</code>: overlay other ORCA-format JSONs (path, <code>data_json/</code> file, or stem → <code>&lt;el&gt;_&lt;stem&gt;.json</code>); source name from filename after <code>Element_</code>; default hidden. Writes the Grotrian page; the spectrum is the Spectrum stage's page (<code>spectra</code>). The old <code>--plots</code> option is accepted and ignored.</td></tr>
     </table>
   </div>
 

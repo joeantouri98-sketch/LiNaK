@@ -2,7 +2,6 @@
 """P15 / P17: zero-denominator guards; P8 provenance group stays separate."""
 from __future__ import annotations
 
-import inspect
 import math
 
 import linak.physics.blackbody_core as bb
@@ -26,6 +25,10 @@ def test_isat_from_sigma_guards_zero_inputs():
 
 
 def test_unknown_f_source_is_not_labelled_coulomb():
-    from linak.pipelines.plotinteractive import spectrum
-    assert spectrum._SOURCE_GROUPS['unknown'] == 'unclassified'
-    assert "_SOURCE_GROUPS.get(_t.get('fosc_source', ''), 'unclassified')" in inspect.getsource(spectrum)
+    from linak.pipelines import spectra
+    lt = {'transitions': [dict(lower_label='3s', upper_label='3p3/2', wavelength_nm=589.0, delta_E_eV=2.1,
+                               fosc=0.6, g_lower=2, g_upper=4)], 'lifetimes': []}
+    _levels, lines, _gs, _dropped = spectra.build_lines(lt)
+    assert lines[0][5] == 'other'
+    from linak.report_templates import load
+    assert "const srcCol=s=>css(SRC_COL[s]||'--line')" in load('spectrum_page.html')

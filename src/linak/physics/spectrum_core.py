@@ -1,132 +1,244 @@
-"""Line shapes of the interactive absorption spectrum: the pure computation.
+"""Atomic line spectra: the physics behind the Spectrum page.
 
-Each line is a peak-normalised Doppler (Gaussian), instrumental (Gaussian) or
-natural (Lorentzian, ħ/τ of the upper state) profile scaled by f · n_degenerate,
-evaluated on a wavelength grid that is fine around every line.
+Every quantity here has a twin in ``report_templates/spectrum_physics.js`` (the page recomputes the
+spectra live); the tests run both and require them to agree. Conventions:
 
-The browser panel's natural width is the same ħ/τ of the upper state
-(``line_gamma_nm``), falling back to the line's own A only without a lifetime.
+* Frequencies in Hz, vacuum wavelengths in nm, cross-sections per atom in m² (the page shows cm²).
+* A line's integrated cross-section is ∫σ dν = π r_e c f (absorption oscillator strength f of the
+  lower level). Its profile is a Voigt: a Gaussian (Doppler, σ_D = ν₀ √(kT/mc²), combined in
+  quadrature with an instrument Gaussian) convolved with a Lorentzian of FWHM (Γ_u + Γ_l)/2π plus
+  any extra (pressure, laser) width. The profile is area-normalised, φ = Re w(z) / (σ √(2π)),
+  z = (ν − ν₀ + iγ) / (σ √2) with γ the Lorentzian half width and w the Faddeeva function.
+* The same w gives the refractive index of a dilute vapour (Kramers–Kronig partner of the
+  absorption): n − 1 = −(c / 4πν) N π r_e c f Im w(z) / (σ √(2π)).
+* Populations are Boltzmann over the listed levels, N_l ∝ g_l exp(−E_l / kT). Absorption includes
+  stimulated emission at the gas temperature through the factor 1 − exp(−hν/kT).
+* Emission (optically thin): power per line ∝ N_u A_ul hν with N_u ∝ g_u exp(−E_u / kT_exc); at
+  T_exc → ∞ this is g_u A hν (equal population per sublevel).
+* Air wavelengths: standard air (the Edlén / Birch & Downs formula NIST's Atomic Spectra Database
+  uses; Morton 2000, ApJS 130, 403), valid above 200 nm. Vacuum below 200 nm.
+* Vapour pressure: Alcock, Itkin & Horrigan, Can. Metall. Q. 23, 309 (1984), as tabulated in the
+  CRC Handbook: log₁₀(P/Pa) = a − b/T for the solid and the liquid.
 """
-
 from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 
-from linak.core.constants import C_SI, HBAR_EV_S, HC_EV_NM, KB_EV
+from linak.core.constants import AMU_KG, C_SI, H_SI, KB_EV, KB_SI
 
-def doppler_sigma_nm(wl_nm, mc2_eV, T_K=300.0):
-    """Gaussian σ (standard deviation, NOT FWHM) in nm from Doppler broadening;
-    *mc2_eV* is the atom's rest energy.
-    FWHM = 2√(2ln2)·σ ≈ 2.355·σ. Used directly in exp(-0.5*(x/σ)²)."""
-    E_eV     = HC_EV_NM / wl_nm
-    # Doppler standard deviation: sigma_nu/nu = sqrt(kT/mc^2)  (FWHM = 2 sqrt(2 ln2) sigma = nu sqrt(8 kT ln2/mc^2))
-    sigma_eV = E_eV * np.sqrt(KB_EV * T_K / mc2_eV)
-    return wl_nm**2 / HC_EV_NM * sigma_eV   # convert ΔE → Δλ
-
-def natural_gamma_nm(state_label, wl_nm, lifetimes_by_state):
-    """Lorentzian FWHM in nm from natural linewidth (ħ/τ)."""
-    lt_entry = lifetimes_by_state.get(state_label)
-    if lt_entry:
-        tau_s = lt_entry.get('lifetime_s',
-                             lt_entry.get('lifetime_ns', 0) * 1e-9)
-        if tau_s and tau_s > 0:
-            gamma_eV = HBAR_EV_S / tau_s
-            return wl_nm**2 / HC_EV_NM * gamma_eV
-    return None
+R_E = 2.8179403262e-15          # classical electron radius (m), CODATA 2018
+LINE_K = math.pi * R_E * C_SI   # ∫σ dν per unit f (m² Hz)
+SQRT2PI = math.sqrt(2.0 * math.pi)
 
 
-# Adaptive wavelength grid: the Doppler σ at 589 nm for Na is ~1.5 pm, invisible on a
-# 350 nm-wide uniform grid, so a fine sub-grid is built around each line (±6σ_inst,
-# pts_per_line points) and merged, sorted and de-duplicated. Every peak is then
-# resolved regardless of the overall wavelength span.
-SIGMA_INST_DEFAULT = 0.3   # nm — makes all peaks visible on overview plot
+# ---------------------------------------------------------------- line shape
+def faddeeva(z):
+    """w(z) = exp(−z²) erfc(−iz) (scipy's reference implementation)."""
+    from scipy.special import wofz
+    return wofz(z)
 
-def adaptive_grid(lines, sigma_inst=SIGMA_INST_DEFAULT, pts_per_line=300):
+
+def doppler_sigma_hz(nu_hz, mass_amu, T_K):
+    """Gaussian standard deviation (Hz) of the Doppler profile: σ_D = ν₀ √(kT / mc²)."""
+    return nu_hz * math.sqrt(KB_SI * T_K / (mass_amu * AMU_KG * C_SI ** 2))
+
+
+def instrument_sigma_hz(nu_hz, fwhm_nm):
+    """Gaussian σ (Hz) of an instrument function of FWHM *fwhm_nm* at frequency *nu_hz*."""
+    lam_nm = C_SI / nu_hz * 1e9
+    return (fwhm_nm / (2.0 * math.sqrt(2.0 * math.log(2.0)))) * C_SI / lam_nm ** 2 * 1e9
+
+
+def natural_fwhm_hz(tau_upper_s=None, tau_lower_s=None):
+    """Lorentzian FWHM (Hz) of a line: (Γ_u + Γ_l)/2π with Γ = 1/τ (an infinite τ adds nothing)."""
+    g = 0.0
+    for tau in (tau_upper_s, tau_lower_s):
+        if tau and tau > 0 and math.isfinite(tau):
+            g += 1.0 / tau
+    return g / (2.0 * math.pi)
+
+
+def voigt(nu, nu0, sigma_hz, gamma_hwhm_hz):
+    """Area-normalised Voigt profile (1/Hz) at *nu*: Re w(z) / (σ √(2π))."""
+    z = (np.asarray(nu, float) - nu0 + 1j * gamma_hwhm_hz) / (sigma_hz * math.sqrt(2.0))
+    return faddeeva(z).real / (sigma_hz * SQRT2PI)
+
+
+def voigt_complex(nu, nu0, sigma_hz, gamma_hwhm_hz):
+    """w(z) / (σ √(2π)): real part the absorption profile, imaginary part its dispersion partner."""
+    z = (np.asarray(nu, float) - nu0 + 1j * gamma_hwhm_hz) / (sigma_hz * math.sqrt(2.0))
+    return faddeeva(z) / (sigma_hz * SQRT2PI)
+
+
+def cross_section_m2(nu, nu0, f, sigma_hz, gamma_hwhm_hz):
+    """Absorption cross-section per atom in the lower level (m²): π r_e c f φ(ν)."""
+    return LINE_K * f * voigt(nu, nu0, sigma_hz, gamma_hwhm_hz)
+
+
+def refractive_index_minus_1(nu, nu0, f, sigma_hz, gamma_hwhm_hz, N_m3):
+    """n − 1 of N_m3 absorbers (in the lower level) per m³ near one line."""
+    w = voigt_complex(nu, nu0, sigma_hz, gamma_hwhm_hz)
+    return -(C_SI / (4.0 * math.pi * np.asarray(nu, float))) * N_m3 * LINE_K * f * w.imag
+
+
+def stimulated_factor(nu_hz, T_K):
+    """1 − exp(−hν/kT): absorption minus stimulated emission in thermal equilibrium."""
+    if T_K <= 0:
+        return 1.0
+    return -math.expm1(-H_SI * nu_hz / (KB_SI * T_K))
+
+
+# ---------------------------------------------------------------- air wavelengths
+def air_index(lam_vac_nm):
+    """Refractive index of standard air at the vacuum wavelength (nm); 1 below 200 nm."""
+    lam = np.asarray(lam_vac_nm, float)
+    s2 = (1e3 / lam) ** 2                        # (1/λ in µm)²
+    n = 1.0 + 8.34254e-5 + 2.406147e-2 / (130.0 - s2) + 1.5998e-4 / (38.9 - s2)
+    return np.where(lam >= 200.0, n, 1.0)
+
+
+def vac_to_air_nm(lam_vac_nm):
+    return np.asarray(lam_vac_nm, float) / air_index(lam_vac_nm)
+
+
+# ---------------------------------------------------------------- vapour
+# log10(P/Pa) = a − b/T for the solid (below T_melt) and the liquid; Alcock et al. (1984) via CRC.
+VAPOUR_PRESSURE: dict[str, dict[str, Any]] = {
+    'Li': dict(solid=(10.673, 8310.0), liquid=(10.061, 8023.0), T_melt=453.65),
+    'Na': dict(solid=(10.304, 5603.0), liquid=(9.710, 5377.0), T_melt=370.944),
+    'K': dict(solid=(9.967, 4646.0), liquid=(9.408, 4453.0), T_melt=336.53),
+    'Rb': dict(solid=(9.863, 4215.0), liquid=(9.318, 4040.0), T_melt=312.45),
+    'Cs': dict(solid=(9.717, 3999.0), liquid=(9.171, 3830.0), T_melt=301.59),
+}
+VAPOUR_SOURCE = ("Alcock, Itkin & Horrigan, Can. Metall. Q. 23, 309 (1984), as tabulated in the CRC "
+                 "Handbook; ±5% or better")
+
+
+def vapour_pressure_pa(element, T_K):
+    vp = VAPOUR_PRESSURE.get(element)
+    if vp is None:
+        return None
+    a, b = vp['solid'] if T_K < vp['T_melt'] else vp['liquid']
+    return 10.0 ** (a - b / T_K)
+
+
+def vapour_density_cm3(element, T_K):
+    """Atoms per cm³ of the saturated vapour above the metal at T (ideal gas, N = P/kT)."""
+    p = vapour_pressure_pa(element, T_K)
+    return None if p is None else p / (KB_SI * T_K) * 1e-6
+
+
+# Typical cell temperatures for an optically interesting vapour (a few cm, T ~ 1-100% at the D lines).
+DEFAULT_CELL_T = {'Li': 623.0, 'Na': 423.0, 'K': 333.0, 'Rb': 298.15, 'Cs': 298.15}
+
+
+# ---------------------------------------------------------------- populations
+def boltzmann_weights(E_eV, g, T_K):
+    """Relative populations g e^{−E/kT} normalised over the given levels (T = inf: ∝ g)."""
+    E = np.asarray(E_eV, float)
+    g = np.asarray(g, float)
+    if not math.isfinite(T_K):
+        w = g.copy()
+    else:
+        w = g * np.exp(-(E - E.min()) / (KB_EV * T_K))
+    return w / w.sum()
+
+
+# ---------------------------------------------------------------- curve of growth
+def equivalent_width_hz(column_cm2, f, sigma_hz, gamma_hwhm_hz, n_points=20001):
+    """W_ν = ∫(1 − e^{−τ(ν)}) dν for one line, τ = Nℓ σ(ν) (Nℓ in cm⁻²)."""
+    K = LINE_K * f * column_cm2 * 1e4                         # Nℓ in m⁻² times ∫σ dν
+    half = 12.0 * sigma_hz + 40.0 * gamma_hwhm_hz + 12.0 * math.sqrt(max(K * gamma_hwhm_hz / math.pi, 0.0))
+    u = np.linspace(-1.0, 1.0, n_points)
+    U = 8.0
+    d = half * np.sinh(U * u) / math.sinh(U)
+    tau = K * voigt(d, 0.0, sigma_hz, gamma_hwhm_hz)
+    # beyond ±half the line is thin and Lorentzian: ∫ τ dν over both tails = 2Kγ/(π·half)
+    return float(np.trapezoid(-np.expm1(-tau), d)) + 2.0 * K * gamma_hwhm_hz / (math.pi * half)
+
+
+# ---------------------------------------------------------------- D-line hyperfine components
+# Line-centre (hyperfine-free) isotope shifts ν(A) − ν(reference A), MHz.
+ISOTOPE_SHIFT_MHZ = {
+    ('Li', 6): {'D1': -10534.215, 'D2': -10533.352},   # Das & Natarajan, PRA 75, 052508 (2007)
+    ('K', 41): {'D1': 235.5, 'D2': 236.2},             # Falke et al., PRA 74, 032503 (2006)
+    ('Rb', 87): {'D1': 77.586, 'D2': 77.992},          # Banerjee et al., arXiv:physics/0209019, /0307094
+}
+ISOTOPE_SHIFT_SOURCE = {
+    'Li': "Das & Natarajan, Phys. Rev. A 75, 052508 (2007)",
+    'K': "Falke et al., Phys. Rev. A 74, 032503 (2006)",
+    'Rb': "Banerjee, Das & Natarajan, Phys. Rev. A 2003 (arXiv:physics/0209019, physics/0307094)",
+}
+
+
+@dataclass
+class HfComponent:
+    F: float
+    Fp: float
+    detuning_MHz: float          # from the reference isotope's line centre
+    weight: float                # abundance × ground-F population × S_FF' (sums to the abundance)
+    S: float                     # S_FF' (sums to 1 over F' for each F)
+
+
+@dataclass
+class IsotopeLine:
+    A: int
+    I: float
+    abundance: float
+    mass_amu: float
+    shift_MHz: float
+    components: list[HfComponent] = field(default_factory=list)
+
+
+def hyperfine_components(I, J, Jp, A_g, B_g, A_e, B_e, C_e=0.0, shift_MHz=0.0, abundance=1.0):
+    """Zero-field hyperfine components of a J → J' line of one isotope."""
+    from linak.physics.hyperfine_core import F_levels, hyperfine_energy, hyperfine_line_strengths
+    S = hyperfine_line_strengths(I, J, Jp)
+    gtot = (2 * I + 1) * (2 * J + 1)
+    out = []
+    for F in F_levels(I, J):
+        Eg = hyperfine_energy(F, I, J, A_g, B_g)
+        for Fp in F_levels(I, Jp):
+            s = S.get((F, Fp), 0.0)
+            if s <= 0:
+                continue
+            Ee = hyperfine_energy(Fp, I, Jp, A_e, B_e, C_e)
+            out.append(HfComponent(F, Fp, shift_MHz + Ee - Eg, abundance * (2 * F + 1) / gtot * s, s))
+    return out
+
+
+# ---------------------------------------------------------------- saturated absorption
+def lamb_dip_hwhm_hz(gamma_rate_s, s0, extra_fwhm_hz=0.0):
+    """Half width of a Lamb dip in laser frequency: ((Γ/2π)(1 + √(1 + s))/2 + extra FWHM)/2."""
+    return 0.5 * (gamma_rate_s / (2 * math.pi) * 0.5 * (1.0 + math.sqrt(1.0 + s0)) + extra_fwhm_hz)
+
+
+def sas_pairs(components, sigma_d_hz):
+    """Lamb dips and crossovers of one isotope's components (pump and probe counter-propagating).
+
+    Weak-saturation rate-equation estimate per pair, no optical pumping between ground levels: a
+    pair (i, j) sharing a lower F or an upper F' gives a feature at (ν_i + ν_j)/2 of strength
+    (a_i S_j + a_j S_i)/2 (a = component weight, S = its S_FF'), times the Doppler density of the
+    velocity class that sees both, exp(−((ν_i − ν_j)/2)² / 2σ_D²). The weak probe sees only these
+    narrow features: for one two-level line, α_D(Δ) [1 − (s/2) γ_d² / (Δ² + γ_d²)]. The scan moves the
+    pump's hole and the probe's resonance in opposite directions, so the dip's FWHM in laser frequency
+    is the mean of the probe width and the saturated hole width, (Γ/2π)(1 + √(1 + s))/2 (Demtröder,
+    Laser Spectroscopy, Vol. 2, §2.2). Returns [(centre_MHz, strength)].
     """
-    Build a wavelength grid that is fine around every spectral line and
-    coarse in the gaps. Each line contributes pts_per_line points spanning
-    ±6*sigma_inst. A coarse background grid (200 pts) fills the full range.
-    """
-    if not lines:
-        return np.linspace(100, 1100, 500)
-    wls   = [r['wl'] for r in lines]
-    lo    = max(10, min(wls) - 10 * sigma_inst)
-    hi    = max(wls) + 10 * sigma_inst
-    # Coarse background
-    grids = [np.linspace(lo, hi, 300)]
-    # Fine sub-grid per line
-    for wl0 in wls:
-        grids.append(np.linspace(wl0 - 6*sigma_inst, wl0 + 6*sigma_inst, pts_per_line))
-    combined = np.concatenate(grids)
-    combined = np.clip(combined, lo, hi)
-    combined = np.unique(combined)   # sort + deduplicate
-    return combined
-
-def broadened_spectrum(lines, wl_arr, broadening, mc2_eV, lifetimes_by_state,
-                   T_K=300.0, sigma_inst_nm=SIGMA_INST_DEFAULT):
-    """
-    Compute a normalised spectrum array on wl_arr.
-    broadening: 'doppler' | 'instrumental' | 'natural'
-
-    Amplitude = fosc * n_degenerate so degenerate Rydberg levels contribute
-    their correct total absorption strength (PHYSICS FIX 6).
-
-    All lineshapes are peak-normalised to 1 before scaling by amplitude so
-    that relative line heights correctly reflect oscillator strengths regardless
-    of linewidth (PHYSICS FIX 2 & 5).
-
-      Gaussian peak = 1  at x=x0  (already satisfied by exp formula)
-      Lorentzian peak = 2/(pi*gamma) at x=x0 — divide out to normalise
-
-    Returns normalised intensity array (max=1 across all lines combined).
-    """
-    result = np.zeros(len(wl_arr))
-    for r in lines:
-        wl0  = r['wl']
-        # PHYSICS FIX 6: weight by total degeneracy-corrected oscillator strength
-        n_deg = r.get('n_deg', 1)
-        amp   = r['fosc'] * n_deg
-        lbl   = r['ul']
-        if broadening == 'doppler':
-            sig = max(doppler_sigma_nm(wl0, mc2_eV, T_K), 1e-6)
-            # Peak-normalised Gaussian: peak = 1 at x=x0
-            result += amp * np.exp(-0.5 * ((wl_arr - wl0) / sig)**2)
-        elif broadening == 'instrumental':
-            sig = sigma_inst_nm
-            result += amp * np.exp(-0.5 * ((wl_arr - wl0) / sig)**2)
-        elif broadening == 'natural':
-            gamma = natural_gamma_nm(lbl, wl0, lifetimes_by_state)
-            if gamma and gamma > 0:
-                # PHYSICS FIX 5: peak-normalised Lorentzian
-                # Raw Lorentzian peak = (gamma/2pi)/(gamma/2)^2 = 2/(pi*gamma)
-                # Divide by peak so max = 1 at x=x0
-                lorentz_raw = (gamma / (2*np.pi)) / ((wl_arr - wl0)**2 + (gamma/2)**2)
-                lorentz_peak = 2.0 / (np.pi * gamma)
-                result += amp * lorentz_raw / lorentz_peak
-            else:
-                # PHYSICS FIX 3: use Lorentzian with narrow but finite gamma
-                # rather than a Gaussian (natural lineshape IS Lorentzian)
-                gamma_proxy = 1e-5   # 0.01 pm — essentially a delta function
-                lorentz_raw  = (gamma_proxy / (2*np.pi)) / ((wl_arr - wl0)**2 + (gamma_proxy/2)**2)
-                lorentz_peak = 2.0 / (np.pi * gamma_proxy)
-                result += amp * lorentz_raw / lorentz_peak
-    mx = result.max()
-    if mx > 0:
-        result /= mx
-    return result
-
-
-def line_gamma_nm(r, lifetimes_by_state):
-    """Natural linewidth (Lorentzian FWHM) in nm for the JS panel.
-
-    Same quantity as the pre-rendered 'natural' trace: hbar / tau_total of the UPPER state
-    (all decay channels), via natural_gamma_nm. Only when the state has no lifetime entry does
-    it fall back to the single line's A coefficient (a lower bound on the total rate)."""
-    g = natural_gamma_nm(r.get('ul'), r.get('wl', 500.0), lifetimes_by_state)
-    if g:
-        return g
-    _A  = r.get('A', 0)
-    _wl = r.get('wl', 500.0)
-    if not _A or _A <= 0:
-        return 0.0
-    return (_wl * 1e-9)**2 / (2 * np.pi * C_SI) * _A * 1e9   # nm
+    out = []
+    n = len(components)
+    for i in range(n):
+        ci = components[i]
+        for j in range(i, n):
+            cj = components[j]
+            if i != j and ci.F != cj.F and ci.Fp != cj.Fp:
+                continue
+            k = ci.weight * ci.S if i == j else 0.5 * (ci.weight * cj.S + cj.weight * ci.S)
+            half = 0.5 * (ci.detuning_MHz - cj.detuning_MHz) * 1e6
+            k *= math.exp(-half * half / (2.0 * sigma_d_hz ** 2))
+            out.append((0.5 * (ci.detuning_MHz + cj.detuning_MHz), k))
+    return out

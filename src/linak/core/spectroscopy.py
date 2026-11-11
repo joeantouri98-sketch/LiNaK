@@ -1,14 +1,12 @@
 """Shared atomic-spectroscopy data tables (single source of truth).
 
 The bundled literature tables pipelines used to re-declare inline live here.
-One table holds the numbers; the other shape is derived from it:
 
 - ``LITERATURE`` — per-element literature parameter record for the
   cross-element comparison table (consumed by
   ``pipelines.compare_elements``). Edit values here only.
-- ``DLINES_FALLBACK`` — labelled D-line transitions for the spectral-bar
-  viewer fallback (consumed by ``pipelines.spectra``), built from
-  ``LITERATURE`` by ``dline_transitions`` (never a second copy of numbers).
+- ``dline_transitions`` — the D lines of an element as labelled records,
+  built from ``LITERATURE`` (never a second copy of numbers).
 
 This module stays import-light: pure data and labels only — no IO, no
 argument parsing, no plotting. The typed ``Transition``
@@ -120,7 +118,6 @@ def dline_transitions(element):
 
 
 # spectra fallback: labelled D-line transitions for the spectral-bar viewer
-DLINES_FALLBACK = {el: dline_transitions(el) for el in LITERATURE}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # typed transition record
@@ -176,6 +173,6 @@ def spectral_region(wavelength_nm: float) -> str:
 
 
 __all__ = [
-    "DLINES_FALLBACK", "LITERATURE", "SPECTRAL_REGIONS", "Transition", "dline_transitions",
+    "LITERATURE", "SPECTRAL_REGIONS", "Transition", "dline_transitions",
     "spectral_region",
 ]

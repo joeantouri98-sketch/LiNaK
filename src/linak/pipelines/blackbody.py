@@ -39,14 +39,14 @@ __version__ = '2.9'   # High-n dyn BBR: each channel a principal value, not a gr
 import argparse
 import json
 import os
-from collections import defaultdict
 from dataclasses import dataclass
 
-from linak.core.constants import E_FIELD_REF_T_K, E_FIELD_REF_V_M, EATOMIC_V_M, HARTREE_TO_HZ
 from linak.core.errors import MissingDataError
 from linak.core.data_inputs import resolve_data_file
-from linak.core.fileio import atomic_write_text, write_json
+from linak.core.fileio import write_json
+from linak.core.species import resolve_species
 from linak.core.workspace import Workspace
+from linak.pipelines.blackbody_report import options_from_args, write_report
 from linak.physics.blackbody_core import (
     N_PAD_DEFAULT,
     N_TAIL_DEFAULT,
@@ -69,15 +69,6 @@ from linak.physics.polarizability_core import (
     load_cached_transitions,
     load_element,
 )
-from linak.report_templates import (
-    ELEMENT_COLORS,
-    fullscreen_css,
-    inject_body,
-    inject_head,
-    load as load_template,
-    render as render_template,
-    write_offline_report,
-)
 
 TOP_CHANNELS = 5   # strongest BBR channels listed per state in the JSON
 
@@ -94,6 +85,9 @@ class BlackbodyRun:
     rydberg: RydbergShifts | None
     extrapolation: dict | None = None      # the 'extrapolation' block the f-values came with (None: not used)
     inputs: dict | None = None             # upstream files chosen instead of the defaults (None: all default)
+    trans_gs: list | None = None           # the alpha networks behind the shift curves (for the plot)
+    trans_ex: list | None = None
+    life: dict | None = None               # the lifetimes data the rates came from (for the plot)
 
 
 # ============================================================================
@@ -250,7 +244,8 @@ def run_element(element, args, data_dir) -> BlackbodyRun | None:
 
     return BlackbodyRun(gs_label=gs_label, excited_label=excited_label, shifts=shifts,
                         rates=rates, continuum=continuum, rydberg=rydberg,
-                        extrapolation=data.get('extrapolation'), inputs=inputs or None)
+                        extrapolation=data.get('extrapolation'), inputs=inputs or None,
+                        trans_gs=trans_gs, trans_ex=trans_ex or None, life=life)
 
 
 # ============================================================================
@@ -612,342 +607,6 @@ def save_json(payload, data_dir):
 
 
 # ============================================================================
-# PLOTTING
-# ============================================================================
-
-SERIES_COLORS = {
-    's': '#4ea1ff', 'p': '#f0c54d', 'd': '#4df0b0',
-    'f': '#f05a4d', 'g': '#c54df0',
-}
-
-_BASE_LAYOUT = dict(
-    plot_bgcolor='#0f1628', paper_bgcolor='#0a0d14',
-    font=dict(color='#c8d0e0', family="'Helvetica Neue', Arial, sans-serif"),
-    hovermode='x unified', autosize=True,
-    margin=dict(t=90, r=40, b=60, l=80),
-    legend=dict(bgcolor='rgba(10,13,20,0.88)', bordercolor='#1e2840',
-                borderwidth=1, font=dict(size=11)),
-)
-
-
-def _avg_by_n(rows, value_key, abs_val=False, skip_field_ionized=False):
-    by_n = defaultdict(list)
-    for r in rows:
-        if skip_field_ionized and r.get('field_ionized'):
-            continue
-        v = r.get(value_key)
-        if v is None:
-            continue
-        by_n[r['n']].append(abs(v) if abs_val else v)
-    ns = sorted(by_n.keys())
-    ys = [sum(by_n[n]) / len(by_n[n]) for n in ns]
-    return ns, ys
-
-
-def _fig_shifts(payload, sh: Shifts):
-    import plotly.graph_objects as go
-
-    el = payload['element']
-    gs_lbl, ex_lbl = payload['gs_label'], payload['excited_label']
-    col = ELEMENT_COLORS.get(el, '#7777ff')
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=sh.T_stat_K.tolist(), y=sh.stat_gs_curve_hz.tolist(),
-        mode='lines', line=dict(color=col, width=2, dash='dot'),
-        name=f'dnu_stat (ground, {gs_lbl})',
-        hovertemplate='T = %{x:.0f} K<br>dnu_stat = %{y:.4f} Hz<extra></extra>',
-    ))
-    fig.add_trace(go.Scatter(
-        x=sh.T_dyn_K.tolist(), y=sh.dyn_gs_curve_hz.tolist(),
-        mode='lines+markers', marker=dict(size=4),
-        line=dict(color=col, width=2.5),
-        name=f'dnu_total (ground, {gs_lbl})',
-        hovertemplate='T = %{x:.0f} K<br>dnu_total = %{y:.4f} Hz<extra></extra>',
-    ))
-    if sh.stat_ex_curve_hz is not None:
-        fig.add_trace(go.Scatter(
-            x=sh.T_stat_K.tolist(), y=sh.stat_ex_curve_hz.tolist(),
-            mode='lines', line=dict(color='#ff6b6b', width=2, dash='dot'),
-            name=f'dnu_stat (excited, {ex_lbl})',
-            hovertemplate='T = %{x:.0f} K<br>dnu_stat = %{y:.4f} Hz<extra></extra>',
-        ))
-        fig.add_trace(go.Scatter(
-            x=sh.T_dyn_K.tolist(), y=sh.dyn_ex_curve_hz.tolist(),
-            mode='lines+markers', marker=dict(size=4),
-            line=dict(color='#ff6b6b', width=2, dash='dash'),
-            name=f'dnu_total (excited, {ex_lbl})',
-            hovertemplate='T = %{x:.0f} K<br>dnu_total = %{y:.4f} Hz<extra></extra>',
-        ))
-        fig.add_trace(go.Scatter(
-            x=sh.T_stat_K.tolist(), y=sh.stat_diff_curve_hz.tolist(),
-            mode='lines', line=dict(color='#a78bfa', width=2, dash='dot'),
-            name=f'dnu_stat (diff, {gs_lbl}->{ex_lbl})',
-            hovertemplate='T = %{x:.0f} K<br>dnu_diff,stat = %{y:.4f} Hz<extra></extra>',
-        ))
-        fig.add_trace(go.Scatter(
-            x=sh.T_dyn_K.tolist(), y=sh.dyn_diff_curve_hz.tolist(),
-            mode='lines+markers', marker=dict(size=4),
-            line=dict(color='#a78bfa', width=2.5),
-            name=f'dnu_total (diff, {gs_lbl}->{ex_lbl})',
-            hovertemplate='T = %{x:.0f} K<br>dnu_diff,total = %{y:.4f} Hz<extra></extra>',
-        ))
-    fig.add_vline(x=300, line_dash='dot', line_color='rgba(255,255,255,0.25)',
-                  line_width=1)
-    fig.add_annotation(x=300, y=1.0, xref='x', yref='paper', text='300 K',
-                       showarrow=False, yanchor='bottom',
-                       font=dict(size=10, color='rgba(220,220,220,0.6)'))
-    fig.add_hline(y=0, line_dash='dot', line_color='rgba(255,255,255,0.15)',
-                  line_width=1)
-    a0g, a0e = payload['alpha0_gs_au'], payload['alpha0_ex_au']
-    sub = f'alpha(0)_ground = {a0g:.1f} au'
-    if a0e is not None:
-        sub += f'  ·  alpha(0)_excited = {a0e:.1f} au'
-    sub += '  ·  dotted = static  ·  solid = static + dynamic'
-    fig.update_layout(
-        **_BASE_LAYOUT,
-        title=dict(
-            text=f'<b>{el} - BBR energy shifts vs T</b><br><sup>{sub}</sup>',
-            x=0.5, xanchor='center', font=dict(size=18, color='#e8edf5'),
-        ),
-    )
-    fig.update_xaxes(title='Temperature (K)', gridcolor='#1a2540',
-                     tickfont=dict(color='#6b7a99'))
-    fig.update_yaxes(title='dnu (Hz)', gridcolor='#1a2540', zeroline=True,
-                     zerolinecolor='#2a3555', tickfont=dict(color='#6b7a99'))
-    return fig
-
-
-def _fig_series_vs_n(el, title, subtitle, states, value_key, y_title,
-                     log_y=True, abs_val=False, sfi_key=None,
-                     mix_key=None, ion_key=None, dyn_key=None, fw_hz=None):
-    import plotly.graph_objects as go
-
-    fig = go.Figure()
-    by_l = {}
-    for st in states:
-        by_l.setdefault(st['l'], []).append(st)
-    for l_char, rows in sorted(by_l.items()):
-        rows = sorted(rows, key=lambda r: r['n'])
-        ns, ys = _avg_by_n(rows, value_key, abs_val=abs_val)
-        if not ns:
-            continue
-        if log_y:
-            ys = [max(y, 1e-30) for y in ys]
-        fig.add_trace(go.Scatter(
-            x=ns, y=ys, mode='lines+markers', marker=dict(size=6),
-            line=dict(color=SERIES_COLORS.get(l_char, '#aaa'), width=1.8),
-            name=f'{value_key} ({l_char})',
-            hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
-        ))
-        if sfi_key:
-            ns2, ys2 = _avg_by_n(rows, sfi_key, skip_field_ionized=True)
-            if ns2:
-                ys2 = [max(y, 1e-30) for y in ys2]
-                fig.add_trace(go.Scatter(
-                    x=ns2, y=ys2, mode='lines+markers',
-                    marker=dict(size=5, symbol='diamond'),
-                    line=dict(color=SERIES_COLORS.get(l_char, '#aaa'),
-                              width=1.4, dash='dot'),
-                    name=f'{sfi_key} ({l_char})',
-                    hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
-                ))
-        if mix_key:
-            ns3, ys3 = _avg_by_n(rows, mix_key)
-            if ns3:
-                ys3 = [max(y, 1e-30) for y in ys3]
-                fig.add_trace(go.Scatter(
-                    x=ns3, y=ys3, mode='lines+markers',
-                    marker=dict(size=5, symbol='square'),
-                    line=dict(color=SERIES_COLORS.get(l_char, '#aaa'),
-                              width=1.4, dash='dash'),
-                    name=f'{mix_key} ({l_char})',
-                    hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
-                ))
-        if ion_key:
-            ns4, ys4 = _avg_by_n(rows, ion_key)
-            if ns4:
-                ys4 = [max(y, 1e-30) for y in ys4]
-                fig.add_trace(go.Scatter(
-                    x=ns4, y=ys4, mode='lines+markers',
-                    marker=dict(size=4),
-                    line=dict(color=SERIES_COLORS.get(l_char, '#aaa'),
-                              width=2.2),
-                    name=f'{ion_key} ({l_char})',
-                    hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
-                ))
-        if dyn_key:
-            ns5, ys5 = _avg_by_n([r for r in rows if r.get('dyn_reliable', True)],
-                                 dyn_key, abs_val=abs_val)
-            if ns5:
-                if log_y:
-                    ys5 = [max(abs(y), 1e-30) for y in ys5]
-                fig.add_trace(go.Scatter(
-                    x=ns5, y=ys5, mode='lines+markers',
-                    marker=dict(size=5, symbol='x'),
-                    line=dict(color=SERIES_COLORS.get(l_char, '#aaa'),
-                              width=1.5, dash='dash'),
-                    name=f'|dnu_dyn| ({l_char})',
-                    hovertemplate='n=%{x}<br>%{y:.4g}<extra></extra>',
-                ))
-    if fw_hz is not None and abs(fw_hz) > 0:
-        n_lo = min(st['n'] for st in states if st.get('n') is not None)
-        n_hi = max(st['n'] for st in states if st.get('n') is not None)
-        fig.add_trace(go.Scatter(
-            x=[n_lo, n_hi], y=[abs(fw_hz), abs(fw_hz)],
-            mode='lines',
-            line=dict(color='#e8edf5', width=1.5, dash='dot'),
-            name=f'|Farley-Wing| = {abs(fw_hz):.1f} Hz',
-            hovertemplate='FW %{y:.4g} Hz<extra></extra>',
-        ))
-    fig.update_layout(
-        **_BASE_LAYOUT,
-        title=dict(
-            text=f'<b>{el} - {title}</b><br><sup>{subtitle}</sup>',
-            x=0.5, xanchor='center', font=dict(size=18, color='#e8edf5'),
-        ),
-    )
-    fig.update_xaxes(title='Principal quantum number n', gridcolor='#1a2540',
-                     tickfont=dict(color='#6b7a99'))
-    ykw = dict(title=y_title, gridcolor='#1a2540',
-               tickfont=dict(color='#6b7a99'))
-    if log_y:
-        ykw['type'] = 'log'
-    fig.update_yaxes(**ykw)
-    return fig
-
-
-def _write_plot_html(fig, path, calculator=None):
-    """Write one report; *calculator* = (payload, shifts) adds the T-point calculator."""
-    raw = fig.to_html(include_plotlyjs=False, full_html=True)
-    raw = inject_head(raw, fullscreen_css())
-    if calculator is not None:
-        raw = _inject_point_calculator(raw, *calculator)
-    write_offline_report(path, raw)
-    print(f"  Wrote {path}")
-    return path
-
-
-def _write_blackbody_hub(el, out_dir, views):
-    """
-    Hub page with a dropdown that loads one fullscreen plot (iframe).
-    views: list of (key, label, filename)
-    """
-    options = '\n'.join(
-        f'    <option value="{fname}">{label}</option>'
-        for _key, label, fname in views
-    )
-    default = views[0][2]
-    html = render_template('blackbody_hub.html', el=el, options=options, default=default)
-    path = os.path.join(out_dir, f'{el}_blackbody.html')
-    atomic_write_text(path, html)
-    print(f"  Wrote {path} (plot chooser hub)")
-    return path
-
-
-def plot_blackbody(payload, shifts: Shifts, out_dir):
-    """
-    Write one fullscreen HTML per plot family, plus a hub page with a
-    dropdown to pick which plot to show (avoids a crowded multi-row figure).
-
-    The reports show the JSON *payload*, plus the shift-vs-T curves of *shifts*.
-    """
-    el = payload['element']
-    rates = payload.get('rates')
-    continuum = payload.get('continuum')
-    ryd_sh = payload.get('rydberg_shifts')
-    views = []
-
-    fig = _fig_shifts(payload, shifts)
-    fname = f'{el}_blackbody_shifts.html'
-    _write_plot_html(fig, os.path.join(out_dir, fname), calculator=(payload, shifts))
-    views.append(('shifts', 'Energy shifts vs T', fname))
-
-    if rates and rates.get('states'):
-        fig = _fig_series_vs_n(
-            el,
-            "BBR depopulation Gamma_BBR vs n",
-            f"T = {rates['T_K']:.0f} K  ·  n >= {rates['n_min']}  ·  bound-bound",
-            rates['states'], 'Gamma_BBR_s', 'Gamma_BBR (1/s)',
-        )
-        fname = f'{el}_blackbody_rates.html'
-        _write_plot_html(fig, os.path.join(out_dir, fname))
-        views.append(('rates', 'Depopulation Gamma_BBR vs n', fname))
-
-    if continuum and continuum.get('states'):
-        field = continuum.get('field_V_cm')
-        sub = f"T = {continuum['T_K']:.0f} K  ·  n >= {continuum['n_min']}  ·  Beterov eq.27"
-        if field:
-            sub += f"  ·  SFI at E = {field:g} V/cm (dotted)"
-        if continuum.get('mix'):
-            sub += "  ·  dashed = mix_PI  ·  thick = ion_tot"
-        fig = _fig_series_vs_n(
-            el, 'BBR photoionization vs n', sub,
-            continuum['states'], 'Gamma_PI_s', 'Gamma (1/s)',
-            sfi_key='Gamma_SFI_s' if field else None,
-            mix_key='Gamma_mix_PI_s' if continuum.get('mix') else None,
-            ion_key='Gamma_ion_s' if continuum.get('mix') else None,
-        )
-        fname = f'{el}_blackbody_pi.html'
-        _write_plot_html(fig, os.path.join(out_dir, fname))
-        views.append(('pi', 'Photoionization / SFI vs n', fname))
-
-    if ryd_sh and ryd_sh.get('states'):
-        nwin = ''
-        if ryd_sh.get('n_min') is not None:
-            nwin = f"  ·  n = {ryd_sh['n_min']}..{ryd_sh['n_max']}"
-        has_dyn = ryd_sh.get('do_dyn') and any(
-            r.get('shift_dyn_hz') is not None for r in ryd_sh['states'])
-        sub = f"T = {ryd_sh['T_K']:.0f} K{nwin}  ·  static Itano"
-        if has_dyn:
-            fw = ryd_sh.get('farley_wing_hz')
-            sub += (f"  ·  dashed = dnu_dyn  ·  FW = {fw:+.1f} Hz"
-                    if fw is not None else "  ·  dashed = dnu_dyn")
-        fig = _fig_series_vs_n(
-            el, 'Rydberg BBR shift vs n',
-            sub,
-            ryd_sh['states'], 'shift_stat_hz', 'shift (Hz)',
-            abs_val=True,
-            dyn_key='shift_dyn_hz' if has_dyn else None,
-            fw_hz=ryd_sh.get('farley_wing_hz') if has_dyn else None,
-        )
-        fname = f'{el}_blackbody_alpha.html'
-        _write_plot_html(fig, os.path.join(out_dir, fname))
-        views.append(('alpha', 'Rydberg alpha / BBR shift vs n', fname))
-
-    hub = _write_blackbody_hub(el, out_dir, views)
-    return hub
-
-
-def _inject_point_calculator(raw_html, payload, sh: Shifts):
-    a0g = payload['alpha0_gs_au']
-    a0e = payload['alpha0_ex_au']
-    E_ref, T_ref, E_au = E_FIELD_REF_V_M, E_FIELD_REF_T_K, EATOMIC_V_M
-    hz_per_hartree = HARTREE_TO_HZ
-    T_dyn = sh.T_dyn_K.tolist()
-    dyn_gs = sh.dyn_gs_curve_hz.tolist()
-    dyn_ex = sh.dyn_ex_curve_hz.tolist() if sh.dyn_ex_curve_hz is not None else None
-
-    css = load_template('blackbody_point_calculator.css')
-    html = load_template('blackbody_point_calculator.html')
-    js = render_template(
-        'blackbody_point_calculator.js',
-        a0g=a0g,
-        a0e_js='null' if a0e is None else f'{a0e}',
-        E_ref=E_ref,
-        T_ref=T_ref,
-        E_au=E_au,
-        hz_per_hartree=hz_per_hartree,
-        T_dyn_js=json.dumps(T_dyn),
-        dyn_gs_js=json.dumps(dyn_gs),
-        dyn_ex_js='null' if dyn_ex is None else json.dumps(dyn_ex),
-    )
-
-    raw_html = inject_head(raw_html, css)
-    raw_html = inject_body(raw_html, html + js)
-    return raw_html
-
-
-# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -1006,8 +665,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--lifetimes-file', default=None, metavar='FILE',
                         help='Lifetimes data to read instead of <species>_lifetimes.json '
                              '(a path, or a name under the data folder).')
+    parser.add_argument('--output-dir', default=str(Workspace.current().plots_dir),
+                        help='Plots folder; the page goes in <output-dir>/<species>/')
     parser.add_argument('--no-plot', action='store_true',
-                        help='Write the data (JSON) only; skip the interactive plot.')
+                        help='Write the data (JSON) only; skip the interactive page.')
+    parser.add_argument('--no-tab-shifts', action='store_true', help='Page: leave out the Shifts vs T tab.')
+    parser.add_argument('--no-tab-depopulation', action='store_true', help='Page: leave out the Depopulation tab.')
+    parser.add_argument('--no-tab-photoionization', action='store_true',
+                        help='Page: leave out the Photoionization tab.')
+    parser.add_argument('--no-tab-rydberg', action='store_true', help='Page: leave out the Rydberg shifts tab.')
+    parser.add_argument('--plot-units', choices=['hz', 'frac'], default='hz',
+                        help='Page: units for the shifts when it opens (switchable on the page).')
+    parser.add_argument('--plot-t-min', type=float, default=10.0, help='Page: lowest temperature shown (K).')
+    parser.add_argument('--plot-t-max', type=float, default=1000.0, help='Page: highest temperature shown (K).')
     return parser
 
 
@@ -1016,7 +686,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     data_dir = args.data_dir
-    plots_dir = Workspace.current().plots_dir
+    plots_dir = args.output_dir
     os.makedirs(plots_dir, exist_ok=True)
     print(f"linak --pipeline blackbody (v{__version__})")
 
@@ -1053,7 +723,8 @@ def main(argv=None) -> int:
         payload = output_json(el, run)
         save_json(payload, data_dir)
         if not args.no_plot:
-            plot_blackbody(payload, run.shifts, el_out_dir)
+            write_report(resolve_species(el)['label'], el, payload, run.trans_gs, run.trans_ex, run.life,
+                         options_from_args(args), el_out_dir, shifts=run.shifts)
 
     if failed:
         print(f"  Failed: {', '.join(failed)}")

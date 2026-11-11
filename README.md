@@ -16,7 +16,7 @@ Pick an atom, run the calculations you need, and browse the results as interacti
 - Extrapolated ns→np oscillator strengths for high Rydberg levels (including Fr)
 - Hyperfine structure and Zeeman diagrams
 - Feshbach resonances
-- Grotrian diagrams, spectra, 3D orbitals and element comparisons
+- Grotrian diagrams, absorption and emission spectra (vapour cells, hyperfine D lines, saturated absorption), 3D orbitals and element comparisons
 
 Reference data from the NIST Atomic Spectra Database is included. You can also add results from the [ORCA](https://www.faccts.de/orca/) quantum chemistry program if you have it installed.
 
@@ -159,7 +159,7 @@ uv run linak --pipeline rydberg --help
 
 All stage names:
 
-`runorca`, `orca_to_json`, `rydberg`, `transitions`, `lifetimes`, `polarizability`, `blackbody`, `tweezer`, `hyperfine`, `feshbach`, `plotinteractive`, `polarizability_page`, `blackbody_page`, `spectra`, `orbital3d`, `compare_elements`, `scattering_rate`
+`runorca`, `orca_to_json`, `dhf`, `brueckner`, `rydberg`, `transitions`, `lifetimes`, `polarizability`, `tweezer`, `blackbody`, `hyperfine`, `feshbach`, `plotinteractive`, `polarizability_page`, `spectra`, `orbital3d`, `compare_elements`, `scattering_rate`
 
 ORCA examples:
 

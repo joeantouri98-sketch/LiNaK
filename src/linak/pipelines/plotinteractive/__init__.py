@@ -8,7 +8,6 @@ Features:
 - Grotrian diagram with allowed E1 transition arrows
 - ORCA TD-DFT excitations overlaid for comparison
 - ORCA CASSCF/SOC D-lines overlaid automatically when data_json/<element>_soc.json exists
-- Interactive spectrum
 - Export to HTML
 
 Usage: linak --pipeline plotinteractive <SPECIES_ID> [options]
@@ -18,12 +17,12 @@ Usage: linak --pipeline plotinteractive <SPECIES_ID> [options]
       --extra / -e  overlay another ORCA-format JSON (repeatable); source
                     name is the filename stem after species_ (e.g. Na_BLY3P.json -> BLY3P).
                     Default: extras must share the same species_id prefix.
-      --plots N     write plots 1..N only (1=grotrian, 2=+spectrum_levels).
-                    Example: --plots 1
+      --plots N     kept for old command lines; only the Grotrian page is written (the spectrum
+                    is the Spectrum stage's page, <species>_spectrum.html).
 
 Layout: ``inputs`` reads the data folder, ``view`` applies the energy axis and
-the display choices, then one module per plot writes its report (``grotrian_page``,
-``spectrum``).
+the display choices, then ``grotrian_page`` writes the report. The spectrum is the Spectrum
+stage's own page (``pipelines/spectra.py``).
 """
 
 from __future__ import annotations
@@ -37,7 +36,6 @@ from linak.core.workspace import Workspace
 
 from .grotrian_page import plot_grotrian
 from .inputs import load_inputs
-from .spectrum import plot_spectrum
 from .view import View, prepare_view
 
 
@@ -94,8 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
                              'Bare name or stem resolves under data_json/. '
                              'Must share the same species_id prefix.')
     _parser.add_argument('--plots', default='all', metavar='N', type=_parse_plots_max,
-                        help='Highest plot to write: 1=grotrian only, 2=+spectrum '
-                             '(default: all). Also accepts 1,2 or 1-2 (max number wins).')
+                        help=argparse.SUPPRESS)   # old option: plot 2 (the spectrum) is now the Spectrum stage
 
     # Energy reference for the ORCA/SOC level axis.
     _parser.add_argument('--energy-shift', choices=('1', '2', '3'), default='1',
@@ -148,9 +145,9 @@ def build_parser() -> argparse.ArgumentParser:
     _parser.add_argument('--also-spectra', action='store_true',
                          help='Also run linak --pipeline spectra for this species after plotting.')
     _parser.add_argument('--spectra-wl-min', type=float, default=None,
-                         help='--wl-min passed to the spectra pipeline (default: 200).')
+                         help='--wl-min passed to the spectra pipeline (initial view, vacuum nm).')
     _parser.add_argument('--spectra-wl-max', type=float, default=None,
-                         help='--wl-max passed to the spectra pipeline (default: 900).')
+                         help='--wl-max passed to the spectra pipeline (initial view, vacuum nm).')
     return _parser
 
 
@@ -183,8 +180,8 @@ def _run_extra_viewers(cli, element, rydberg_data, data_dir, plots_dir) -> None:
             argv += ['--wl-min', str(cli.spectra_wl_min)]
         if cli.spectra_wl_max is not None:
             argv += ['--wl-max', str(cli.spectra_wl_max)]
-        viewers.append((spectra, argv, f"{element}_spectra.html",
-                        "7.", "Absorption + emission spectrum"))
+        viewers.append((spectra, argv, f"{element}_spectrum.html",
+                        "7.", "Spectrum page"))
 
     for module, argv, out_name, number, what in viewers:
         name = module.__name__.rsplit('.', 1)[-1]
@@ -218,8 +215,6 @@ def main(argv: list[str] | None = None) -> int:
     element = species["species_id"]  # stem used for all data_json / plot paths
     if species["kind"] == "ion":
         print(f" Species: {element} ({species['label']}, ion)")
-    if cli.plots < 2:
-        print(" --plots: writing plot 1 only (skipping 2)")
     # Workspace roots for this run, resolved now
     data_dir = str(Workspace.current().data_json_dir)
     plots_dir = Workspace.current().plots_dir
@@ -230,25 +225,21 @@ def main(argv: list[str] | None = None) -> int:
     os.makedirs(output_dir, exist_ok=True)
 
     plot_grotrian(inputs, view, output_dir)
-    if cli.plots >= 2:
-        plot_spectrum(inputs, view, output_dir)
-    _print_summary(element, view, cli.plots, output_dir)
+    _print_summary(element, view, output_dir)
 
     _run_extra_viewers(cli, element, inputs.rydberg, data_dir, plots_dir)
     return 0
 
 
-def _print_summary(element, view: View, plots_max, output_dir) -> None:
+def _print_summary(element, view: View, output_dir) -> None:
     print("\n" + "=" * 70)
     print(" INTERACTIVE PLOTS CREATED")
     print("=" * 70)
     print(f"\n All files saved in: {os.path.abspath(output_dir)}/")
     print("\n Interactive HTML files:")
     print(f"   1. {element}_grotrian.html          - Grotrian diagram + transitions")
-    if plots_max >= 2:
-        print(f"   2. {element}_spectrum_levels.html   - Spectrum + energy levels")
-    else:
-        print("   (plot 2 skipped)")
+    print("   (the spectrum is the Spectrum stage's page: linak --pipeline spectra "
+          f"{element})")
     print("\n INTERACTIVE FEATURES:")
     print("   - Hover over levels/arrows -> energy, wavelength, f, A, lifetimes")
     print("   - Grotrian: filter by region, source, f, n; ground / excited lower level;")

@@ -98,8 +98,7 @@ def test_hyperfine_runs_a_state_without_constants(tmp_path):
     root = make_workspace(tmp_path / "ws")
     result = run_pipeline(["hyperfine", "Na", "--states", "4d5/2", "3s1/2"], root)
     assert result.returncode == 0, result.stdout + result.stderr
-    for name in ("data/Na_hyperfine.json", "plots/Na/Na_hyperfine.html",
-                 "plots/Na/Na_zeeman.html"):
+    for name in ("data/Na_hyperfine.json", "plots/Na/Na_hyperfine.html"):
         assert (root / ".linak" / name).is_file(), name
     payload = load_json(root / ".linak" / "data" / "Na_hyperfine.json")
     assert [st["label"] for st in payload["states"]] == ["4d5/2", "3s1/2"]
@@ -121,7 +120,7 @@ def test_plotinteractive_runs_twice_in_one_process(tmp_path, monkeypatch):
             assert run("plotinteractive", ["Na", "--plots", "2"]) == 0
         runs.append({p.name: plotly_ids.sub(b"", p.read_bytes())
                      for p in sorted((root / ".linak" / "plots" / "Na").glob("*.html"))})
-    assert sorted(runs[0]) == ["Na_grotrian.html", "Na_spectrum_levels.html"]
+    assert sorted(runs[0]) == ["Na_grotrian.html"]
     assert runs[1] == runs[0]
 
 
@@ -140,3 +139,26 @@ def test_orca_to_json_reads_the_bundled_runs_in_a_fresh_folder(tmp_path):
     assert payload["reparsed_from"] == "orca_outputs/Na/Na_ex.out"
     assert payload["orca_outputs_dir"] == "orca_outputs/Na"
     assert not (root / ".linak" / "orca_outputs").exists(), "nothing is copied"
+
+
+def test_grotrian_needs_no_orca_data(tmp_path):
+    """ORCA is an overlay: the levels come from the Rydberg data, so a folder without <El>.json still plots."""
+    import shutil
+
+    import pytest
+
+    from linak.core.errors import MissingDataError
+    from linak.core.paths import reference_path
+    from linak.core.species import resolve_species
+    from linak.pipelines.plotinteractive import build_parser
+    from linak.pipelines.plotinteractive.inputs import load_inputs
+
+    for kind in ("rydberg", "transitions", "lifetimes"):
+        shutil.copy(reference_path("data_json", f"Na_{kind}.json"), tmp_path)
+    cli = build_parser().parse_args(["Na", "--no-soc-overlay"])
+    inputs = load_inputs(resolve_species("Na"), cli, str(tmp_path))
+    assert not inputs.excitations and inputs.rydberg_excitations
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    with pytest.raises(MissingDataError, match="no levels to draw"):
+        load_inputs(resolve_species("Na"), cli, str(empty))

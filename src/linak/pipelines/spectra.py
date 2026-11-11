@@ -1,491 +1,347 @@
 """
 spectra.py
 ----------
-Generates two interactive spectral bar visualisations for any element
-in the alkali pipeline:
+The Spectrum page: one tabbed page with the absorption, emission and D-line spectra of a species,
+written to ``plots/<species>/<species>_spectrum.html``.
 
-  Panel 1 — Absorption spectrum:
-    Rainbow background, dark vertical notches.
-    Notch opacity and width ∝ oscillator strength (fosc).
+Tabs (each can be left out):
+  Absorption   cross-section per atom, optical depth, transmission of a vapour cell or the
+               refractive index n − 1, Voigt line shapes (Doppler, natural, instrument)
+  Emission     optically thin emission, upper levels populated at an excitation temperature
+  D lines      the hyperfine-resolved D1 / D2 lines of a vapour cell with the natural isotope mix,
+               Doppler-broadened or saturated-absorption (Doppler-free)
+  Curve of growth  equivalent width against column density for any line
+  Strip        the spectrum as colour bands (a white continuum through the cell; the emission)
+  Lines        the line list (air and vacuum wavelengths, f, A, widths), searchable, CSV
 
-  Panel 2 — Emission spectrum:
-    Black background, coloured vertical lines.
-    Line width ∝ fosc, colour = true spectral colour of the wavelength.
-
-Data sources (priority order):
-  1. data_json/<element>_lifetimes.json   → fosc, wavelength per transition
-  2. data_json/<element>_transitions.json → wavelengths only (uniform weight)
-  3. data_json/<element>.json             → ORCA TD-DFT oscillator strengths
-  Fallback: hardcoded literature D-lines for Li/Na/K/Rb/Cs/Fr
+Data: <species>_lifetimes.json (lines with f, A and sources; level lifetimes) and, for the D-line
+tab, <El>_hf_constants.json and nuclear_data.json. The physics is in physics/spectrum_core.py and
+report_templates/spectrum_physics.js; the page recomputes every spectrum live.
 
 Usage:
   linak --pipeline spectra Na
-  linak --pipeline spectra Cs --wl-min 300 --wl-max 1000
+  linak --pipeline spectra Rb --T 320 --cell-length 7.5
   linak --pipeline spectra Na_c1 --wl-min 25 --wl-max 50
-
-Output:
-  .linak/plots/<element>/<element>_spectra.html — standalone interactive HTML
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
-import sys
+import re
+from collections import Counter, deque
 
-from linak.core.constants import HC_EV_NM as HC_NM
+from linak.core.constants import (
+    ATOMIC_MASS_AMU,
+    DEFAULT_ISOTOPE_NO_ABUNDANCE,
+    ISOTOPE_MASS_AMU,
+    NATURAL_ABUNDANCE_PCT,
+    default_isotope_A,
+)
 from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.species import resolve_species
-from linak.core.spectroscopy import DLINES_FALLBACK
 from linak.core.workspace import Workspace
+from linak.physics import spectrum_core as sc
 from linak.physics.rydberg import label_to_pretty
-from linak.report_templates import (
-    inject_body,
-    inject_head,
-    load as load_template,
-    render as render_template,
-    write_offline_report,
-)
+from linak.report_templates import load as load_template
+from linak.report_templates import render, write_offline_report
 
-
-# CLI
+TEMPLATE = 'spectrum_page.html'
+TABS = ('ab', 'em', 'dl', 'cg', 'st', 'li')
+TAB_FLAGS = {'ab': 'absorption', 'em': 'emission', 'dl': 'dlines', 'cg': 'growth', 'st': 'strip', 'li': 'lines'}
+UNITS = ('nm', 'air', 'cm', 'eV', 'THz')
+MIN_DE_EV = 2e-6        # the lifetimes table rounds ΔE to 1e-6 eV: a smaller gap is rounding, not a line
+MIN_ABUNDANCE = 1e-3    # isotopes below 0.1% (40K, 0.0117%) are left out of the D-line tab
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="linak --pipeline spectra",
-        description="Absorption + emission spectral bar viewer")
-    parser.add_argument("element",    nargs="?", default=None,
-                        help="Species id: Na or ion stem Na_c1")
+    parser = argparse.ArgumentParser(prog="linak --pipeline spectra",
+                                     description="Spectrum page: absorption, emission, D lines, curve of growth")
+    parser.add_argument("element", nargs="?", default=None, help="Species id: Na or ion stem Na_c1")
     parser.add_argument("--data-dir", default=str(Workspace.current().data_json_dir))
     parser.add_argument("--lifetimes-file", default=None, metavar="FILE",
                         help="Lifetimes data to read instead of <species>_lifetimes.json "
                              "(a path, or a name under the data folder).")
-    parser.add_argument("--transitions-file", default=None, metavar="FILE",
-                        help="Transitions data to read instead of <species>_transitions.json "
-                             "(a path, or a name under the data folder).")
-    parser.add_argument("--wl-min",   type=float, default=200.0)
-    parser.add_argument("--wl-max",   type=float, default=900.0)
+    parser.add_argument("--hf-file", default=None, metavar="FILE",
+                        help="Hyperfine constants for the D-line tab instead of <El>_hf_constants.json.")
+    parser.add_argument("--transitions-file", default=None, help=argparse.SUPPRESS)   # no longer read
+    parser.add_argument("--wl-min", type=float, default=None, help="Initial view: shortest vacuum wavelength (nm)")
+    parser.add_argument("--wl-max", type=float, default=None, help="Initial view: longest vacuum wavelength (nm)")
+    parser.add_argument("--units", choices=UNITS, default="nm",
+                        help="Initial x axis: nm (vacuum), air (nm), cm (cm⁻¹), eV, THz")
+    parser.add_argument("--T", type=float, default=None,
+                        help="Gas temperature (K); default a typical cell temperature for the element")
+    parser.add_argument("--cell-length", type=float, default=5.0, help="Cell length (cm), default 5")
+    parser.add_argument("--density", type=float, default=None,
+                        help="Atom density (cm⁻³); default the saturated vapour at T")
+    parser.add_argument("--t-exc", default="5000",
+                        help="Excitation temperature of the emission tab (K, or 'inf')")
+    parser.add_argument("--instrument-pm", type=float, default=0.0,
+                        help="Instrument resolution FWHM (pm), Gaussian; 0 = none")
+    for key, name in TAB_FLAGS.items():
+        parser.add_argument(f"--no-tab-{name}", action="store_true", help=f"Leave out the {name} tab")
     return parser
 
 
-# CONSTANTS
-
-SRC_COLORS = {
-    "NIST": "#1a6eb5", "precision": "#1a6eb5", "NIST-extrap": "#5b9bd5",
-    "literature": "#c47a00", "lit": "#c47a00",
-    "ORCA": "#c0392b", "EOM-CCSD": "#c0392b",
-    "Numerov": "#0e7c6b",
-    "Coulomb": "#27ae60", "Coulomb(approx)": "#52be80",
-    "transitions": "#888", "?": "#aaa",
-}
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DATA LOADING
+# ----------------------------------------------------------------- data
+def _load_json(path):
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
 
 
+def _ground_label(lines):
+    """The level every other level lies above. Levels that are never an upper level are the
+    candidates; metastable ones (Na⁺ 3s ³P°₂, which no E1 line reaches from below) are among them,
+    so the one from which all energies come out non-negative is the ground."""
+    uppers = {t['upper_label'] for t in lines}
+    cands = Counter(t['lower_label'] for t in lines if t['lower_label'] not in uppers)
+    if not cands:
+        raise MissingDataError("no ground state in the transitions (every level is an upper level)")
+    for c, _n in cands.most_common():
+        if min(level_energies(lines, c).values()) >= -1e-9:
+            return c
+    return cands.most_common(1)[0][0]
 
-def _fmt_trans_label(upper, lower):
-    """Readable full-size labels: '3s 3P° J=1 → 2p'."""
-    u = label_to_pretty(upper) if upper else "?"
-    l = label_to_pretty(lower) if lower else "?"
-    return f"{u} \u2192 {l}"
+
+def level_energies(lines, ground):
+    """Level energies (eV above the ground) from the lines' ΔE, walked outwards from the ground."""
+    adj: dict[str, list[tuple[str, float]]] = {}
+    for t in lines:
+        dE = t.get('delta_E_eV')
+        if dE is None:
+            continue
+        adj.setdefault(t['lower_label'], []).append((t['upper_label'], dE))
+        adj.setdefault(t['upper_label'], []).append((t['lower_label'], -dE))
+    E = {ground: 0.0}
+    queue = deque([ground])
+    while queue:
+        a = queue.popleft()
+        for b, d in adj.get(a, ()):
+            if b not in E:
+                E[b] = E[a] + d
+                queue.append(b)
+    return E
 
 
-def load_transitions(element, data_dir, is_ion, lifetimes_file=None, transitions_file=None):
+def build_lines(lt: dict):
+    """(levels, lines, ground label, number of lines dropped as ΔE rounding) from a lifetimes JSON."""
+    raw = [t for t in lt.get('transitions', []) if (t.get('fosc') or 0) > 0 and t.get('wavelength_nm')]
+    dropped = sum(1 for t in raw if abs(t.get('delta_E_eV') or 0.0) <= MIN_DE_EV)
+    raw = [t for t in raw if abs(t.get('delta_E_eV') or 0.0) > MIN_DE_EV]
+    if not raw:
+        raise MissingDataError("the lifetimes file has no lines with an oscillator strength")
+    gs = _ground_label(raw)
+    E = level_energies(raw, gs)
+    tau = {r['state']: r.get('lifetime_s') for r in lt.get('lifetimes', [])}
+    g: dict[str, int] = {}
+    for t in raw:
+        g.setdefault(t['lower_label'], int(t.get('g_lower') or 0))
+        g.setdefault(t['upper_label'], int(t.get('g_upper') or 0))
+    names = sorted((k for k in E if g.get(k)), key=lambda k: (E[k], k))
+    idx = {k: i for i, k in enumerate(names)}
+    levels = [[k, label_to_pretty(k), round(E[k], 7), g[k], tau.get(k)] for k in names]
     lines = []
+    for t in raw:
+        lo, up = idx.get(t['lower_label']), idx.get(t['upper_label'])
+        if lo is None or up is None:
+            continue
+        lines.append([lo, up, round(float(t['wavelength_nm']), 6), float(t['fosc']), float(t.get('A_s') or 0.0),
+                      t.get('fosc_source') or 'other', t.get('fosc_acc') or '', t.get('fosc_delta')])
+    lines.sort(key=lambda r: r[2])
+    return levels, lines, gs, dropped
 
-    # Source 1: lifetimes JSON (fosc + wavelength; NIST/ORCA/Numerov/Coulomb/...)
-    lt_file = lifetimes_file or os.path.join(data_dir, f"{element}_lifetimes.json")
-    if os.path.exists(lt_file):
-        with open(lt_file, encoding="utf-8") as f:
-            lt = json.load(f)
-        for t in lt.get("transitions", []):
-            fosc = t.get("fosc", 0)
-            if fosc <= 0:
+
+def _isotope_I(nuclear, element, A, block_text):
+    for iso in nuclear.get(element, []):
+        if iso['A'] == A:
+            return float(iso['I'])
+    m = re.search(r'I\s*=\s*(\d+)(?:/(\d+))?', block_text or '')
+    if m:
+        return int(m.group(1)) / (int(m.group(2)) if m.group(2) else 1)
+    return None
+
+
+def _hf_blocks(path, element):
+    """Mass number -> (state -> HfConstants, block text) for every measured block of a constants file."""
+    from linak.pipelines.hyperfine import _block_isotope_A, _parse_hf_block
+    raw = _load_json(path)
+    out = {}
+    for blk in [raw] + [v for k, v in raw.items() if k.startswith('_') and isinstance(v, dict)]:
+        A = _block_isotope_A(blk, element)
+        hf = _parse_hf_block(blk)
+        if A is not None and hf:
+            out[A] = (hf, str(blk.get('_isotope', '')))
+    return out
+
+
+def build_dlines(element, levels, lines, gs, data_dir, hf_file=None):
+    """The D1 and D2 lines with every isotope's hyperfine components, or [] if the data are missing.
+
+    Only measured constants are used (an isotope with no block of its own is left out rather than
+    rescaled), with the natural abundances and the measured isotope shifts of physics/spectrum_core.
+    """
+    from linak.physics.hyperfine_core import parse_state_label
+    from linak.pipelines.hyperfine import load_nuclear_index
+
+    m = re.match(r'(\d+)([a-z])', gs)
+    if not m or m.group(2) != 's':
+        return [], 'the ground state is not an s state'
+    n = m.group(1)
+    names = [lv[0] for lv in levels]
+    gi = names.index(gs)
+    path = hf_file or os.path.join(data_dir, f'{element}_hf_constants.json')
+    if not os.path.isfile(path):
+        return [], f'no {element}_hf_constants.json'
+    blocks = _hf_blocks(path, element)
+    nuclear_path = os.path.join(data_dir, 'nuclear_data.json')
+    if not os.path.isfile(nuclear_path):
+        from linak.core.paths import reference_path
+        nuclear_path = str(reference_path('data_json', 'nuclear_data.json'))
+    nuclear = load_nuclear_index(nuclear_path) if os.path.isfile(nuclear_path) else {}
+
+    abund = {A: p / 100.0 for (el, A), p in NATURAL_ABUNDANCE_PCT.items() if el == element and p / 100 >= MIN_ABUNDANCE}
+    if not abund:
+        A0 = DEFAULT_ISOTOPE_NO_ABUNDANCE.get(element)
+        if A0 is None:
+            return [], 'no isotope data'
+        abund = {A0: 1.0}
+    ref_A = default_isotope_A(element) or max(abund, key=abund.get)
+
+    out = []
+    for name, J_up in (('D1', 0.5), ('D2', 1.5)):
+        up_label = f'{n}p{"1/2" if J_up == 0.5 else "3/2"}'
+        if up_label not in names:
+            continue
+        ui = names.index(up_label)
+        ln = next((r for r in lines if r[0] == gi and r[1] == ui), None)
+        if ln is None:
+            continue
+        isos, missing = [], []
+        for A, ab in sorted(abund.items()):
+            hf, text = blocks.get(A, (None, ''))
+            I = _isotope_I(nuclear, element, A, text)
+            g_key = next((k for k in (hf or {}) if (parse_state_label(k) or (0, ''))[:2] == (int(n), 's')), None)
+            shift = 0.0 if A == ref_A else sc.ISOTOPE_SHIFT_MHZ.get((element, A), {}).get(name)
+            if hf is None or I is None or g_key is None or up_label not in hf or shift is None:
+                missing.append(A)
                 continue
-            ul = t.get("upper_label", "")
-            ll = t.get("lower_label", "")
-            lines.append({
-                "wl":    t["wavelength_nm"],
-                "fosc":  fosc,
-                "label": _fmt_trans_label(ul, ll),
-                "src":   t.get("fosc_source", "?"),
-                "upper": ul,
-                "lower": ll,
-                "ulp":   label_to_pretty(ul) if ul else "",
-                "llp":   label_to_pretty(ll) if ll else "",
-            })
-        if lines:
-            print(f"  {len(lines)} transitions from {lt_file}")
-            return lines
-
-    # Source 2: transitions JSON (wavelengths only, uniform fosc=1)
-    tr_file = transitions_file or os.path.join(data_dir, f"{element}_transitions.json")
-    if os.path.exists(tr_file):
-        with open(tr_file, encoding="utf-8") as f:
-            tr = json.load(f)
-        for t in tr.get("transitions", []):
-            wl = t.get("wavelength_nm", 0)
-            if wl <= 0:
-                continue
-            ul = t.get("upper_label", "")
-            ll = t.get("lower_label", "")
-            lines.append({
-                "wl":    wl,
-                "fosc":  1.0,
-                "label": _fmt_trans_label(ul, ll),
-                "src":   "transitions",
-                "upper": ul,
-                "lower": ll,
-                "ulp":   label_to_pretty(ul) if ul else "",
-                "llp":   label_to_pretty(ll) if ll else "",
-            })
-        if lines:
-            print(f"  {len(lines)} transitions from {tr_file} (uniform fosc — no lifetimes.json)")
-            return lines
-
-    # Source 3: ORCA TD-DFT
-    orca_file = os.path.join(data_dir, f"{element}.json")
-    if os.path.exists(orca_file):
-        with open(orca_file, encoding="utf-8") as f:
-            orca = json.load(f)
-        for ex in orca.get("excitations", []):
-            fosc = ex.get("oscillator_strength", 0)
-            if fosc <= 0 or ex.get("spin_forbidden"):
-                continue
-            eV = ex["energy_eV"]
-            if eV <= 0:
-                continue
-            ul = ex.get("to", "")
-            ll = ex.get("from", "")
-            lines.append({
-                "wl":    HC_NM / eV,
-                "fosc":  fosc,
-                "label": _fmt_trans_label(ul, ll),
-                "src":   "ORCA",
-                "upper": ul,
-                "lower": ll,
-                "ulp":   label_to_pretty(ul) if ul else ul,
-                "llp":   label_to_pretty(ll) if ll else ll,
-            })
-        if lines:
-            print(f"  {len(lines)} ORCA excitations from {orca_file}")
-            return lines
-
-    # Fallback
-    if not is_ion and element in DLINES_FALLBACK:
-        print(f"  Using hardcoded D-line fallback for {element}")
-        # Copies: the caller annotates the records (fosc_norm, trace_idx).
-        return [dict(line) for line in DLINES_FALLBACK[element]]
-
-    return []
+            g_c, e_c = hf[g_key], hf[up_label]
+            comps = sc.hyperfine_components(I, 0.5, J_up, g_c.A_MHz, g_c.B_MHz, e_c.A_MHz, e_c.B_MHz, e_c.C_kHz,
+                                            shift, ab)
+            isos.append(dict(A=A, I=I, ab=ab, m=ISOTOPE_MASS_AMU.get((element, A), ATOMIC_MASS_AMU.get(element)),
+                             shift=shift, ref=A == ref_A,
+                             comps=[[c.F, c.Fp, round(c.detuning_MHz, 4), c.weight, round(c.S, 9)] for c in comps]))
+        if isos:
+            out.append(dict(name=name, lower=gs, upper=up_label, lam=ln[2], f=ln[3], tau=levels[ui][4],
+                            iso=isos, missing=missing, shift_src=sc.ISOTOPE_SHIFT_SOURCE.get(element)))
+    return out, '' if out else 'no hyperfine constants for the D lines'
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# WAVELENGTH → RGB
+def default_range(lines, gs_index):
+    """Initial view: the ground-state lines with f above 10⁻⁴ of the strongest, padded by 3%."""
+    gl = [r for r in lines if r[0] == gs_index]
+    if not gl:
+        gl = lines
+    fmax = max(r[3] for r in gl)
+    wl = [r[2] for r in gl if r[3] >= 1e-4 * fmax]
+    lo, hi = min(wl), max(wl)
+    return round(lo / 1.03, 3), round(hi * 1.03, 3)
 
 
-def wl_to_rgb(wl):
-    if wl < 380:
-        r, g, b = 0.45, 0.0, 0.75
-    elif wl < 440:
-        r, g, b = (440 - wl) / 60, 0.0, 1.0
-    elif wl < 490:
-        r, g, b = 0.0, (wl - 440) / 50, 1.0
-    elif wl < 510:
-        r, g, b = 0.0, 1.0, (510 - wl) / 20
-    elif wl < 580:
-        r, g, b = (wl - 510) / 70, 1.0, 0.0
-    elif wl < 645:
-        r, g, b = 1.0, (645 - wl) / 65, 0.0
-    elif wl <= 700:
-        r, g, b = 1.0, 0.0, 0.0
-    else:
-        fade = max(0.0, 1.0 - (wl - 700) / 200)
-        r, g, b = fade, 0.0, 0.0
-
-    if wl < 380 or wl > 700:
-        factor = 0.3 + 0.7 * min(1, max(0, (wl - 350) / 30))
-    elif wl < 420:
-        factor = 0.3 + 0.7 * (wl - 380) / 40
-    elif wl > 680:
-        factor = 0.3 + 0.7 * (700 - wl) / 20
-    else:
-        factor = 1.0
-
-    gamma = 0.80
-    def c(v):
-        v *= factor
-        return int(round(255 * (v ** gamma))) if v > 0 else 0
-    return c(r), c(g), c(b)
+# ----------------------------------------------------------------- page
+def build_payload(element, species, lt, data_dir, args, hf_file=None) -> dict:
+    levels, lines, gs, dropped = build_lines(lt)
+    gi = [lv[0] for lv in levels].index(gs)
+    symbol = species.get('symbol', element)
+    vp = sc.VAPOUR_PRESSURE.get(element) if species['kind'] != 'ion' else None
+    dlines, dl_note = build_dlines(element, levels, lines, gs, data_dir, hf_file) if species['kind'] != 'ion' else ([], 'ion')
+    T = args.T if args.T is not None else sc.DEFAULT_CELL_T.get(element, 300.0)
+    lo, hi = default_range(lines, gi)
+    if args.wl_min is not None:
+        lo = args.wl_min
+    if args.wl_max is not None:
+        hi = args.wl_max
+    t_exc = math.inf if str(args.t_exc).strip().lower() in ('inf', 'infinity', '∞') else float(args.t_exc)
+    tabs = [t for t in TABS if not getattr(args, f'no_tab_{TAB_FLAGS[t]}')]
+    if not dlines and 'dl' in tabs:
+        tabs.remove('dl')
+    N_typed = args.density
+    if N_typed is None and vp is None:
+        N_typed = 1e10
+    return dict(
+        element=element, label=species['label'], is_ion=species['kind'] == 'ion',
+        mass=ATOMIC_MASS_AMU.get(symbol, ATOMIC_MASS_AMU.get(element, 40.0)), gs=gs, gi=gi,
+        IE=lt.get('ionization_energy_eV'),
+        levels=levels, lines=lines, dropped=dropped,
+        vapour=None if vp is None else dict(solid=list(vp['solid']), liquid=list(vp['liquid']), T_melt=vp['T_melt'],
+                                            src=sc.VAPOUR_SOURCE),
+        dlines=dlines, dl_note=dl_note,
+        opts=dict(tabs=tabs, T=T, L=args.cell_length, N=N_typed, unit=args.units, wl=[lo, hi],
+                  texc=None if math.isinf(t_exc) else t_exc, inst=args.instrument_pm),
+    )
 
 
-def rgb_str(wl):
-    r, g, b = wl_to_rgb(wl)
-    return f"rgb({r},{g},{b})"
+def payload_js(payload: dict) -> str:
+    text = json.dumps(payload, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+    return text.replace('</', '<\\/').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
 
 
-# PIPELINE
-# ─────────────────────────────────────────────────────────────────────────────
+def write_page(element: str, payload: dict, out_dir: str) -> str:
+    html = render(TEMPLATE, TITLE=f"{payload['label']} spectrum", PHYS_JS=load_template('spectrum_physics.js'),
+                  DATA_JS=payload_js(payload))
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f'{element}_spectrum.html')
+    write_offline_report(path, html)
+    return path
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-
-    try:
-        import plotly.graph_objects as go
-        from plotly.subplots import make_subplots
-    except ImportError:
-        print("Plotly not installed.  Run: pip install plotly", file=sys.stderr)
-        return 1
-
-    # ── ELEMENT SELECTION ────────────────────────────────────────────────────
-    element = args.element
-    if element is None:
-        available = []
+    if args.element is None:
+        avail = []
         if os.path.isdir(args.data_dir):
-            available = sorted(
-                f.replace("_lifetimes.json", "")
-                for f in os.listdir(args.data_dir)
-                if f.endswith("_lifetimes.json")
-            )
-        if not available:
-            available = list(DLINES_FALLBACK.keys())
-        parser.error("element required; available: " + ", ".join(available))
-
+            avail = sorted(f[:-len('_lifetimes.json')] for f in os.listdir(args.data_dir) if f.endswith('_lifetimes.json'))
+        parser.error("element required; available: " + (", ".join(avail) or "none"))
     try:
-        _sp = resolve_species(element.strip())
+        species = resolve_species(args.element.strip())
     except ValueError as exc:
         parser.error(str(exc))
-    element = _sp["species_id"]
-    species_label = _sp["label"]
-    is_ion = _sp["kind"] == "ion"
+    element = species["species_id"]
+    if args.transitions_file:
+        print("  Note: --transitions-file is no longer read; the lines come from the lifetimes data.")
+    lt_path = resolve_data_file(args.lifetimes_file, element, args.data_dir, "lifetimes") \
+        or os.path.join(args.data_dir, f"{element}_lifetimes.json")
+    if not os.path.isfile(lt_path):
+        raise MissingDataError(f"no lifetimes data for {element} ({lt_path}); run the Lifetimes stage first")
+    hf_file = resolve_data_file(args.hf_file, species.get('symbol', element), args.data_dir, "hyperfine constants")
+    lt = _load_json(lt_path)
+    payload = build_payload(element, species, lt, args.data_dir, args, hf_file)
     out_dir = os.path.join(Workspace.current().plots_dir, element)
+    path = write_page(element, payload, out_dir)
 
-    # ── DATA LOADING ─────────────────────────────────────────────────────────
-    lines_all = load_transitions(
-        element, args.data_dir, is_ion,
-        resolve_data_file(args.lifetimes_file, element, args.data_dir, "lifetimes"),
-        resolve_data_file(args.transitions_file, element, args.data_dir, "transitions"))
-    if not lines_all:
-        raise MissingDataError(f"no spectral data for {element} in {args.data_dir}")
-
-    # Apply wavelength window (ions often need EUV; do not clamp min to 100 nm)
-    wl_min, wl_max = args.wl_min, args.wl_max
-    lines = [l for l in lines_all if wl_min <= l["wl"] <= wl_max]
-    if not lines:
-        wls = [l["wl"] for l in lines_all]
-        wl_min = max(10.0, min(wls) - 5.0)
-        wl_max = min(5000.0, max(wls) + 20.0)
-        lines = [l for l in lines_all if wl_min <= l["wl"] <= wl_max]
-        print(f"  No lines in requested window — auto range "
-              f"{wl_min:.1f}–{wl_max:.1f} nm")
-    if not lines:
-        print(f"No spectral lines within the wavelength window for {element}. Exiting.")
-        return 1
-
-    # Normalise fosc; assign trace_idx after wl sort (maps to Plotly trace pairs)
-    max_fosc = max(l["fosc"] for l in lines) or 1.0
-    for l in lines:
-        l["fosc_norm"] = l["fosc"] / max_fosc
-    lines.sort(key=lambda x: x["wl"])
-    for i, l in enumerate(lines):
-        l["trace_idx"] = i
-
-    print(f"  Plotting {len(lines)} lines in {wl_min:.0f}–{wl_max:.0f} nm")
-
-    # ── BUILD FIGURE — 2 rows only ───────────────────────────────────────────
-    _title_sp = species_label if is_ion else element
-    fig = make_subplots(
-        rows=2, cols=1,
-        row_heights=[0.5, 0.5],
-        vertical_spacing=0.08,
-        subplot_titles=[
-            f"<b>Absorption Spectrum — {_title_sp}</b>",
-            f"<b>Emission Spectrum — {_title_sp}</b>",
-        ],
-    )
-
-    N_BG = 500   # background gradient columns
-    shapes = []
-
-    for row_i, bar_type in [(1, "absorption"), (2, "emission")]:
-        for i in range(N_BG):
-            wl_lo  = wl_min + (wl_max - wl_min) * i / N_BG
-            wl_hi  = wl_min + (wl_max - wl_min) * (i + 1) / N_BG
-            wl_mid = (wl_lo + wl_hi) / 2
-            if bar_type == "absorption":
-                r, g, b = wl_to_rgb(wl_mid)
-                fill = f"rgb({r},{g},{b})"
-            else:
-                fill = "black"
-            yref = "y" if row_i == 1 else "y2"
-            shapes.append(dict(
-                type="rect", xref="x", yref=yref,
-                x0=wl_lo, x1=wl_hi, y0=0, y1=1,
-                fillcolor=fill, line_width=0, layer="below",
-            ))
-
-    # Dummy traces to anchor y-axes
-    for row_i in (1, 2):
-        fig.add_trace(go.Scatter(
-            x=[wl_min, wl_max], y=[0.5, 0.5],
-            mode="lines", line=dict(width=0),
-            showlegend=False, hoverinfo="skip",
-        ), row=row_i, col=1)
-
-    # Draw spectral lines in wl order (trace_idx i -> Plotly traces 2+2*i, 3+2*i)
-    for ln in lines:
-        wl  = ln["wl"]
-        fn  = ln["fosc_norm"]
-        col = rgb_str(wl)
-        hover = (
-            f"<b>{ln['label']}</b><br>"
-            f"\u03bb = {wl:.2f} nm<br>"
-            f"fosc = {ln['fosc']:.5f}<br>"
-            f"[{ln['src']}]<extra></extra>"
-        )
-
-        # Absorption: black notch, opacity + width ∝ fosc
-        opacity = 0.20 + 0.80 * fn
-        fig.add_trace(go.Scatter(
-            x=[wl, wl], y=[0, 1],
-            mode="lines",
-            line=dict(color=f"rgba(0,0,0,{opacity:.3f})", width=max(0.8, fn * 5)),
-            showlegend=False,
-            hovertemplate=hover,
-        ), row=1, col=1)
-
-        # Emission: coloured line, width ∝ fosc
-        fig.add_trace(go.Scatter(
-            x=[wl, wl], y=[0, 1],
-            mode="lines",
-            line=dict(color=col, width=max(0.8, fn * 5)),
-            showlegend=False,
-            hovertemplate=hover,
-        ), row=2, col=1)
-
-    # ── LAYOUT ───────────────────────────────────────────────────────────────
-    src_counts = {}
-    for l in lines:
-        src_counts[l["src"]] = src_counts.get(l["src"], 0) + 1
-
-    src_ann_parts = []
-    for s, n in sorted(src_counts.items(), key=lambda x: -x[1]):
-        c = SRC_COLORS.get(s, "#888")
-        src_ann_parts.append(f"<b style='color:{c}'>{s}</b>: {n}")
-    src_ann = "  |  ".join(src_ann_parts)
-
-    fig.update_layout(
-        title=dict(
-            text=(f"<b>{_title_sp}  —  Spectral Lines</b>"
-                  f"<br><span style='font-size:13px'>{len(lines)} lines  |  "
-                  f"{wl_min:.0f}–{wl_max:.0f} nm  |  {src_ann}</span>"),
-            x=0.5, xanchor="center",
-            font=dict(size=20, family="Georgia, serif", color="#1a1a2e"),
-        ),
-        autosize=True,
-        plot_bgcolor="white",
-        paper_bgcolor="#f4f6fb",
-        hovermode="x",
-        hoverlabel=dict(
-            bgcolor="#111", font_color="#eee", bordercolor="#444",
-            font_size=14, font_family="Arial, sans-serif",
-        ),
-        margin=dict(t=95, b=60, l=55, r=270),
-        font=dict(family="'Helvetica Neue', Helvetica, Arial, sans-serif", size=13),
-        shapes=shapes,
-        annotations=[
-            dict(
-                text="ABSORPTION",
-                x=0.005, xref="paper", y=0.97, yref="paper",
-                xanchor="left", yanchor="top", showarrow=False,
-                font=dict(size=10, color="rgba(0,0,0,0.50)", family="monospace"),
-            ),
-            dict(
-                text="EMISSION",
-                x=0.005, xref="paper", y=0.44, yref="paper",
-                xanchor="left", yanchor="top", showarrow=False,
-                font=dict(size=10, color="rgba(210,210,210,0.80)", family="monospace"),
-            ),
-            # Source legend
-            dict(
-                text="<b>Sources</b><br>" + "<br>".join(
-                    "<span style='color:{}'>\u25a0 {}</span>: {}".format(
-                        SRC_COLORS.get(s, "#888"), s, n)
-                    for s, n in sorted(src_counts.items(), key=lambda x: -x[1])
-                ),
-                x=1.01, xref="paper", y=0.98, yref="paper",
-                xanchor="left", yanchor="top", showarrow=False,
-                font=dict(size=11, color="#333"),
-                bgcolor="rgba(255,255,255,0.92)",
-                bordercolor="#ccc", borderwidth=1, borderpad=7,
-                align="left",
-            ),
-        ],
-    )
-
-    # Axis styling
-    for row_i in (1, 2):
-        fig.update_yaxes(
-            range=[0, 1], showticklabels=False, showgrid=False,
-            zeroline=False, row=row_i, col=1,
-        )
-        fig.update_xaxes(
-            range=[wl_min, wl_max],
-            showticklabels=True,
-            tickfont=dict(size=11, color="#555"),
-            title_text="Wavelength (nm)" if row_i == 2 else "",
-            title_font=dict(size=13),
-            showgrid=False, zeroline=False,
-            row=row_i, col=1,
-        )
-
-    # ── SAVE + INJECT CONTROL PANEL ──────────────────────────────────────────
-    out_file = os.path.join(out_dir, f"{element}_spectra.html")
-    # The control panel needs a full document: it is injected before the
-    # closing head/body tags.
-    html = fig.to_html(include_plotlyjs=False, full_html=True)
-
-    lines_js  = json.dumps([
-        dict(wl=l["wl"], fosc=round(l["fosc"], 6),
-             label=l["label"], src=l["src"],
-             upper=l.get("upper", ""), lower=l.get("lower", ""),
-             trace_idx=l["trace_idx"],
-             col=rgb_str(l["wl"]))
-        for l in lines
-    ])
-    src_info_js   = json.dumps(src_counts)
-    src_colors_js = json.dumps(SRC_COLORS)
-
-    html = inject_head(html, load_template('spectra_fs.css') + load_template('spectra_panel.css'))
-    html = inject_body(
-        html,
-        render_template('spectra_panel.html', wl_lo0=f'{wl_min:.0f}', wl_hi0=f'{wl_max:.0f}')
-        + render_template(
-            'spectra_panel.js',
-            lines_js=lines_js,
-            src_colors_js=src_colors_js,
-            src_info_js=src_info_js,
-            wl_lo=f'{wl_min:.0f}',
-            wl_hi=f'{wl_max:.0f}',
-        )
-    )
-
-    write_offline_report(out_file, html)
-
-    print(f"\n{'='*60}")
-    print(f"  Saved: {out_file}")
-    print(f"  Absorption bar : {len(lines)} dark notches (width/opacity ~ fosc)")
-    print(f"  Emission bar   : {len(lines)} coloured lines (width ~ fosc)")
-    print("\n  Controls: region buttons | wavelength range |")
-    print("            source filter | fosc threshold | label search")
-    print("  Keyboard: \u2190/\u2192 pan  +/\u2212 zoom  R reset")
-    print(f"{'='*60}\n")
+    n_gs = sum(1 for r in payload['lines'] if r[0] == payload['gi'])
+    print(f"  Lines and lifetimes from {os.path.basename(lt_path)}"
+          + (f"; hyperfine constants from {os.path.basename(hf_file)}" if hf_file else ""))
+    print(f"  {species['label']}: {len(payload['lines'])} lines ({n_gs} from the ground state "
+          f"{label_to_pretty(payload['gs'])}), {len(payload['levels'])} levels")
+    if payload['dropped']:
+        print(f"  Left out {payload['dropped']} line(s) with ΔE ≤ {MIN_DE_EV:g} eV (below the table's rounding).")
+    if payload['dlines']:
+        for d in payload['dlines']:
+            print(f"  {d['name']} {label_to_pretty(d['lower'])} → {label_to_pretty(d['upper'])}: "
+                  + ", ".join(f"{element}-{i['A']} ({100 * i['ab']:.2f}%, {len(i['comps'])} components)" for i in d['iso']))
+    elif 'dl' not in payload['opts']['tabs'] and payload['dl_note'] and species['kind'] != 'ion':
+        print(f"  D-line tab left out: {payload['dl_note']}.")
+    vp = payload['vapour']
+    T = payload['opts']['T']
+    if vp:
+        N = sc.vapour_density_cm3(element, T)
+        print(f"  Vapour at {T:g} K: {N:.3g} atoms/cm³ (cell {payload['opts']['L']:g} cm)")
+    print(f"  ✓ {path}")
     return 0
 
 

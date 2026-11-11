@@ -136,6 +136,7 @@ from .stages import (
     STAGE_BY_ID,
     STAGE_GROUPS,
     STAGE_PHYSICS,
+    FLAG_SECTIONS,
     flag_section,
     input_hint,
     output_hint,
@@ -1145,7 +1146,7 @@ class MainWindow(QMainWindow):
             self.cmd_preview.setText("")
             return
 
-        rows = {"input": [], "output": [], "options": []}
+        rows: dict[str, list] = {key: [] for key, _title in FLAG_SECTIONS}
         for spec in stage.get("flags", []):
             kind = spec["kind"]
             help_text = spec.get("help", "")
@@ -1247,8 +1248,9 @@ class MainWindow(QMainWindow):
             self._save_as_edit.setPlaceholderText("optional")
             rows["output"].append((QLabel("Save as:"), self._save_as_edit))
 
-        # Input first, then Outputs, then the rest; a heading only where there is more than one kind of row.
-        titles = (("input", "Input"), ("output", "Output"), ("options", "Options"))
+        # Model / Fit to NIST (stages that ask for them), Input, Output, then the rest; a heading only
+        # where there is more than one kind of row.
+        titles = FLAG_SECTIONS
         shown = [key for key, _title in titles if rows[key]]
         for key, title in titles:
             if not rows[key]:

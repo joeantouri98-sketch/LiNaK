@@ -260,9 +260,8 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
             if soc_excitations:
                 print(f" Found {len(soc_excitations)} SOC levels in {soc_file} will overlay on plot")
         if not excitations and not soc_excitations:
-            raise MissingDataError(
-                f"no ORCA data found for {element}: expected {json_file} and/or "
-                f"{soc_file}; run: linak --pipeline runorca {element}")
+            # ORCA is an overlay: the levels and lines come from the Rydberg, Transitions and Lifetimes data.
+            print(f" No ORCA data for {element}: drawing the NIST / Rydberg levels without the TD-DFT overlay")
 
     _seen_extra_names = set()
     for _espec in cli.extra or []:
@@ -304,6 +303,10 @@ def load_inputs(species, cli, data_dir) -> PlotInputs:
                     or label_to_pretty(_gs_block['label']))
         except Exception as e:
             print(f"  Could not load Rydberg data: {e}")
+    if not (excitations or soc_excitations or rydberg_excitations):
+        raise MissingDataError(
+            f"no levels to draw for {element}: run linak --pipeline rydberg {element} "
+            f"(or runorca for the ORCA levels)")
 
     # Try to load transitions
     transitions_file = _chosen(cli, 'transitions_file', element, data_dir, 'Transitions',

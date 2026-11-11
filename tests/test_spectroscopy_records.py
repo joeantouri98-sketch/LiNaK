@@ -141,15 +141,11 @@ def test_unknown_energy_sort_reproduces_the_minus999_ordering():
 
 
 def test_dline_tables_match_core_spectroscopy():
-    """Both pipelines consume the tables that live in core.spectroscopy."""
+    """The comparison table consumes the tables that live in core.spectroscopy."""
     from linak.core import spectroscopy
-    from linak.pipelines import compare_elements, spectra
+    from linak.pipelines import compare_elements
 
-    assert spectra.DLINES_FALLBACK == spectroscopy.DLINES_FALLBACK
     assert compare_elements.LITERATURE == spectroscopy.LITERATURE
-    # One dataset (PHYSICS_BUGS P18): the spectra fallback is derived from LITERATURE.
-    assert spectroscopy.DLINES_FALLBACK == {
-        el: spectroscopy.dline_transitions(el) for el in spectroscopy.LITERATURE}
 
 
 def test_core_spectroscopy_import_is_light():

@@ -37,7 +37,8 @@ from fractions import Fraction
 
 import numpy as _np
 
-from linak.core.constants import AMU_KG, C_M_S, EINSTEIN_PREFACTOR, H_J_S, KB_J_K
+from linak.core.constants import AMU_KG, C_M_S, EINSTEIN_PREFACTOR, EV_TO_HARTREE, H_J_S, KB_J_K
+from linak.physics.atomic_structure.dhf_lines import DHF_REL_UNCERTAINTY, DHFLines
 from linak.physics.polarizability_core import (
     ACC_UNCERTAINTY,
     coulomb_fosc,
@@ -105,6 +106,8 @@ class FValueSources:
     # f_values/<El>_literature.json["nist_fit_exclusions"]: NIST points left out of the
     # extrapolation fits (the table value itself is never altered)
     nist_fit_exclusions: Sequence[Mapping] = ()
+    # DHF + core polarisation E1 network (opt-in, --dhf): ahead of ORCA / Numerov / Coulomb
+    dhf: DHFLines | None = None
 
 
 @dataclass(frozen=True)
@@ -586,6 +589,20 @@ def _line_row(t, c: _Context) -> TransitionA | str:
                 fosc_delta  = 0.20
                 if _res_lit is not None:
                     fosc, g_upper, g_lower = _res_lit
+
+    # Priority 1c: a structure model (DHF + core polarisation or Brueckner, opt-in): its dipoles at
+    # the line's measured energy, ahead of every model source; never ahead of NIST or literature.
+    if fosc is None and c.sources.dhf is not None and not c.orca_only and _drop_reason is None \
+            and lu >= 0 and ll_int >= 0 and not _is_ion:
+        _JU2 = parse_J2_set(t.get('upper_J') or parse_J_label(ul), lu)
+        _JL2 = parse_J2_set(t.get('lower_J') or parse_J_label(ll), ll_int)
+        _f_dhf = c.sources.dhf.f_absorption(_ll_nl, _ul_nl, _JL2, _JU2, abs(dE) * EV_TO_HARTREE)
+        if _f_dhf:
+            fosc        = _f_dhf
+            fosc_source = c.sources.dhf.source
+            fosc_delta  = DHF_REL_UNCERTAINTY
+            g_upper     = sum(j + 1 for j in _JU2)
+            g_lower     = sum(j + 1 for j in _JL2)
 
     # Priority 2: ORCA TD-DFT for ground state transitions
     # Match ONLY when a TD-DFT root lies close in energy to the spectroscopic level.

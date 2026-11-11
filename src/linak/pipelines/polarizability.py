@@ -331,7 +331,7 @@ def run_element(element, excited_label=None,
                 wl_min=200.0, wl_max=2000.0, n_grid=2000,
                 I_ref_kWcm2=10.0, waist_um=1.0, wl_point=None,
                 data_dir=None, isotope_A=None, extrapolation=None,
-                rydberg_file=None, transitions_file=None):
+                rydberg_file=None, transitions_file=None, model_f=None, model_file=None):
     """
     Full polarizability pipeline for one element.
     Returns result dict or None on failure.
@@ -346,6 +346,9 @@ def run_element(element, excited_label=None,
                         rydberg_file=rydberg_file, transitions_file=transitions_file)
     if data is None:
         return None
+    if model_f:
+        from linak.pipelines.dhf import load_dhf_lines
+        data['dhf_lines'] = load_dhf_lines(element, data_dir, model_file, model_f)
 
     all_transitions = data['transitions']
     gs_label        = data['gs_label']
@@ -509,7 +512,8 @@ def run_element(element, excited_label=None,
     result = dict(
         element          = element,
         extrapolation    = data.get('extrapolation'),
-        inputs           = {k: os.path.basename(v) for k, v in (('rydberg', rydberg_file), ('transitions', transitions_file)) if v} or None,
+        inputs           = ({k: os.path.basename(v) for k, v in (('rydberg', rydberg_file), ('transitions', transitions_file)) if v}
+                            | ({model_f: os.path.basename(model_file or f"{element}_{model_f}.json")} if model_f else {})) or None,
         gs_label         = gs_label,
         excited_label    = excited_used,
         alpha0_au        = round(alpha0, 4),
@@ -1260,6 +1264,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--transitions-file', default=None, metavar='FILE',
                         help='Transitions data to read instead of <species>_transitions.json '
                              '(a path, or a name under the data folder).')
+    from linak.pipelines.dhf import add_model_f_arguments
+    add_model_f_arguments(parser, 'Numerov and Coulomb')
     parser.add_argument('--no-plot', action='store_true',
                         help='Write the data (JSON) only; skip the interactive plot.')
     parser.add_argument('--n-grid', type=int, default=2000)
@@ -1299,6 +1305,10 @@ def main(argv=None) -> int:
                             transitions_file=resolve_data_file(args.transitions_file, el, data_dir, "Transitions"))
         if data is None:
             raise MissingDataError(f"No polarizability data for {el} in {data_dir}")
+        from linak.pipelines.dhf import load_dhf_lines, model_f_choice
+        _model, _model_spec = model_f_choice(args)
+        if _model:
+            data['dhf_lines'] = load_dhf_lines(el, data_dir, _model_spec, _model)
         lab = args.state.strip()
         if lab not in data['state_energy_au']:
             parser.error(f"state {lab!r} not in {el} rydberg set")
@@ -1323,6 +1333,8 @@ def main(argv=None) -> int:
                 + (", ".join(available) if available else "none"))
         elements = [require_alpha_species(args.element, "polarizability.py")["species_id"]]
 
+    from linak.pipelines.dhf import model_f_choice
+    model_f, model_spec = model_f_choice(args)
     all_results = []
     failed = []
     for el in elements:
@@ -1343,6 +1355,8 @@ def main(argv=None) -> int:
                 extrapolation=args.extrapolation,
                 rydberg_file=resolve_data_file(args.rydberg_file, el, data_dir, "Rydberg"),
                 transitions_file=resolve_data_file(args.transitions_file, el, data_dir, "Transitions"),
+                model_f=model_f,
+                model_file=resolve_data_file(model_spec, el, data_dir, "model"),
             )
         except MissingDataError as exc:
             if not args.all:

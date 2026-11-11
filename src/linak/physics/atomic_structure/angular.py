@@ -85,3 +85,27 @@ def exchange_coefficients(kappa_a: int, kappa_b: int) -> list[tuple[int, float]]
         if lam > 0:
             out.append((k, lam))
     return out
+
+
+# 6j symbol (doubled arguments)
+def _tri(a: int, b: int, c: int) -> float:
+    return _f(a + b - c) * _f(a - b + c) * _f(-a + b + c) / _f(a + b + c + 2)
+
+
+def _ok(a: int, b: int, c: int) -> bool:
+    return abs(a - b) <= c <= a + b and (a + b + c) % 2 == 0
+
+
+def sixj2(j1: int, j2: int, j3: int, j4: int, j5: int, j6: int) -> float:
+    """{j1 j2 j3; j4 j5 j6} with doubled arguments (Racah formula)."""
+    if not (_ok(j1, j2, j3) and _ok(j1, j5, j6) and _ok(j4, j2, j6) and _ok(j4, j5, j3)):
+        return 0.0
+    pre = math.sqrt(_tri(j1, j2, j3) * _tri(j1, j5, j6) * _tri(j4, j2, j6) * _tri(j4, j5, j3))
+    a1, a2, a3, a4 = j1 + j2 + j3, j1 + j5 + j6, j4 + j2 + j6, j4 + j5 + j3
+    b1, b2, b3 = j1 + j2 + j4 + j5, j2 + j3 + j5 + j6, j3 + j1 + j6 + j4
+    tot = 0.0
+    for t in range(max(a1, a2, a3, a4), min(b1, b2, b3) + 1, 2):
+        den = (_f(t - a1) * _f(t - a2) * _f(t - a3) * _f(t - a4)
+               * _f(b1 - t) * _f(b2 - t) * _f(b3 - t))
+        tot += (-1) ** (t // 2) * _f(t + 2) / den
+    return pre * tot

@@ -92,7 +92,7 @@ def window(tmp_path, monkeypatch):
 def test_group_headings_are_not_stages(window):
     headings = [window.stage_list.item(i) for i in range(window.stage_list.count())
                 if window.stage_list.item(i).data(Qt.UserRole) is None]
-    assert [item.text() for item in headings][0] == "Ab initio"
+    assert [item.text() for item in headings][0] == "Structure models"
     assert all(not (item.flags() & Qt.ItemIsSelectable) for item in headings)
 
 

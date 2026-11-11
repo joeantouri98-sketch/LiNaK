@@ -103,16 +103,22 @@ PIPELINE = [
          outputs=["data/{el}.json"]),
 
     dict(id="dhf", label="DHF + core polarisation", symbol="DHF", pipeline="dhf",
-         desc="Ab initio one-valence spectrum: levels, E1 network, lifetimes, alpha.",
+         desc="One-valence spectrum, DHF core + fitted polarisation potential: levels, E1 network, lifetimes, alpha.",
          positional=lambda el: [el],
          flags=[
-             dict(name="--no-fit-d", kind="flag", label="IP only (no d-level fit)",
-                  help="Fix the core-polarisation cutoff from the IP alone."),
-             dict(name="--alpha-core", kind="float", label="Core polarisability (au)", default="",
+             dict(name="--alpha-core", kind="float", label="Core polarisability (au)", default="", section="model",
                   help="Blank: LiNaK's alpha_core table. 0 = pure DHF."),
-             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6"),
+             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6", section="model"),
              dict(name="--omega", kind="strlist", label="alpha(omega) photon energies (eV)",
-                  default=""),
+                  default="", section="model"),
+             dict(name="--no-fit-p", kind="invflag", label="Fit p levels", section="fit",
+                  help="Fit the p cutoffs to the lowest p levels. Untick to predict the resonance lines."),
+             dict(name="--no-fit-d", kind="invflag", label="Fit d levels", section="fit",
+                  help="Fit the d channel to NIST d levels. Untick: d on the IP cutoff."),
+             dict(name="--d-one-level", kind="invflag", label="Second d level", section="fit",
+                  help="Also fit a higher d level and a d alpha factor. Untick: lowest d only."),
+             dict(name="--ip", kind="float", label="Ionization energy (cm-1)", default="", section="fit",
+                  help="Blank: from NIST levels. Set it to run without NIST."),
              dict(name="--all", kind="flag", label="Run all available elements"),
              dict(name="--nist-dir", kind="path", browse="dir", label="NIST levels directory (override)",
                   default="", help="Blank: bundled NIST levels."),
@@ -120,6 +126,27 @@ PIPELINE = [
                   default=workspace_data_dir),
          ],
          outputs=["data/{el}_dhf.json"]),
+
+    dict(id="brueckner", label="Brueckner (DHF + Σ2)", symbol="BO", pipeline="brueckner",
+         desc="Energy-dependent core polarisation: levels, RPA E1 network, lifetimes, alpha. Minutes on the first run.",
+         positional=lambda el: [el],
+         flags=[
+             dict(name="--lmax", kind="int", label="Σ2 max l", default="5", section="model",
+                  help="Highest l of the virtual orbitals in Σ2."),
+             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6", section="model"),
+             dict(name="--omega", kind="strlist", label="alpha(omega) photon energies (eV)",
+                  default="", section="model"),
+             dict(name="--unscaled", kind="invflag", label="Scale Σ2 to NIST", section="fit",
+                  help="One factor per l, j from the lowest NIST level. Untick: pure ab initio."),
+             dict(name="--ip", kind="float", label="Ionization energy (cm-1)", default="", section="fit",
+                  help="Blank: from NIST levels. Set it to run without NIST."),
+             dict(name="--all", kind="flag", label="Run all available elements"),
+             dict(name="--nist-dir", kind="path", browse="dir", label="NIST levels directory (override)",
+                  default="", help="Blank: bundled NIST levels."),
+             dict(name="--data-dir", kind="path", browse="dir", label="Data directory",
+                  default=workspace_data_dir),
+         ],
+         outputs=["data/{el}_brueckner.json"]),
 
     dict(id="rydberg", label="Rydberg series", symbol="QDT", pipeline="rydberg",
          desc="NIST levels + quantum defect theory -> Rydberg series.",
@@ -168,12 +195,17 @@ PIPELINE = [
                   help="Transitions file to read. Blank: <species>_transitions.json."),
              dict(name="--orca-file", kind="path", browse="data", label="ORCA results", default="",
                   help="ORCA result file for the TD-DFT f-values. Blank: <species>.json."),
+             dict(name="--model-file", kind="path", browse="data", label="Model data", default="",
+                  help="Structure-model file to read. Blank: <species>_dhf.json or _brueckner.json."),
              dict(name="--n-max", kind="int", label="Max n (Rydberg cutoff)", default="",
                   help="Max principal quantum number for Rydberg transitions."),
              dict(name="--orca-only", kind="flag", label="ORCA oscillator strengths only",
                   help="Only use ORCA TD-DFT oscillator strengths."),
              dict(name="--nist-only", kind="flag", label="NIST/Rydberg transitions only",
                   help="Only use NIST / Rydberg (Numerov/Coulomb) transitions."),
+             dict(name="--model-f", kind="choice", label="Model f-values",
+                  choices=[("", "None"), ("dhf", "DHF + core polarisation"), ("brueckner", "Brueckner")],
+                  default="", help="Structure-model f-values where NIST and literature have none."),
              dict(name="--extrapolation", kind="extrapolation", label="Extrapolation",
                   default="",
                   help="Extrapolation of ns->np oscillator strengths. "
@@ -191,6 +223,11 @@ PIPELINE = [
                   help="Rydberg file to read. Blank: <species>_rydberg.json."),
              dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
                   help="Transitions file to read. Blank: <species>_transitions.json."),
+             dict(name="--model-file", kind="path", browse="data", label="Model data", default="",
+                  help="Structure-model file to read. Blank: <species>_dhf.json or _brueckner.json."),
+             dict(name="--model-f", kind="choice", label="Model f-values",
+                  choices=[("", "None"), ("dhf", "DHF + core polarisation"), ("brueckner", "Brueckner")],
+                  default="", help="Structure-model f-values where NIST and literature have none."),
              dict(name="--excited", kind="str", label="Excited state label", default="",
                   help="e.g. 3p3/2. Default: lowest dipole-allowed state from ground."),
              dict(name="--wl-min", kind="float", label="Scan min wavelength (nm)",
@@ -223,11 +260,24 @@ PIPELINE = [
          outputs=["data/{el}_polarizability.json"]),
 
     dict(id="blackbody", label="Blackbody (BBR)", symbol="BBR", pipeline="blackbody",
-         desc="Static + dynamic BBR shifts, depopulation, photoionization.",
+         desc="Static + dynamic BBR shifts, depopulation, photoionization. Writes one tabbed page.",
          positional=lambda el: [el],
          flags=[
              dict(name="--no-plot", kind="invflag", label="Generate plot",
-                  help="Untick to write the data only and skip the plot."),
+                  help="Untick to write the data only and skip the page."),
+             dict(name="--no-tab-shifts", kind="invflag", label="Shifts vs T tab",
+                  help="Page tab: static and dynamic shift of the ground, excited and difference."),
+             dict(name="--no-tab-depopulation", kind="invflag", label="Depopulation tab",
+                  help="Page tab: BBR depopulation against n, with the channels behind each rate."),
+             dict(name="--no-tab-photoionization", kind="invflag", label="Photoionization tab",
+                  help="Page tab: direct and field photoionization against n."),
+             dict(name="--no-tab-rydberg", kind="invflag", label="Rydberg shifts tab",
+                  help="Page tab: static and dynamic shift of the Rydberg states."),
+             dict(name="--plot-units", kind="choice", label="Shift units when the page opens",
+                  choices=[("hz", "Hz"), ("frac", "Fractional (\u0394\u03bd/\u03bd\u2080)")],
+                  default="hz", help="Switchable on the page."),
+             dict(name="--plot-t-min", kind="float", label="Page min temperature (K)", default="10"),
+             dict(name="--plot-t-max", kind="float", label="Page max temperature (K)", default="1000"),
              dict(name="--excited", kind="str", label="Excited state label", default="",
                   help="e.g. 3p3/2. Default: auto (first fine-structure partner)."),
              dict(name="--T", kind="float", label="Temperature (K)", default="300",
@@ -269,6 +319,7 @@ PIPELINE = [
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Process every element with a valid BBR dataset."),
              dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
+             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
          ],
          outputs=["data/{el}_blackbody.json",
                   "plots/{el}/{el}_blackbody.html"]),
@@ -296,7 +347,7 @@ PIPELINE = [
          outputs=["data/{el}_tweezer.json"]),
 
     dict(id="hyperfine", label="Hyperfine / Zeeman", symbol="F", pipeline="hyperfine",
-         desc="Breit-Rabi diagonalization; needs {el}_hf_constants.json.",
+         desc="Hyperfine levels, Breit-Rabi, microwave and Zeeman-resolved lines; needs {el}_hf_constants.json.",
          positional=lambda el: [el],
          flags=[
              dict(name="--no-plot", kind="invflag", label="Generate plot",
@@ -320,8 +371,7 @@ PIPELINE = [
              dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=""),
          ],
          outputs=["data/{el}_hyperfine.json",
-                  "plots/{el}/{el}_hyperfine.html",
-                  "plots/{el}/{el}_zeeman.html"]),
+                  "plots/{el}/{el}_hyperfine.html"]),
 
     dict(id="feshbach", label="Feshbach resonances", symbol="a(B)", pipeline="feshbach",
          desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
@@ -347,7 +397,7 @@ PIPELINE = [
                   "plots/{el}/{el}_feshbach.html"]),
 
     dict(id="grotrian", label="Grotrian diagram", symbol="hν", pipeline="plotinteractive",
-         desc="Needs ORCA data already generated (the ORCA stage above) for this species.",
+         desc="Needs the Rydberg, Transitions and Lifetimes stages run first. ORCA levels are drawn over them when present.",
          positional=lambda el: [el],
          flags=[
              dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
@@ -434,15 +484,6 @@ PIPELINE = [
                   default="2000",
                   help="Used when ORCA transitions is custom range."),
 
-             dict(name="--plots", kind="choice", label="Plots to generate",
-                  choices=[
-                      ("1", "Grotrian diagram only"),
-                      ("2", "Grotrian + Spectrum (default)"),
-                  ],
-                  default="2",
-                  help="Cumulative, not exclusive: each option always includes every "
-                       "plot below it too, so '2' already writes both the Grotrian "
-                       "diagram and the Spectrum. Matches the script's own default."),
              dict(name="--soc-file", kind="path", browse="data", label="SOC data to overlay", default="",
                   help="SOC data file to draw over the TD-DFT levels."),
              dict(name="--extra", kind="pathlist", browse="data", label="Extra data to overlay", default="",
@@ -455,22 +496,48 @@ PIPELINE = [
          outputs=["plots/{el}/{el}_grotrian.html"]),
 
     dict(id="spectra", label="Spectrum", symbol="λ", pipeline="spectra",
-         desc="Absorption + emission spectral bar chart.",
+         desc="One tabbed page: absorption, emission, the hyperfine D lines, curve of growth, colour strip "
+              "and the line list. Needs the Lifetimes stage run first.",
          positional=lambda el: [el],
          flags=[
              dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
                   help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
-             dict(name="--transitions-file", kind="path", browse="data", label="Transitions data", default="",
-                  help="Transitions file to read. Blank: <species>_transitions.json."),
-             dict(name="--wl-min", kind="float", label="Min wavelength (nm)", default="200"),
-             dict(name="--wl-max", kind="float", label="Max wavelength (nm)", default="900"),
+             dict(name="--hf-file", kind="path", browse="data", label="Hyperfine constants", default="",
+                  help="For the D-line tab. Blank: <El>_hf_constants.json."),
+             dict(name="--no-tab-absorption", kind="invflag", label="Absorption tab",
+                  help="Cross-section, optical depth, cell transmission or n − 1."),
+             dict(name="--no-tab-emission", kind="invflag", label="Emission tab",
+                  help="Optically thin emission at an excitation temperature."),
+             dict(name="--no-tab-dlines", kind="invflag", label="D lines tab",
+                  help="Hyperfine D1/D2 of a vapour cell, Doppler or saturated absorption."),
+             dict(name="--no-tab-growth", kind="invflag", label="Curve of growth tab",
+                  help="Equivalent width against column density."),
+             dict(name="--no-tab-strip", kind="invflag", label="Strip tab",
+                  help="The spectrum as colour bands."),
+             dict(name="--no-tab-lines", kind="invflag", label="Lines tab",
+                  help="Searchable line list with widths."),
+             dict(name="--units", kind="choice", label="x axis when the page opens",
+                  choices=[("nm", "Wavelength, vacuum"), ("air", "Wavelength, air"), ("cm", "cm⁻¹"),
+                           ("eV", "eV"), ("THz", "THz")],
+                  default="nm", help="Switchable on the page."),
+             dict(name="--T", kind="float", label="Gas temperature (K)", default="",
+                  help="Blank: a typical cell temperature (Li 623, Na 423, K 333, Rb and Cs 298 K)."),
+             dict(name="--cell-length", kind="float", label="Cell length (cm)", default="5"),
+             dict(name="--density", kind="float", label="Density (cm⁻³)", default="",
+                  help="Blank: the saturated vapour at T (needed for ions and Fr)."),
+             dict(name="--t-exc", kind="str", label="Excitation temperature (K)", default="5000",
+                  help="Emission tab; 'inf' for equal population per sublevel."),
+             dict(name="--instrument-pm", kind="float", label="Instrument FWHM (pm)", default="0"),
+             dict(name="--wl-min", kind="float", label="View from (nm, vacuum)", default="",
+                  help="Blank: the ground-state lines."),
+             dict(name="--wl-max", kind="float", label="View to (nm, vacuum)", default=""),
              dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
          ],
-         outputs=["plots/{el}/{el}_spectra.html"]),
+         outputs=["plots/{el}/{el}_spectrum.html"]),
 
     dict(id="response", label="Polarizability page", symbol="α·U", pipeline="polarizability_page",
          desc="One tabbed page: polarizability, magic wavelengths and optical tweezer. "
-              "Needs the Polarizability stage run first; the tweezer tab also needs lifetimes data.",
+              "Needs the Polarizability stage run first. The tweezer tab requires lifetimes data.",
          positional=lambda el: [el],
          flags=[
              dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
@@ -499,39 +566,6 @@ PIPELINE = [
              dict(name="--waist", kind="float", label="Beam waist (\u00b5m)", default="1"),
          ],
          outputs=["plots/{el}/{el}_response.html"]),
-
-    dict(id="bbr", label="Blackbody page", symbol="BBR", pipeline="blackbody_page",
-         desc="One tabbed page: BBR shifts versus temperature, depopulation, photoionization and Rydberg shifts. "
-              "Needs the Blackbody stage run first; shifts need polarizability data, channels need lifetimes data.",
-         positional=lambda el: [el],
-         flags=[
-             dict(name="--blackbody-file", kind="path", browse="data", label="Blackbody data", default="",
-                  help="Blackbody file to read. Blank: <species>_blackbody.json."),
-             dict(name="--polarizability-file", kind="path", browse="data", label="Polarizability data", default="",
-                  help="Polarizability file to read. Blank: <species>_polarizability.json."),
-             dict(name="--lifetimes-file", kind="path", browse="data", label="Lifetimes data", default="",
-                  help="Lifetimes file to read. Blank: <species>_lifetimes.json."),
-             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
-             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
-             dict(name="--no-shifts", kind="invflag", label="Shifts vs T",
-                  help="Tab with static and dynamic BBR shifts versus temperature."),
-             dict(name="--no-depopulation", kind="invflag", label="Depopulation",
-                  help="Tab with thermal depopulation rates and their channels. Needs lifetimes data."),
-             dict(name="--no-photoionization", kind="invflag", label="Photoionization",
-                  help="Tab with direct and field photoionization rates."),
-             dict(name="--no-rydberg", kind="invflag", label="Rydberg shifts",
-                  help="Tab with static and dynamic shifts of the Rydberg states."),
-             dict(name="--units", kind="choice", label="Shift units when it opens",
-                  choices=[("hz", "Hz"), ("frac", "Fractional (\u0394\u03bd/\u03bd\u2080)")],
-                  default="hz", help="Switchable on the page."),
-             dict(name="--temperature", kind="float", label="Cursor temperature (K)", default="",
-                  help="Blank: the temperature of the Blackbody run."),
-             dict(name="--t-min", kind="float", label="Min temperature (K)", default="10"),
-             dict(name="--t-max", kind="float", label="Max temperature (K)", default="1000"),
-             dict(name="--field", kind="float", label="Field for field ionization (V/cm)", default="",
-                  help="Blank: the field of the Blackbody run, else 100."),
-         ],
-         outputs=["plots/{el}/{el}_blackbody_page.html"]),
 
     dict(id="orbital3d", label="Orbital viewer", symbol="|ψ|²", pipeline="orbital3d",
          desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
@@ -586,10 +620,10 @@ PIPELINE = [
 # The sidebar's sections, in running order. Every stage is in exactly one
 # (tests/test_gui_stage_table.py checks that).
 STAGE_GROUPS = (
-    ("Ab initio", ("runorca", "orca_to_json", "dhf")),
+    ("Structure models", ("runorca", "orca_to_json", "dhf", "brueckner")),
     ("Atomic structure", ("rydberg", "transitions", "lifetimes")),
-    ("Atomic response", ("polarizability", "blackbody", "tweezer", "hyperfine", "feshbach")),
-    ("Visualise", ("grotrian", "response", "bbr", "spectra", "orbital3d")),
+    ("Atomic response", ("polarizability", "tweezer", "blackbody", "hyperfine", "feshbach")),
+    ("Visualise", ("grotrian", "response", "spectra", "orbital3d")),
     ("Compare", ("compare", "scattering")),
 )
 
@@ -612,10 +646,18 @@ STAGE_PHYSICS = {
         "basis sets/functionals."
     ),
     "dhf": (
-        "Dirac-Hartree-Fock for the closed M+ core (exact exchange) plus a "
-        "core-polarisation potential -alpha_c/2r^4 for the valence electron. "
-        "Only the IP (and, by default, the lowest d levels) come from NIST; "
-        "levels, fine structure, f values, lifetimes and alpha are predictions."
+        "Dirac-Hartree-Fock for the closed core (M+ for atoms, M2+ for the one-valence "
+        "ions; exact exchange) plus a core-polarisation potential -alpha_c/2r^4 for the "
+        "valence electron. Its cutoffs are fitted to the IP and, by default, the lowest p "
+        "and d levels (and a higher d level); other levels, f values, lifetimes and alpha "
+        "are predictions."
+    ),
+    "brueckner": (
+        "The same DHF core, with the valence electron in the second-order correlation "
+        "potential Sigma2(E): core polarisation that depends on the level's energy, which "
+        "carries the d and f series of Ca+, Sr+, Ba+ that one static potential cannot. "
+        "Sigma2 is scaled per l, j to the lowest NIST level (or not at all: pure ab initio). "
+        "Dipoles include the core's RPA response, which also gives alpha_core."
     ),
     "rydberg": (
         "Fits quantum defects delta_l from NIST energy levels via "
@@ -649,7 +691,10 @@ STAGE_PHYSICS = {
         "Computes the energy shift a thermal photon bath induces on a state "
         "(static Itano <E^2>_T term plus the full Planck-spectrum integral of "
         "alpha(omega)), and the BBR-driven depopulation and photoionization "
-        "rates it causes for Rydberg states."
+        "rates it causes for Rydberg states. The plot is one tabbed page (Shifts "
+        "vs T, Depopulation, Photoionization, Rydberg shifts); tick the tabs you "
+        "want. Temperature, units, n range and field change live in the browser, "
+        "and the Rydberg tab marks states where the static formula does not apply."
     ),
     "tweezer": (
         "Uses the imaginary part of the complex polarizability (with finite "
@@ -658,10 +703,12 @@ STAGE_PHYSICS = {
         "counterpart to polarizability.py's conservative trap depth."
     ),
     "hyperfine": (
-        "Diagonalizes the hyperfine + Zeeman Hamiltonian (magnetic-dipole and "
-        "electric-quadrupole coupling of nuclear spin I to J) exactly at any "
-        "field strength, producing the full Breit-Rabi diagram and the "
-        "ground-state microwave clock frequency."
+        "Diagonalizes the hyperfine + Zeeman Hamiltonian (magnetic-dipole, "
+        "electric-quadrupole and octupole coupling of nuclear spin I to J) exactly "
+        "at any field, level by level in m_F. One page: zero-field levels, Breit-Rabi "
+        "curves with slopes and composition, the ground microwave lines with their "
+        "field-insensitive points and clock Zeeman shift, Zeeman-resolved D lines "
+        "with sigma/pi strengths, and the constants used."
     ),
     "feshbach": (
         "Evaluates the standard isolated-resonance form "
@@ -671,7 +718,8 @@ STAGE_PHYSICS = {
     ),
     "grotrian": (
         "Builds the interactive energy-level (Grotrian) diagram from the "
-        "Rydberg, transitions, lifetimes, and ORCA data: levels in columns by "
+        "Rydberg, transitions and lifetimes data, with the ORCA levels drawn over "
+        "them when present: levels in columns by "
         "orbital l with J fine-structure bars, line weight by oscillator "
         "strength, filters (region, source, grade, n, wavelength, minimum f, "
         "ground or excited lower level), a matching-transitions table with a "
@@ -687,17 +735,15 @@ STAGE_PHYSICS = {
         "Render only: it reads the Polarizability and lifetimes data and runs no "
         "new physics."
     ),
-    "bbr": (
-        "Puts the blackbody-radiation results on one tabbed page: static and dynamic "
-        "BBR shifts versus temperature, thermal depopulation with the channels behind "
-        "each rate, direct and field photoionization, and the Rydberg-state shifts. "
-        "Temperature, units, n range and field change live in the browser. Render only: "
-        "it reads the Blackbody, Polarizability and lifetimes data; the Blackbody stage "
-        "keeps its own plots."
-    ),
     "spectra": (
-        "Renders the absorption and emission line spectrum as colored bars "
-        "using each transition's real wavelength and oscillator strength."
+        "Builds the spectrum from the lifetimes data: every line a Voigt profile "
+        "(Doppler at the gas temperature, natural width from the level lifetimes, "
+        "optional instrument and pressure widths) with area pi r_e c f. Tabs: "
+        "absorption (cross-section, optical depth or transmission of a vapour cell "
+        "whose density follows the vapour pressure, refractive index), optically "
+        "thin emission at an excitation temperature, the hyperfine D lines with the "
+        "natural isotope mix (Doppler or saturated absorption), the curve of growth, "
+        "colour strips and the line list with air and vacuum wavelengths."
     ),
     "orbital3d": (
         "Draws the Rydberg-state orbital (exact Coulomb radial function at the "
@@ -721,9 +767,17 @@ STAGE_PHYSICS = {
 OUTPUT_FLAGS = ("--output-dir", "--no-plot", "--outname")
 
 
+# Option sections a stage can ask for with section=..., in display order, before Input / Output.
+FLAG_SECTIONS = (("model", "Model"), ("fit", "Fit to NIST"), ("input", "Input"), ("output", "Output"),
+                 ("options", "Options"))
+
+
 def flag_section(spec: dict) -> str:
-    """Where an option sits in the options form: "input" (files and folders the stage reads),
-    "output" (what it writes and where) or "options" (everything else)."""
+    """Where an option sits in the options form: the spec's own "section" ("model", "fit"), else
+    "input" (files and folders the stage reads), "output" (what it writes and where) or "options"
+    (everything else)."""
+    if spec.get("section"):
+        return spec["section"]
     if spec["name"] in OUTPUT_FLAGS:
         return "output"
     if spec["kind"] in ("path", "pathlist") or spec["name"] == "__elements":
@@ -739,6 +793,7 @@ DEFAULT_INPUT_FILES = {
     "--blackbody-file": "{el}_blackbody.json",
     "--polarizability-file": "{el}_polarizability.json",
     "--orca-file": "{el}.json",
+    "--model-file": "{el}_<model>.json",
     "--soc-file": "none",
     "--magn-csv": "bundled IAEA table",
     "--elec-csv": "bundled IAEA table",

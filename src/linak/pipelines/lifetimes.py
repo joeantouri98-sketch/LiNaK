@@ -70,7 +70,7 @@ KNOWN_LIFETIMES = {
 _user_tables.apply("lifetimes.known", KNOWN_LIFETIMES)
 
 # Dominant-channel sources reliable enough for the line-parameter tables
-_RELIABLE_SOURCES = ('NIST', 'ORCA', 'literature', 'Numerov', 'precision', 'NIST-extrap')
+_RELIABLE_SOURCES = ('NIST', 'ORCA', 'literature', 'Numerov', 'precision', 'NIST-extrap', 'DHF', 'Brueckner')
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -90,6 +90,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Only use ORCA oscillator strengths')
     parser.add_argument('--nist-only', action='store_true',
                         help='Only use NIST/Rydberg transitions')
+    from linak.pipelines.dhf import add_model_f_arguments
+    add_model_f_arguments(parser, 'ORCA, Numerov and Coulomb')
     parser.add_argument('--extrapolation', default=None, metavar='CONFIG.json',
                         help='Extrapolation settings written by the GUI dialog (mode off/show/use, '
                              'anchors, n_max). Show adds extrapolated ns->np f-values to the output; '
@@ -214,6 +216,15 @@ def main(argv: list[str] | None = None) -> int:
         sources = FValueSources(nist=nist, literature=literature, orca_fosc=orca_fosc,
                                 ee_fosc=ee_fosc, orca_excitations=excitations,
                                 nist_series_caveats=caveats, nist_fit_exclusions=fit_excl)
+
+    from linak.pipelines.dhf import load_dhf_lines, model_f_choice
+    _model, _model_spec = model_f_choice(args)
+    if _model:
+        import dataclasses
+
+        _lines = load_dhf_lines(element, data_dir, _model_spec, _model)
+        sources = dataclasses.replace(sources, dhf=_lines)
+        args.inputs[_model] = os.path.basename(_model_spec or f"{element}_{_model}.json")
 
     IE      = rydberg_data['ionization_energy_eV']
     n_start = rydberg_data.get('n_start', 2)
