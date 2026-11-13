@@ -1,6 +1,6 @@
 import json, numpy as np
 from pathlib import Path
-from linak.core.paths import reference_path
+from qali.core.paths import reference_path
 R=json.loads(Path(str(reference_path("data_json","Fr_rydberg.json"))).read_text(encoding="utf-8"))
 HA=27.211386245988
 RY=13.605693122994

@@ -3,7 +3,7 @@
 
 These tests pin the behaviour that the offline-plotly change must deliver:
 
-1. ``linak/resources/vendor/plotly.min.js`` must be the exact plotly.js version that
+1. ``qali/resources/vendor/plotly.min.js`` must be the exact plotly.js version that
    the installed ``plotly`` Python package generates figure HTML for, so the
    vendored renderer matches the emitted ``Plotly.newPlot`` calls.
 2. ``pysidedeploy.spec`` must keep every plotly *module* available in the
@@ -12,7 +12,7 @@ These tests pin the behaviour that the offline-plotly change must deliver:
    copying the never-read ~9.4 MB of plotly.js/labextension data — the only
    plotly data the app reads is ``package_data/templates/*.json``.
 3. Every HTML report must be self-contained: it references a sibling
-   ``plotly.min.js`` (copied from ``linak/resources/vendor/``) instead of a
+   ``plotly.min.js`` (copied from ``qali/resources/vendor/``) instead of a
    ``cdn.plot.ly`` URL, so reports render offline.
 4. The GUI's report cache must mirror that vendored file alongside the
    mirrored HTML pages.
@@ -28,10 +28,10 @@ from pathlib import Path
 import plotly.offline
 import pytest
 
-from linak.report_templates import PLOTLY_JS_TAG, VENDOR_PLOTLY_JS_FILENAME
+from qali.report_templates import PLOTLY_JS_TAG, VENDOR_PLOTLY_JS_FILENAME
 
 ROOT = Path(__file__).resolve().parents[1]
-VENDOR_PLOTLY_JS = ROOT / "src" / "linak" / "resources" / "vendor" / "plotly.min.js"
+VENDOR_PLOTLY_JS = ROOT / "src" / "qali" / "resources" / "vendor" / "plotly.min.js"
 SPEC = ROOT / "pysidedeploy.spec"
 
 
@@ -49,7 +49,7 @@ def test_vendor_plotlyjs_version_matches_installed_plotly():
     ``plotly.offline.get_plotlyjs_version()``; a drifted vendored file can
     render reports with missing or mis-typed traces.
     """
-    assert VENDOR_PLOTLY_JS.is_file(), "linak/resources/vendor/plotly.min.js is missing"
+    assert VENDOR_PLOTLY_JS.is_file(), "qali/resources/vendor/plotly.min.js is missing"
     assert VENDOR_PLOTLY_JS.stat().st_size > 1_000_000, (
         "vendored plotly.min.js looks truncated or corrupted"
     )
@@ -79,7 +79,7 @@ def test_spec_ships_plotly_as_bytecode_and_templates_only():
     assert "--include-distribution-metadata=plotly" in tokens, (
         "plotly reads its own version via importlib.metadata at import"
     )
-    assert "--include-data-dir=src/linak/resources=linak/resources" in tokens, (
+    assert "--include-data-dir=src/qali/resources=qali/resources" in tokens, (
         "bundled data (incl. the vendored plotly.min.js) must sit inside the "
         "package in the payload, where core.paths.resource_root() looks"
     )
@@ -102,10 +102,10 @@ def test_spec_ships_plotly_as_bytecode_and_templates_only():
     # to per-process log files in the OS temp dir (the GUI Console tab tails
     # them for frozen stage runs, see gui/main_window.py).
     assert "--disable-console" in tokens, "the bundle must not open a cmd window"
-    assert "--force-stdout-spec={TEMP}/LiNaK_stdout_{PID}.log" in tokens, (
+    assert "--force-stdout-spec={TEMP}/Qali_stdout_{PID}.log" in tokens, (
         "stdout must land in an OS-temp-dir log keyed by the bootstrap PID"
     )
-    assert "--force-stderr-spec={TEMP}/LiNaK_stderr_{PID}.log" in tokens
+    assert "--force-stderr-spec={TEMP}/Qali_stderr_{PID}.log" in tokens
 
 
 def _spec_extra_args() -> str:
@@ -116,7 +116,7 @@ def _spec_extra_args() -> str:
 
 
 def test_report_assets_declare_offline_plotly_constants():
-    """linak.report_templates must expose the shared offline-plotly constants."""
+    """qali.report_templates must expose the shared offline-plotly constants."""
     assert VENDOR_PLOTLY_JS_FILENAME == "plotly.min.js", (
         "report assets must name the vendored file"
     )
@@ -125,7 +125,7 @@ def test_report_assets_declare_offline_plotly_constants():
 
 def test_write_offline_report_is_self_contained(tmp_path: Path):
     """write_offline_report writes the HTML plus a matching sibling plotly.min.js."""
-    from linak.report_templates import write_offline_report
+    from qali.report_templates import write_offline_report
 
     html = (
         "<!DOCTYPE html><html><head><title>t</title></head>"
@@ -151,7 +151,7 @@ def test_write_offline_report_is_self_contained(tmp_path: Path):
 
 def test_write_offline_report_neutralizes_legacy_cdn_tag(tmp_path: Path):
     """Reports that still carry a CDN tag must be rewritten to the vendored js."""
-    from linak.report_templates import write_offline_report
+    from qali.report_templates import write_offline_report
 
     cdn = f"https://cdn.plot.ly/plotly-{plotly.offline.get_plotlyjs_version()}.min.js"
     html = f'<html><head><script src="{cdn}" charset="utf-8"></script></head></html>'
@@ -168,11 +168,11 @@ def test_no_pipeline_writes_cdn_plotly_scripts():
 
     This covers both the ``include_plotlyjs='cdn'`` argument of
     ``to_html``/``write_html`` and hand-built CDN tags (as in ``orbital3d``).
-    ``linak.report_templates`` holds the *neutralizer* that rewrites legacy
+    ``qali.report_templates`` holds the *neutralizer* that rewrites legacy
     CDN tags in old reports; the pipelines themselves carry no reference.
     """
     offenders = []
-    for source in (ROOT / "src" / "linak" / "pipelines").glob("*.py"):
+    for source in (ROOT / "src" / "qali" / "pipelines").glob("*.py"):
         text = source.read_text(encoding="utf-8", errors="replace")
         if "cdn.plot.ly" in text:
             offenders.append(source.name)
@@ -181,7 +181,7 @@ def test_no_pipeline_writes_cdn_plotly_scripts():
 
 def test_feshbach_end_to_end_report_is_offline(workspace, feshbach_run):
     """The shared e2e run's plot must be self-contained: no CDN, local script."""
-    plot_dir = workspace / ".linak" / "plots" / "Na"
+    plot_dir = workspace / ".qali" / "plots" / "Na"
     plot_html = plot_dir / "Na_feshbach.html"
     assert plot_html.is_file(), "feshbach did not write its plot"
 
@@ -202,7 +202,7 @@ def test_gui_report_cache_renders_current_and_legacy_reports(tmp_path: Path):
     mirrored into the cache; a legacy report's CDN tag is pointed at the
     bundled file instead. Nothing in the source directory changes.
     """
-    from linak.gui.plot_cache import local_plot_copy
+    from qali.gui.plot_cache import local_plot_copy
 
     reports = tmp_path / "plots" / "Na"
     reports.mkdir(parents=True)
@@ -233,18 +233,18 @@ def test_gui_report_cache_renders_current_and_legacy_reports(tmp_path: Path):
 def test_frozen_build_offline_smoke(workspace):
     """The frozen exe must produce an offline report (needs a frozen build).
 
-    Skipped unless ``LINAK_TEST_FROZEN=1``: run a clean build first, e.g.
+    Skipped unless ``QALI_TEST_FROZEN=1``: run a clean build first, e.g.
     ``packaging/build_pyside6.ps1 -Clean``, then
-    ``set LINAK_TEST_FROZEN=1`` and re-run pytest.
+    ``set QALI_TEST_FROZEN=1`` and re-run pytest.
     """
-    if os.environ.get("LINAK_TEST_FROZEN") != "1":
-        pytest.skip("frozen-build smoke requires LINAK_TEST_FROZEN=1 and a clean build")
+    if os.environ.get("QALI_TEST_FROZEN") != "1":
+        pytest.skip("frozen-build smoke requires QALI_TEST_FROZEN=1 and a clean build")
 
-    exe = ROOT / "dist" / "pyside6" / "LiNaK.exe"
-    assert exe.is_file(), "LiNaK.exe not found; build it first"
+    exe = ROOT / "dist" / "pyside6" / "Qali.exe"
+    assert exe.is_file(), "Qali.exe not found; build it first"
 
     env = dict(os.environ)  # onefile bootstrap needs TEMP/TMP etc.
-    env["LINAK_PROJECT_ROOT"] = str(workspace)
+    env["QALI_PROJECT_ROOT"] = str(workspace)
 
     result = subprocess.run(
         [str(exe), "--pipeline", "feshbach", "Na"],
@@ -256,12 +256,12 @@ def test_frozen_build_offline_smoke(workspace):
     )
     assert result.returncode == 0, f"frozen feshbach failed:\n{result.stderr}"
 
-    html = (workspace / ".linak" / "plots" / "Na" / "Na_feshbach.html").read_text(
+    html = (workspace / ".qali" / "plots" / "Na" / "Na_feshbach.html").read_text(
         encoding="utf-8"
     )
     assert "cdn.plot.ly" not in html, "frozen build still emits CDN tags"
     assert 'src="plotly.min.js"' in html
-    assert (workspace / ".linak" / "plots" / "Na" / "plotly.min.js").is_file()
+    assert (workspace / ".qali" / "plots" / "Na" / "plotly.min.js").is_file()
 
 
 def _sha(path: Path) -> str:

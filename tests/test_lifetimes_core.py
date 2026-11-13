@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from linak.core.constants import EINSTEIN_PREFACTOR
-from linak.physics.lifetimes_core import (
+from qali.core.constants import EINSTEIN_PREFACTOR
+from qali.physics.lifetimes_core import (
     Dropped,
     FValueSources,
     TransitionA,

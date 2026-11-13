@@ -6,8 +6,8 @@ import shutil
 
 import pytest
 
-from linak.core import paths, species_data as D, user_tables as U
-from linak.core.paths import resource_root
+from qali.core import paths, species_data as D, user_tables as U
+from qali.core.paths import resource_root
 
 CR_LEVELS = resource_root() / "NIST Levels" / "Cr.csv"
 CR_LINES = resource_root() / "f_values" / "Cr_lines.csv"
@@ -31,7 +31,7 @@ def test_only_species_without_levels_or_lines_need_setup(ws):
 
 
 def test_stage_ids_exist_in_the_gui_stage_table():
-    from linak.gui.stages import PIPELINE
+    from qali.gui.stages import PIPELINE
 
     ids = {s["id"] for s in PIPELINE if s.get("id")}
     assert {sid for sid, _l, _n in D.STAGES} <= ids
@@ -71,7 +71,7 @@ def test_ground_numbers_count_once_added(ws):
 
 
 def test_rydberg_uses_nist_levels_only_for_a_neutral_that_is_not_an_alkali(ws):
-    from linak.pipelines import rydberg
+    from qali.pipelines import rydberg
 
     D.import_file("levels", "Mg", CR_LEVELS)
     assert rydberg.main(["Mg", "--n-max", "10"]) == 0

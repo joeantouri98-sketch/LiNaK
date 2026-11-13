@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-title: "LiNaK: an alkali-atom AMO pipeline"
-message: "If you use LiNaK, please cite it using the metadata below."
+title: "Qali (formerly LiNaK): an alkali-atom AMO pipeline"
+message: "If you use Qali, please cite it using the metadata below."
 type: software
 authors:
   - family-names: Antoury
@@ -18,7 +18,7 @@ version: "0.1.0"
 date-released: "2026-08-06"
 license: GPL-3.0-or-later
 abstract: >-
-  LiNaK is a Python NIST/QDT toolkit for neutral alkali atoms (Li–Fr):
+  Qali (called LiNaK until November 2026) is a Python NIST/QDT toolkit for neutral alkali atoms (Li–Fr):
   levels, transitions, lifetimes, polarizability, BBR, tweezers, hyperfine,
   and Feshbach, with optional ORCA (Neese) and ARC bridges. Limited support
   for ions and 3d metals (Fe, Cr).

@@ -8,9 +8,9 @@ import math
 import numpy as np
 import pytest
 
-import linak.physics.hyperfine_core as hf
-import linak.pipelines.hyperfine as hf_pipeline
-from linak.core.paths import reference_path
+import qali.physics.hyperfine_core as hf
+import qali.pipelines.hyperfine as hf_pipeline
+from qali.core.paths import reference_path
 
 
 # ── P41: nuclear-data parsing ────────────────────────────────────────────────
@@ -63,7 +63,7 @@ def test_clock_wavelength_uses_exact_c():
 
 # ── P43: GAMESS L (SP) shells ────────────────────────────────────────────────
 def test_gamess_L_shell_becomes_S_and_P():
-    import linak.integrations.orca_templates as ot
+    import qali.integrations.orca_templates as ot
     txt = "$DATA\nLITHIUM\nS   2\n1 10.0 0.5\n2 2.0 0.6\nL   2\n1 0.9 0.1 0.2\n2 0.3 0.4 0.5\nD 1\n1 0.2 1.0\n$END"
     out = ot._basis_block_from_gamess(txt, 'Li')
     kinds = [ln.split()[0] for ln in out.splitlines() if ln.strip()[:1] in 'SPD' and len(ln.split()) == 2]
@@ -73,8 +73,8 @@ def test_gamess_L_shell_becomes_S_and_P():
 
 # ── P18: one D-line table ────────────────────────────────────────────────────
 def test_dline_tables_share_one_source():
-    from linak.core import spectroscopy
-    from linak.pipelines import compare_elements
+    from qali.core import spectroscopy
+    from qali.pipelines import compare_elements
     for el, rec in spectroscopy.LITERATURE.items():
         tr = {t['label'].split('→')[0]: t for t in spectroscopy.dline_transitions(el)}
         assert tr[rec['np'] + '3/2']['fosc'] == rec['fosc_D2']
@@ -84,7 +84,7 @@ def test_dline_tables_share_one_source():
 
 # ── P28: non-LS downward channel carries g_lower/g_upper ─────────────────────
 def test_non_ls_downward_channel_has_g_ratio(data_dir):
-    import linak.physics.polarizability_core as ac
+    import qali.physics.polarizability_core as ac
     d = ac.load_element('Na', str(data_dir))
     d['ls_mode'] = False
     tr = ac.build_transitions_for_state('3p3/2', d, d['transitions'])
@@ -94,16 +94,16 @@ def test_non_ls_downward_channel_has_g_ratio(data_dir):
 
 # ── P39 / P44: species without a QDT scheme ──────────────────────────────────
 def test_transition_metal_rejected_for_alpha():
-    import linak.physics.polarizability_core as ac
-    from linak.core.errors import InvalidSpeciesError
+    import qali.physics.polarizability_core as ac
+    from qali.core.errors import InvalidSpeciesError
     with pytest.raises(InvalidSpeciesError):
         ac.require_alpha_species('Fe', 'test')
     assert ac.require_alpha_species('Na', 'test')['species_id'] == 'Na'
 
 
 def test_nist_only_rydberg_json_selects_line_list_path(tmp_path):
-    import linak.physics.polarizability_core as ac
-    from linak.core.workspace import Workspace, set_active
+    import qali.physics.polarizability_core as ac
+    from qali.core.workspace import Workspace, set_active
     ws = Workspace(root=tmp_path)
     ws.data_json_dir.mkdir(parents=True)
     set_active(ws)
@@ -119,17 +119,17 @@ def test_nist_only_rydberg_json_selects_line_list_path(tmp_path):
 
 # ── P42: GUI roots field is blank by default ─────────────────────────────────
 def test_gui_nroots_default_blank():
-    from linak.gui.stages import STAGE_BY_ID
+    from qali.gui.stages import STAGE_BY_ID
     flag = next(f for f in STAGE_BY_ID['runorca']['flags'] if f['name'] == '--nroots')
     assert flag['default'] == ''
 
 
 # ── P19/P20/P34/P35/P36/P37/P38: plotting fixes ──────────────────────────────
 def test_plotinteractive_fixes_present():
-    from linak.core.constants import AMU_KG, C_SI, KB_SI
-    from linak.physics import spectrum_core
-    from linak.pipelines.plotinteractive import common, grotrian_page
-    from linak.report_templates import load as load_template
+    from qali.core.constants import AMU_KG, C_SI, KB_SI
+    from qali.physics import spectrum_core
+    from qali.pipelines.plotinteractive import common, grotrian_page
+    from qali.report_templates import load as load_template
     # P34: the Doppler width is a standard deviation, not the FWHM
     nu = C_SI / 589e-9
     assert spectrum_core.doppler_sigma_hz(nu, 23.0, 300.0) == pytest.approx(nu * math.sqrt(KB_SI * 300 / (23 * AMU_KG * C_SI**2)))
@@ -142,7 +142,7 @@ def test_plotinteractive_fixes_present():
 
 
 def test_spectra_coulomb_approx_colour_distinct():
-    from linak.report_templates import load as load_template
+    from qali.report_templates import load as load_template
     page = load_template('spectrum_page.html')                              # P36: its own colour
     assert "Coulomb:'--sel','Coulomb(approx)':'--ov6'" in page
 
@@ -169,19 +169,19 @@ def test_peak_cross_section_lorentzian_convention(data_dir):
 @pytest.mark.parametrize('args,exact', [((2, 1, 1, 0), 0.4161967), ((3, 2, 2, 1), 0.6957847),
                                         ((4, 3, 3, 2), 1.0175189), ((3, 1, 2, 0), 0.4348654)])
 def test_coulomb_fosc_hydrogen_limit_low_n(args, exact):
-    import linak.physics.polarizability_core as ac
+    import qali.physics.polarizability_core as ac
     assert ac.coulomb_fosc(*args, 0.0, 0.0) == pytest.approx(exact, rel=1e-5)
 
 
 @pytest.mark.parametrize('args,exact', [((30, 2, 29, 1), 1.658130), ((60, 2, 59, 1), 3.058680),
                                         ((100, 2, 99, 1), 4.934668), ((150, 1, 5, 0), 3.7547e-6)])
 def test_coulomb_fosc_hydrogen_limit_high_n(args, exact):
-    import linak.physics.polarizability_core as ac
+    import qali.physics.polarizability_core as ac
     assert ac.coulomb_fosc(*args, 0.0, 0.0) == pytest.approx(exact, rel=0.02)   # Numerov, log-space start
 
 
 def test_coulomb_fosc_alkali_close_to_nist(data_dir):
-    import linak.physics.polarizability_core as ac
+    import qali.physics.polarizability_core as ac
     nist = ac.load_nist_fvalues('Na', str(reference_path('f_values')), verbose=False)['fosc']
     with (data_dir / 'Na_rydberg.json').open(encoding='utf-8') as f:
         q = json.load(f)['quantum_defects']
@@ -194,9 +194,9 @@ def test_coulomb_fosc_alkali_close_to_nist(data_dir):
 
 
 def test_tail_partner_interpolation_matches_exact(data_dir):
-    import linak.physics.blackbody_core as bb
-    import linak.physics.polarizability_core as ac
-    from linak.physics.qdt_radial import level_defect
+    import qali.physics.blackbody_core as bb
+    import qali.physics.polarizability_core as ac
+    from qali.physics.qdt_radial import level_defect
     data = ac.load_element('Na', str(data_dir))
     tail = bb.discrete_tail_partners('40d', data, 51, 200)
     assert tail

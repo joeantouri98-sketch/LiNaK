@@ -40,14 +40,14 @@ This project enforces the following practices:
 - ORCA and basis-set-exchange invocations follow this rule today
 
 ### File operations
-- Write files through `linak.core.fileio` (`atomic_write_text`, `write_json` with
+- Write files through `qali.core.fileio` (`atomic_write_text`, `write_json` with
   `allow_nan=False`); every pipeline JSON output and the GUI dataset editor do.
-  Plot HTML goes through `linak.report_templates.write_offline_report`.
-- Validate user-chosen save targets with `linak.gui.project_io.ensure_project_safe_path`
+  Plot HTML goes through `qali.report_templates.write_offline_report`.
+- Validate user-chosen save targets with `qali.gui.project_io.ensure_project_safe_path`
 - Build file names from user input (run tags, `--outname`, `--run`) only after
-  `linak.core.fileio.is_safe_name` accepts them: one path component of
+  `qali.core.fileio.is_safe_name` accepts them: one path component of
   `[A-Za-z0-9._+-]`, so no separators, `..`, drive letters or NTFS streams
-- Keep generated outputs in the workspace (`linak.core.workspace`): the chosen
+- Keep generated outputs in the workspace (`qali.core.workspace`): the chosen
   output folder, else the per-user data folder; never the launch directory
 - Avoid silent writes to external directories; surface warnings instead
 

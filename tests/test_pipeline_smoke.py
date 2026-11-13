@@ -5,11 +5,11 @@ These are the safety net for large refactors: every registered pipeline must
 still import, build its CLI and print ``--help`` without error, and at least one
 pipeline is exercised end-to-end against an isolated workspace.
 
-The ``--help`` checks run in-process through :func:`linak.pipelines.runner.run`,
+The ``--help`` checks run in-process through :func:`qali.pipelines.runner.run`,
 which sets ``sys.argv`` before importing and captures ``SystemExit``. That keeps
 the suite fast (heavy imports are paid once) while still exercising the real CLI
 wiring. The end-to-end run stays a subprocess so its file writes land in an
-isolated workspace instead of the developer's own ``.linak`` directory.
+isolated workspace instead of the developer's own ``.qali`` directory.
 """
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ import io
 
 import pytest
 
-from linak.pipelines import PIPELINE_MODULES
-from linak.pipelines.runner import IMPLEMENTATIONS, run
+from qali.pipelines import PIPELINE_MODULES
+from qali.pipelines.runner import IMPLEMENTATIONS, run
 
 from helpers import load_json, run_pipeline
 
@@ -73,8 +73,8 @@ def test_feshbach_end_to_end_writes_finite_json(workspace):
     result = run_pipeline(["feshbach", "Na"], workspace)
     assert result.returncode == 0, f"feshbach Na failed:\n{result.stderr}"
 
-    data_json = workspace / ".linak" / "data" / "Na_feshbach_out.json"
-    plot_html = workspace / ".linak" / "plots" / "Na" / "Na_feshbach.html"
+    data_json = workspace / ".qali" / "data" / "Na_feshbach_out.json"
+    plot_html = workspace / ".qali" / "plots" / "Na" / "Na_feshbach.html"
     assert data_json.is_file(), "feshbach did not write its output JSON"
     assert plot_html.is_file(), "feshbach did not write its plot"
 
@@ -84,7 +84,7 @@ def test_feshbach_end_to_end_writes_finite_json(workspace):
 
 def test_feshbach_report_is_the_tabbed_page(workspace, feshbach_run):
     """The Feshbach report is the shared tabbed page (rail, tabs, theme), not a bare Plotly figure."""
-    html = (workspace / ".linak" / "plots" / "Na" / "Na_feshbach.html").read_text(
+    html = (workspace / ".qali" / "plots" / "Na" / "Na_feshbach.html").read_text(
         encoding="utf-8"
     )
     assert 'role="tablist"' in html and 'id="theme"' in html, "tabbed page shell missing"
@@ -99,8 +99,8 @@ def test_hyperfine_runs_a_state_without_constants(tmp_path):
     result = run_pipeline(["hyperfine", "Na", "--states", "4d5/2", "3s1/2"], root)
     assert result.returncode == 0, result.stdout + result.stderr
     for name in ("data/Na_hyperfine.json", "plots/Na/Na_hyperfine.html"):
-        assert (root / ".linak" / name).is_file(), name
-    payload = load_json(root / ".linak" / "data" / "Na_hyperfine.json")
+        assert (root / ".qali" / name).is_file(), name
+    payload = load_json(root / ".qali" / "data" / "Na_hyperfine.json")
     assert [st["label"] for st in payload["states"]] == ["4d5/2", "3s1/2"]
 
 
@@ -112,14 +112,14 @@ def test_plotinteractive_runs_twice_in_one_process(tmp_path, monkeypatch):
     from helpers import make_workspace
 
     root = make_workspace(tmp_path / "ws")
-    monkeypatch.setenv("LINAK_PROJECT_ROOT", str(root))
+    monkeypatch.setenv("QALI_PROJECT_ROOT", str(root))
     plotly_ids = re.compile(rb"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
     runs = []
     for _ in range(2):
         with contextlib.redirect_stdout(io.StringIO()):
             assert run("plotinteractive", ["Na", "--plots", "2"]) == 0
         runs.append({p.name: plotly_ids.sub(b"", p.read_bytes())
-                     for p in sorted((root / ".linak" / "plots" / "Na").glob("*.html"))})
+                     for p in sorted((root / ".qali" / "plots" / "Na").glob("*.html"))})
     assert sorted(runs[0]) == ["Na_grotrian.html"]
     assert runs[1] == runs[0]
 
@@ -135,10 +135,10 @@ def test_orca_to_json_reads_the_bundled_runs_in_a_fresh_folder(tmp_path):
     root = make_workspace(tmp_path / "ws")
     result = run_pipeline(["orca_to_json", "Na"], root)
     assert result.returncode == 0, result.stdout + result.stderr
-    payload = load_json(root / ".linak" / "data" / "Na.json")
+    payload = load_json(root / ".qali" / "data" / "Na.json")
     assert payload["reparsed_from"] == "orca_outputs/Na/Na_ex.out"
     assert payload["orca_outputs_dir"] == "orca_outputs/Na"
-    assert not (root / ".linak" / "orca_outputs").exists(), "nothing is copied"
+    assert not (root / ".qali" / "orca_outputs").exists(), "nothing is copied"
 
 
 def test_grotrian_needs_no_orca_data(tmp_path):
@@ -147,11 +147,11 @@ def test_grotrian_needs_no_orca_data(tmp_path):
 
     import pytest
 
-    from linak.core.errors import MissingDataError
-    from linak.core.paths import reference_path
-    from linak.core.species import resolve_species
-    from linak.pipelines.plotinteractive import build_parser
-    from linak.pipelines.plotinteractive.inputs import load_inputs
+    from qali.core.errors import MissingDataError
+    from qali.core.paths import reference_path
+    from qali.core.species import resolve_species
+    from qali.pipelines.plotinteractive import build_parser
+    from qali.pipelines.plotinteractive.inputs import load_inputs
 
     for kind in ("rydberg", "transitions", "lifetimes"):
         shutil.copy(reference_path("data_json", f"Na_{kind}.json"), tmp_path)

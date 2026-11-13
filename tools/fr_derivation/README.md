@@ -35,4 +35,4 @@ The core term lowers 7s-7p1/2 from 4.69 to 4.29 a.u. Unfitted checks: 8s-8p and 
 - `tests/test_fr_derivation.py`: the same checks as assertions.
 - `fit/`: the scripts that produced the parameters (`fit1.py` per-l level fit, `val2.py` spin-orbit scale and rc[1], `val3.py` chi2 scan,
   `val4.py` dipole sensitivity, `val5.py` NIST T6898 comparison; `frmodel.py`, `frD.py`, `frlev.py` helpers; `mp_sp.json`, `tuned_sp.json` fitted values).
-  They need `linak` importable and write JSON next to themselves; run from the repo root.
+  They need `qali` importable and write JSON next to themselves; run from the repo root.

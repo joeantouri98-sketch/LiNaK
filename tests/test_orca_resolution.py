@@ -2,7 +2,7 @@
 
 import pytest
 
-from linak.integrations import orca_runner
+from qali.integrations import orca_runner
 
 
 def _fake_install(folder, names):

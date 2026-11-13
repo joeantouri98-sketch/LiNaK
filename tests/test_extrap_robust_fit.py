@@ -1,7 +1,7 @@
 """NIST-series extrapolation: robust outlier retry, curated exclusions, dropped-by-family summary."""
 from types import SimpleNamespace
 
-from linak.physics import lifetimes_core as lc
+from qali.physics import lifetimes_core as lc
 
 QD = {'p': 2.0}
 

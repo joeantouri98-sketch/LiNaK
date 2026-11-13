@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Pin the error model: only ``linak.cli`` maps typed errors to exit codes.
+"""Pin the error model: only ``qali.cli`` maps typed errors to exit codes.
 
 Pipelines raise typed errors, the runner
-captures ``SystemExit`` into a return code, and ``linak.cli`` turns
+captures ``SystemExit`` into a return code, and ``qali.cli`` turns
 ``PipelineError`` into a ``SystemExit`` whose string maps to exit code 1.
 """
 from __future__ import annotations
@@ -11,9 +11,9 @@ import sys
 
 import pytest
 
-from linak.cli import main as cli_main
-from linak.core.errors import UnknownPipelineError
-from linak.pipelines import runner
+from qali.cli import main as cli_main
+from qali.core.errors import UnknownPipelineError
+from qali.pipelines import runner
 
 
 class TestRunnerUnknownPipeline:

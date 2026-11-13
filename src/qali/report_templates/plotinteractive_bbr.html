@@ -1,0 +1,360 @@
+<meta charset="utf-8"><title>$!TITLE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+:root{
+  --bg:#fcfcfb; --panel:#f3f2ef; --edge:#dedcd6; --ink:#161513; --ink2:#55534e; --muted:#7d7a73; --grid:#e8e6e1;
+  --nist:#2a78d6; --soc:#eb6834; --td:#6250d6; --line:#6b6963; --band:#e5f1ec; --cont:#efeeea; --sel:#0e9f6e; --hl:#fff3c4;
+  --r-xray:#6b2fd6; --r-vuv:#7a3fe0; --r-uv:#2a5bd6; --r-vis:#e8710a; --r-nir:#c8261c; --r-mir:#7a7770; --r-mic:#9a978f; --qdt:#7fa6dc; --theo:#b03aa8; --ov3:#2e8b57; --ov4:#a23b72; --ov5:#c08a00; --ov6:#4a7a96;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;margin:0;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:12px}
+h1{font-size:21px;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--edge);border-radius:4px;padding:1px 6px}
+.hdr-btns{margin-left:auto;display:flex;gap:8px}
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);gap:14px;align-items:start}
+.app.closed{grid-template-columns:minmax(0,1fr)}
+.app.closed .rail{display:none}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.rail h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0;min-width:0}
+.row label{flex:1;min-width:0;cursor:pointer}
+.row .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chip{width:12px;height:12px;border-radius:3px;flex:none}
+.bar{width:16px;height:0;border-top:3px solid;flex:none;border-radius:2px}
+input[type=checkbox],input[type=radio]{accent-color:var(--nist);margin:0}
+input[type=range]{width:100%;accent-color:var(--nist)}
+input[type=number],input[type=search],input[type=text]{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;min-width:0;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lbl{font-size:12px;color:var(--ink2);margin:6px 0 3px}
+.sl{margin:6px 0}.sl .top{display:flex;justify-content:space-between;color:var(--ink2);font-size:12.5px}
+.sl .v{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.seg{display:flex;border:1px solid var(--edge);border-radius:6px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:var(--ink2);border:0;padding:5px 2px;font:inherit;font-size:12.5px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--edge)}
+.seg button[aria-pressed=true]{background:var(--nist);color:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:4px 12px}
+.checks label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px}
+.hint{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+.main{min-width:0;display:flex;flex-direction:column;gap:10px}
+.plot{border:1px solid var(--edge);border-radius:8px;background:var(--bg);overflow:hidden}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px 0;flex-wrap:wrap}
+.count{font-size:12.5px;color:var(--ink2)}
+#plot{width:100%;height:680px}
+.note{color:var(--ink2);font-size:12.5px;line-height:1.5;max-width:100ch;margin:0}
+.card{border:1px solid var(--edge);border-radius:8px;padding:10px 12px;min-width:0}
+.card .bar2{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.card .bar2 b{font-size:13px;font-weight:600;margin-right:auto}
+.btn{background:transparent;color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--nist);border-color:var(--nist);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 12px 4px 0;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11.5px;cursor:pointer;user-select:none}
+th.nosort{cursor:default}
+th .arr{font-size:9px;margin-left:3px}
+td.m{font-family:var(--mono);font-size:12px}
+tbody tr.t{cursor:pointer;user-select:none;-webkit-user-select:none}
+#plot,.ptop{user-select:none;-webkit-user-select:none}
+tbody tr.t:hover{background:var(--panel)}
+tbody tr.sel{background:var(--hl)}
+.empty{color:var(--muted);font-size:12.5px}
+.pager{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.j{font-size:.85em;vertical-align:sub;line-height:0}
+.cm{position:fixed;z-index:50;background:var(--bg);border:1px solid var(--edge);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:4px;min-width:200px}
+.cm button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-radius:5px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.cm button:hover{background:var(--panel)}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:10px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dlg h3{margin:0 0 2px;font-size:17px}
+.dlg h4{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dlg .g{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:2px 12px;font-size:13px}
+.dlg .g span:nth-child(odd){color:var(--ink2)}
+.dlg .g span:nth-child(even){font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:4px;padding:0 4px}
+.rail h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.rail h2::before{content:'▾';font-size:10px;width:10px;display:inline-block;transition:transform .12s}
+.rail section.shut>h2::before{transform:rotate(-90deg)}
+.rail section.shut>*:not(h2){display:none}
+.rail section.shut>h2{margin-bottom:0}
+.rail h2:focus-visible{outline:2px solid var(--nist);outline-offset:2px;border-radius:3px}
+.railtools{display:flex;gap:8px}.railtools .btn{flex:1}
+@media print{header,.rail,.note,.card,.ptop button,.cm,.ov{display:none!important}.app{display:block}body{background:#fff}}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--edge);margin-bottom:2px}
+.tabs button{background:transparent;color:var(--ink2);border:0;border-bottom:2px solid transparent;padding:8px 14px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--nist);font-weight:600}
+.tabs button:focus-visible{outline:2px solid var(--nist);outline-offset:-2px;border-radius:4px}
+.pane[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.stat{border:1px solid var(--edge);border-radius:8px;padding:6px 10px;min-width:150px}
+.stat .k{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .v{font-family:var(--mono);font-size:14px;margin-top:1px}
+.stat .d{font-size:11.5px;color:var(--ink2)}
+.p{height:560px}.p.short{height:520px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media(max-width:1100px){.cols{grid-template-columns:minmax(0,1fr)}}
+.pillrow{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--edge);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;background:transparent;color:var(--ink2)}
+.pill[aria-pressed=true]{background:var(--nist);border-color:var(--nist);color:#fff}
+tr.sel td{background:var(--hl)}
+.cls{display:inline-block;border-radius:4px;padding:0 6px;font-size:11.5px;border:1px solid var(--edge)}
+.cls.robust{color:var(--sel);border-color:var(--sel)}.cls.sensitive{color:var(--ov5);border-color:var(--ov5)}.cls.very{color:var(--r-nir);border-color:var(--r-nir)}
+.shr{display:inline-block;height:8px;background:var(--nist);border-radius:2px;vertical-align:middle;opacity:.75}
+.shr.neg{background:var(--soc)}
+@media print{header,.rail,.tabs,.note,.card,.stat,.chips,.cm{display:none!important}.app{display:block}body{background:#fff}.pane[hidden]{display:none}}
+
+.pg{display:flex;align-items:center}.pg .pill:disabled{opacity:.4;cursor:default}
+
+</style>
+<header>
+  <h1 id="h1"></h1>
+  <span class="sub" id="sub"></span>
+  <div class="hdr-btns">
+    <button class="btn" id="exportbtn" aria-haspopup="menu">Export ▾</button>
+    <button class="btn" id="railbtn" aria-expanded="true">Hide controls</button>
+    <button class="btn" id="theme" aria-label="Switch theme">Theme: auto</button>
+  </div>
+</header>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Controls">
+    <section class="railtools"><button class="btn" id="colall">Collapse all</button><button class="btn" id="expall">Expand all</button></section>
+    <section><h2>Temperature</h2>
+      <div class="lbl">Cursor temperature (K), also set by clicking a plot</div><input type="number" id="temp" value="300" step="1" min="1">
+      <div class="pillrow" id="tpre" style="margin-top:6px"><button class="pill" data-t="77">77 K</button><button class="pill" data-t="300">300 K</button><button class="pill" data-t="400">400 K</button><button class="pill" data-t="500">500 K</button></div>
+      <div class="lbl" style="margin-top:8px">Range for the shift and rate curves (K)</div>
+      <div class="two"><input type="number" id="tmin" value="10" aria-label="Minimum temperature"><input type="number" id="tmax" value="1000" aria-label="Maximum temperature"></div>
+    </section>
+    <section><h2>Energy shifts</h2>
+      <div class="checks"><label><input type="checkbox" id="s-gs" checked>Ground</label><label><input type="checkbox" id="s-ex" checked>Excited</label><label><input type="checkbox" id="s-df" checked>Difference</label></div>
+      <div class="checks" style="margin-top:6px"><label><input type="checkbox" id="s-st" checked>Static</label><label><input type="checkbox" id="s-tt" checked>Static + dynamic</label><label><input type="checkbox" id="s-co" checked>Correction panel</label></div>
+      <div class="lbl" style="margin-top:8px">Units</div>
+      <div class="seg" id="units" role="group" aria-label="Units"><button data-u="hz" aria-pressed="true">Hz</button><button data-u="frac" aria-pressed="false">Δν / ν₀</button></div>
+      <div class="hint">Δν / ν₀ divides by the ground → excited transition frequency.</div>
+    </section>
+    <section><h2>States vs n</h2>
+      <div class="checks" id="ls"></div>
+      <div class="two" style="margin-top:6px"><div><div class="lbl">n min</div><input type="number" id="nmin" value="5"></div><div><div class="lbl">n max</div><input type="number" id="nmax" value="50"></div></div>
+      <div class="checks" style="margin-top:6px"><label><input type="checkbox" id="split">Split fine structure (J)</label></div>
+      <div class="lbl" style="margin-top:8px">Depopulation shows</div>
+      <div class="seg" id="qty" role="group" aria-label="Quantity"><button data-q="G" aria-pressed="true">Γ_BBR</button><button data-q="tau" aria-pressed="false">τ_eff</button></div>
+    </section>
+    <section><h2>Photoionization</h2>
+      <div class="checks"><label><input type="checkbox" id="p-pi" checked>Direct PI</label><label><input type="checkbox" id="p-sfi" checked>SFI</label><label><input type="checkbox" id="p-mix" checked>Mixing PI</label><label><input type="checkbox" id="p-ion" checked>Total ion rate</label></div>
+      <div class="lbl" style="margin-top:6px">Static field for SFI (V/cm)</div><input type="number" id="field" value="100">
+      <div class="hint">Direct PI and SFI follow the cursor temperature. Mixing PI and the total ion rate are computed at 300 K only.</div>
+    </section>
+    <section><h2>Rydberg shifts</h2>
+      <div class="checks"><label><input type="checkbox" id="r-st" checked>Static</label><label><input type="checkbox" id="r-dy" checked>Dynamic (300 K)</label><label><input type="checkbox" id="r-fw" checked>Farley-Wing limit</label><label><input type="checkbox" id="r-un" checked>Mark uncertain</label></div>
+    </section>
+    <section><button class="btn" id="reset" style="width:100%">Reset</button></section>
+  </aside>
+  <div class="main">
+    <div class="chips" id="stats"></div>
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-sh" aria-selected="true" aria-controls="pane-sh" data-t="sh">Shifts vs T</button>
+      <button role="tab" id="tab-rt" aria-selected="false" aria-controls="pane-rt" data-t="rt">Depopulation</button>
+      <button role="tab" id="tab-pi" aria-selected="false" aria-controls="pane-pi" data-t="pi">Photoionization</button>
+      <button role="tab" id="tab-ry" aria-selected="false" aria-controls="pane-ry" data-t="ry">Rydberg shifts</button>
+    </div>
+    <section class="pane" id="pane-sh" role="tabpanel" aria-labelledby="tab-sh">
+      <div class="plot"><div class="p" id="p1" style="height:560px"></div></div>
+      <p class="note">Dotted: the static (Itano) shift.<br>Solid: static plus the dynamic correction, from the Planck integral over α(ω).<br>Lower panel: the correction as a percent of the static shift.</p>
+      <div class="card"><div class="bar2"><b id="shtitle">Shifts</b></div><div class="tw"><table id="shtab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+    <section class="pane" id="pane-rt" role="tabpanel" aria-labelledby="tab-rt" hidden>
+      <div class="plot"><div class="p" id="p2" style="height:430px"></div></div>
+      <div class="plot" style="margin-top:12px"><div class="p" id="p2b" style="height:330px"></div></div>
+      <p class="note">Top: BBR depopulation of every state at the cursor temperature.<br>It sums stimulated emission and absorption of thermal photons over all channels.<br>Bottom: Γ_BBR against temperature for the chosen states; the dotted line is the cursor temperature.</p>
+      <div class="card"><div class="bar2"><b id="chtitle">Channels</b><span class="hint" id="chinfo" style="margin:0"></span></div>
+        <div class="bar2" style="margin:0 0 6px"><input type="search" id="chsearch" placeholder="Search channels (e.g. 6p, abs, 38529)" style="max-width:320px"><span class="pg"><button id="chprev" class="pill">‹ Prev</button><span id="chpage" class="hint" style="margin:0 8px"></span><button id="chnext" class="pill">Next ›</button></span></div>
+        <div class="tw"><table id="chtab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+    <section class="pane" id="pane-pi" role="tabpanel" aria-labelledby="tab-pi" hidden>
+      <div class="plot"><div class="p" id="p3" style="height:560px"></div></div>
+      <p class="note">Colour: the l series.<br>Line style: the process (solid direct PI, dotted SFI, dashed mixing PI, thick total ion rate).<br>States below n = 7 lie far below the range, so they are left out of the plot; they are in the table.</p>
+      <div class="card"><div class="bar2"><b>All states</b><span class="hint" id="pitinfo" style="margin:0"></span></div>
+        <div class="bar2" style="margin:0 0 6px"><input type="search" id="pisearch" placeholder="Search states (e.g. 20s, 12d)" style="max-width:320px"><span class="pg"><button id="piprev" class="pill">‹ Prev</button><span id="pipage" class="hint" style="margin:0 8px"></span><button id="pinext" class="pill">Next ›</button></span></div>
+        <div class="tw"><table id="pitab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+    <section class="pane" id="pane-ry" role="tabpanel" aria-labelledby="tab-ry" hidden>
+      <div class="plot"><div class="p" id="p4" style="height:640px"></div></div>
+      <p class="note">Top: size of the static shift (it scales as T⁴).<br>Bottom: the dynamic shift at 300 K, which tends to the Farley-Wing limit at high n.<br>Diamonds: states where the static formula does not apply, so use the dynamic shift; the table gives the reason.<br>Either the coupling to a near-degenerate partner exceeds its gap (second-order theory fails), or most of α(0) comes from partners below k<sub>B</sub>T, which the thermal field does not see as static.<br>Files made before this check have no flag and show a gap-below-10⁻⁶ a.u. warning instead.</p>
+      <div class="card"><div class="bar2"><b>All states</b><span class="hint" id="rytinfo" style="margin:0"></span></div>
+        <div class="bar2" style="margin:0 0 6px"><input type="search" id="rysearch" placeholder="Search states (e.g. 30g, 12d)" style="max-width:320px"><span class="pg"><button id="ryprev" class="pill">‹ Prev</button><span id="rypage" class="hint" style="margin:0 8px"></span><button id="rynext" class="pill">Next ›</button></span></div>
+        <div class="tw"><table id="rytab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const D=$!DATA_JS;
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const HB=1.054571817e-34,KB=1.380649e-23,C=2.99792458e8;
+const LCOL={s:'--nist',p:'--soc',d:'--td',f:'--sel',g:'--ov5'};
+const PAL=['--nist','--soc','--td','--sel','--ov5','--r-nir'];
+const O=D.opts,HAS_EX=D.dyn_ex!=null&&D.a0e!=null,RS=D.rates?D.rates.states:[];
+const S={tab:D.tabs[0]||'sh',T:O.T,unit:O.unit,theme:'auto',rail:true,q:'G',sel:[],ch:null};
+(function(){const want=['5p1/2','28s','20d5/2'].filter(s=>RS.some(x=>x.s===s));S.sel=want.length?want:RS.slice(0,3).map(x=>x.s);S.ch=S.sel[0]||null})();
+const sci=x=>{if(x==null||!isFinite(x))return '–';if(x===0)return '0';const e=Math.floor(Math.log10(Math.abs(x)));return Math.abs(e)<4?(+x.toPrecision(4)).toString():(x/10**e).toFixed(2)+'×10^'+e};
+const col=n=>css(n);
+function base(){const ink=col('--ink'),ink2=col('--ink2'),grid=col('--grid'),bg=col('--bg');return {ink,ink2,grid,bg,
+  lay:{paper_bgcolor:bg,plot_bgcolor:bg,font:{family:col('--sans'),color:ink},hovermode:'closest',margin:{l:74,r:24,t:56,b:46},
+   hoverlabel:{bgcolor:col('--panel'),bordercolor:col('--edge'),font:{color:ink,family:col('--sans'),size:12}},legend:{orientation:'h',x:0,xanchor:'left',y:1.02,yanchor:'bottom',traceorder:'normal',font:{size:12,color:ink2}}}}}
+const cfg={displaylogo:false,responsive:true,modeBarButtonsToRemove:['lasso2d','select2d']};
+const axs=(b,t,extra)=>Object.assign({title:{text:t,font:{color:b.ink2,size:12}},gridcolor:b.grid,linecolor:b.ink2,tickfont:{color:b.ink2,size:11},ticks:'outside',tickcolor:b.ink2,zerolinecolor:b.ink2},extra||{});
+const num=(id,d)=>{const v=+$(id).value;return isFinite(v)&&$(id).value!==''?v:d};
+// ---------- physics
+const E2=T=>{const e=D.E_ref*(T/D.T_ref)**2/D.E_au;return e*e};
+const stat=(a,T)=>-0.5*a*E2(T)*D.hz_per_ha;
+function interp(xs,ys,x){if(x<=xs[0])return ys[0];if(x>=xs[xs.length-1])return ys[ys.length-1];let i=0;while(xs[i+1]<x)i++;const t=(x-xs[i])/(xs[i+1]-xs[i]);return ys[i]*(1-t)+ys[i+1]*t}
+const corrG=D.Tdyn?D.Tdyn.map((T,i)=>D.dyn_gs[i]-stat(D.a0g,T)):[],corrE=HAS_EX?D.Tdyn.map((T,i)=>D.dyn_ex[i]-stat(D.a0e,T)):[];
+const shiftAt=(k,T)=>{const a=k==='gs'?D.a0g:D.a0e,s=stat(a,T),c=interp(D.Tdyn,k==='gs'?corrG:corrE,T);return {st:s,tt:s+c,co:c}};
+function shifts(T){const g=shiftAt('gs',T);if(!HAS_EX)return {gs:g};const e=shiftAt('ex',T);return {gs:g,ex:e,df:{st:e.st-g.st,tt:e.tt-g.tt,co:e.co-g.co}}}
+const nbar=(wl,T)=>{const w=2*Math.PI*C/(wl*1e-9),x=HB*w/(KB*T);return x>700?0:1/Math.expm1(x)};
+const gBBR=(st,T)=>{let g=0;for(const e of st.e)g+=e[1]*nbar(e[0],T);return g};
+const lnT=x=>x>40?Math.exp(-x):-Math.log1p(-Math.exp(-x));
+const gPI=(s,T)=>{const x=D.pi.E/(T*s.ns*s.ns);return s.A*D.pi.pref*T/Math.pow(s.ns,7/3)*s.ph*lnT(x)};
+const gSFI=(s,T,F)=>{const nc=Math.pow(3.2e8/F,.25);if(s.ns>=nc)return 0;const xn=D.pi.E/(T*s.ns*s.ns),xc=D.pi.E/(T*nc*nc),d=xn-xc;const l1=d>40?Math.exp(-d):-Math.log1p(-Math.exp(-d));const b=l1-lnT(xn);return b<0?0:s.A*D.pi.pref*T/Math.pow(s.ns,7/3)*s.ph*b};
+const ST={};RS.forEach(s=>ST[s.s]=s);
+// ---------- helpers
+const lsel=()=>[...document.querySelectorAll('[data-l]:checked')].map(i=>i.dataset.l);
+const nrng=()=>[num('nmin',5),num('nmax',50)];
+const jOf=s=>{const m=/^\d+[a-z](\d+\/\d+)$/.exec(s);return m?m[1]:''};
+function groups(rows,split){const m={};for(const r of rows){const j=split?jOf(r.s):'';const k=r.l+(j?' '+j:'');(m[k]=m[k]||{l:r.l,j,rows:[]}).rows.push(r)}return Object.entries(m).sort((a,b)=>a[0]<b[0]?-1:1)}
+const dashOf=(g,k)=>g.j?(+g.j.split('/')[0]>= (({s:1,p:3,d:5,f:7,g:9})[g.l]||0)?'dash':'solid'):'solid';
+const unitf=()=>S.unit==='frac'?1/D.nu_hz:1;
+function mkTable(o){const st={pg:0,q:''};return {draw(){const rows=o.rows().filter(r=>!st.q||o.text(r).toLowerCase().includes(st.q));const np=Math.max(1,Math.ceil(rows.length/12));st.pg=Math.min(st.pg,np-1);
+  $(o.page).textContent=`${rows.length?st.pg*12+1:0}–${Math.min(rows.length,(st.pg+1)*12)} of ${rows.length}`;$(o.prev).disabled=st.pg===0;$(o.next).disabled=st.pg>=np-1;
+  $(o.id).tHead.innerHTML='<tr>'+o.cols.map(c=>`<th class="nosort">${c[0]}</th>`).join('')+'</tr>';
+  $(o.id).tBodies[0].innerHTML=rows.slice(st.pg*12,st.pg*12+12).map(r=>`<tr${o.cls?(' class="'+o.cls(r)+'"'):''}>`+o.cols.map(c=>`<td class="${c[2]||'m'}">${c[1](r)}</td>`).join('')+'</tr>').join('')||`<tr><td colspan="${o.cols.length}" class="empty">No rows match.</td></tr>`},
+  wire(){$(o.search).addEventListener('input',e=>{st.q=e.target.value.trim().toLowerCase();st.pg=0;this.draw()});$(o.prev).onclick=()=>{st.pg--;this.draw()};$(o.next).onclick=()=>{st.pg++;this.draw()}}}}
+// ---------- tab 1: shifts vs T
+function build1(){const b=base(),f=unitf(),lo=num('tmin',10),hi=num('tmax',1000),N=220,Ts=[...Array(N)].map((_,i)=>lo+(hi-lo)*i/(N-1)),tr=[];
+  const defs=[['gs','Ground ('+D.gs+')','--nist','solid','s-gs']].concat(HAS_EX?[['ex','Excited ('+D.ex+')','--soc','dash','s-ex'],['df','Difference ('+D.gs+'→'+D.ex+')','--td','solid','s-df']]:[]);
+  const val=(k,T)=>{const s=shifts(T);return s[k]};
+  for(const [k,nm,cv,dash,id] of defs){if(!$(id).checked)continue;const c=col(cv);
+    if($('s-st').checked)tr.push({x:Ts,y:Ts.map(T=>val(k,T).st*f),mode:'lines',name:nm+' static',line:{color:c,width:1.6,dash:'dot'},hovertemplate:'T = %{x:.0f} K<br>static %{y:.4g}<extra>'+nm+'</extra>'});
+    if($('s-tt').checked)tr.push({x:Ts,y:Ts.map(T=>val(k,T).tt*f),mode:'lines',name:nm+(dash==='dash'?' total':' total'),line:{color:c,width:2.4,dash},hovertemplate:'T = %{x:.0f} K<br>total %{y:.4g}<extra>'+nm+'</extra>'});
+    if($('s-co').checked)tr.push({x:Ts,y:Ts.map(T=>{const v=val(k,T);return 100*v.co/v.st}),yaxis:'y2',mode:'lines',showlegend:false,line:{color:c,width:1.8,dash},hovertemplate:'T = %{x:.0f} K<br>correction %{y:.3f}%<extra>'+nm+'</extra>'})}
+  const co=$('s-co').checked;
+  const L=Object.assign({},b.lay,{xaxis:axs(b,'Temperature (K)',{range:[lo,hi],autorange:false,anchor:co?'y2':'y'}),yaxis:axs(b,S.unit==='frac'?'Δν / ν₀':'Shift (Hz)',{domain:co?[.3,1]:[0,1],exponentformat:'e'}),
+    shapes:[{type:'line',xref:'x',yref:'paper',x0:S.T,x1:S.T,y0:0,y1:1,line:{color:col('--sel'),width:1.2,dash:'dot'}}],annotations:[{x:S.T,xref:'x',y:1,yref:'paper',text:S.T+' K',showarrow:false,yanchor:'top',xanchor:'left',xshift:4,font:{size:11,color:col('--sel')}}],uirevision:'sh'+lo+hi+S.unit});
+  if(co)L.yaxis2=axs(b,'Dynamic / static (%)',{domain:[0,.22]});
+  return Plotly.react('p1',tr,L,cfg)}
+function table1(){const s=shifts(S.T),f=unitf(),u=S.unit==='frac'?'':' Hz';$('shtitle').textContent='Shifts at '+S.T+' K';
+  $('shtab').tHead.innerHTML='<tr><th class="nosort">State</th><th class="nosort">α(0) (a.u.)</th><th class="nosort">Static</th><th class="nosort">Dynamic correction</th><th class="nosort">Static + dynamic</th><th class="nosort">Correction / static</th></tr>';
+  const row=(n,a,v)=>`<tr><td>${n}</td><td class="m">${a==null?'–':a.toFixed(2)}</td><td class="m">${sci(v.st*f)}${u}</td><td class="m">${sci(v.co*f)}${u}</td><td class="m">${sci(v.tt*f)}${u}</td><td class="m">${(100*v.co/v.st).toFixed(2)}%</td></tr>`;
+  $('shtab').tBodies[0].innerHTML=row('Ground '+D.gs,D.a0g,s.gs)+(HAS_EX?row('Excited '+D.ex,D.a0e,s.ex)+row('Difference',null,s.df):'')}
+// ---------- tab 2: depopulation
+const tabCh=mkTable({id:'chtab',search:'chsearch',prev:'chprev',next:'chnext',page:'chpage',text:r=>r.p+' '+r.k+' '+r.wl.toFixed(1),rows:()=>{const st=ST[S.ch];if(!st)return[];const T=S.T;const rr=st.e.map(e=>({p:D.labels[e[2]],k:e[3]?'abs':'stim',wl:e[0],A:e[1],nb:nbar(e[0],T),r:e[1]*nbar(e[0],T)})).filter(r=>r.r>0).sort((a,b)=>b.r-a.r);const tot=rr.reduce((x,y)=>x+y.r,0);rr.forEach(r=>r.sh=100*r.r/tot);return rr},
+  cols:[['Partner',r=>esc(r.p),''],['Process',r=>r.k==='abs'?'absorption':'stimulated emission',''],['λ (nm)',r=>r.wl.toFixed(1)],['n̄',r=>sci(r.nb)],['A_eff (s⁻¹)',r=>sci(r.A)],['Rate (s⁻¹)',r=>sci(r.r)],['Share',r=>r.sh.toFixed(1)+'%']]});
+function build2(){const b=base(),T=S.T,[n0,n1]=nrng(),L=lsel(),split=$('split').checked,tr=[];
+  const rows=RS.filter(s=>s.n>=n0&&s.n<=n1&&L.includes(s.l)).map(s=>({...s,G:gBBR(s,T)}));
+  rows.forEach(s=>{s.tau=1/(s.Grad+s.G)});
+  for(const [k,g] of groups(rows,split)){const rs=g.rows.sort((a,c)=>a.n-c.n),c=col(LCOL[g.l]);
+    tr.push({x:rs.map(r=>r.n),y:rs.map(r=>S.q==='G'?r.G:r.tau),text:rs.map(r=>r.s),customdata:rs.map(r=>r.s),mode:'lines+markers',name:k,marker:{size:6,color:c},line:{color:c,width:1.6,dash:dashOf(g)},
+      hovertemplate:'<b>%{text}</b><br>n = %{x}<br>'+(S.q==='G'?'Γ_BBR = %{y:.4g} s⁻¹':'τ_eff = %{y:.4g} s')+'<extra></extra>'})}
+  S.sel.forEach(s=>{const r=rows.find(x=>x.s===s);if(r)tr.push({x:[r.n],y:[S.q==='G'?r.G:r.tau],mode:'markers',showlegend:false,hoverinfo:'skip',marker:{size:14,color:'rgba(0,0,0,0)',line:{width:2,color:b.ink}}})});
+  Plotly.react('p2',tr,Object.assign({},b.lay,{xaxis:axs(b,'Principal quantum number n'),yaxis:axs(b,S.q==='G'?'Γ_BBR (s⁻¹) at '+T+' K':'τ_eff (s) at '+T+' K',{type:'log',dtick:1,exponentformat:'power'}),uirevision:'rt'+n0+n1+S.q}),cfg).then(()=>hook('p2'));
+  const lo=Math.max(50,num('tmin',10)),hi=Math.max(lo+50,num('tmax',1000)),Ts=[...Array(60)].map((_,i)=>lo+(hi-lo)*i/59),t2=[];
+  S.sel.forEach((s,i)=>{const st=ST[s];if(!st)return;t2.push({x:Ts,y:Ts.map(t=>gBBR(st,t)),mode:'lines',name:s,line:{color:col(PAL[i%PAL.length]),width:2},hovertemplate:'T = %{x:.0f} K<br>Γ_BBR = %{y:.4g} s⁻¹<extra>'+s+'</extra>'})});
+  Plotly.react('p2b',t2,Object.assign({},b.lay,{xaxis:axs(b,'Temperature (K)',{range:[lo,hi],autorange:false}),yaxis:axs(b,'Γ_BBR (s⁻¹)',{type:'log',dtick:1,exponentformat:'power'}),
+    shapes:[{type:'line',xref:'x',yref:'paper',x0:T,x1:T,y0:0,y1:1,line:{color:col('--sel'),width:1.2,dash:'dot'}}],uirevision:'rtb'+lo+hi}),cfg).then(()=>hook('p2b'));
+  const st=ST[S.ch];$('chtitle').textContent='Channels of '+(S.ch||'–')+' at '+T+' K';$('chinfo').textContent=st?`Γ_rad = ${sci(st.Grad)} s⁻¹ · Γ_BBR = ${sci(gBBR(st,T))} s⁻¹ · ${st.e.length} channels`:'';tabCh.draw();return Promise.resolve()}
+// ---------- tab 3: photoionization
+const piRows=()=>{if(!D.pi)return[];const T=S.T,F=num('field',O.field),o=Math.abs(T-D.pi.T)<.5;return D.pi.states.map(s=>({...s,PI:gPI(s,T),SFI:gSFI(s,T,F),MIX:o?s.mixpi:null,ION:o?s.ion:null}))};
+const tabPi=mkTable({id:'pitab',search:'pisearch',prev:'piprev',next:'pinext',page:'pipage',text:r=>r.s,rows:piRows,
+  cols:[['State',r=>esc(r.s),''],['n*',r=>r.ns.toFixed(3)],['Γ_PI (s⁻¹)',r=>sci(r.PI)],['Γ_SFI (s⁻¹)',r=>r.fi?'above threshold':sci(r.SFI)],['Γ_mix,PI (s⁻¹)',r=>r.MIX==null?'300 K only':sci(r.MIX)],['Γ_ion (s⁻¹)',r=>r.ION==null?'300 K only':sci(r.ION)],['Γ_BBR (s⁻¹)',r=>sci(r.bbr)],['Γ_rad (s⁻¹)',r=>sci(r.rad)]]});
+function build3(){const b=base(),[n0,n1]=nrng(),L=lsel(),rows=piRows().filter(s=>s.n>=Math.max(7,n0)&&s.n<=n1&&L.includes(s.l)),tr=[];let lo=1e300,hi=0;
+  const add=(g,key,nm,dash,w,sym)=>{const rs=g.rows.sort((a,c)=>a.n-c.n).filter(r=>r[key]!=null&&r[key]>0);if(!rs.length)return;const c=col(LCOL[g.l]);rs.forEach(r=>{lo=Math.min(lo,r[key]);hi=Math.max(hi,r[key])});
+    tr.push({x:rs.map(r=>r.n),y:rs.map(r=>r[key]),text:rs.map(r=>r.s),mode:'lines+markers',name:g.l+' '+nm,showlegend:false,legendgroup:nm,marker:{size:5,symbol:sym,color:c},line:{color:c,width:w,dash},hovertemplate:'<b>%{text}</b> · '+nm+'<br>n = %{x}<br>Γ = %{y:.4g} s⁻¹<extra></extra>'})};
+  for(const [k,g] of groups(rows,false)){if($('p-pi').checked)add(g,'PI','direct PI','solid',1.8,'circle');if($('p-sfi').checked)add(g,'SFI','SFI','dot',1.6,'diamond');if($('p-mix').checked&&D.pi&&Math.abs(S.T-D.pi.T)<.5)add(g,'MIX','mixing PI','dash',1.6,'square');if($('p-ion').checked&&D.pi&&Math.abs(S.T-D.pi.T)<.5)add(g,'ION','total ion rate','solid',3.4,'circle')}
+  const keyP=[['direct PI','solid',1.8],['SFI','dot',1.6],['mixing PI','dash',1.6],['total ion rate','solid',3.4]];
+  ['s','p','d','f','g'].forEach(l=>tr.push({x:[null],y:[null],mode:'lines',name:l,meta:'l:'+l,visible:L.includes(l)?true:'legendonly',line:{color:col(LCOL[l]),width:3},hoverinfo:'skip'}));
+  keyP.forEach(([nm,dash,w],i)=>{const id=['p-pi','p-sfi','p-mix','p-ion'][i];tr.push({x:[null],y:[null],mode:'lines',name:nm,meta:'p:'+id,visible:$(id).checked?true:'legendonly',line:{color:b.ink2,width:w,dash},hoverinfo:'skip'})});
+  const yr=hi>0?[Math.log10(lo)-.3,Math.log10(hi)+.3]:undefined;
+  return Plotly.react('p3',tr,Object.assign({},b.lay,{xaxis:axs(b,'Principal quantum number n'),yaxis:axs(b,'Γ (s⁻¹) at '+S.T+' K',{type:'log',dtick:1,range:yr,exponentformat:'power'}),uirevision:'pi'+n0+n1}),cfg).then(()=>{hook('p3');tabPi.draw();$('pitinfo').textContent='SFI field '+num('field',O.field)+' V/cm'})}
+// ---------- tab 4: Rydberg
+const ryRows=()=>{if(!D.ry)return[];const k=E2(S.T)/E2(D.ry.T);return D.ry.states.map(s=>({...s,stT:s.st*k,bad:s.sv===false||(s.sv===undefined&&s.dE!=null&&s.dE<1e-6)}))};
+const tabRy=mkTable({id:'rytab',search:'rysearch',prev:'ryprev',next:'rynext',page:'rypage',text:r=>r.s,rows:ryRows,cls:r=>r.bad?'':'',
+  cols:[['State',r=>esc(r.s),''],['α(0) (a.u.)',r=>sci(r.a0)],['Static shift (Hz)',r=>sci(r.stT)],['Dynamic shift, 300 K (Hz)',r=>r.dy==null?'–':sci(r.dy)],['Nearest partner (a.u.)',r=>sci(r.dE)],['Note',r=>r.bad?esc(r.sn||'partner gap near energy resolution'):(r.rel?'':'dynamic not converged'),'']]});
+function build4(){const b=base(),[n0,n1]=nrng(),L=lsel(),rows=ryRows().filter(s=>s.n>=n0&&s.n<=n1&&L.includes(s.l)),tr=[];
+  for(const [k,g] of groups(rows,false)){const rs=g.rows.sort((a,c)=>a.n-c.n),c=col(LCOL[g.l]);
+    if($('r-st').checked){tr.push({x:rs.map(r=>r.n),y:rs.map(r=>Math.abs(r.stT)),text:rs.map(r=>r.s),mode:'lines+markers',name:g.l,legendgroup:g.l,marker:{size:5,color:c},line:{color:c,width:1.6},hovertemplate:'<b>%{text}</b><br>n = %{x}<br>|static| = %{y:.4g} Hz<extra></extra>'});
+      if($('r-un').checked){const bd=rs.filter(r=>r.bad);if(bd.length)tr.push({x:bd.map(r=>r.n),y:bd.map(r=>Math.abs(r.stT)),text:bd.map(r=>r.s),customdata:bd.map(r=>r.sn||'partner gap near energy resolution'),mode:'markers',showlegend:false,legendgroup:g.l,marker:{size:11,symbol:'diamond',color:'rgba(0,0,0,0)',line:{width:2,color:b.ink}},hovertemplate:'<b>%{text}</b> · static formula not valid<br>%{customdata}<br>|static| = %{y:.4g} Hz<extra></extra>'})}}
+    if($('r-dy').checked){const dr=rs.filter(r=>r.dy!=null);tr.push({x:dr.map(r=>r.n),y:dr.map(r=>r.dy),text:dr.map(r=>r.s),xaxis:'x',yaxis:'y2',mode:'lines+markers',showlegend:false,legendgroup:g.l,marker:{size:5,color:c,symbol:dr.map(r=>r.rel||!$('r-un').checked?'circle':'circle-open')},line:{color:c,width:1.4,dash:'dash'},hovertemplate:'<b>%{text}</b><br>n = %{x}<br>dynamic = %{y:.4g} Hz<extra></extra>'})}}
+  const sh=[];if($('r-fw').checked)sh.push({type:'line',xref:'paper',yref:'y2',x0:0,x1:1,y0:D.ry.fw,y1:D.ry.fw,line:{color:b.ink,width:1.2,dash:'dot'}});
+  const L2=Object.assign({},b.lay,{xaxis:axs(b,'Principal quantum number n',{anchor:'y2'}),yaxis:axs(b,'|Static shift| (Hz) at '+S.T+' K',{type:'log',dtick:1,domain:[.42,1],exponentformat:'power'}),yaxis2:axs(b,'Dynamic shift (Hz)',{domain:[0,.34]}),shapes:sh,uirevision:'ry'+n0+n1});
+  if($('r-fw').checked)L2.annotations=[{xref:'paper',x:1,yref:'y2',y:D.ry.fw,text:'Farley-Wing '+D.ry.fw.toFixed(1)+' Hz',showarrow:false,yanchor:'bottom',xanchor:'right',font:{size:11,color:b.ink2}}];
+  return Plotly.react('p4',tr,L2,cfg).then(()=>{tabRy.draw();$('rytinfo').textContent=rows.filter(r=>r.bad).length+' of '+rows.length+' shown states flagged'})}
+// ---------- shell
+const hooked={};
+function clickX(el,cb){let d=null;el.addEventListener('mousedown',e=>{d=[e.clientX,e.clientY]});el.addEventListener('click',e=>{if(!d)return;const mv=Math.hypot(e.clientX-d[0],e.clientY-d[1]);d=null;if(mv>4||e.target.closest('.modebar,.legend'))return;
+  const xa=el._fullLayout&&el._fullLayout.xaxis,bb=el.querySelector('.nsewdrag');if(!xa||!bb)return;const r=bb.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top-2||e.clientY>r.bottom+2)return;cb(xa.p2d(e.clientX-r.left))})}
+function hook(id){const el=$(id);if(hooked[id]||!el.on)return;hooked[id]=1;
+  if(id==='p1'||id==='p2b')clickX(el,x=>{if(!isFinite(x))return;S.T=Math.max(1,Math.round(x));draw()});
+  if(id==='p2')el.on('plotly_click',ev=>{const p=ev.points[0];if(!p||!p.customdata)return;const s=p.customdata,i=S.sel.indexOf(s);if(i>=0&&S.sel.length>1)S.sel.splice(i,1);else if(i<0)S.sel.push(s);S.ch=s;draw()});
+  if(id==='p3'){el.on('plotly_legendclick',ev=>{const m=ev.data[ev.curveNumber].meta||'',[k,v]=m.split(':');if(k==='l'){const c=document.querySelector('[data-l='+v+']');c.checked=!c.checked}else if(k==='p'){$(v).checked=!$(v).checked}else return true;draw();return false});el.on('plotly_legenddoubleclick',()=>false)}}
+function draw(){const t=S.tab;if(!D.tabs.length)return Promise.resolve();['sh','rt','pi','ry'].forEach(k=>{$('pane-'+k).hidden=k!==t});document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.t===t)));$('temp').value=S.T;
+  const p=t==='sh'?(table1(),build1()):t==='rt'?build2():t==='pi'?build3():build4();return p.then?p.then(r=>{if(t==='sh')hook('p1');return r}):p}
+$('h1').textContent=D.element+' blackbody radiation';$('sub').textContent=D.sub;
+(function(){const k=(l,v,d)=>`<div class="stat"><div class="k">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;let h='';
+  if(D.Tdyn){const s=shifts(O.T);h+=k('Ground shift, '+O.T+' K',sci(s.gs.tt)+' Hz','static '+sci(s.gs.st)+' Hz');if(HAS_EX)h+=k('Difference, '+O.T+' K',sci(s.df.tt)+' Hz','Δν/ν₀ = '+sci(s.df.tt/D.nu_hz))}
+  if(D.ry)h+=k('Farley-Wing limit',D.ry.fw==null?'–':D.ry.fw.toFixed(1)+' Hz','high-n dynamic shift');
+  if(D.rates)h+=k('States',String(RS.length),'n ≥ '+D.rates.n_min);$('stats').innerHTML=h})();
+$('temp').value=O.T;$('tmin').value=O.tmin;$('tmax').value=O.tmax;$('field').value=O.field;
+document.querySelectorAll('#units button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.u===S.unit)));
+document.querySelectorAll('.tabs button').forEach(b=>{b.hidden=!D.tabs.includes(b.dataset.t)});
+if(!HAS_EX)document.querySelectorAll('#s-ex,#s-df').forEach(i=>{i.checked=false;i.disabled=true});
+$('ls').innerHTML=['s','p','d','f','g'].map(l=>`<label><input type="checkbox" data-l="${l}" checked><span class="chip" style="background:${col(LCOL[l])}"></span>${l}</label>`).join('');
+document.querySelectorAll('.rail input').forEach(i=>i.addEventListener('input',()=>{if(i.id==='temp')S.T=Math.max(1,num('temp',O.T));draw()}));
+function seg(id,a,k){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{S[k]=b.dataset[a];document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw()})}
+seg('units','u','unit');seg('qty','q','q');
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;draw()});
+document.querySelectorAll('#tpre .pill').forEach(b=>b.onclick=()=>{S.T=+b.dataset.t;draw()});
+[tabCh,tabPi,tabRy].forEach(t=>t.wire());
+$('reset').onclick=()=>{S.T=O.T;$('tmin').value=O.tmin;$('tmax').value=O.tmax;$('nmin').value=D.nrange[0];$('nmax').value=D.nrange[1];$('field').value=O.field;document.querySelectorAll('.rail input[type=checkbox]').forEach(i=>i.checked=i.id!=='split'&&!i.disabled);draw()};
+$('railbtn').onclick=()=>{S.rail=!S.rail;$('app').classList.toggle('closed',!S.rail);$('railbtn').textContent=S.rail?'Hide controls':'Show controls';$('railbtn').setAttribute('aria-expanded',String(S.rail));setTimeout(()=>Plotly.Plots.resize(document.querySelector('.pane:not([hidden]) .p')),30)};
+$('theme').onclick=()=>{const o=['auto','light','dark'];S.theme=o[(o.indexOf(S.theme)+1)%3];const h=document.documentElement;S.theme==='auto'?h.removeAttribute('data-theme'):h.setAttribute('data-theme',S.theme);$('theme').textContent='Theme: '+S.theme;draw()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw());
+const SK='qali-bbr-rail';let shut={};try{shut=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+const secs=[...document.querySelectorAll('.rail section')].filter(x=>x.querySelector(':scope>h2'));const keep=()=>{try{localStorage.setItem(SK,JSON.stringify(shut))}catch(e){}};
+secs.forEach((sec,i)=>{const h=sec.querySelector(':scope>h2'),key=h.textContent.trim();h.tabIndex=0;h.setAttribute('role','button');const set=v=>{sec.classList.toggle('shut',v);h.setAttribute('aria-expanded',String(!v));shut[key]=v};
+  set(shut[key]===undefined?i>=3:!!shut[key]);const tog=()=>{set(!sec.classList.contains('shut'));keep()};h.onclick=tog;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}}});
+$('colall').onclick=()=>{secs.forEach(x=>{x.classList.add('shut');x.querySelector('h2').setAttribute('aria-expanded','false');shut[x.querySelector('h2').textContent.trim()]=true});keep()};
+$('expall').onclick=()=>{secs.forEach(x=>{x.classList.remove('shut');x.querySelector('h2').setAttribute('aria-expanded','true');shut[x.querySelector('h2').textContent.trim()]=false});keep()};
+const closeCM=()=>{const m=$('cm');m&&m.remove()};document.addEventListener('click',e=>{if(!e.target.closest('.cm'))closeCM()});
+async function lightly(fn){const h=document.documentElement,prev=h.getAttribute('data-theme');h.setAttribute('data-theme','light');try{await draw();await fn()}finally{prev==null?h.removeAttribute('data-theme'):h.setAttribute('data-theme',prev);draw()}}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+function csv(){if(S.tab==='sh'){const s=shifts(S.T);return 'state,static_hz,dynamic_correction_hz,total_hz\n'+[['ground',s.gs],['excited',s.ex],['difference',s.df]].filter(x=>x[1]).map(([n,v])=>[n,v.st,v.co,v.tt].map(q).join(',')).join('\n')}
+  if(S.tab==='rt')return 'state,n,l,gamma_rad_s,gamma_bbr_s\n'+RS.map(s=>[s.s,s.n,s.l,s.Grad,gBBR(s,S.T)].map(q).join(',')).join('\n');
+  if(S.tab==='pi')return 'state,n_star,gamma_pi,gamma_sfi\n'+piRows().map(r=>[r.s,r.ns,r.PI,r.SFI].map(q).join(',')).join('\n');
+  return 'state,alpha0_au,static_hz,dynamic_hz_300K\n'+ryRows().map(r=>[r.s,r.a0,r.stT,r.dy].map(q).join(',')).join('\n')}
+$('exportbtn').onclick=e=>{e.stopPropagation();closeCM();const b=e.currentTarget.getBoundingClientRect(),m=document.createElement('div');m.className='cm';m.id='cm';
+  m.innerHTML='<button data-a="svg">Plot as SVG (vector)</button><button data-a="png">Plot as PNG (high resolution)</button><button data-a="pdf">Page as PDF (print dialog)</button><button data-a="csv">Table as CSV</button>';document.body.appendChild(m);m.style.top=(b.bottom+4)+'px';m.style.left=Math.max(8,Math.min(b.left,innerWidth-m.offsetWidth-8))+'px';
+  m.onclick=ev=>{const a=ev.target.dataset.a;if(!a)return;closeCM();const id={sh:'p1',rt:'p2',pi:'p3',ry:'p4'}[S.tab],o={width:1600,height:1000,filename:D.element+'_bbr_'+S.tab};
+    if(a==='svg')lightly(()=>Plotly.downloadImage(id,{...o,format:'svg'}));if(a==='png')lightly(()=>Plotly.downloadImage(id,{...o,format:'png',scale:3}));
+    if(a==='pdf')lightly(async()=>{window.print();await new Promise(r=>setTimeout(r,2000))});if(a==='csv')dl(D.element+'_bbr_'+S.tab+'.csv',csv(),'text/csv')}};
+$('nmin').value=D.nrange[0];$('nmax').value=D.nrange[1];
+draw();
+
+</script>

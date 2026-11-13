@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from linak.gui import web_downloads
+from qali.gui import web_downloads
 
 
 class _Item:

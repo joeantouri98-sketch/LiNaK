@@ -13,8 +13,8 @@ import math
 import numpy as np
 import pytest
 
-from linak.core.constants import C_SI, MU_B_MHz_G, MU_N_MHz_G
-from linak.physics.hyperfine_core import (
+from qali.core.constants import C_SI, MU_B_MHz_G, MU_N_MHz_G
+from qali.physics.hyperfine_core import (
     HfConstants,
     Nucleus,
     breit_rabi_energies,
@@ -133,7 +133,7 @@ RB87_CONSTANTS = {"5s1/2": HfConstants(A_MHz=3417.341305452145, gJ_exp=2.0023311
 def test_breit_rabi_curves_keep_their_m_F_through_crossings():
     """Each column is one level: its eigenvector stays inside one m_F block at every field, and
     levels of different m_F do cross (sorting all eigenvalues together used to swap them)."""
-    from linak.physics.hyperfine_core import ZeemanSystem
+    from qali.physics.hyperfine_core import ZeemanSystem
     zs = ZeemanSystem(1.5, 1.5, 18.534, 2.724, 1.3341, NA23.gI)
     for B in (0.5, 44.0, 120.0):
         _E, V = zs.solve(B, vectors=True)
@@ -147,7 +147,7 @@ def test_breit_rabi_curves_keep_their_m_F_through_crossings():
 
 
 def test_high_field_labels_follow_steck():
-    from linak.physics.hyperfine_core import ZeemanSystem
+    from qali.physics.hyperfine_core import ZeemanSystem
     zs = ZeemanSystem(1.5, 0.5, 3417.341305452145, 0.0, 2.00233113, RB87.gI)
     lab = dict(zip(zs.labels, zs.high_field))
     assert lab[(2.0, 0.0)] == (0.5, -0.5)          # |2,0> -> |m_J=+1/2, m_I=-1/2>
@@ -180,7 +180,7 @@ def test_rb87_two_photon_magic_field():
 def test_zero_field_line_strengths_and_zeeman_components():
     """S_FF' of the 87Rb D2 line (Steck): 7/10, 1/4, 1/20 from F = 2; 5/12, 5/12, 1/6 from F = 1.
     The Zeeman-resolved components reproduce them at B -> 0 and add to 1 per ground sublevel."""
-    from linak.physics.hyperfine_core import hyperfine_line_strengths
+    from qali.physics.hyperfine_core import hyperfine_line_strengths
     S = hyperfine_line_strengths(1.5, 0.5, 1.5)
     assert S[(2.0, 3.0)] == pytest.approx(0.7) and S[(2.0, 2.0)] == pytest.approx(0.25)
     assert S[(2.0, 1.0)] == pytest.approx(0.05) and S[(1.0, 0.0)] == pytest.approx(1 / 6)

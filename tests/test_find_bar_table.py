@@ -6,7 +6,7 @@ import pytest
 pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem  # noqa: E402
 
-from linak.gui.find_bar import with_find_bar  # noqa: E402
+from qali.gui.find_bar import with_find_bar  # noqa: E402
 
 
 def _table():

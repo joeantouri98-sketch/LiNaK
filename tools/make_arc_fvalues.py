@@ -75,14 +75,14 @@ def main():
                     help="replace this tool's own nist_series_caveats entry with the built-in text (default: keep the file's)")
     a = ap.parse_args()
     if a.f_values_dir is None:
-        from linak.core.paths import reference_path
+        from qali.core.paths import reference_path
         a.f_values_dir = str(reference_path('f_values'))
     el = a.element
     if el not in ARC_OK:
         sys.exit(f"{el}: ARC series not validated against NIST (see the module docstring); no file written.")
     cfg = ARC_OK[el]
     import arc
-    import linak.physics.polarizability_core as ac
+    import qali.physics.polarizability_core as ac
     if cfg.get('scaled_p'):
         return main_scaled(a, el, cfg, arc, ac)
     atom = getattr(arc, cfg['cls'])()

@@ -12,10 +12,10 @@ import numpy as np
 import pytest
 
 from helpers import make_workspace, run_pipeline
-from linak.physics import laser_cooling as lc
-from linak.physics.polarizability_core import alpha_real, omega_au_from_nm
-from linak.pipelines.polarizability import compute_C6, compute_C6_pair, tune_out_wavelengths
-from linak.report_templates import load as load_template
+from qali.physics import laser_cooling as lc
+from qali.physics.polarizability_core import alpha_real, omega_au_from_nm
+from qali.pipelines.polarizability import compute_C6, compute_C6_pair, tune_out_wavelengths
+from qali.report_templates import load as load_template
 
 NODE = shutil.which("node")
 PHYS_JS = load_template("compare_physics.js")
@@ -61,7 +61,7 @@ def test_pair_c6_against_two_oscillators_in_closed_form():
 
 
 def test_heteronuclear_c6_tracks_derevianko(trans):
-    """Casimir–Polder from LiNaK's own α(iω), RPA core included, is within 0.5 % of Derevianko et
+    """Casimir–Polder from Qali's own α(iω), RPA core included, is within 0.5 % of Derevianko et
     al. (2010) for the pairs without Li (Li's own C₆ is 2 % low: its valence sum lacks the continuum)."""
     for (a, b), ref in {("Na", "K"): 2447, ("K", "Rb"): 4274, ("Rb", "Cs"): 5663, ("Na", "Cs"): 3227}.items():
         assert compute_C6_pair(trans[a], trans[b]) == pytest.approx(ref, rel=0.005), (a, b)
@@ -85,7 +85,7 @@ def test_tune_outs_are_zeros_between_neighbouring_resonances(trans):
 
 
 def test_fr_c6_reference_is_derevianko():
-    from linak.core.constants import C6_EXPT
+    from qali.core.constants import C6_EXPT
     assert C6_EXPT["Fr"] == 5256.0                                 # was an unsourced 5500
 
 
@@ -112,7 +112,7 @@ def ws(tmp_path_factory):
 def test_compare_stage_writes_the_page_and_the_c6_matrix(ws):
     res = run_pipeline(["compare_elements", "--elements", "Na", "K", "Rb"], ws)
     assert res.returncode == 0, res.stdout + res.stderr
-    html = (ws / ".linak" / "plots" / "comparison.html").read_text(encoding="utf-8")
+    html = (ws / ".qali" / "plots" / "comparison.html").read_text(encoding="utf-8")
     d = _payload(html)
     assert d["opts"]["tabs"] == ["dl", "lc", "pol", "c6", "tr", "acc"]
     els = {r["element"] for r in d["rows"]}            # added to the saved table's elements
@@ -121,23 +121,23 @@ def test_compare_stage_writes_the_page_and_the_c6_matrix(ws):
     assert len(d["c6"]) == n * (n + 1) // 2 and all(p[4] for p in d["c6"])   # every pair has a reference
     qs = {r["q"] for r in d["acc"]}
     assert {"τ D1", "τ D2", "α(0)", "C₆", "C₆ pair", "tune-out"} <= qs
-    out = json.loads((ws / ".linak" / "data" / "comparison_table.json").read_text(encoding="utf-8"))
+    out = json.loads((ws / ".qali" / "data" / "comparison_table.json").read_text(encoding="utf-8"))
     assert len(out["C6_au"]) == n * (n + 1) // 2 and "Rb" in out["tune_out_nm"]
 
 
 def test_scattering_rate_opens_the_laser_cooling_tab(ws):
     res = run_pipeline(["scattering_rate", "--element", "Rb", "--line", "D1"], ws)
     assert res.returncode == 0, res.stdout + res.stderr
-    d = _payload((ws / ".linak" / "plots" / "comparison.html").read_text(encoding="utf-8"))
+    d = _payload((ws / ".qali" / "plots" / "comparison.html").read_text(encoding="utf-8"))
     assert d["opts"]["tab"] == "lc" and d["opts"]["el"] == "Rb" and d["opts"]["line"] == "D1"
 
 
 def test_tabs_can_be_left_out_and_the_page_skipped(ws):
     res = run_pipeline(["compare_elements", "--elements", "Na", "--no-tab-c6", "--no-tab-trends"], ws)
     assert res.returncode == 0, res.stdout + res.stderr
-    d = _payload((ws / ".linak" / "plots" / "comparison.html").read_text(encoding="utf-8"))
+    d = _payload((ws / ".qali" / "plots" / "comparison.html").read_text(encoding="utf-8"))
     assert d["opts"]["tabs"] == ["dl", "lc", "pol", "acc"]
-    page = ws / ".linak" / "plots" / "comparison.html"
+    page = ws / ".qali" / "plots" / "comparison.html"
     page.unlink()
     assert run_pipeline(["compare_elements", "--elements", "Na", "--no-page"], ws).returncode == 0
     assert not page.exists()

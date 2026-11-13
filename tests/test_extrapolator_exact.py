@@ -8,13 +8,13 @@ import pytest
 
 pytest.importorskip("arc")
 
-from linak.core.paths import reference_path  # noqa: E402
-from linak.physics.extrapolation import exact  # noqa: E402
-from linak.physics.extrapolation import model_settings as M  # noqa: E402
-from linak.physics.extrapolation import stage as S  # noqa: E402
-from linak.physics.extrapolation.params import UnsupportedSpeciesError, model_overrides, params_hash  # noqa: E402
-from linak.physics.extrapolation.tables import get_model, packaged_table  # noqa: E402
-from linak.physics.polarizability_core import load_nist_fvalues  # noqa: E402
+from qali.core.paths import reference_path  # noqa: E402
+from qali.physics.extrapolation import exact  # noqa: E402
+from qali.physics.extrapolation import model_settings as M  # noqa: E402
+from qali.physics.extrapolation import stage as S  # noqa: E402
+from qali.physics.extrapolation.params import UnsupportedSpeciesError, model_overrides, params_hash  # noqa: E402
+from qali.physics.extrapolation.tables import get_model, packaged_table  # noqa: E402
+from qali.physics.polarizability_core import load_nist_fvalues  # noqa: E402
 
 
 def _inputs(el="Na"):
@@ -88,7 +88,7 @@ def test_settings_page_edits_model_parameters(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui.extrapolator_settings import ExtrapolatorSettingsPage
+    from qali.gui.extrapolator_settings import ExtrapolatorSettingsPage
 
     app = QApplication.instance() or QApplication([])
     page = ExtrapolatorSettingsPage(tmp_path, "Rb")
@@ -132,7 +132,7 @@ def test_potential_form_is_editable_and_changes_the_model():
 def test_user_formula_is_safe_and_matches_a_built_in_form():
     import numpy as np
 
-    from linak.physics.extrapolation import userform as U
+    from qali.physics.extrapolation import userform as U
 
     r = np.geomspace(0.01, 50, 40)
     own = U.evaluate("alpha_D/r**3*(1-exp(-(r/rc)**3))", [], r, 2.0, 3.0)
@@ -151,7 +151,7 @@ def test_user_formula_is_safe_and_matches_a_built_in_form():
 
 
 def test_user_defined_form_with_constant_and_dataset_parameters(tmp_path):
-    from linak.physics.extrapolation import userform as U
+    from qali.physics.extrapolation import userform as U
 
     base = {"form": "U_user", "user_formula": "k*alpha_D/r**3*(1-exp(-(r/rc)**3))", "user_params": [{"name": "k", "value": 1.0}]}
     clean, problems = M.validate({"Na": base})
@@ -182,7 +182,7 @@ def test_settings_page_user_defined_rows(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui.extrapolator_settings import ExtrapolatorSettingsPage
+    from qali.gui.extrapolator_settings import ExtrapolatorSettingsPage
 
     app = QApplication.instance() or QApplication([])
     page = ExtrapolatorSettingsPage(tmp_path, "Rb")
@@ -217,7 +217,7 @@ def test_rebuild_without_arc_says_so(tmp_path, monkeypatch):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication, QMessageBox
 
-    from linak.gui import extrapolator_settings as G
+    from qali.gui import extrapolator_settings as G
 
     app = QApplication.instance() or QApplication([])
     shown = []

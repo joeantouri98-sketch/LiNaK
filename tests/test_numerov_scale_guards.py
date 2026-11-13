@@ -8,11 +8,11 @@ Independent check of the unscaled radial integral: Cs published reduced matrix e
 give published/Numerov = 1.03-1.04 for same-n s->p and 1.09-1.10 for p->s.
 """
 import json
-from linak.core.paths import reference_path
+from qali.core.paths import reference_path
 
 import pytest
 
-from linak.physics.qdt_radial import numerov_scale_for, GAP_KNOTS
+from qali.physics.qdt_radial import numerov_scale_for, GAP_KNOTS
 
 CAL = {
     "global": {"scale": 3.3},

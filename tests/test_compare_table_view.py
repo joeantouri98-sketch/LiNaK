@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.gui.compare_table_view import CompareTableView  # noqa: E402
+from qali.gui.compare_table_view import CompareTableView  # noqa: E402
 from tests.test_comparison_rows import _record  # noqa: E402
 
 
@@ -31,7 +31,7 @@ def test_rows_shown_and_sortable(view):
 
 
 def test_temperature_changes_doppler_column(view):
-    col = [k for k, *_ in __import__("linak.core.comparison_rows", fromlist=["x"]).COLUMNS].index("dnu_D")
+    col = [k for k, *_ in __import__("qali.core.comparison_rows", fromlist=["x"]).COLUMNS].index("dnu_D")
     before = view.table.item(0, col).text()
     view.temperature.setValue(1200.0)
     assert view.table.item(0, col).text() != before
@@ -56,6 +56,6 @@ def test_remove_selected_rewrites_file(view):
 
 
 def test_sections_cover_every_column():
-    from linak.core import comparison_rows as cr
-    from linak.gui import compare_table_view as v
+    from qali.core import comparison_rows as cr
+    from qali.gui import compare_table_view as v
     assert set(v._GROUP_OF) == {k for k, *_ in cr.COLUMNS}

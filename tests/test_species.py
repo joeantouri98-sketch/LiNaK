@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Unit tests for the species registry in ``linak.core.species``."""
+"""Unit tests for the species registry in ``qali.core.species``."""
 from __future__ import annotations
 
 import pytest
 
-from linak.core.species import (
+from qali.core.species import (
     is_ion_id,
     listed_ion_ids,
     parse_species_id,
@@ -151,7 +151,7 @@ def test_require_neutral_species_passes_neutral() -> None:
 
 def test_require_neutral_species_rejects_ion_with_a_typed_error() -> None:
     """Ions are refused with a typed error that ``cli.py`` maps to exit 1."""
-    from linak.core.errors import InvalidSpeciesError, PipelineError
+    from qali.core.errors import InvalidSpeciesError, PipelineError
 
     with pytest.raises(InvalidSpeciesError) as excinfo:
         require_neutral_species("Na_c1", "feshbach.py")

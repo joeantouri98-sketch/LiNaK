@@ -13,9 +13,9 @@ import re
 import numpy as np
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics.extrapolation import exact
-from linak.physics.extrapolation.params import species_params
+from qali.core.paths import reference_path
+from qali.physics.extrapolation import exact
+from qali.physics.extrapolation.params import species_params
 
 CM = 219474.63
 SP = species_params("Fr")

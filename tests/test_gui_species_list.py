@@ -1,7 +1,7 @@
 """The species list finds a species at any point of the pipeline chain."""
 
-from linak.core.workspace import Workspace
-from linak.gui.project_io import workspace_species
+from qali.core.workspace import Workspace
+from qali.gui.project_io import workspace_species
 
 
 def _touch(path):

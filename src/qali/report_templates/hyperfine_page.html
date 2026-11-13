@@ -1,0 +1,377 @@
+<meta charset="utf-8"><title>$!TITLE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+:root{
+  --bg:#fcfcfb; --panel:#f3f2ef; --edge:#dedcd6; --ink:#161513; --ink2:#55534e; --muted:#7d7a73; --grid:#e8e6e1;
+  --nist:#2a78d6; --soc:#eb6834; --td:#6250d6; --line:#6b6963; --band:#e5f1ec; --cont:#efeeea; --sel:#0e9f6e; --hl:#fff3c4;
+  --r-xray:#6b2fd6; --r-vuv:#7a3fe0; --r-uv:#2a5bd6; --r-vis:#e8710a; --r-nir:#c8261c; --r-mir:#7a7770; --r-mic:#9a978f; --qdt:#7fa6dc; --theo:#b03aa8; --ov3:#2e8b57; --ov4:#a23b72; --ov5:#c08a00; --ov6:#4a7a96;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;margin:0;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:12px}
+h1{font-size:21px;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--edge);border-radius:4px;padding:1px 6px}
+.hdr-btns{margin-left:auto;display:flex;gap:8px}
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);gap:14px;align-items:start}
+.app.closed{grid-template-columns:minmax(0,1fr)}
+.app.closed .rail{display:none}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.rail h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0;min-width:0}
+.row label{flex:1;min-width:0;cursor:pointer}
+.row .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chip{width:12px;height:12px;border-radius:3px;flex:none}
+.bar{width:16px;height:0;border-top:3px solid;flex:none;border-radius:2px}
+input[type=checkbox],input[type=radio]{accent-color:var(--nist);margin:0}
+input[type=range]{width:100%;accent-color:var(--nist)}
+input[type=number],input[type=search],input[type=text]{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;min-width:0;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lbl{font-size:12px;color:var(--ink2);margin:6px 0 3px}
+.sl{margin:6px 0}.sl .top{display:flex;justify-content:space-between;color:var(--ink2);font-size:12.5px}
+.sl .v{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.seg{display:flex;border:1px solid var(--edge);border-radius:6px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:var(--ink2);border:0;padding:5px 2px;font:inherit;font-size:12.5px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--edge)}
+.seg button[aria-pressed=true]{background:var(--nist);color:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:4px 12px}
+.checks label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px}
+.hint{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+.main{min-width:0;display:flex;flex-direction:column;gap:10px}
+.plot{border:1px solid var(--edge);border-radius:8px;background:var(--bg);overflow:hidden}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px 0;flex-wrap:wrap}
+.count{font-size:12.5px;color:var(--ink2)}
+#plot{width:100%;height:680px}
+.note{color:var(--ink2);font-size:12.5px;line-height:1.5;max-width:100ch;margin:0}
+.card{border:1px solid var(--edge);border-radius:8px;padding:10px 12px;min-width:0}
+.card .bar2{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.card .bar2 b{font-size:13px;font-weight:600;margin-right:auto}
+.btn{background:transparent;color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--nist);border-color:var(--nist);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 12px 4px 0;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11.5px;cursor:pointer;user-select:none}
+th.nosort{cursor:default}
+th .arr{font-size:9px;margin-left:3px}
+td.m{font-family:var(--mono);font-size:12px}
+tbody tr.t{cursor:pointer;user-select:none;-webkit-user-select:none}
+#plot,.ptop{user-select:none;-webkit-user-select:none}
+tbody tr.t:hover{background:var(--panel)}
+tbody tr.sel{background:var(--hl)}
+.empty{color:var(--muted);font-size:12.5px}
+.pager{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.j{font-size:.85em;vertical-align:sub;line-height:0}
+.cm{position:fixed;z-index:50;background:var(--bg);border:1px solid var(--edge);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:4px;min-width:200px}
+.cm button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-radius:5px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.cm button:hover{background:var(--panel)}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:10px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dlg h3{margin:0 0 2px;font-size:17px}
+.dlg h4{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dlg .g{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:2px 12px;font-size:13px}
+.dlg .g span:nth-child(odd){color:var(--ink2)}
+.dlg .g span:nth-child(even){font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:4px;padding:0 4px}
+.rail h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.rail h2::before{content:'▾';font-size:10px;width:10px;display:inline-block;transition:transform .12s}
+.rail section.shut>h2::before{transform:rotate(-90deg)}
+.rail section.shut>*:not(h2){display:none}
+.rail section.shut>h2{margin-bottom:0}
+.rail h2:focus-visible{outline:2px solid var(--nist);outline-offset:2px;border-radius:3px}
+.railtools{display:flex;gap:8px}.railtools .btn{flex:1}
+@media print{header,.rail,.note,.card,.ptop button,.cm,.ov{display:none!important}.app{display:block}body{background:#fff}}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--edge);margin-bottom:2px}
+.tabs button{background:transparent;color:var(--ink2);border:0;border-bottom:2px solid transparent;padding:8px 14px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--nist);font-weight:600}
+.tabs button:focus-visible{outline:2px solid var(--nist);outline-offset:-2px;border-radius:4px}
+.pane[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.stat{border:1px solid var(--edge);border-radius:8px;padding:6px 10px;min-width:150px}
+.stat .k{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .v{font-family:var(--mono);font-size:14px;margin-top:1px}
+.stat .d{font-size:11.5px;color:var(--ink2)}
+.p{height:560px}.p.short{height:520px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media(max-width:1100px){.cols{grid-template-columns:minmax(0,1fr)}}
+.pillrow{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--edge);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;background:transparent;color:var(--ink2)}
+.pill[aria-pressed=true]{background:var(--nist);border-color:var(--nist);color:#fff}
+tr.sel td{background:var(--hl)}
+.cls{display:inline-block;border-radius:4px;padding:0 6px;font-size:11.5px;border:1px solid var(--edge)}
+.cls.robust{color:var(--sel);border-color:var(--sel)}.cls.sensitive{color:var(--ov5);border-color:var(--ov5)}.cls.very{color:var(--r-nir);border-color:var(--r-nir)}
+.shr{display:inline-block;height:8px;background:var(--nist);border-radius:2px;vertical-align:middle;opacity:.75}
+.shr.neg{background:var(--soc)}
+@media print{header,.rail,.tabs,.note,.card,.stat,.chips,.cm{display:none!important}.app{display:block}body{background:#fff}.pane[hidden]{display:none}}
+
+.pg{display:flex;align-items:center}.pg .pill:disabled{opacity:.4;cursor:default}
+
+</style>
+<style>
+.grad{height:10px;border-radius:3px;border:1px solid var(--edge);background:linear-gradient(90deg,#2a6fd6,#8a8780,#d6402a)}
+.gradlbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono)}
+select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;width:100%}
+.p.tall{height:620px}
+</style>
+<header>
+  <h1 id="h1"></h1>
+  <span class="sub" id="sub"></span>
+  <div class="hdr-btns">
+    <button class="btn" id="exportbtn" aria-haspopup="menu">Export ▾</button>
+    <button class="btn" id="railbtn" aria-expanded="true">Hide controls</button>
+    <button class="btn" id="theme" aria-label="Switch theme">Theme: auto</button>
+  </div>
+</header>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Controls">
+    <section class="railtools"><button class="btn" id="colall">Collapse all</button><button class="btn" id="expall">Expand all</button></section>
+    <section><h2>States</h2>
+      <div class="checks" id="stchk"></div>
+      <div class="hint">Shown on the Levels and Breit–Rabi tabs.</div>
+    </section>
+    <section><h2>Field</h2>
+      <div class="lbl">Cursor field (<span class="bu">G</span>), also set by clicking a curve</div>
+      <input type="number" id="bc" step="any" min="0">
+      <input type="range" id="bcs" min="0" max="1000" value="200" aria-label="Cursor field">
+      <div class="lbl" style="margin-top:8px">Field units</div>
+      <div class="seg" id="bunit" role="group" aria-label="Field units"><button data-v="G">G</button><button data-v="mT">mT</button><button data-v="T">T</button></div>
+      <div class="lbl" style="margin-top:8px">Frequency units</div>
+      <div class="seg" id="funit" role="group" aria-label="Frequency units"><button data-v="kHz">kHz</button><button data-v="MHz">MHz</button><button data-v="GHz">GHz</button></div>
+    </section>
+    <section><h2>Breit–Rabi</h2>
+      <div class="lbl">Plot</div>
+      <div class="seg" id="brq" role="group" aria-label="Quantity"><button data-v="E">Energy</button><button data-v="dE">dE/dB (μ<sub>B</sub>)</button></div>
+      <div class="lbl" style="margin-top:8px">Colour</div>
+      <div class="seg" id="brc" role="group" aria-label="Colour by"><button data-v="mF">m<sub>F</sub></button><button data-v="F">F</button></div>
+      <div class="checks" style="margin-top:8px"><label><input type="checkbox" id="lin">Weak-field (linear) Zeeman</label><label><input type="checkbox" id="lab">High-field labels |m<sub>J</sub>, m<sub>I</sub>⟩</label></div>
+      <div class="lbl" style="margin-top:8px">m<sub>F</sub> colour scale</div><div class="grad"></div><div class="gradlbl"><span>−F</span><span>0</span><span>+F</span></div>
+    </section>
+    <section><h2>Microwave lines</h2>
+      <div class="checks"><label><input type="checkbox" id="mw-M1" checked>Single photon (|Δm<sub>F</sub>| ≤ 1)</label><label><input type="checkbox" id="mw-2p" checked>Two-photon (|Δm<sub>F</sub>| = 2)</label></div>
+      <div class="hint">ΔF = ±1 lines of the ground state, drawn as the shift from their zero-field frequency.</div>
+    </section>
+    <section><h2>Optical lines</h2>
+      <div class="lbl">Line</div><select id="olsel" aria-label="Optical line"></select>
+      <div class="checks" style="margin-top:8px"><label><input type="checkbox" id="q1" checked>σ+</label><label><input type="checkbox" id="q0" checked>π</label><label><input type="checkbox" id="qm" checked>σ−</label></div>
+      <div class="two" style="margin-top:6px"><div><div class="lbl">Linewidth FWHM (MHz)</div><input type="number" id="fw" value="10" min="0" step="any"></div><div><div class="lbl">Hide below strength</div><input type="number" id="smin" value="0.01" min="0" max="1" step="any"></div></div>
+      <div class="hint">Strengths are (2J+1)|⟨e|d_q|g⟩|²/|⟨J′‖d‖J⟩|²: each ground sublevel's components add to 1. Equal ground populations.</div>
+    </section>
+    <section><button class="btn" id="reset" style="width:100%">Reset</button></section>
+  </aside>
+  <div class="main">
+    <div class="chips" id="stats"></div>
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-lv" aria-selected="true" aria-controls="pane-lv" data-t="lv">Levels</button>
+      <button role="tab" id="tab-br" aria-selected="false" aria-controls="pane-br" data-t="br">Breit–Rabi</button>
+      <button role="tab" id="tab-tr" aria-selected="false" aria-controls="pane-tr" data-t="tr">Transitions</button>
+      <button role="tab" id="tab-co" aria-selected="false" aria-controls="pane-co" data-t="co">Constants</button>
+    </div>
+    <section class="pane" id="pane-lv" role="tabpanel" aria-labelledby="tab-lv">
+      <div class="plot"><div class="p" id="plv"></div></div>
+      <p class="note">Zero-field hyperfine levels, each state on its own frequency scale relative to its centroid.<br>Dots: the 2F+1 m<sub>F</sub> sublevels, coloured by m<sub>F</sub>; g<sub>F</sub> is on the right.<br>Arrow: the ground-state microwave clock interval.</p>
+      <div class="card"><div class="bar2"><b>F levels</b></div><div class="tw"><table id="lvtab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+    <section class="pane" id="pane-br" role="tabpanel" aria-labelledby="tab-br" hidden>
+      <div class="plot"><div class="p tall" id="pbr"></div></div>
+      <p class="note">Exact levels of H<sub>hf</sub> + (g<sub>J</sub> μ<sub>B</sub> J<sub>z</sub> − g<sub>I</sub> μ<sub>N</sub> I<sub>z</sub>)B, solved per m<sub>F</sub>.<br>m<sub>F</sub> is exact at every field, so each curve is one level even where levels cross.<br>dE/dB is the level's slope: positive slopes are low-field seekers (magnetically trappable).</p>
+      <div class="card"><div class="bar2"><b id="brtitle">Levels at the cursor</b><select id="focus" aria-label="State in the table" style="max-width:180px"></select></div><div class="tw"><table id="brtab"><thead></thead><tbody></tbody></table></div></div>
+      <div class="plot"><div class="ptop"><span class="count" id="comptitle">Composition</span></div><div class="p short" id="pcomp" style="height:300px"></div></div>
+    </section>
+    <section class="pane" id="pane-tr" role="tabpanel" aria-labelledby="tab-tr" hidden>
+      <div class="plot"><div class="ptop"><span class="count" id="mwtitle">Ground-state microwave lines</span></div><div class="p" id="pmw" style="height:440px"></div></div>
+      <div class="card"><div class="bar2"><b>Microwave lines</b><span class="hint" id="mwinfo" style="margin:0"></span></div><div class="tw"><table id="mwtab"><thead></thead><tbody></tbody></table></div></div>
+      <div class="cols">
+        <div class="plot"><div class="ptop"><span class="count" id="oftitle">Optical components vs field</span></div><div class="p" id="pof" style="height:440px"></div></div>
+        <div class="plot"><div class="ptop"><span class="count" id="sptitle">Spectrum at the cursor</span></div><div class="p" id="psp" style="height:440px"></div></div>
+      </div>
+      <p class="note">Optical detunings are from the line's zero-field centroid.<br>Diamonds: field-insensitive points, where a microwave frequency is stationary in B (such as the 87Rb |1,−1⟩ ↔ |2,+1⟩ two-photon line near 3.23 G).</p>
+      <div class="card"><div class="bar2"><b id="sftitle">Zero-field hyperfine line strengths S<sub>FF′</sub></b></div><div class="tw"><table id="sftab"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+    <section class="pane" id="pane-co" role="tabpanel" aria-labelledby="tab-co" hidden>
+      <div class="card"><div class="bar2"><b>Nucleus</b></div><div class="tw"><table id="nutab"><thead></thead><tbody></tbody></table></div></div>
+      <div class="card"><div class="bar2"><b>States</b></div><div class="tw"><table id="cotab"><thead></thead><tbody></tbody></table></div></div>
+      <p class="note">A and B in MHz, C in kHz (magnetic dipole, electric quadrupole, magnetic octupole).<br>g<sub>J</sub>: measured where the constants file gives it, otherwise Landé with g<sub>S</sub> = 2.00231930436 and the reduced-mass g<sub>L</sub>.<br>g<sub>I</sub>: the atomic value (with diamagnetic shielding) where the file gives it, otherwise the bare nuclear μ<sub>I</sub>/I.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const D=$!DATA_JS;
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const O=D.opts,BF={G:1,mT:0.1,T:1e-4},FF={kHz:1e3,MHz:1,GHz:1e-3};
+const BMAX=D.B.length?D.B[D.B.length-1]:0;
+const S={tab:O.tabs[0]||'lv',Bu:O.Bu,fu:O.fu,Bc:O.Bc,theme:'auto',rail:true,sel:D.states.map((_,i)=>i),focus:0,lvl:null,q:'E',colr:'mF',ol:0};
+const bx=b=>b*BF[S.Bu],fx=f=>f*FF[S.fu];
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sci=x=>{if(x==null||!isFinite(x))return '–';if(x===0)return '0';const e=Math.floor(Math.log10(Math.abs(x)));return (e<7&&e>-4)?(+x.toPrecision(7)).toString():(x/10**e).toFixed(4)+'×10'+String(e).split('').map(c=>SUP[c]).join('')};
+const fr=v=>{const t=Math.round(2*Math.abs(v));const s=t%2?t+'/2':String(t/2);return v<0?'−'+s:s};
+const sg=v=>v>0?'+'+fr(v):fr(v);
+const ket=(F,m)=>`|${fr(F)}, ${sg(m)}⟩`;
+const num=(id,d)=>{const v=+$(id).value;return isFinite(v)&&$(id).value!==''?v:d};
+function interp(xs,ys,x){const n=xs.length;if(!n)return NaN;if(x<=xs[0])return ys[0];if(x>=xs[n-1])return ys[n-1];let lo=0,hi=n-1;while(hi-lo>1){const m=(lo+hi)>>1;if(xs[m]<=x)lo=m;else hi=m}const t=(x-xs[lo])/(xs[hi]-xs[lo]);return ys[lo]*(1-t)+ys[hi]*t}
+const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')'};
+function mfCol(m,Fmax){if(!Fmax)return '#8a8780';const t=Math.max(-1,Math.min(1,m/Fmax));return t<0?mix('#8a8780','#2a6fd6',-t):mix('#8a8780','#d6402a',t)}
+const FCOL=['--nist','--soc','--td','--sel','--ov5','--r-nir','--ov3','--ov4'];
+function levelCol(st,F,m){const Fs=st.F.map(f=>f.F);if(S.colr==='F')return css(FCOL[Fs.indexOf(F)%FCOL.length]);return mfCol(m,Math.max(...Fs))}
+function base(){const ink=css('--ink'),ink2=css('--ink2'),grid=css('--grid'),bg=css('--bg');return {ink,ink2,grid,bg,
+  lay:{paper_bgcolor:bg,plot_bgcolor:bg,font:{family:css('--sans'),color:ink},hovermode:'closest',margin:{l:78,r:24,t:30,b:50},showlegend:false,
+   hoverlabel:{bgcolor:css('--panel'),bordercolor:css('--edge'),font:{color:ink,family:css('--sans'),size:12}}}}}
+const cfg={displaylogo:false,responsive:true,modeBarButtonsToRemove:['lasso2d','select2d']};
+const axs=(b,t,extra)=>Object.assign({title:{text:t,font:{color:b.ink2,size:12}},gridcolor:b.grid,linecolor:b.ink2,tickfont:{color:b.ink2,size:11},ticks:'outside',tickcolor:b.ink2,zerolinecolor:b.grid},extra||{});
+const ax=(k,c)=>c+(k?k+1:''),axk=(k,c)=>c+'axis'+(k?k+1:'');
+function grid(n,ncol){const nr=Math.ceil(n/ncol),gx=.06,gy=.12,w=(1-gx*(ncol-1))/ncol,h=(1-gy*(nr-1))/nr;return [...Array(n)].map((_,k)=>{const c=k%ncol,r=Math.floor(k/ncol);return {x:[c*(w+gx),c*(w+gx)+w],y:[1-r*(h+gy)-h,1-r*(h+gy)]}})}
+function mkTable(id,cols,rows){$(id).tHead.innerHTML='<tr>'+cols.map(c=>`<th class="nosort">${c[0]}</th>`).join('')+'</tr>';
+  $(id).tBodies[0].innerHTML=rows.map(r=>'<tr'+(r._sel?' class="sel"':'')+'>'+cols.map(c=>`<td class="${c[2]===undefined?'m':c[2]}">${c[1](r)}</td>`).join('')+'</tr>').join('')||`<tr><td colspan="${cols.length}" class="empty">Nothing to show.</td></tr>`}
+const sel=()=>S.sel.map(i=>D.states[i]);
+const curShape=(k)=>({type:'line',xref:ax(k,'x'),yref:ax(k,'y')+' domain',x0:bx(S.Bc),x1:bx(S.Bc),y0:0,y1:1,line:{color:css('--sel'),width:1.2,dash:'dot'}});
+// ---------------- Levels
+function buildLv(){const b=base(),sts=sel(),n=sts.length,tr=[],L=Object.assign({},b.lay,{annotations:[],margin:{l:70,r:20,t:40,b:20}}),G=grid(n,Math.min(n,4));
+  sts.forEach((st,k)=>{const xa=ax(k,'x'),ya=ax(k,'y'),Fmax=Math.max(...st.F.map(f=>f.F));
+    L[axk(k,'x')]={domain:G[k].x,range:[0,1],showticklabels:false,showgrid:false,zeroline:false,fixedrange:true,anchor:ya};
+    L[axk(k,'y')]=axs(b,'E ('+S.fu+')',{domain:G[k].y,anchor:xa});
+    L.annotations.push({xref:xa+' domain',yref:ya+' domain',x:.5,y:1,yanchor:'bottom',showarrow:false,text:'<b>'+esc(st.label)+'</b>  A = '+sci(st.A)+' MHz'+(st.B?'  B = '+sci(st.B)+' MHz':''),font:{size:12,color:b.ink}});
+    st.F.forEach(f=>{const y=fx(f.E),c=S.colr==='F'?levelCol(st,f.F,0):b.ink;
+      tr.push({x:[.18,.82],y:[y,y],xaxis:xa,yaxis:ya,mode:'lines',line:{color:c,width:3},hovertemplate:`<b>${esc(st.label)} F = ${fr(f.F)}</b><br>E = ${sci(fx(f.E))} ${S.fu}<br>g<sub>F</sub> = ${f.gF.toFixed(6)}<extra></extra>`});
+      const nm=Math.round(2*f.F+1),xs=[...Array(nm)].map((_,i)=>.22+.56*(nm>1?i/(nm-1):.5)),ms=[...Array(nm)].map((_,i)=>-f.F+i);
+      tr.push({x:xs,y:xs.map(()=>y),xaxis:xa,yaxis:ya,mode:'markers',marker:{size:7,color:ms.map(m=>mfCol(m,Fmax)),line:{width:0}},text:ms.map(m=>sg(m)),hovertemplate:`F = ${fr(f.F)}, m<sub>F</sub> = %{text}<extra></extra>`});
+      L.annotations.push({xref:xa,yref:ya,x:.18,y,xanchor:'left',yanchor:'bottom',yshift:2,showarrow:false,text:'F = '+fr(f.F),font:{size:11,color:b.ink2}},{xref:xa,yref:ya,x:.82,y,xanchor:'right',yanchor:'bottom',yshift:2,showarrow:false,text:'g<sub>F</sub> '+(f.gF>=0?'+':'')+f.gF.toFixed(4),font:{size:10,color:b.ink2}})});
+    if(D.clock&&D.clock.state===st.label){const eu=st.F.find(f=>f.F===D.clock.Fu),el=st.F.find(f=>f.F===D.clock.Fl);if(eu&&el)L.annotations.push({xref:xa,yref:ya,x:.9,y:fx(eu.E),ax:.9,ay:fx(el.E),axref:xa,ayref:ya,showarrow:true,arrowhead:2,arrowside:'end+start',arrowcolor:css('--sel'),arrowwidth:1.6,text:''},{xref:xa,yref:ya,x:.92,y:fx((eu.E+el.E)/2),xanchor:'left',showarrow:false,text:sci(fx(D.clock.MHz))+' '+S.fu,textangle:-90,font:{size:11,color:css('--sel')}})}
+    if(st.F.length<2||st.F.every(f=>f.E===st.F[0].E))L[axk(k,'y')].range=[-1,1]});
+  const rows=[];sts.forEach(st=>st.F.forEach((f,i)=>{const nx=st.F[i+1];rows.push({st:st.label,F:f.F,E:f.E,gF:f.gF,d:nx?nx.E-f.E:null,n:2*f.F+1})}));
+  mkTable('lvtab',[['State',r=>esc(r.st),''],['F',r=>fr(r.F)],['E ('+S.fu+')',r=>sci(fx(r.E))],['g<sub>F</sub>',r=>r.gF.toFixed(6)],['Sublevels',r=>r.n],['To next F ('+S.fu+')',r=>r.d==null?'–':sci(fx(r.d))]],rows);
+  return Plotly.react('plv',tr,L,cfg)}
+// ---------------- Breit-Rabi
+function buildBr(){const b=base(),sts=sel(),n=sts.length,tr=[],G=grid(n,Math.min(n,3)),L=Object.assign({},b.lay,{annotations:[],shapes:[],uirevision:'br'+S.sel.join()+S.Bu+S.fu+S.q});
+  const xs=D.B.map(bx);
+  sts.forEach((st,k)=>{const xa=ax(k,'x'),ya=ax(k,'y'),si=D.states.indexOf(st);
+    L[axk(k,'x')]=axs(b,'B ('+S.Bu+')',{domain:G[k].x,anchor:ya});L[axk(k,'y')]=axs(b,S.q==='E'?'E ('+S.fu+')':'dE/dB (μ<sub>B</sub>)',{domain:G[k].y,anchor:xa});
+    L.annotations.push({xref:xa+' domain',yref:ya+' domain',x:0,y:1,xanchor:'left',yanchor:'bottom',showarrow:false,text:'<b>'+esc(st.label)+'</b>  g<sub>J</sub> = '+st.gJ.toFixed(6),font:{size:12,color:b.ink}});
+    L.shapes.push(curShape(k));
+    st.lv.forEach((v,j)=>{const on=S.lvl&&S.lvl[0]===si&&S.lvl[1]===j,c=levelCol(st,v.F,v.mF);
+      const y=S.q==='E'?v.E.map(fx):v.dE.map(d=>d/D.muB);
+      tr.push({x:xs,y,xaxis:xa,yaxis:ya,mode:'lines',line:{color:c,width:on?4:1.8},customdata:xs.map(()=>[si,j]),
+        hovertemplate:`<b>${esc(st.label)} ${ket(v.F,v.mF)}</b><br>high field |m<sub>J</sub> ${sg(v.mJ)}, m<sub>I</sub> ${sg(v.mI)}⟩<br>B = %{x:.5g} ${S.Bu}<br>`+(S.q==='E'?`E = %{y:.6g} ${S.fu}`:'dE/dB = %{y:.5f} μ<sub>B</sub>')+'<extra></extra>'});
+      if(S.lin&&S.q==='E'){const f=st.F.find(g=>g.F===v.F);if(f)tr.push({x:xs,y:D.B.map(B=>fx(f.E+f.gF*D.muB*v.mF*B)),xaxis:xa,yaxis:ya,mode:'lines',line:{color:c,width:1,dash:'dot'},hoverinfo:'skip'})}
+      if(S.lab){const yl=y[y.length-1];L.annotations.push({xref:xa,yref:ya,x:xs[xs.length-1],y:yl,xanchor:'left',showarrow:false,text:sg(v.mJ)+', '+sg(v.mI),font:{size:9,color:c}})}});
+    if(S.lab)L[axk(k,'x')].range=[0,xs[xs.length-1]*1.12]});
+  if(S.lab)L.margin=Object.assign({},L.margin,{r:40});
+  brTable();
+  return Plotly.react('pbr',tr,L,cfg).then(()=>{hook('pbr');buildComp()})}
+function brTable(){const st=D.states[S.focus],Bc=S.Bc;if(!st)return;$('brtitle').innerHTML=`${st.label} levels at B = ${sci(bx(Bc))} ${S.Bu}`;
+  const rows=st.lv.map((v,j)=>({j,v,E:interp(D.B,v.E,Bc),s:interp(D.B,v.dE,Bc),_sel:S.lvl&&S.lvl[0]===S.focus&&S.lvl[1]===j})).sort((a,c)=>c.E-a.E);
+  mkTable('brtab',[['Level (B → 0)',r=>ket(r.v.F,r.v.mF),''],['High field',r=>`|m<sub>J</sub> ${sg(r.v.mJ)}, m<sub>I</sub> ${sg(r.v.mI)}⟩`,''],['E ('+S.fu+')',r=>sci(fx(r.E))],['dE/dB ('+S.fu+'/'+S.Bu+')',r=>sci(fx(r.s)/BF[S.Bu])],['dE/dB (μ<sub>B</sub>)',r=>(r.s/D.muB).toFixed(5)],['In a magnetic trap',r=>Math.abs(r.s)<1e-9?'insensitive':r.s>0?'low-field seeker':'high-field seeker','']],rows)}
+function buildComp(){const b=base();if(!S.lvl){$('comptitle').innerHTML='Composition: click a curve';return Plotly.react('pcomp',[],Object.assign({},b.lay,{xaxis:axs(b,'B ('+S.Bu+')',{range:[0,bx(BMAX)]}),yaxis:axs(b,'Probability',{range:[0,1.02]})}),cfg)}
+  const [si,j]=S.lvl,st=D.states[si],v=st.lv[j],cp=st.comp[j],xs=st.cB.map(bx),tr=cp.basis.map((bs,c)=>({x:xs,y:cp.p.map(r=>r[c]),mode:'lines',name:`|m<sub>J</sub> ${sg(bs[0])}, m<sub>I</sub> ${sg(bs[1])}⟩`,line:{width:2,color:css(FCOL[c%FCOL.length])},hovertemplate:`|m<sub>J</sub> ${sg(bs[0])}, m<sub>I</sub> ${sg(bs[1])}⟩<br>B = %{x:.5g} ${S.Bu}<br>P = %{y:.4f}<extra></extra>`}));
+  $('comptitle').innerHTML=`Composition of ${st.label} ${ket(v.F,v.mF)} in the |m<sub>J</sub>, m<sub>I</sub>⟩ basis`;
+  return Plotly.react('pcomp',tr,Object.assign({},b.lay,{showlegend:true,legend:{orientation:'h',x:0,y:1.15,font:{size:11,color:b.ink2}},xaxis:axs(b,'B ('+S.Bu+')'),yaxis:axs(b,'Probability',{range:[0,1.02]}),shapes:[{type:'line',xref:'x',yref:'paper',x0:bx(S.Bc),x1:bx(S.Bc),y0:0,y1:1,line:{color:css('--sel'),width:1.2,dash:'dot'}}]}),cfg)}
+// ---------------- Transitions
+const gsState=()=>D.clock?D.states.find(s=>s.label===D.clock.state):D.states[0];
+function buildTr(){const b=base(),xs=D.B.map(bx),gs=gsState();
+  const kinds=[];if($('mw-M1').checked)kinds.push('M1');if($('mw-2p').checked)kinds.push('two-photon');
+  const mw=D.microwave.filter(m=>kinds.includes(m.kind)),tr=[];
+  mw.forEach((m,i)=>{const c=css(FCOL[i%FCOL.length]),nm=`${ket(...m.u)} ↔ ${ket(...m.l)}`;
+    tr.push({x:xs,y:m.nu.map(fx),mode:'lines',name:nm,line:{color:c,width:m.kind==='M1'?1.8:2.4,dash:m.kind==='M1'?'solid':'dash'},hovertemplate:`<b>${nm}</b> (${m.kind})<br>B = %{x:.5g} ${S.Bu}<br>ν − ν₀ = %{y:.6g} ${S.fu}<extra></extra>`});
+    if(m.stat.length)tr.push({x:m.stat.map(p=>bx(p[0])),y:m.stat.map(p=>fx(p[1]-m.nu0)),mode:'markers',marker:{symbol:'diamond',size:11,color:c,line:{width:1.5,color:b.ink}},hovertemplate:`<b>Field-insensitive point</b><br>${nm}<br>B = %{x:.7g} ${S.Bu}<br>ν = ${''}%{customdata}<extra></extra>`,customdata:m.stat.map(p=>p[1].toFixed(6)+' MHz')})});
+  $('mwtitle').innerHTML=gs?`${gs.label} microwave lines: ν − ν₀`:'Microwave lines';
+  const L1=Object.assign({},b.lay,{xaxis:axs(b,'B ('+S.Bu+')'),yaxis:axs(b,'ν − ν₀ ('+S.fu+')'),shapes:[curShape(0)],uirevision:'mw'+S.Bu+S.fu});
+  const rows=mw.map(m=>({m,c:interp(D.B,m.nu,S.Bc)}));
+  mkTable('mwtab',[['Line',r=>ket(...r.m.u)+' ↔ '+ket(...r.m.l),''],['Kind',r=>r.m.kind,''],['ν₀ (MHz)',r=>r.m.nu0.toFixed(6)],['ν − ν₀ at cursor ('+S.fu+')',r=>sci(fx(r.c))],['Linear (Hz/G)',r=>sci(r.m.lin)],['Quadratic (Hz/G²)',r=>sci(r.m.quad)],['Field-insensitive points',r=>r.m.stat.length?r.m.stat.map(p=>`${sci(bx(p[0]))} ${S.Bu} (ν = ${p[1].toFixed(6)} MHz, ${sci(p[2])} Hz/G²)`).join('; '):'none in range','']],rows);
+  $('mwinfo').textContent=`${mw.length} lines · cursor ${sci(bx(S.Bc))} ${S.Bu}`;
+  const p1=Plotly.react('pmw',tr,L1,cfg);
+  const ol=D.optical[S.ol];let p2,p3;
+  if(!ol){$('oftitle').textContent='No optical line (needs a p state in the run)';p2=Plotly.react('pof',[],Object.assign({},b.lay),cfg);p3=Plotly.react('psp',[],Object.assign({},b.lay),cfg);mkTable('sftab',[['',r=>'']],[]);return Promise.all([p1,p2,p3]).then(()=>{hook('pmw')})}
+  const g=D.states.find(s=>s.label===ol.lower),e=D.states.find(s=>s.label===ol.upper),qs=[];if($('q1').checked)qs.push(1);if($('q0').checked)qs.push(0);if($('qm').checked)qs.push(-1);
+  const QC={1:css('--soc'),0:css('--nist'),'-1':css('--td')},QN={1:'σ+',0:'π','-1':'σ−'},smin=num('smin',.01),ox=ol.B.map(bx);
+  const comps=ol.c.filter(c=>qs.includes(c[2])&&Math.max(...c[4])>=smin),t2=[];
+  comps.forEach(c=>{const gl=g.lv[c[0]],el=e.lv[c[1]],mx=Math.max(...c[4]);t2.push({x:ox,y:c[3].map(fx),mode:'lines',line:{color:QC[c[2]],width:1.2+1.8*mx},opacity:.3+.7*mx,customdata:c[4],
+    hovertemplate:`<b>${QN[c[2]]}</b> ${esc(ol.lower)} ${ket(gl.F,gl.mF)} → ${esc(ol.upper)} ${ket(el.F,el.mF)}<br>B = %{x:.5g} ${S.Bu}<br>detuning %{y:.6g} ${S.fu}<br>strength %{customdata:.4f}<extra></extra>`})});
+  $('oftitle').textContent=`${ol.lower} → ${ol.upper}: components vs field (${comps.length} shown)`;
+  p2=Plotly.react('pof',t2,Object.assign({},b.lay,{xaxis:axs(b,'B ('+S.Bu+')'),yaxis:axs(b,'Detuning ('+S.fu+')'),shapes:[curShape(0)],uirevision:'of'+S.ol+S.Bu+S.fu}),cfg);
+  const ng=g.lv.length,w=Math.max(num('fw',10),1e-6),sticks=ol.c.filter(c=>qs.includes(c[2])).map(c=>({q:c[2],d:interp(ol.B,c[3],S.Bc),s:interp(ol.B,c[4],S.Bc)/ng,g:c[0],e:c[1]})).filter(s=>s.s>1e-9);
+  const t3=[];if(sticks.length){const lo=Math.min(...sticks.map(s=>s.d))-4*w,hi=Math.max(...sticks.map(s=>s.d))+4*w,N=1600,X=[...Array(N)].map((_,i)=>lo+(hi-lo)*i/(N-1)),hw=w/2;
+    for(const q of qs){const ss=sticks.filter(s=>s.q===q);if(!ss.length)continue;
+      t3.push({x:X.map(fx),y:X.map(x=>ss.reduce((a,s)=>a+s.s*hw*hw/((x-s.d)**2+hw*hw),0)),mode:'lines',name:QN[q],line:{color:QC[q],width:2},hovertemplate:QN[q]+' profile<br>%{x:.5g} '+S.fu+'<br>%{y:.4f}<extra></extra>'});
+      const sx=[],sy=[];ss.forEach(s=>{sx.push(fx(s.d),fx(s.d),null);sy.push(0,s.s,null)});
+      t3.push({x:sx,y:sy,mode:'lines',name:QN[q]+' sticks',showlegend:false,line:{color:QC[q],width:1.4},hoverinfo:'skip'});
+      t3.push({x:ss.map(s=>fx(s.d)),y:ss.map(s=>s.s),mode:'markers',showlegend:false,marker:{size:5,color:QC[q]},text:ss.map(s=>`${ket(g.lv[s.g].F,g.lv[s.g].mF)} → ${ket(e.lv[s.e].F,e.lv[s.e].mF)}`),hovertemplate:QN[q]+' %{text}<br>%{x:.6g} '+S.fu+'<br>strength %{y:.4f}<extra></extra>'})}}
+  $('sptitle').textContent=`${ol.lower} → ${ol.upper} at B = ${sci(bx(S.Bc))} ${S.Bu}, FWHM ${w} MHz`;
+  p3=Plotly.react('psp',t3,Object.assign({},b.lay,{showlegend:true,legend:{orientation:'h',x:0,y:1.1,font:{size:12,color:b.ink2}},xaxis:axs(b,'Detuning ('+S.fu+')'),yaxis:axs(b,'Relative strength (per atom)',{rangemode:'tozero'})}),cfg);
+  $('sftitle').innerHTML=`Zero-field hyperfine line strengths S<sub>FF′</sub>, ${esc(ol.lower)} → ${esc(ol.upper)}`;
+  mkTable('sftab',[['F',r=>fr(r[0])],['F′',r=>fr(r[1])],['S<sub>FF′</sub>',r=>r[2].toFixed(6)],['As a fraction',r=>frac(r[2]),'m']],ol.S);
+  return Promise.all([p1,p2,p3]).then(()=>{hook('pmw');hook('pof')})}
+function frac(x){for(let d=1;d<=400;d++){const n=Math.round(x*d);if(Math.abs(n/d-x)<1e-9)return n+'/'+d}return '–'}
+// ---------------- Constants
+function buildCo(){mkTable('nutab',[['Isotope',r=>esc(D.nuclide),''],['I',r=>fr(D.I)],['μ<sub>I</sub> (μ<sub>N</sub>)',r=>sci(D.mu_I)],['Q (b)',r=>sci(D.Q)],['g<sub>I</sub> used (μ<sub>N</sub> units)',r=>sci(D.gI)],['g<sub>I</sub> source',r=>D.gI_src==='atomic'?'atomic (with diamagnetic shielding)':'bare nucleus (μ<sub>I</sub>/I)','']],[{}]);
+  mkTable('cotab',[['State',r=>esc(r.label),''],['J',r=>fr(r.J)],['A (MHz)',r=>sci(r.A)],['B (MHz)',r=>r.B?sci(r.B):'–'],['C (kHz)',r=>r.C?sci(r.C):'–'],['g<sub>J</sub>',r=>r.gJ.toFixed(8)],['g<sub>J</sub> source',r=>r.gJ_src==='experimental'?'measured':'Landé (g<sub>S</sub>, reduced mass)',''],['Constants',r=>r.missing?'none: degenerate F levels':r.scaled_from?'scaled from '+esc(r.scaled_from)+' as n*⁻³':'measured','']],D.states);return Promise.resolve()}
+// ---------------- shell
+const hooked={};
+function hook(id){const el=$(id);if(hooked[id]||!el.on)return;hooked[id]=1;
+  el.on('plotly_click',ev=>{const p=ev.points&&ev.points[0];if(!p||p.x==null||!isFinite(p.x))return;S.Bc=Math.max(0,Math.min(BMAX,p.x/BF[S.Bu]));
+    if(id==='pbr'&&p.data.customdata){const cd=p.data.customdata[0];S.lvl=cd;S.focus=cd[0];$('focus').value=String(cd[0])}draw()})}
+function draw(){const t=S.tab;['lv','br','tr','co'].forEach(k=>{$('pane-'+k).hidden=k!==t});document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.t===t)));
+  $('bc').value=+bx(S.Bc).toPrecision(8);$('bcs').value=BMAX?Math.round(1000*S.Bc/BMAX):0;document.querySelectorAll('.bu').forEach(x=>x.textContent=S.Bu);
+  return t==='lv'?buildLv():t==='br'?buildBr():t==='tr'?buildTr():buildCo()}
+// header and chips
+$('h1').textContent=D.nuclide+' hyperfine structure';$('sub').innerHTML=`I = ${fr(D.I)} · μ<sub>I</sub> = ${D.mu_I.toFixed(5)} μ<sub>N</sub> · B up to ${BMAX} G`;
+(function(){const k=(l,v,d)=>`<div class="stat"><div class="k">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;let h='';
+  if(D.clock)h+=k('Ground clock '+fr(D.clock.Fu)+' ↔ '+fr(D.clock.Fl),D.clock.MHz.toFixed(6)+' MHz',D.clock.state+(D.clock.cm?' · λ = '+D.clock.cm.toFixed(3)+' cm':''));
+  const z=D.microwave.find(m=>m.l[1]===0&&m.u[1]===0);if(z)h+=k('Clock 0–0 Zeeman shift',sci(z.quad)+' Hz/G²','second order, m<sub>F</sub> = 0 ↔ 0');
+  if(D.cycling)h+=k('Cycling line',`F = ${fr(D.cycling.Fl)} → F′ = ${fr(D.cycling.Fu)}`,D.cycling.lower+' → '+D.cycling.upper);
+  const mg=D.microwave.flatMap(m=>m.stat.map(p=>[m,p])).sort((a,b)=>a[1][0]-b[1][0])[0];if(mg)h+=k('First field-insensitive point',sci(mg[1][0])+' G',ket(...mg[0].u)+' ↔ '+ket(...mg[0].l));
+  $('stats').innerHTML=h})();
+$('stchk').innerHTML=D.states.map((s,i)=>`<label><input type="checkbox" data-s="${i}" checked>${esc(s.label)}</label>`).join('');
+$('focus').innerHTML=D.states.map((s,i)=>`<option value="${i}">${esc(s.label)}</option>`).join('');
+$('olsel').innerHTML=D.optical.map((o,i)=>`<option value="${i}">${esc(o.lower)} → ${esc(o.upper)}</option>`).join('')||'<option>none</option>';
+document.querySelectorAll('[data-s]').forEach(c=>c.addEventListener('change',()=>{const v=[...document.querySelectorAll('[data-s]:checked')].map(x=>+x.dataset.s);if(!v.length){c.checked=true;return}S.sel=v;draw()}));
+$('focus').onchange=e=>{S.focus=+e.target.value;draw()};$('olsel').onchange=e=>{S.ol=+e.target.value;draw()};
+$('bc').addEventListener('change',()=>{S.Bc=Math.max(0,Math.min(BMAX,num('bc',bx(S.Bc))/BF[S.Bu]));draw()});
+$('bcs').addEventListener('input',()=>{S.Bc=BMAX*(+$('bcs').value)/1000;draw()});
+['lin','lab','mw-M1','mw-2p','q1','q0','qm'].forEach(id=>$(id).addEventListener('change',()=>{S.lin=$('lin').checked;S.lab=$('lab').checked;draw()}));
+['fw','smin'].forEach(id=>$(id).addEventListener('input',()=>draw()));
+function seg(id,key){const bs=document.querySelectorAll('#'+id+' button');const mark=()=>bs.forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===S[key])));mark();bs.forEach(b=>b.onclick=()=>{S[key]=b.dataset.v;mark();draw()})}
+seg('bunit','Bu');seg('funit','fu');seg('brq','q');seg('brc','colr');
+document.querySelectorAll('.tabs button').forEach(b=>{b.hidden=!O.tabs.includes(b.dataset.t);b.onclick=()=>{S.tab=b.dataset.t;draw()}});
+$('reset').onclick=()=>{Object.assign(S,{Bu:O.Bu,fu:O.fu,Bc:O.Bc,sel:D.states.map((_,i)=>i),focus:0,lvl:null,q:'E',colr:'mF',ol:0,lin:false,lab:false});document.querySelectorAll('.rail input[type=checkbox]').forEach(i=>i.checked=!['lin','lab'].includes(i.id));$('fw').value=10;$('smin').value=.01;$('olsel').value='0';$('focus').value='0';['bunit','funit','brq','brc'].forEach(id=>document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===S[{bunit:'Bu',funit:'fu',brq:'q',brc:'colr'}[id]]))));draw()};
+$('railbtn').onclick=()=>{S.rail=!S.rail;$('app').classList.toggle('closed',!S.rail);$('railbtn').textContent=S.rail?'Hide controls':'Show controls';$('railbtn').setAttribute('aria-expanded',String(S.rail));setTimeout(()=>document.querySelectorAll('.pane:not([hidden]) .p').forEach(p=>Plotly.Plots.resize(p)),30)};
+$('theme').onclick=()=>{const o=['auto','light','dark'];S.theme=o[(o.indexOf(S.theme)+1)%3];const h=document.documentElement;S.theme==='auto'?h.removeAttribute('data-theme'):h.setAttribute('data-theme',S.theme);$('theme').textContent='Theme: '+S.theme;draw()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw());
+const SK='qali-hyperfine-rail';let shut={};try{shut=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+const secs=[...document.querySelectorAll('.rail section')].filter(x=>x.querySelector(':scope>h2'));const keep=()=>{try{localStorage.setItem(SK,JSON.stringify(shut))}catch(e){}};
+secs.forEach((sec,i)=>{const h=sec.querySelector(':scope>h2'),key=h.textContent.trim();h.tabIndex=0;h.setAttribute('role','button');const set=v=>{sec.classList.toggle('shut',v);h.setAttribute('aria-expanded',String(!v));shut[key]=v};
+  set(shut[key]===undefined?i>=3:!!shut[key]);const tog=()=>{set(!sec.classList.contains('shut'));keep()};h.onclick=tog;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}}});
+$('colall').onclick=()=>{secs.forEach(x=>{x.classList.add('shut');x.querySelector('h2').setAttribute('aria-expanded','false');shut[x.querySelector('h2').textContent.trim()]=true});keep()};
+$('expall').onclick=()=>{secs.forEach(x=>{x.classList.remove('shut');x.querySelector('h2').setAttribute('aria-expanded','true');shut[x.querySelector('h2').textContent.trim()]=false});keep()};
+const closeCM=()=>{const m=$('cm');m&&m.remove()};document.addEventListener('click',e=>{if(!e.target.closest('.cm'))closeCM()});
+async function lightly(fn){const h=document.documentElement,prev=h.getAttribute('data-theme');h.setAttribute('data-theme','light');try{await draw();await fn()}finally{prev==null?h.removeAttribute('data-theme'):h.setAttribute('data-theme',prev);draw()}}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+function csv(){if(S.tab==='lv')return 'state,F,E_MHz,g_F\n'+sel().flatMap(st=>st.F.map(f=>[st.label,f.F,f.E,f.gF].map(q).join(','))).join('\n');
+  if(S.tab==='br')return 'state,F,m_F,m_J_high,m_I_high,B_G,E_MHz,dEdB_MHz_per_G\n'+sel().flatMap(st=>st.lv.map(v=>[st.label,v.F,v.mF,v.mJ,v.mI,S.Bc,interp(D.B,v.E,S.Bc),interp(D.B,v.dE,S.Bc)].map(q).join(','))).join('\n');
+  if(S.tab==='tr')return 'F_upper,mF_upper,F_lower,mF_lower,kind,nu0_MHz,linear_Hz_per_G,quadratic_Hz_per_G2,stationary_B_G\n'+D.microwave.map(m=>[m.u[0],m.u[1],m.l[0],m.l[1],m.kind,m.nu0,m.lin,m.quad,m.stat.map(p=>p[0]).join(' ')].map(q).join(',')).join('\n');
+  return 'state,J,A_MHz,B_MHz,C_kHz,g_J,g_J_source\n'+D.states.map(s=>[s.label,s.J,s.A,s.B,s.C,s.gJ,s.gJ_src].map(q).join(',')).join('\n')}
+const PLOTS={lv:[['plv','Levels']],br:[['pbr','Breit–Rabi'],['pcomp','Composition']],tr:[['pmw','Microwave lines'],['pof','Optical components'],['psp','Spectrum']],co:[]};
+$('exportbtn').onclick=e=>{e.stopPropagation();closeCM();const b=e.currentTarget.getBoundingClientRect(),m=document.createElement('div');m.className='cm';m.id='cm';
+  m.innerHTML=PLOTS[S.tab].map(([id,nm])=>`<button data-a="svg" data-p="${id}">${nm} as SVG</button><button data-a="png" data-p="${id}">${nm} as PNG</button>`).join('')+'<button data-a="pdf">Page as PDF (print dialog)</button><button data-a="csv">Table as CSV</button>';
+  document.body.appendChild(m);m.style.top=(b.bottom+4)+'px';m.style.left=Math.max(8,Math.min(b.left,innerWidth-m.offsetWidth-8))+'px';
+  m.onclick=ev=>{const a=ev.target.dataset.a,id=ev.target.dataset.p;if(!a)return;closeCM();const o={width:1600,height:1000,filename:D.element+'_hyperfine_'+(id||S.tab)};
+    if(a==='svg')lightly(()=>Plotly.downloadImage(id,{...o,format:'svg'}));if(a==='png')lightly(()=>Plotly.downloadImage(id,{...o,format:'png',scale:3}));
+    if(a==='pdf')lightly(async()=>{window.print();await new Promise(r=>setTimeout(r,2000))});if(a==='csv')dl(D.element+'_hyperfine_'+S.tab+'.csv',csv(),'text/csv')}};
+draw();
+</script>

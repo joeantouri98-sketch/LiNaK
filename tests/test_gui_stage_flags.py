@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from linak.gui.stages import STAGE_BY_ID
+from qali.gui.stages import STAGE_BY_ID
 
 # Widget defaults the old stdin responder used (the GUI passes them through
 # the flags form now, so GUI runs keep exactly the same numbers).
@@ -42,7 +42,7 @@ PARSER_DEFAULTS = {
 
 def test_grotrian_stage_uses_cli_flags_not_stdin_answers():
     """The stage table carries real flag names with the responder's defaults."""
-    from linak.pipelines.plotinteractive import build_parser
+    from qali.pipelines.plotinteractive import build_parser
 
     specs = {spec["name"]: spec for spec in STAGE_BY_ID["grotrian"]["flags"]}
 
@@ -75,7 +75,7 @@ def test_grotrian_stage_does_not_offer_the_viewer_launchers():
 
     The pipeline's parser keeps the flags for command-line use.
     """
-    from linak.pipelines.plotinteractive import build_parser
+    from qali.pipelines.plotinteractive import build_parser
 
     specs = {spec["name"] for spec in STAGE_BY_ID["grotrian"]["flags"]}
     launchers = {"--also-orbital3d", "--orbital3d-n-max", "--orbital3d-grid",
@@ -107,8 +107,8 @@ def test_no_plot_writes_the_data_but_no_plot(tmp_path):
 
 
 def test_help_and_about_text_describe_the_current_app():
-    from linak.gui.help_dialog import HelpDialog
-    from linak.gui.stages import STAGE_PHYSICS
+    from qali.gui.help_dialog import HelpDialog
+    from qali.gui.stages import STAGE_PHYSICS
 
     text = HelpDialog._about_html()
     assert "GPL" in text and "View more" in text and "Export" in text and "MIT" in text

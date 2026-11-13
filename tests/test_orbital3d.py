@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics import orbital_radial as orb
-from linak.pipelines.orbital3d import collect_states, radial_payload
+from qali.core.paths import reference_path
+from qali.physics import orbital_radial as orb
+from qali.pipelines.orbital3d import collect_states, radial_payload
 
 
 def _rydberg(el):
@@ -96,7 +96,7 @@ def na_workspace(tmp_path):
     from helpers import make_workspace
 
     ws = make_workspace(tmp_path / "ws")
-    data = ws / ".linak" / "data"
+    data = ws / ".qali" / "data"
     data.mkdir(parents=True)
     src = reference_path("data_json", "Na_rydberg.json").parent
     for f in src.glob("Na_*.json"):
@@ -110,7 +110,7 @@ def test_page_payload(na_workspace, render):
 
     r = run_pipeline(["orbital3d", "Na", "--n-max", "6", "--render", render], na_workspace)
     assert r.returncode == 0, r.stderr
-    page = na_workspace / ".linak" / "plots" / "Na" / "Na_orbital3d.html"
+    page = na_workspace / ".qali" / "plots" / "Na" / "Na_orbital3d.html"
     html = page.read_text(encoding="utf-8")
     assert (page.parent / "plotly.min.js").is_file() and 'src="plotly.min.js"' in html
     assert "$!" not in html and "cdn.plot.ly" not in html

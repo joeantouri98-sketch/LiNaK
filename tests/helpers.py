@@ -25,19 +25,19 @@ def write_result_summary(results_dir: Path, name: str, payload: dict) -> Path:
 def make_workspace(root: Path) -> Path:
     """Turn *root* into a checkout-shaped project dir so pipeline writes stay local.
 
-    ``linak.core.paths.runtime_root_for`` only uses ``<root>/.linak`` when the
+    ``qali.core.paths.runtime_root_for`` only uses ``<root>/.qali`` when the
     root looks like a checkout, so give it the two markers it checks.
     """
     root.mkdir(parents=True, exist_ok=True)
     (root / "pyproject.toml").write_text("# isolated test workspace\n", encoding="utf-8")
-    (root / "src" / "linak").mkdir(parents=True, exist_ok=True)
+    (root / "src" / "qali").mkdir(parents=True, exist_ok=True)
     return root
 
 
 def pipeline_env(workspace: Path) -> dict:
-    """Environment that points LiNaK at an isolated workspace and the source tree."""
+    """Environment that points Qali at an isolated workspace and the source tree."""
     env = os.environ.copy()
-    env["LINAK_PROJECT_ROOT"] = str(workspace)
+    env["QALI_PROJECT_ROOT"] = str(workspace)
     env["PYTHONUTF8"] = "1"
     env["PYTHONIOENCODING"] = "utf-8"
     src = str(REPO_ROOT / "src")
@@ -46,9 +46,9 @@ def pipeline_env(workspace: Path) -> dict:
 
 
 def run_pipeline(args: list[str], workspace: Path, timeout: float = 900.0) -> subprocess.CompletedProcess:
-    """Run ``linak --pipeline <args...>`` as a subprocess against *workspace*."""
+    """Run ``qali --pipeline <args...>`` as a subprocess against *workspace*."""
     return subprocess.run(
-        [sys.executable, "-m", "linak", "--pipeline", *args],
+        [sys.executable, "-m", "qali", "--pipeline", *args],
         cwd=str(workspace),
         env=pipeline_env(workspace),
         capture_output=True,

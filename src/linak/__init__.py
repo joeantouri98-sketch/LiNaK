@@ -1,16 +1,34 @@
-"""LiNaK application package."""
+"""Old name of the ``qali`` package (LiNaK was renamed Qali in 2026-11).
 
-import os as _os
+``import linak`` and ``import linak.<anything>`` still work and give the very same
+modules as ``qali``; new code should import ``qali``.
+"""
 
-# One BLAS thread per process unless the user sets a count. LiNaK's matrices have a few hundred rows,
-# where threaded BLAS gains nothing (the dhf stage runs as fast on 1 thread as on the 4-6 it takes by
-# default) while its spinning threads slow to a crawl when the CPU is shared: stages beside the GUI,
-# a test suite, a second run. Set before numpy is imported; stage subprocesses inherit it.
-for _var in ("OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "OMP_NUM_THREADS"):
-	_os.environ.setdefault(_var, "1")
-from importlib.metadata import PackageNotFoundError, version
+import importlib
+import importlib.abc
+import importlib.util
+import sys
+import warnings
 
-try:
-	__version__ = version("LiNak")
-except PackageNotFoundError:
-	__version__ = "0+unknown"
+import qali
+
+warnings.warn("the 'linak' package is now 'qali'; import qali instead", DeprecationWarning, stacklevel=2)
+
+
+class _Alias(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+    """Resolve ``linak.x.y`` to the module ``qali.x.y`` itself."""
+
+    def find_spec(self, name, path=None, target=None):
+        if name.startswith("linak."):
+            return importlib.util.spec_from_loader(name, self)
+        return None
+
+    def create_module(self, spec):
+        return importlib.import_module("qali" + spec.name[len("linak"):])
+
+    def exec_module(self, module):
+        pass
+
+
+sys.meta_path.insert(0, _Alias())
+sys.modules[__name__] = qali

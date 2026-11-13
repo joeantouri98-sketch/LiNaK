@@ -10,12 +10,12 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 if ! command -v uv >/dev/null 2>&1; then
-    echo "uv was not found on PATH. Install uv before building LiNaK." >&2
+    echo "uv was not found on PATH. Install uv before building Qali." >&2
     exit 1
 fi
 
 if [[ "${1:-}" == "--clean" ]]; then
-    rm -rf dist/pyside6 src/linak/deployment
+    rm -rf dist/pyside6 src/qali/deployment
 elif [[ "${1:-}" != "" ]]; then
     echo "Usage: $0 [--clean]" >&2
     exit 2
@@ -25,7 +25,7 @@ fi
 # tree to exist before its own source-directory creation step. Recreate it.
 # pyside6-deploy also copies the final artifact into "exec_directory" without
 # creating the path, so the destination folder must exist too.
-mkdir -p src/linak/deployment dist/pyside6
+mkdir -p src/qali/deployment dist/pyside6
 
 # Nuitka 4.1.1 officially supports Python up to 3.13, so pin the build
 # interpreter instead of reusing whatever .venv exists.
@@ -35,9 +35,9 @@ uv sync --dev --locked --python "$python"
 uv run --python "$python" pyside6-deploy -c pysidedeploy.spec --mode onefile --no-install --no-warn
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-    output="dist/pyside6/LiNaK.app"
+    output="dist/pyside6/Qali.app"
 else
-    output="dist/pyside6/LiNaK.bin"
+    output="dist/pyside6/Qali.bin"
 fi
 
 if [[ ! -e "$output" ]]; then

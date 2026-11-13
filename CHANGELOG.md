@@ -1,8 +1,22 @@
 # Changelog
 
-Short notes on what changed in LiNaK. Newest first.
+Short notes on what changed in Qali (called LiNaK until November 2026). Newest first.
 
 ## Latest
+
+### Fixed
+- **Bundled hyperfine constants restored.** `Na`, `K`, `Rb` and `Cs_hf_constants.json` had lost the measured atomic g_I′ and ground-state g_J (an older copy from an output folder was put over them), so the hyperfine pages fell back to the bare-nucleus g_I. They are back as of 2026-11-11.
+- **`tools/regenerate_all.py --refresh-bundled`** updates the bundled example data safely: it runs every stage in a fresh temporary folder and copies back only the files the stages wrote, never the input files. Copying an output folder over `resources/data_json` by hand brings in old copies of the input files.
+
+### Changed
+- **LiNaK is now Qali.** The app, the Python package (`qali`), the commands (`qali`, `qali-gui`), the executable, the environment variables (`QALI_PROJECT_ROOT`, `QALI_SETTINGS_FILE`), the per-user data folder (`Qali`) and the output folder inside a source checkout (`.qali`) carry the new name. The licence, the DOI and the repository history are unchanged.
+  - Nothing made under the old name is lost: `linak` and `linak-gui` still start the app (with a one-line note), `import linak` gives the `qali` modules (with a `DeprecationWarning`), `LINAK_PROJECT_ROOT` and `LINAK_SETTINGS_FILE` are read when the new variables are unset, saved settings are copied over on first start, and an existing `LiNaK` data folder or `.linak` output folder keeps being used until a `Qali` / `.qali` one exists.
+  - In a source checkout, run `uv sync` once after updating. It removes the old `linak` install, which otherwise keeps `import linak` and the `linak` command on the old code.
+- **New logo.** A saltwort sprig with an ember ("alkali" comes from the Arabic *al-qalī*, the ash of that plant). It is the window, taskbar and executable icon, the wordmark in the toolbar and a splash screen while the app starts. The main window and taskbar always show the app icon; on Windows the app now has its own taskbar identity, so the taskbar no longer shows the Python launcher's icon. The ember of the toolbar wordmark and of the empty-viewer sprig takes the theme's accent colour (green in Light).
+- **Icons follow the species.** The ember on a species' dialogs (Properties, Set up, Hyperfine constants, Extrapolation, Delete) and on the species list takes that species' colour: the flame-test colour for Li, Na, K, Rb and Cs, grey for Fr, the logo's orange for everything else. Right-click a species > **Properties...** > **Icon colour** changes it.
+- **New theme: Qali** (View > Theme, and Edit > Preferences > Appearance): a sage-slate green-grey with the ember as accent. Every panel colour is built from one **Qali theme base colour**, which Edit > Preferences > Appearance lets you change; the other colours can be edited there like those of Dark and Light.
+- **Toolbar, species list and empty viewer.** The wordmark replaces the "LiNaK" label, followed by the current species in bold (no "Current species:" prefix). Species chips are compact, each with a small ember. The empty viewer shows a faint sprig.
+- **Accent colour.** Dark now uses the logo's ember orange in place of the green for buttons, check marks, links and the stage-done dot. Light keeps its green. A colour you set yourself in Preferences is kept.
 
 ### Fixed
 - **Orbital viewer: wrong radial functions below n* ≈ 3.** The radial part was the Coulomb function at n*, continued as r^ℓ inside the core, so states lost their inner nodes (Na 3s showed 0 instead of 2) and low states had the wrong shape.

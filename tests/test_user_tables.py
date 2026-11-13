@@ -7,7 +7,7 @@ import shutil
 
 import pytest
 
-from linak.core import paths, user_tables as U
+from qali.core import paths, user_tables as U
 
 
 @pytest.fixture()
@@ -36,7 +36,7 @@ def test_every_registered_table_loads_and_has_numbers():
 
 
 def test_override_is_applied_in_place_and_reload_restores(ws):
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
 
     default = P.ALPHA_CORE_AU["Cs"]
     U.save_overrides({"polarizability.alpha_core": {"Cs": 16.0}})
@@ -48,7 +48,7 @@ def test_override_is_applied_in_place_and_reload_restores(ws):
 
 
 def test_integer_tables_stay_integers_and_unknown_keys_are_ignored(ws):
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
 
     U.save_overrides({"polarizability.core_electrons": {"Cs": 55, "Zz": 3}})
     U.reload("polarizability.core_electrons")
@@ -59,7 +59,7 @@ def test_a_corrupt_overrides_file_is_ignored(ws):
     ws.mkdir(parents=True)
     (ws / "overrides.json").write_text("{not json", encoding="utf-8")
     assert U.load_overrides() == {}
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
     U.reload("polarizability.alpha_core")
     assert P.ALPHA_CORE_AU["Cs"] == pytest.approx(15.644)
 
@@ -69,7 +69,7 @@ def test_stage_subprocess_sees_the_override(ws, tmp_path):
     import sys
 
     U.save_overrides({"polarizability.alpha_core": {"Rb": 9.5}})
-    out = subprocess.run([sys.executable, "-c", "from linak.physics import polarizability_core as P; print(P.ALPHA_CORE_AU['Rb'])"],
+    out = subprocess.run([sys.executable, "-c", "from qali.physics import polarizability_core as P; print(P.ALPHA_CORE_AU['Rb'])"],
                          capture_output=True, text=True, env={**os.environ, paths.PROJECT_ROOT_ENV: str(tmp_path)}, check=True)
     assert out.stdout.strip() == "9.5"
 
@@ -115,8 +115,8 @@ def test_new_tables_reach_their_physics(ws):
     """An edited ion level, vapour coefficient or isotope shift is what the stages then use."""
     import json
 
-    from linak.physics import spectrum_core as sc
-    from linak.pipelines import dhf
+    from qali.physics import spectrum_core as sc
+    from qali.pipelines import dhf
 
     ws.mkdir(parents=True, exist_ok=True)
     (ws / U.OVERRIDES_FILE).write_text(json.dumps({
@@ -132,8 +132,8 @@ def test_new_tables_reach_their_physics(ws):
 
 
 def test_added_rows_go_into_the_live_dict_and_come_out_on_reload(ws):
-    from linak.pipelines import lifetimes as L
-    from linak.core import constants as C
+    from qali.pipelines import lifetimes as L
+    from qali.core import constants as C
 
     U.save_additions({"lifetimes.known": {"Mg / 3p": {"value": 2.0, "source": "x"}},
                       "constants.abundance": {"Mg-24": {"value": 78.99, "source": ""}}})
@@ -149,7 +149,7 @@ def test_added_rows_go_into_the_live_dict_and_come_out_on_reload(ws):
 
 
 def test_an_addition_never_overrides_a_packaged_row(ws):
-    from linak.pipelines import lifetimes as L
+    from qali.pipelines import lifetimes as L
 
     before = L.KNOWN_LIFETIMES["Na"]["3p"]
     U.save_additions({"lifetimes.known": {"Na / 3p": {"value": 999.0, "source": ""}}})
@@ -182,7 +182,7 @@ MG = {"Z": "12", "mass_amu": "24.305", "gs": "3s2", "np": "3s3p", "IE_eV": "7.64
 
 
 def test_orbital_and_precision_rows(ws):
-    from linak.physics import blackbody_core as B
+    from qali.physics import blackbody_core as B
 
     assert U.make_key("blackbody.a_l", ["na", "F"]) == ("Na / f", ["Na", "f"])
     assert U.make_key("blackbody.qd_diff", ["na", "d"])[0] == "Na / d"
@@ -200,7 +200,7 @@ def test_orbital_and_precision_rows(ws):
 
 
 def test_a_whole_dline_record_can_be_added_and_removed(ws):
-    from linak.core import spectroscopy as S
+    from qali.core import spectroscopy as S
 
     rec = U.check_record("spectroscopy.dline", "Mg", MG)
     assert rec["Z"] == 12 and rec["gs"] == "3s2" and rec["D1_nm"] == 285.2
@@ -221,7 +221,7 @@ def test_record_checks_every_field():
 
 
 def test_ticked_lifetimes_are_collected_for_the_pipeline(ws):
-    from linak.pipelines import lifetimes as L
+    from qali.pipelines import lifetimes as L
 
     U.save_flags({"lifetimes.known": {"Na / 3p": True, "Na / 99z": True, "Li / 2p": False, "Cs / 6p": True}})
     assert U.lifetime_overrides(L.KNOWN_LIFETIMES, "Na") == {"3p": L.KNOWN_LIFETIMES["Na"]["3p"]}
@@ -231,7 +231,7 @@ def test_ticked_lifetimes_are_collected_for_the_pipeline(ws):
 
 
 def test_fr_7d_f_scale_is_ticked_by_default_and_can_be_switched_off(ws):
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
 
     assert not (ws / "flags.json").exists()
     assert U.ticked_values("nist.fscale", P.NIST_F_SCALE, "Fr") == P.NIST_F_SCALE["Fr"]
@@ -244,7 +244,7 @@ def test_fr_7d_f_scale_is_ticked_by_default_and_can_be_switched_off(ws):
 
 
 def test_f_scale_changes_the_fr_7d_lines_and_off_gives_nist_back(ws):
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
 
     def f_line():
         nist = P.load_nist_fvalues("Fr", verbose=False)
@@ -261,7 +261,7 @@ def test_f_scale_changes_the_fr_7d_lines_and_off_gives_nist_back(ws):
 
 
 def test_override_replaces_the_lifetime_and_keeps_the_computed_one():
-    from linak.pipelines.lifetimes import apply_lifetime_overrides
+    from qali.pipelines.lifetimes import apply_lifetime_overrides
 
     rows = [{"state": "3p1/2", "lifetime_ns": 16.3, "lifetime_s": 16.3e-9, "sigma_tau_ns": 0.2},
             {"state": "3p3/2", "lifetime_ns": 16.2, "lifetime_s": 16.2e-9, "sigma_tau_ns": 0.2},

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from linak.physics.qdt_radial import (
+from qali.physics.qdt_radial import (
     CALIBRATED_NSTAR_MAX,
     level_defect,
     fit_numerov_scale_from_nist,
@@ -14,7 +14,7 @@ from linak.physics.qdt_radial import (
     numerov_fosc,
     numerov_scale_for,
 )
-from linak.physics.rydberg import (
+from qali.physics.rydberg import (
     Ry,
     fit_ritz_defects,
     generate_rydberg_series,
@@ -215,7 +215,7 @@ def test_published_fr_lines_set_the_8s_and_6d_lifetimes(data_dir):
 
 
 def test_a_literature_line_with_both_j_keeps_them_apart(tmp_path):
-    from linak.physics.polarizability_core import load_literature_fvalues
+    from qali.physics.polarizability_core import load_literature_fvalues
     row = dict(lower="7p", lower_J="3/2", upper="6d", upper_J="5/2", f_abs=0.2, acc="B",
                ref="PUBLISHED: test")
     (tmp_path / "Fr_literature.json").write_text(json.dumps({"transitions": [row]}), "utf-8")

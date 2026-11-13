@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Regenerate lifetimes -> polarizability -> blackbody for all alkalis.
 
-Writes into the workspace in effect (``LINAK_PROJECT_ROOT``, else the
+Writes into the workspace in effect (``QALI_PROJECT_ROOT``, else the
 per-user data folder).
 """
 from __future__ import annotations
@@ -22,15 +22,15 @@ def run(cmd: list[str]) -> None:
 
 
 def main() -> int:
-    linak = [sys.executable, "-m", "linak", "--pipeline"]
+    qali = [sys.executable, "-m", "qali", "--pipeline"]
     for el in ELEMENTS:
-        run([*linak, "lifetimes", el])
-        run([*linak, "polarizability", el])
+        run([*qali, "lifetimes", el])
+        run([*qali, "polarizability", el])
         # Na keeps field=100 for mix/SFI continuity with anchors; others free-space PI
         if el == "Na":
-            run([*linak, "blackbody", el, "--field", "100"])
+            run([*qali, "blackbody", el, "--field", "100"])
         else:
-            run([*linak, "blackbody", el])
+            run([*qali, "blackbody", el])
         run([sys.executable, "tools/fosc_audit.py", el])
     print("\nAll alkalis regenerated.")
     return 0

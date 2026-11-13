@@ -18,7 +18,7 @@ def test_transition_is_a_typed_record():
     """Transition must be a dataclass with Optional sigma (None, never 0.0)."""
     import dataclasses
 
-    from linak.core.spectroscopy import Transition
+    from qali.core.spectroscopy import Transition
 
     assert dataclasses.is_dataclass(Transition)
     tr = Transition(delta_E_au=1.0, fosc=0.3, sign=1, upper_label="3p", source="NIST")
@@ -35,12 +35,12 @@ def test_typed_records_preserve_the_legacy_json_shapes():
     """
     import dataclasses
 
-    from linak.core.spectroscopy import Transition
-    from linak.pipelines.compare_elements import (
+    from qali.core.spectroscopy import Transition
+    from qali.pipelines.compare_elements import (
         ElementData,
         build_from_literature,
     )
-    from linak.pipelines.polarizability import _trim_transitions
+    from qali.pipelines.polarizability import _trim_transitions
 
     tr = Transition(
         delta_E_au=1.0,
@@ -108,7 +108,7 @@ def test_unknown_energy_sort_reproduces_the_minus999_ordering():
     key — i.e. *first*, ahead of every real level — and is picked as the
     "lowest" excited state exactly as today's runs do.
     """
-    from linak.physics.polarizability_core import (
+    from qali.physics.polarizability_core import (
         UNKNOWN_ENERGY_AU,
         default_excited_label,
         unknown_energy_sort_key,
@@ -142,8 +142,8 @@ def test_unknown_energy_sort_reproduces_the_minus999_ordering():
 
 def test_dline_tables_match_core_spectroscopy():
     """The comparison table consumes the tables that live in core.spectroscopy."""
-    from linak.core import spectroscopy
-    from linak.pipelines import compare_elements
+    from qali.core import spectroscopy
+    from qali.pipelines import compare_elements
 
     assert compare_elements.LITERATURE == spectroscopy.LITERATURE
 
@@ -152,7 +152,7 @@ def test_core_spectroscopy_import_is_light():
     """core.spectroscopy is pure data; importing it must not pull scipy/plotly."""
     code = (
         "import sys\n"
-        "import linak.core.spectroscopy\n"
+        "import qali.core.spectroscopy\n"
         "heavy = [m for m in sys.modules if m.split('.')[0] in ('scipy', 'plotly')]\n"
         "print(';'.join(heavy))\n"
     )

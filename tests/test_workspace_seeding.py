@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import linak.core.workspace as workspace_mod
-from linak.core.workspace import Workspace, seed_bundled_data
+import qali.core.workspace as workspace_mod
+from qali.core.workspace import Workspace, seed_bundled_data
 
 
 @pytest.fixture
@@ -61,12 +61,12 @@ def test_seeding_never_overwrites_and_leaves_no_temp_files(tmp_path, fake_bundle
     assert leftovers == []
 
 
-def test_seeding_into_a_checkout_stays_under_dot_linak(tmp_path, fake_bundle):
+def test_seeding_into_a_checkout_stays_under_dot_qali(tmp_path, fake_bundle):
     checkout = tmp_path / "repo"
-    (checkout / "src" / "linak").mkdir(parents=True)
+    (checkout / "src" / "qali").mkdir(parents=True)
     (checkout / "pyproject.toml").write_text("", encoding="utf-8")
     seed_bundled_data(Workspace(root=checkout), include_examples=True)
-    assert (checkout / ".linak" / "data" / "Na_rydberg.json").is_file()
+    assert (checkout / ".qali" / "data" / "Na_rydberg.json").is_file()
     assert not (checkout / "data").exists()
 
 
@@ -80,7 +80,7 @@ def window(tmp_path, monkeypatch, isolated_user_data):
     from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance() or QApplication([])
-    from linak.gui.main_window import MainWindow
+    from qali.gui.main_window import MainWindow
 
     created = []
 
@@ -109,7 +109,7 @@ def _species(win) -> list[str]:
 
 def test_gui_starts_in_the_user_folder_and_populates_species(window, isolated_user_data):
     win = window()
-    assert win.root == isolated_user_data / "LiNaK"
+    assert win.root == isolated_user_data / "Qali"
     _wait_for_seeding(win)
     assert {"Li", "Na", "Na_c1"} <= set(_species(win))
 

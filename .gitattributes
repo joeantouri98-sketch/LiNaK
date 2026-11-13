@@ -18,5 +18,5 @@
 # the repository read as an HTML/JavaScript project. Generated plots are also
 # collapsed in pull-request diffs.
 *.html linguist-detectable=false
-src/linak/resources/plots/** linguist-generated
-src/linak/resources/vendor/** linguist-vendored
+src/qali/resources/plots/** linguist-generated
+src/qali/resources/vendor/** linguist-vendored

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-import linak.physics.polarizability_core as A
+import qali.physics.polarizability_core as A
 
 ARC_VALENCE = {          # a.u.
     "3s": 162.09, "3p1/2": 360.55, "3p3/2": 362.27, "4s": 3101.44,
@@ -23,7 +23,7 @@ ARC_VALENCE = {          # a.u.
 def na_network():
     # the bundled data, by path: the default data folder is the session workspace, which is only
     # seeded when another test has created it (this file failed when run on its own)
-    from linak.core.paths import reference_path
+    from qali.core.paths import reference_path
     return A.load_element("Na", str(reference_path("data_json", "Na_rydberg.json").parent), verbose=False)
 
 
@@ -52,7 +52,7 @@ def test_multiplet_f_rebuilt_from_lines(na_network):
 
 def test_s_to_p_needs_no_scale_with_each_levels_own_defect(na_network):
     """NIST/Numerov for Na s->p was 1.0 (near) to 1.37 (far) with the averaged defect."""
-    from linak.physics.qdt_radial import numerov_scale_for
+    from qali.physics.qdt_radial import numerov_scale_for
     cal = na_network["numerov_cal_types"]
     assert not cal["types"][("s", "p")]["gap_dependent"]
     for gap in (0.5, 2.75, 8.0):

@@ -4,7 +4,7 @@ import os; HERE=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,HE
 from frmodel import *
 cl=lambda s:re.sub(r'^="?|"?$','',s or '').strip('"')
 nist={}
-for r in csv.DictReader(Path(os.path.join(HERE,'..','..','..','src','linak','resources','f_values','Fr_lines.csv')).read_text(encoding="utf-8").splitlines()):
+for r in csv.DictReader(Path(os.path.join(HERE,'..','..','..','src','qali','resources','f_values','Fr_lines.csv')).read_text(encoding="utf-8").splitlines()):
     g={k:cl(v) for k,v in r.items() if k}
     if g.get('conf_i')=='7s' and g.get('fik') and g['conf_k'].endswith('p'):
         nist[(int(g['conf_k'][:-1]),float(eval(g['J_k'])))]=float(g['fik'])

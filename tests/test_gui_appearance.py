@@ -16,8 +16,8 @@ from PySide6.QtGui import QMouseEvent, QPalette  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.gui import theme  # noqa: E402
-from linak.gui.stage_list import DONE_ROLE  # noqa: E402
+from qali.gui import theme  # noqa: E402
+from qali.gui.stage_list import DONE_ROLE  # noqa: E402
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -36,7 +36,7 @@ def _contrast(a: str, b: str) -> float:
     return (high + 0.05) / (low + 0.05)
 
 
-@pytest.mark.parametrize("name", [theme.DARK, theme.LIGHT])
+@pytest.mark.parametrize("name", theme.COLOUR_THEMES)
 @pytest.mark.parametrize("foreground, background", [
     ("text", "bg"), ("text", "surface"), ("text", "raised"), ("text", "selection"),
     ("text_muted", "bg"), ("text_muted", "surface"), ("text_muted", "raised"),
@@ -49,13 +49,13 @@ def test_text_meets_wcag_aa(name, foreground, background):
     assert ratio >= 4.5, f"{name}: {foreground} on {background} is {ratio:.2f}:1"
 
 
-@pytest.mark.parametrize("name", [theme.DARK, theme.LIGHT])
+@pytest.mark.parametrize("name", theme.COLOUR_THEMES)
 def test_input_outlines_are_visible(name):
     tokens = theme.THEMES[name]
     assert _contrast(tokens.border_strong, tokens.surface) >= 2.0
 
 
-@pytest.mark.parametrize("name", [theme.DARK, theme.LIGHT])
+@pytest.mark.parametrize("name", theme.COLOUR_THEMES)
 def test_stylesheet_is_fully_filled_in(name):
     sheet = theme.build_stylesheet(theme.THEMES[name])
     assert "{bg}" not in sheet and "{{" not in sheet
@@ -73,13 +73,13 @@ def test_apply_theme_sets_the_palette(app):
 @pytest.fixture
 def window(tmp_path, monkeypatch):
     pytest.importorskip("PySide6.QtWebEngineWidgets")
-    from linak.core.workspace import Workspace
-    from linak.gui import main_window as module
+    from qali.core.workspace import Workspace
+    from qali.gui import main_window as module
 
     workspace = Workspace(root=tmp_path / "out")
     workspace.data_json_dir.mkdir(parents=True)
     (workspace.data_json_dir / "Fe.json").write_text('{"a": 1}', encoding="utf-8")
-    monkeypatch.setenv("LINAK_PROJECT_ROOT", str(workspace.root))
+    monkeypatch.setenv("QALI_PROJECT_ROOT", str(workspace.root))
     monkeypatch.setattr(module, "seed_bundled_data", lambda *a, **k: None)
     win = module.MainWindow()
     for worker in list(win._seed_workers):
@@ -110,6 +110,12 @@ def test_selecting_a_species_highlights_its_chip_and_clears_the_box(window):
     window._set_species_from_input()
     assert window.species_list.currentItem().text() == "Fe"
     assert window.species_input.text() == ""
+
+
+def test_window_icon_stays_the_app_icon_when_the_species_changes(window):
+    before = window.windowIcon().cacheKey()
+    window._set_species("Fe")
+    assert window.windowIcon().cacheKey() == before                      # species colours are for dialogs only
 
 
 def test_opening_an_output_shows_the_viewer(window, tmp_path):
@@ -274,7 +280,7 @@ def test_collapse_still_works_with_the_panel_on_top(window):
 def overview_data(tmp_path):
     import json
 
-    from linak.core.workspace import Workspace
+    from qali.core.workspace import Workspace
 
     ws = Workspace(root=tmp_path / "overview")
     ws.data_json_dir.mkdir(parents=True)
@@ -289,7 +295,7 @@ def overview_data(tmp_path):
 
 @pytest.mark.parametrize("width, columns", [(420, 1), (760, 2), (1300, 3)])
 def test_overview_fits_its_width(overview_data, width, columns):
-    from linak.gui.overview import SpeciesOverviewWidget
+    from qali.gui.overview import SpeciesOverviewWidget
 
     view = SpeciesOverviewWidget()
     view.resize(width, 600)
@@ -304,7 +310,7 @@ def test_overview_fits_its_width(overview_data, width, columns):
 
 
 def test_overview_reflows_when_resized(overview_data):
-    from linak.gui.overview import SpeciesOverviewWidget
+    from qali.gui.overview import SpeciesOverviewWidget
 
     view = SpeciesOverviewWidget()
     view.resize(1300, 600)

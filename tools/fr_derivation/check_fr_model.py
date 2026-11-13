@@ -1,6 +1,6 @@
-"""Check the shipped Fr model against data. Uses only LiNaK code and the shipped parameters.
+"""Check the shipped Fr model against data. Uses only Qali code and the shipped parameters.
 
-Run from the LiNaK checkout:   uv run python tools/check_fr_model.py      (about 20 s)
+Run from the Qali checkout:   uv run python tools/check_fr_model.py      (about 20 s)
 Prints: (1) level energies vs NIST, (2) np fine structure, (3) dipole matrix elements vs Roberts et al. 2023,
 (4) the r~c scan that fixes the one fitted parameter, (5) the NIST T6898 rows against the model.
 """
@@ -11,9 +11,9 @@ import re
 
 import numpy as np
 
-from linak.core.paths import reference_path
-from linak.physics.extrapolation import exact
-from linak.physics.extrapolation.params import species_params
+from qali.core.paths import reference_path
+from qali.physics.extrapolation import exact
+from qali.physics.extrapolation.params import species_params
 
 CM = 219474.63
 HA = exact.HA_EV

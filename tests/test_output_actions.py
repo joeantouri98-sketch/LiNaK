@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from linak.gui.project_io import output_actions, protected_reason
+from qali.gui.project_io import output_actions, protected_reason
 
 
 @pytest.mark.parametrize("name", [
@@ -30,7 +30,7 @@ def test_plots_are_not_editable_json_and_csv_are():
 
 def test_every_stage_output_is_deletable():
     """Whatever a stage writes into data/ must never be reported as protected."""
-    from linak.gui.stages import PIPELINE
+    from qali.gui.stages import PIPELINE
     for stage in PIPELINE:
         for out in stage.get("outputs", []):
             if out.startswith("data/") and out.endswith(".json"):

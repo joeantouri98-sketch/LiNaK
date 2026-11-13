@@ -11,9 +11,9 @@ import math
 
 import pytest
 
-from linak.core.constants import AU_TIME_S, HBAR_SI, KB_SI
-from linak.physics.polarizability_core import U_joules, alpha_real, kWcm2_to_Wm2, omega_au_from_nm
-from linak.physics.tweezer_core import (
+from qali.core.constants import AU_TIME_S, HBAR_SI, KB_SI
+from qali.physics.polarizability_core import U_joules, alpha_real, kWcm2_to_Wm2, omega_au_from_nm
+from qali.physics.tweezer_core import (
     alpha_complex,
     attach_gamma,
     compute,

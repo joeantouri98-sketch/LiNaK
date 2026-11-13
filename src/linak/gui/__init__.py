@@ -1,1 +1,0 @@
-"""LiNaK graphical application."""

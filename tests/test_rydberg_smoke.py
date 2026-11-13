@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """End-to-end smoke test for the ``rydberg`` pipeline and the Rydberg formula.
 
-Runs the full ``linak --pipeline rydberg Na`` CLI against an isolated test
+Runs the full ``qali --pipeline rydberg Na`` CLI against an isolated test
 workspace (subprocess, like test_pipeline_smoke.py), validates its JSON output
 and anchors the series against
 
@@ -21,8 +21,8 @@ from helpers import load_json, run_pipeline, write_result_summary
 
 
 def _na_rydberg_output(workspace):
-    """The pipeline writes <workspace>/.linak/data/Na_rydberg.json."""
-    return workspace / ".linak" / "data" / "Na_rydberg.json"
+    """The pipeline writes <workspace>/.qali/data/Na_rydberg.json."""
+    return workspace / ".qali" / "data" / "Na_rydberg.json"
 
 
 def test_rydberg_na_end_to_end_writes_finite_json(workspace):
@@ -64,7 +64,7 @@ def test_rydberg_qdt_states_follow_rydberg_formula(workspace):
     """QDT-model members satisfy E = -Ry_eff/(n - delta_l(n))^2 exactly, with the Ritz
     delta_l(n) where it was fitted and the constant delta_l otherwise (the series limit
     E_ion = 0 in this ionization-relative convention)."""
-    from linak.physics.rydberg import ritz_delta
+    from qali.physics.rydberg import ritz_delta
     result = run_pipeline(["rydberg", "Na"], workspace)
     assert result.returncode == 0, f"rydberg Na failed:\n{result.stderr}"
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Every GUI stage flag must exist in its pipeline's parser and agree with it.
 
-The stage table in ``linak.gui.stages`` is hand-maintained; this is what keeps
+The stage table in ``qali.gui.stages`` is hand-maintained; this is what keeps
 it honest (drift here made the hyperfine CSV defaults point at a missing
 ``Moments/`` folder, and the scattering stage ignore the selected species).
 """
@@ -12,8 +12,8 @@ import importlib
 
 import pytest
 
-from linak.gui.stages import PIPELINE, STAGE_GROUPS
-from linak.pipelines.runner import IMPLEMENTATIONS
+from qali.gui.stages import PIPELINE, STAGE_GROUPS
+from qali.pipelines.runner import IMPLEMENTATIONS
 
 # GUI defaults that deliberately differ from the CLI's, with the reason.
 INTENTIONAL_DEFAULTS = {
@@ -86,7 +86,7 @@ def test_every_stage_is_in_exactly_one_sidebar_group():
 
 
 def test_flag_section_groups_inputs_and_outputs():
-    from linak.gui.stages import flag_section
+    from qali.gui.stages import flag_section
 
     assert flag_section({"name": "--data-dir", "kind": "path"}) == "input"
     assert flag_section({"name": "--lifetimes-file", "kind": "path"}) == "input"
@@ -98,7 +98,7 @@ def test_flag_section_groups_inputs_and_outputs():
 
 
 def test_blank_fields_hint_at_the_default_files():
-    from linak.gui.stages import STAGE_BY_ID, input_hint, output_hint
+    from qali.gui.stages import STAGE_BY_ID, input_hint, output_hint
 
     spec = {"name": "--rydberg-file", "kind": "path"}
     assert input_hint(spec, "Na") == "Na_rydberg.json"
@@ -114,8 +114,8 @@ def test_blank_fields_hint_at_the_default_files():
 
 
 def test_refresh_default_hints_fills_placeholders():
-    from linak.gui.main_window import MainWindow
-    from linak.gui.stages import STAGE_BY_ID
+    from qali.gui.main_window import MainWindow
+    from qali.gui.stages import STAGE_BY_ID
 
     class Edit:
         def __init__(self):

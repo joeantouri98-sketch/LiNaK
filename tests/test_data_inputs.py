@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from linak.core.data_inputs import resolve_data_file
-from linak.core.errors import MissingDataError
-from linak.core.paths import reference_path
-from linak.gui.stages import STAGE_BY_ID
+from qali.core.data_inputs import resolve_data_file
+from qali.core.errors import MissingDataError
+from qali.core.paths import reference_path
+from qali.gui.stages import STAGE_BY_ID
 
 
 def test_blank_means_the_default_file(tmp_path):
@@ -29,8 +29,8 @@ def test_names_resolve_under_the_data_folder_and_must_belong_to_the_species(tmp_
 
 
 def test_blackbody_and_tweezer_offer_the_input_files():
-    from linak.pipelines.blackbody import build_parser as bb
-    from linak.pipelines.tweezer import build_parser as tw
+    from qali.pipelines.blackbody import build_parser as bb
+    from qali.pipelines.tweezer import build_parser as tw
 
     for stage_id, parser in (("blackbody", bb()), ("tweezer", tw())):
         names = {f["name"]: f for f in STAGE_BY_ID[stage_id]["flags"]}
@@ -53,7 +53,7 @@ def na_workspace(tmp_path):
     from helpers import make_workspace
 
     ws = make_workspace(tmp_path / "ws")
-    data = ws / ".linak" / "data"
+    data = ws / ".qali" / "data"
     data.mkdir(parents=True)
     src = reference_path("data_json", "Na_rydberg.json").parent
     for f in src.glob("Na*.json"):
@@ -93,14 +93,14 @@ def test_tweezer_reads_chosen_files_and_records_them(na_workspace):
 def test_browse_modes_fill_the_field(tmp_path, monkeypatch):
     from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit
 
-    from linak.core.workspace import Workspace
-    from linak.gui import main_window as mw
+    from qali.core.workspace import Workspace
+    from qali.gui import main_window as mw
 
     QApplication.instance() or QApplication([])
-    runs = tmp_path / ".linak" / "orca_outputs" / "Na" / "casscf_a"
+    runs = tmp_path / ".qali" / "orca_outputs" / "Na" / "casscf_a"
     runs.mkdir(parents=True)
     (tmp_path / "pyproject.toml").write_text("#")
-    (tmp_path / "src" / "linak").mkdir(parents=True)
+    (tmp_path / "src" / "qali").mkdir(parents=True)
 
     class Fake:
         root = tmp_path
@@ -125,7 +125,7 @@ def test_browse_modes_fill_the_field(tmp_path, monkeypatch):
 def test_plot_stages_offer_their_input_files(stage_id, flags):
     import importlib
 
-    from linak.pipelines.runner import IMPLEMENTATIONS
+    from qali.pipelines.runner import IMPLEMENTATIONS
 
     parser = importlib.import_module(IMPLEMENTATIONS[STAGE_BY_ID[stage_id]["pipeline"]]).build_parser()
     names = {f["name"]: f for f in STAGE_BY_ID[stage_id]["flags"]}
@@ -150,7 +150,7 @@ def test_spectra_reads_a_chosen_lifetimes_file(na_workspace):
 
 
 def test_orca_stages_have_no_save_as():
-    from linak.gui.main_window import NO_SAVE_AS
+    from qali.gui.main_window import NO_SAVE_AS
 
     assert set(NO_SAVE_AS) == {"runorca", "orca_to_json"}
     assert all("--outname" in {f["name"] for f in STAGE_BY_ID[s]["flags"]} for s in NO_SAVE_AS)
@@ -188,5 +188,5 @@ def test_transitions_and_lifetimes_read_chosen_files(na_workspace):
     assert run_pipeline(["lifetimes", "Na", "--orca-file", "nope"], ws).returncode != 0
     plain = run_pipeline(["lifetimes", "Na"], ws)
     assert plain.returncode == 0 and "inputs" not in json.loads((data / "Na_lifetimes.json").read_text())
-    from linak.pipelines.lifetimes import build_parser
+    from qali.pipelines.lifetimes import build_parser
     assert build_parser().parse_args(["Na", "--orca-file", "x"]).orca_file == "x"

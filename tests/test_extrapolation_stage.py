@@ -6,9 +6,9 @@ import os
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics.extrapolation import stage as S
-from linak.physics.polarizability_core import load_nist_fvalues
+from qali.core.paths import reference_path
+from qali.physics.extrapolation import stage as S
+from qali.physics.polarizability_core import load_nist_fvalues
 
 
 def _inputs(el):
@@ -52,7 +52,7 @@ def test_config_roundtrip_and_validation(tmp_path):
 
 
 def test_lifetimes_flag_is_in_the_parser():
-    from linak.pipelines.lifetimes import build_parser
+    from qali.pipelines.lifetimes import build_parser
     assert build_parser().parse_args(["Rb", "--extrapolation", "x.json"]).extrapolation == "x.json"
 
 
@@ -61,7 +61,7 @@ def test_dialog_builds_and_saves(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication, QCheckBox
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Rb")
@@ -80,16 +80,16 @@ def test_dialog_builds_and_saves(tmp_path):
 def test_dialog_refuses_unsupported_species(tmp_path):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PySide6.QtWidgets")
-    from linak.gui import extrapolation_dialog as D
-    from linak.physics.extrapolation import UnsupportedSpeciesError
+    from qali.gui import extrapolation_dialog as D
+    from qali.physics.extrapolation import UnsupportedSpeciesError
 
     with pytest.raises(UnsupportedSpeciesError):
         D.ExtrapolationDialog(None, tmp_path, "Ra", {}, {})
 
 
 def test_extrapolated_rows_are_tagged_in_the_lifetimes_json():
-    from linak.physics.lifetimes_core import TransitionA
-    from linak.pipelines.lifetimes import _transition_json
+    from qali.physics.lifetimes_core import TransitionA
+    from qali.pipelines.lifetimes import _transition_json
     import dataclasses
     fields = {f.name: None for f in dataclasses.fields(TransitionA)}
     fields.update(upper_label="21p1/2", lower_label="5s", fosc=1e-6, fosc_source="literature", fosc_acc="extrapolated")
@@ -109,7 +109,7 @@ def test_dialog_options_follow_the_species_and_the_user_file(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Cs")
@@ -132,7 +132,7 @@ def test_table_filter_selection_copy_and_template(tmp_path):
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QTableWidgetSelectionRange
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Rb")
@@ -173,7 +173,7 @@ def test_legend_entries_toggle_series_and_stay_toggled(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Rb")
@@ -213,7 +213,7 @@ def test_dialog_threshold_from_the_user_file_enables_the_options(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Cs")
@@ -234,7 +234,7 @@ def test_threshold_line_under_the_plot(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs("Rb")
@@ -247,7 +247,7 @@ def test_threshold_line_under_the_plot(tmp_path):
 
 def test_show_mode_overlay_lines_are_synthesised():
     """'Show alongside' rows become hidden-group Grotrian lines even where a measured value exists."""
-    from linak.pipelines.plotinteractive.inputs import _synthetic_gap_transition
+    from qali.pipelines.plotinteractive.inputs import _synthetic_gap_transition
 
     trans = [{"lower_label": "5s", "lower_n": 5, "lower_energy_eV": -4.177128, "lower_source": "NIST",
               "upper_label": "5p1/2"}]
@@ -259,7 +259,7 @@ def test_show_mode_overlay_lines_are_synthesised():
 
 def test_polarizability_uses_extrapolated_f_only_where_nothing_measured(tmp_path):
     """'use' mode feeds the polarizability sum: gap levels become source 'extrapolated', NIST rows stay NIST."""
-    from linak.physics.polarizability_core import build_transitions_for_state, load_element
+    from qali.physics.polarizability_core import build_transitions_for_state, load_element
 
     cfg = tmp_path / "rb.json"
     S.save_config(S.ExtrapolationConfig(mode="use", n_max=30), cfg)
@@ -276,8 +276,8 @@ def test_polarizability_uses_extrapolated_f_only_where_nothing_measured(tmp_path
 
 
 def test_polarizability_flag_is_in_the_parser_and_the_gui_stage():
-    from linak.gui.stages import STAGE_BY_ID
-    from linak.pipelines.polarizability import build_parser
+    from qali.gui.stages import STAGE_BY_ID
+    from qali.pipelines.polarizability import build_parser
 
     assert build_parser().parse_args(["Rb", "--extrapolation", "x.json"]).extrapolation == "x.json"
     flags = {f["name"] for f in STAGE_BY_ID["polarizability"]["flags"]}
@@ -298,7 +298,7 @@ def test_fill_skips_levels_with_a_multiplet_total_from_nist_or_literature():
 @pytest.mark.parametrize("el,expect_fills", [("Li", True), ("Na", True), ("K", False)])
 def test_model_potential_literature_is_replaceable_published_is_not(el, expect_fills):
     """ARC model-potential rows rank below the anchor-calibrated extrapolation; published tables (K: Theodosiou) rank above."""
-    from linak.physics.polarizability_core import load_literature_fvalues
+    from qali.physics.polarizability_core import load_literature_fvalues
 
     nist, ry = _inputs(el)
     lit = load_literature_fvalues(el, verbose=False)
@@ -321,8 +321,8 @@ def test_published_values_outside_the_band_are_reported_not_replaced():
 
 
 def test_blackbody_flag_is_in_the_parser_and_the_gui_stage():
-    from linak.gui.stages import STAGE_BY_ID
-    from linak.pipelines.blackbody import build_parser
+    from qali.gui.stages import STAGE_BY_ID
+    from qali.pipelines.blackbody import build_parser
 
     assert build_parser().parse_args(["Rb", "--extrapolation", "x.json"]).extrapolation == "x.json"
     assert build_parser().parse_args(["Rb"]).extrapolation is None
@@ -330,8 +330,8 @@ def test_blackbody_flag_is_in_the_parser_and_the_gui_stage():
 
 
 def test_blackbody_reads_as_before_without_extrapolation_and_changes_only_the_filled_network(tmp_path):
-    from linak.pipelines.blackbody import _alpha_networks, build_parser
-    from linak.physics.polarizability_core import load_element
+    from qali.pipelines.blackbody import _alpha_networks, build_parser
+    from qali.physics.polarizability_core import load_element
 
     data_dir = str(reference_path("data_json", "Rb_rydberg.json").parent)
     base = load_element("Rb", data_dir, verbose=False)
@@ -352,7 +352,7 @@ def test_blackbody_reads_as_before_without_extrapolation_and_changes_only_the_fi
 
 
 def test_user_anchor_template_has_an_example_that_the_code_ignores(tmp_path):
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     data = json.loads(D.USER_ANCHOR_TEMPLATE)
     assert data["_example"]["anchors"] and data["_example"]["threshold"]["sigma_Mb"] > 0
@@ -362,7 +362,7 @@ def test_user_anchor_template_has_an_example_that_the_code_ignores(tmp_path):
 
 
 def test_an_existing_anchors_file_is_shown_with_the_example_and_keeps_its_content(tmp_path):
-    from linak.gui import extrapolation_dialog as D
+    from qali.gui import extrapolation_dialog as D
 
     mine = json.dumps({"anchors": [{"n": 10, "J": "3/2", "f": 0.002, "unc": 0.1}], "threshold": None})
     shown = json.loads(D.with_user_anchor_example(mine))

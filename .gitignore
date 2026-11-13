@@ -35,8 +35,9 @@ Thumbs.db
 
 # orca_outputs/
 # plots/
+.qali/
 .linak/
-src/linak/deployment/
+src/qali/deployment/
 
 # Nuitka build crash dumps
 nuitka-crash-report.xml

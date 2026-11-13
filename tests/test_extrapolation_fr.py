@@ -1,4 +1,4 @@
-"""Francium: model derived for LiNaK (ARC has no Fr), checked against all-order matrix elements and NIST levels."""
+"""Francium: model derived for Qali (ARC has no Fr), checked against all-order matrix elements and NIST levels."""
 from __future__ import annotations
 
 import json
@@ -6,11 +6,11 @@ import math
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics.extrapolation import exact, frlevels
-from linak.physics.extrapolation import stage as S
-from linak.physics.extrapolation.params import anchor_config, species_params
-from linak.physics.extrapolation.tables import table_status
+from qali.core.paths import reference_path
+from qali.physics.extrapolation import exact, frlevels
+from qali.physics.extrapolation import stage as S
+from qali.physics.extrapolation.params import anchor_config, species_params
+from qali.physics.extrapolation.tables import table_status
 
 # Roberts, Fairhall & Ginges, PRA 107, 052812 (2023), Table X: <7s||D||nP_J> (a.u.)
 ROBERTS = {(7, 0.5): 4.2895, (7, 1.5): 5.9065, (8, 0.5): 0.3041, (8, 1.5): 0.9070}
@@ -49,7 +49,7 @@ def test_np_fine_structure_is_reproduced():
 
 
 def test_the_unreliable_nist_rows_are_left_out_and_the_precision_anchors_used(tmp_path):
-    from linak.physics.polarizability_core import load_nist_fvalues
+    from qali.physics.polarizability_core import load_nist_fvalues
 
     nist = load_nist_fvalues("Fr", verbose=False)
     ryd = json.loads(reference_path("data_json", "Fr_rydberg.json").read_text(encoding="utf-8"))
@@ -70,7 +70,7 @@ def test_the_unreliable_nist_rows_are_left_out_and_the_precision_anchors_used(tm
 
 
 def test_ticking_an_unreliable_row_changes_nothing_and_it_stays_excluded():
-    from linak.physics.polarizability_core import load_nist_fvalues
+    from qali.physics.polarizability_core import load_nist_fvalues
 
     nist = load_nist_fvalues("Fr", verbose=False)
     ryd = json.loads(reference_path("data_json", "Fr_rydberg.json").read_text(encoding="utf-8"))

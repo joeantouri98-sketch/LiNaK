@@ -11,9 +11,9 @@ pytest.importorskip("PySide6.QtWidgets")
 from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.core import paths, user_tables as U  # noqa: E402
-from linak.gui import tables_page as T  # noqa: E402
-from linak.gui.properties_dialog import PropertiesDialog, element_of_species  # noqa: E402
+from qali.core import paths, user_tables as U  # noqa: E402
+from qali.gui import tables_page as T  # noqa: E402
+from qali.gui.properties_dialog import PropertiesDialog, element_of_species  # noqa: E402
 
 
 @pytest.fixture()
@@ -82,7 +82,7 @@ def test_a_missing_element_is_flagged_and_can_be_filled_in(make, monkeypatch):
     assert page.grid.rowCount() == 1 and page.grid.item(0, 0).text() == "Mg"
     assert "&#10003; Atomic mass: 1 value" in page.intro.text()
     assert page.apply() == []
-    from linak.core import constants as C
+    from qali.core import constants as C
     assert C.ALKALI_MASS_AMU["Mg"] == 24.305
 
 

@@ -109,8 +109,8 @@ def build_scorecard(element: str, data_dir: Path) -> dict:
     # Runtime Numerov scale from this element's NIST + QD (no hardcoded factors)
     ryd = _load(data_dir / f"{element}_rydberg.json")
     try:
-        from linak.physics.polarizability_core import load_nist_fvalues
-        from linak.physics.qdt_radial import fit_numerov_scale_from_nist
+        from qali.physics.polarizability_core import load_nist_fvalues
+        from qali.physics.qdt_radial import fit_numerov_scale_from_nist
         nist = load_nist_fvalues(element, verbose=False)
         qd = (ryd or {}).get("quantum_defects", {})
         card["numerov_calibration"] = fit_numerov_scale_from_nist(qd, nist["fosc"])
@@ -120,7 +120,7 @@ def build_scorecard(element: str, data_dir: Path) -> dict:
 
 
 def main(argv=None):
-    from linak.core.workspace import Workspace
+    from qali.core.workspace import Workspace
 
     p = argparse.ArgumentParser(description="f-source scorecard")
     p.add_argument("element", nargs="?", default="Na")

@@ -7,7 +7,7 @@ import textwrap
 
 import pytest
 
-from linak.gui import test_runner as R
+from qali.gui import test_runner as R
 
 COLLECT = """tests/test_a.py::test_ok
 tests/test_a.py::test_bad
@@ -73,7 +73,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QCoreApplication, QElapsedTimer, Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.gui.tests_dialog import TestsDialog  # noqa: E402
+from qali.gui.tests_dialog import TestsDialog  # noqa: E402
 
 
 @pytest.fixture()

@@ -1,9 +1,9 @@
 [app]
-title = LiNaK
+title = Qali
 project_dir = .
-input_file = src/linak/__main__.py
+input_file = src/qali/__main__.py
 exec_directory = dist/pyside6
-icon = LiNaK.png
+icon = Qali.png
 
 [python]
 packages = Nuitka==4.1.1
@@ -15,7 +15,7 @@ modules = Core,Gui,WebEngineWidgets,Widgets
 plugins = accessiblebridge,egldeviceintegrations,generic,iconengines,imageformats,networkaccess,networkinformation,platforminputcontexts,platforms,platforms/darwin,platformthemes,position,printsupport,qmltooling,scenegraph,styles,tls,vectorimageformats,wayland-decoration-client,wayland-graphics-integration-client,wayland-shell-integration,xcbglintegrations
 
 [nuitka]
-extra_args = --quiet --noinclude-qt-translations --include-package=linak --include-package=plotly --noinclude-custom-mode=plotly:bytecode --include-package-data=plotly:package_data/templates/*.json --include-package-data=plotly:validators/_validators.json --include-distribution-metadata=plotly --noinclude-data-files=plotly/package_data/plotly.min.js --noinclude-data-files=plotly/package_data/datasets/* --noinclude-data-files=plotly/labextension/** --include-data-dir=src/linak/resources=linak/resources --include-data-dir=src/linak/report_templates=linak/report_templates --disable-console --force-stdout-spec={TEMP}/LiNaK_stdout_{PID}.log --force-stderr-spec={TEMP}/LiNaK_stderr_{PID}.log --assume-yes-for-downloads --nofollow-import-to=arc
+extra_args = --quiet --noinclude-qt-translations --include-package=qali --include-package=plotly --noinclude-custom-mode=plotly:bytecode --include-package-data=plotly:package_data/templates/*.json --include-package-data=plotly:validators/_validators.json --include-distribution-metadata=plotly --noinclude-data-files=plotly/package_data/plotly.min.js --noinclude-data-files=plotly/package_data/datasets/* --noinclude-data-files=plotly/labextension/** --include-data-dir=src/qali/resources=qali/resources --include-data-dir=src/qali/report_templates=qali/report_templates --disable-console --force-stdout-spec={TEMP}/Qali_stdout_{PID}.log --force-stderr-spec={TEMP}/Qali_stderr_{PID}.log --assume-yes-for-downloads --nofollow-import-to=arc
 macos.permissions = 
 mode = onefile
 

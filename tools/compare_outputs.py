@@ -72,21 +72,21 @@ def run_chain(tree: Path, out: Path, steps: list[list[str]]) -> list[int | str]:
     """Run *steps* with the code in *tree* into the output folder *out*.
 
     *out* is made checkout-shaped, so every revision's code writes into
-    ``out/.linak`` (older revisions only honoured ``LINAK_PROJECT_ROOT`` for
+    ``out/.qali`` (older revisions only honoured ``QALI_PROJECT_ROOT`` for
     a checkout).
     """
-    (out / "src" / "linak").mkdir(parents=True)
+    (out / "src" / "qali").mkdir(parents=True)
     (out / "pyproject.toml").write_text("# output folder for compare_outputs\n", encoding="utf-8")
-    env = dict(os.environ, LINAK_PROJECT_ROOT=str(out), PYTHONPATH=str(tree / "src"),
+    env = dict(os.environ, QALI_PROJECT_ROOT=str(out), PYTHONPATH=str(tree / "src"),
                PYTHONHASHSEED="0")
     codes: list[int | str] = []
     with (out / "chain.log").open("w", encoding="utf-8") as log:
         for step in steps:
-            log.write(f"\n### linak --pipeline {' '.join(step)}\n")
+            log.write(f"\n### qali --pipeline {' '.join(step)}\n")
             log.flush()
             try:
                 result = subprocess.run(
-                    [sys.executable, "-m", "linak", "--pipeline", *step],
+                    [sys.executable, "-m", "qali", "--pipeline", *step],
                     cwd=out, env=env, stdin=subprocess.DEVNULL, stdout=log,
                     stderr=subprocess.STDOUT, timeout=STEP_TIMEOUT_S,
                 )
@@ -97,7 +97,7 @@ def run_chain(tree: Path, out: Path, steps: list[list[str]]) -> list[int | str]:
 
 
 def _outputs(folder: Path) -> dict[str, Path]:
-    runtime = folder / ".linak"
+    runtime = folder / ".qali"
     return {
         path.relative_to(runtime).as_posix(): path   # same names on every OS
         for sub in ("data", "plots")
@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     steps = [step for step in CHAIN if not args.only or step[0] in args.only]
-    work = Path(tempfile.mkdtemp(prefix="linak_compare_"))
+    work = Path(tempfile.mkdtemp(prefix="qali_compare_"))
     before_tree = export_revision(args.before, work / "before_tree")
     with ThreadPoolExecutor(2) as pool:
         old = pool.submit(run_chain, before_tree, work / "before", steps)
@@ -138,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         old_codes, new_codes = old.result(), new.result()
 
     problems = [
-        f"exit code:     linak --pipeline {' '.join(step)}: {a} -> {b}"
+        f"exit code:     qali --pipeline {' '.join(step)}: {a} -> {b}"
         for step, a, b in zip(steps, old_codes, new_codes) if a != b
     ]
     problems += compare(work / "before", work / "after")

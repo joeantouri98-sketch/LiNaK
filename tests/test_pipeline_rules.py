@@ -3,7 +3,7 @@
 
 Pipelines take every option through argparse (a stdin prompt hangs the GUI
 and CI), keep their state inside ``main`` (so they can run twice in one
-process), and report HTML/CSS/JS lives in ``linak/report_templates`` rather
+process), and report HTML/CSS/JS lives in ``qali/report_templates`` rather
 than in Python string builders.
 """
 from __future__ import annotations
@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PIPELINES = ROOT / "src" / "linak" / "pipelines"
+PIPELINES = ROOT / "src" / "qali" / "pipelines"
 
 
 def test_no_stdin_prompts_in_pipelines():
@@ -22,7 +22,7 @@ def test_no_stdin_prompts_in_pipelines():
     """
     import importlib.util
 
-    from linak.pipelines.runner import IMPLEMENTATIONS
+    from qali.pipelines.runner import IMPLEMENTATIONS
 
     offenders = []
     for module in IMPLEMENTATIONS.values():

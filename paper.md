@@ -1,5 +1,5 @@
 ---
-title: 'LiNaK: A Python pipeline for alkali-atom atomic, molecular, and optical (AMO) physics'
+title: 'Qali: A Python pipeline for alkali-atom atomic, molecular, and optical (AMO) physics'
 tags:
   - Python
   - atomic physics
@@ -25,7 +25,7 @@ Independent Researcher
 
 # Summary
 
-`LiNaK` is a Python pipeline that turns public spectroscopic data for the
+`Qali` is a Python pipeline that turns public spectroscopic data for the
 alkali metals (Li, Na, K, Rb, Cs, Fr) into a complete, cross-checked set of
 atomic, molecular, and optical (AMO) physics quantities, together with an
 interactive visualization suite. Starting from NIST Atomic Spectra Database
@@ -68,7 +68,7 @@ oscillator strengths, radiative lifetimes, blackbody shifts, hyperfine
 structure, Feshbach resonances, or an interactive visualization layer in
 one pipeline.
 
-`LiNaK` addresses this gap by unifying the full chain, from raw ASD
+`Qali` addresses this gap by unifying the full chain, from raw ASD
 exports through to publication-ready interactive figures, behind a
 single, consistent set of physical conventions (energy zero, oscillator
 strength sources and their priority order, degeneracy factors) that are

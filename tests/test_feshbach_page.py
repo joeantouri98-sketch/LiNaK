@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 
 from helpers import make_workspace, run_pipeline
-from linak.physics import feshbach as fb
-from linak.report_templates import load as load_template
+from qali.physics import feshbach as fb
+from qali.report_templates import load as load_template
 
 NODE = shutil.which("node")
 PHYS_JS = load_template("feshbach_physics.js")
@@ -37,13 +37,13 @@ def _payload(html: str) -> dict:
 
 @pytest.fixture(scope="module")
 def li_inputs(data_dir):
-    from linak.pipelines.feshbach import load_inputs
+    from qali.pipelines.feshbach import load_inputs
     return load_inputs("Li", str(data_dir))
 
 
 @pytest.fixture(scope="module")
 def cs_inputs(data_dir):
-    from linak.pipelines.feshbach import load_inputs
+    from qali.pipelines.feshbach import load_inputs
     return load_inputs("Cs", str(data_dir))
 
 
@@ -99,7 +99,7 @@ def test_compute_uses_the_published_curve_and_refines_the_grid(cs_inputs):
 
 
 def test_stale_workspace_copy_is_reported(tmp_path, data_dir):
-    from linak.pipelines.feshbach import _stale_copy_hint
+    from qali.pipelines.feshbach import _stale_copy_hint
     assert _stale_copy_hint("Cs", str(tmp_path), {"resonances": []}) is not None
     assert _stale_copy_hint("Cs", str(tmp_path), {"curves": {"x": {}}}) is None
 
@@ -129,7 +129,7 @@ def test_resonance_strength_matches_chin_table_iv():
 
 
 def test_binding_energy_universal_and_corrected():
-    from linak.core.constants import A0_M, AMU_KG, HBAR_SI, H_SI
+    from qali.core.constants import A0_M, AMU_KG, HBAR_SI, H_SI
     m = 6.015122
     univ = HBAR_SI**2 / (m * AMU_KG * (1000 * A0_M) ** 2) / H_SI
     assert float(fb.binding_energy_hz(1000.0, m)) == pytest.approx(univ, rel=1e-12)
@@ -167,7 +167,7 @@ def ws(tmp_path_factory):
 def test_page_carries_every_tab_and_the_thresholds(ws, el):
     res = run_pipeline(["feshbach", el, "--field-unit", "mT"], ws)
     assert res.returncode == 0, res.stdout + res.stderr
-    html = (ws / ".linak" / "plots" / el / f"{el}_feshbach.html").read_text(encoding="utf-8")
+    html = (ws / ".qali" / "plots" / el / f"{el}_feshbach.html").read_text(encoding="utf-8")
     d = _payload(html)
     assert d["opts"]["tabs"] == ["a", "cs", "mo", "th", "rs"] and d["opts"]["unit"] == "mT"
     assert d["thr"] and d["thr"]["chs"]
@@ -178,12 +178,12 @@ def test_page_carries_every_tab_and_the_thresholds(ws, el):
         assert d["thr"]["lab"][d["thr"]["chs"]["|1> + |2>"][1]] == [0.5, -0.5]
     else:
         assert src == {"|3,+3> + |3,+3>": "fit"} and d["ch"][0]["br"]
-    out = json.loads((ws / ".linak" / "data" / f"{el}_feshbach_out.json").read_text(encoding="utf-8"))
+    out = json.loads((ws / ".qali" / "data" / f"{el}_feshbach_out.json").read_text(encoding="utf-8"))
     assert out["channels"][0]["source"] == src[out["channels"][0]["channel"]]
 
 
 def test_tabs_can_be_left_out(ws):
     res = run_pipeline(["feshbach", "Na", "--no-tab-thresholds", "--no-tab-molecules"], ws)
     assert res.returncode == 0, res.stdout + res.stderr
-    d = _payload((ws / ".linak" / "plots" / "Na" / "Na_feshbach.html").read_text(encoding="utf-8"))
+    d = _payload((ws / ".qali" / "plots" / "Na" / "Na_feshbach.html").read_text(encoding="utf-8"))
     assert d["opts"]["tabs"] == ["a", "cs", "rs"] and d["thr"] is None

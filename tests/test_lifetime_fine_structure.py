@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from linak.physics.qdt_radial import (
+from qali.physics.qdt_radial import (
     allowed_J2,
     build_true_multiplet_f,
     ls_group_branching,

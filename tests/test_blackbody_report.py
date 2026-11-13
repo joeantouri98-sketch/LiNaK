@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from linak.core.errors import MissingDataError
-from linak.core.paths import reference_path
-from linak.gui.stages import STAGE_BY_ID, STAGE_GROUPS, flag_section, stage_argv
-from linak.pipelines import blackbody
-from linak.pipelines import blackbody_report as br
-from linak.pipelines.runner import IMPLEMENTATIONS
+from qali.core.errors import MissingDataError
+from qali.core.paths import reference_path
+from qali.gui.stages import STAGE_BY_ID, STAGE_GROUPS, flag_section, stage_argv
+from qali.pipelines import blackbody
+from qali.pipelines import blackbody_report as br
+from qali.pipelines.runner import IMPLEMENTATIONS
 
 
 @pytest.fixture(scope="module")
@@ -114,14 +114,14 @@ def test_blackbody_stage_writes_the_page_with_its_data(tmp_path):
     from helpers import make_workspace, run_pipeline
 
     ws = make_workspace(tmp_path / "ws")
-    data = ws / ".linak" / "data"
+    data = ws / ".qali" / "data"
     data.mkdir(parents=True)
     for f in Path(reference_path("data_json", "Na_rydberg.json")).parent.glob("Na*.json"):
         shutil.copy(f, data / f.name)
     res = run_pipeline(["blackbody", "Na", "--no-rydberg-shifts", "--no-pi"], ws)
     assert res.returncode == 0, res.stderr
-    plots = list((ws / ".linak").rglob("Na_blackbody.html"))
+    plots = list((ws / ".qali").rglob("Na_blackbody.html"))
     assert len(plots) == 1
     assert _payload(plots[0])["tabs"] == ["sh", "rt"]
     for old in ("_shifts", "_rates", "_pi", "_alpha"):
-        assert not list((ws / ".linak").rglob(f"Na_blackbody{old}.html"))
+        assert not list((ws / ".qali").rglob(f"Na_blackbody{old}.html"))

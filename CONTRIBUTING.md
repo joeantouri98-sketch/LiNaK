@@ -1,6 +1,6 @@
-# Contributing to LiNaK
+# Contributing to Qali
 
-Thanks for your interest in improving LiNaK.
+Thanks for your interest in improving Qali.
 
 ## Reporting bugs / requesting features
 
@@ -16,8 +16,8 @@ with:
 
 1. Fork the repository and create a branch from `main`.
 2. Keep changes scoped to one module where possible; the pipeline is
-   intentionally modular (`linak --pipeline rydberg -> transitions ->
-   lifetimes`, etc., one module each under `src/linak/pipelines/`), and
+   intentionally modular (`qali --pipeline rydberg -> transitions ->
+   lifetimes`, etc., one module each under `src/qali/pipelines/`), and
    cross-cutting changes are harder to review. `ARCHITECTURE.md` is the map
    of the code; the rules below apply to every change.
 3. Do not hand-edit generated JSON in the output folder's `data/`;
@@ -39,7 +39,7 @@ with:
 
 ## Coding rules
 
-- **Pipelines** expose `build_parser()` (with `prog="linak --pipeline NAME"`) and
+- **Pipelines** expose `build_parser()` (with `prog="qali --pipeline NAME"`) and
   `main(argv) -> int`, are registered in `pipelines/runner.py::IMPLEMENTATIONS`, take
   every option through argparse (never `input()`), and do nothing at import time.
 - **Errors:** bad arguments → `parser.error(...)`; missing or bad data →
@@ -52,7 +52,7 @@ with:
 - **Physics:** keep computations in pure functions (no files, prints or plots). A
   refactor must not move any number (`tools/compare_outputs.py` reports no
   differences); known defects are recorded in `PHYSICS_BUGS.md`, not patched in passing.
-- **Reports:** HTML/CSS/JS live in `src/linak/report_templates/`, filled with `render()`.
+- **Reports:** HTML/CSS/JS live in `src/qali/report_templates/`, filled with `render()`.
 - **One place for each thing:** import shared constants and tables from `core`; no dead
   or commented-out code; don't add rules to the ruff `ignore` list.
 - **Tests ship with the change**, and write only to a temporary folder or `tests/results/`.
@@ -61,7 +61,7 @@ with:
 
 - Neutral alkalis follow the existing NIST + quantum-defect-theory (QDT)
   path; adding one requires NIST ASD level/line exports under
-  `src/linak/resources/NIST Levels/` and `src/linak/resources/f_values/`.
+  `src/qali/resources/NIST Levels/` and `src/qali/resources/f_values/`.
 - Ions and 3d transition metals currently use a reduced track (NIST
   plotting + optional ORCA spin-orbit structure only). Extending the full
   QDT/polarizability/BBR/tweezer/hyperfine/Feshbach chain to a new species

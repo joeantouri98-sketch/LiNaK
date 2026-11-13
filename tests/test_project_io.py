@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from linak.core.fileio import atomic_write_text
-from linak.core.paths import is_checkout
-from linak.gui.project_io import ensure_project_safe_path, is_within_project
+from qali.core.fileio import atomic_write_text
+from qali.core.paths import is_checkout
+from qali.gui.project_io import ensure_project_safe_path, is_within_project
 
 
 def leftovers(directory: Path, target: Path) -> list[Path]:
@@ -25,10 +25,10 @@ def leftovers(directory: Path, target: Path) -> list[Path]:
 
 
 def test_is_checkout_detects_checkout_shape(tmp_path: Path) -> None:
-    """A dir with pyproject.toml + src/linak counts as a checkout."""
+    """A dir with pyproject.toml + src/qali counts as a checkout."""
     assert not is_checkout(tmp_path)
     (tmp_path / "pyproject.toml").write_text("# marker\n", encoding="utf-8")
-    (tmp_path / "src" / "linak").mkdir(parents=True)
+    (tmp_path / "src" / "qali").mkdir(parents=True)
     assert is_checkout(tmp_path)
 
 
@@ -110,7 +110,7 @@ def test_atomic_write_text_cleanup_on_replace_failure(tmp_path: Path, monkeypatc
     def boom(src: str, dst: str) -> None:
         raise OSError("simulated rename failure")
 
-    monkeypatch.setattr("linak.core.fileio.os.replace", boom)
+    monkeypatch.setattr("qali.core.fileio.os.replace", boom)
     with pytest.raises(OSError, match="simulated rename failure"):
         atomic_write_text(target, "payload")
     assert not target.exists()
@@ -127,7 +127,7 @@ def test_atomic_write_text_failure_leaves_existing_target_intact(
     def boom(src: str, dst: str) -> None:
         raise OSError("simulated rename failure")
 
-    monkeypatch.setattr("linak.core.fileio.os.replace", boom)
+    monkeypatch.setattr("qali.core.fileio.os.replace", boom)
     with pytest.raises(OSError, match="simulated rename failure"):
         atomic_write_text(target, "corrupted")
     assert target.read_text(encoding="utf-8") == "original"

@@ -5,10 +5,10 @@ import shutil
 
 import pytest
 
-from linak.core.errors import MissingDataError
-from linak.core.paths import reference_path
-from linak.gui.stages import STAGE_BY_ID, STAGE_GROUPS, flag_section
-from linak.pipelines import polarizability_page as pp
+from qali.core.errors import MissingDataError
+from qali.core.paths import reference_path
+from qali.gui.stages import STAGE_BY_ID, STAGE_GROUPS, flag_section
+from qali.pipelines import polarizability_page as pp
 
 
 @pytest.fixture()
@@ -116,9 +116,9 @@ def test_stage_flags_parse_to_the_stage_defaults():
 
 
 def test_polarizability_and_tweezer_stages_write_data_only():
-    from linak.gui.stages import stage_argv
+    from qali.gui.stages import stage_argv
 
-    from linak.pipelines import polarizability, tweezer
+    from qali.pipelines import polarizability, tweezer
 
     for stage_id in ("polarizability", "tweezer"):
         stage = STAGE_BY_ID[stage_id]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Atomic-structure engines (physics/atomic_structure) and the dhf and brueckner pipelines.
 
-Anchors: exact hydrogen-like Dirac levels; NIST Handbook Na levels; LiNaK's own
+Anchors: exact hydrogen-like Dirac levels; NIST Handbook Na levels; Qali's own
 precision D-line f values (lifetime-derived, alpha_core.py history) and ALPHA0_EXPT;
 Na quantum defects (standard compilation).
 """
@@ -11,9 +11,9 @@ import math
 
 import pytest
 
-from linak.physics.atomic_structure.angular import exchange_coefficients, reduced_c
-from linak.physics.atomic_structure.dhf_cp import one_valence_configuration
-from linak.physics.atomic_structure.dirac_basis import (
+from qali.physics.atomic_structure.angular import exchange_coefficients, reduced_c
+from qali.physics.atomic_structure.dhf_cp import one_valence_configuration
+from qali.physics.atomic_structure.dirac_basis import (
     C_AU,
     Basis,
     dirac_matrices,
@@ -103,7 +103,7 @@ def na_ws(tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def na_dhf(na_ws):
-    return load_json(na_ws / ".linak" / "data" / "Na_dhf.json")
+    return load_json(na_ws / ".qali" / "data" / "Na_dhf.json")
 
 
 def test_na_dhf_matches_nist_and_measured_values(na_dhf):
@@ -146,7 +146,7 @@ def test_dhf_runs_without_nist_files_given_ip(tmp_path):
     empty.mkdir()
     result = run_pipeline(["dhf", "Li", "--ip", "43487.114", "--nist-dir", str(empty)], root)
     assert result.returncode == 0, result.stdout + result.stderr
-    data = load_json(root / ".linak" / "data" / "Li_dhf.json")
+    data = load_json(root / ".qali" / "data" / "Li_dhf.json")
     assert data["inputs"]["ionization_source"] == "--ip"
     assert data["inputs"]["fitted_levels"] == {} and data["nist_comparison"] == []
     levels = {lv["label"]: lv for lv in data["levels"]}
@@ -180,7 +180,7 @@ def _toy_payload():
 
 
 def test_dhf_lines_f_from_reduced_dipoles():
-    from linak.physics.atomic_structure.dhf_lines import DHFLines
+    from qali.physics.atomic_structure.dhf_lines import DHFLines
 
     lines = DHFLines.from_payload(_toy_payload())
     dE = 0.08
@@ -194,7 +194,7 @@ def test_dhf_lines_f_from_reduced_dipoles():
 
 
 def test_dhf_lines_withholds_unreliable_lines():
-    from linak.physics.atomic_structure.dhf_lines import DHFLines
+    from qali.physics.atomic_structure.dhf_lines import DHFLines
 
     lines = DHFLines.from_payload(_toy_payload())
     # strong cancellation in one component -> the whole group falls back to other sources
@@ -211,7 +211,7 @@ def test_dhf_lines_withholds_unreliable_lines():
 def test_lifetimes_dhf_fills_model_lines_and_keeps_measured_ones(na_ws):
     result = run_pipeline(["lifetimes", "Na", "--model-f", "dhf"], na_ws)
     assert result.returncode == 0, result.stdout + result.stderr
-    data = load_json(na_ws / ".linak" / "data" / "Na_lifetimes.json")
+    data = load_json(na_ws / ".qali" / "data" / "Na_lifetimes.json")
     states = {s["state"]: s for s in data["lifetimes"]}
     sources = {c["fosc_source"] for s in states.values() for c in s["channels"]}
     assert "DHF" in sources
@@ -225,7 +225,7 @@ def test_polarizability_dhf_labels_its_lines(na_ws):
     def run(*extra):
         r = run_pipeline(["polarizability", "Na", "--no-plot", *extra], na_ws)
         assert r.returncode == 0, r.stdout + r.stderr
-        return load_json(na_ws / ".linak" / "data" / "Na_polarizability.json")
+        return load_json(na_ws / ".qali" / "data" / "Na_polarizability.json")
 
     base, dhf = run(), run("--dhf")
     def by_src(d, src):
@@ -252,7 +252,7 @@ def ion_ws(tmp_path_factory):
 
 
 def _ion(ion_ws, species):
-    data = load_json(ion_ws / ".linak" / "data" / f"{species}_dhf.json")
+    data = load_json(ion_ws / ".qali" / "data" / f"{species}_dhf.json")
     levels = {lv["label"]: lv for lv in data["levels"]}
     f = {t["upper"]: t["f_absorption"] for t in data["transitions"] if t["lower"] == data["valence"]}
     tau = {lt["state"]: lt["tau_ns"] for lt in data["lifetimes"]}
@@ -302,7 +302,7 @@ def test_dhf_predictive_mode_fits_only_the_lowest_d(tmp_path):
     root = make_workspace(tmp_path / "ws")
     result = run_pipeline(["dhf", "Na", "--no-fit-p", "--d-one-level"], root)
     assert result.returncode == 0, result.stdout + result.stderr
-    data = load_json(root / ".linak" / "data" / "Na_dhf.json")
+    data = load_json(root / ".qali" / "data" / "Na_dhf.json")
     assert set(data["inputs"]["fitted_levels"]) == {"3d3/2", "3d5/2"}
     assert data["cpp_alpha_factors_kappa"] == {}
     levels = {lv["label"]: lv for lv in data["levels"]}
@@ -314,7 +314,7 @@ def test_dhf_predictive_mode_fits_only_the_lowest_d(tmp_path):
 # Brueckner model: Sigma(2) levels (dhf_sigma), RPA dipoles (dhf_rpa), the brueckner stage
 # ---------------------------------------------------------------------------
 def test_sixj_known_values():
-    from linak.physics.atomic_structure.dhf_sigma import sixj2
+    from qali.physics.atomic_structure.dhf_sigma import sixj2
 
     assert sixj2(1, 1, 2, 1, 1, 0) == pytest.approx(0.5)          # {1/2 1/2 1; 1/2 1/2 0}
     assert sixj2(2, 2, 2, 2, 2, 2) == pytest.approx(1 / 6)        # {1 1 1; 1 1 1}
@@ -323,8 +323,8 @@ def test_sixj_known_values():
 
 def test_sigma2_j_coupled_matches_m_scheme_sum():
     # Li 2s, small basis: <v|Sigma(2)(e_v)|v> from the j-coupled matrices = brute-force E2_v
-    from linak.physics.atomic_structure.dhf_cp import _Model
-    from linak.physics.atomic_structure.dhf_sigma import MBPT, mscheme_second_order_energy, sigma2_matrices
+    from qali.physics.atomic_structure.dhf_cp import _Model
+    from qali.physics.atomic_structure.dhf_sigma import MBPT, mscheme_second_order_energy, sigma2_matrices
 
     core, nv = one_valence_configuration(3)
     m = _Model(3, core, nv, 0.0, 0.0, None)
@@ -338,7 +338,7 @@ def test_sigma2_j_coupled_matches_m_scheme_sum():
 
 
 def test_sigma2_scaled_fits_and_predicts_and_caches():
-    from linak.physics.atomic_structure.dhf_sigma import compute_sigma2
+    from qali.physics.atomic_structure.dhf_sigma import compute_sigma2
 
     kw = dict(ionization_cm=41449.451, fit_levels_cm={(3, 1): 16956.172, (3, -2): 16973.368},
               lmax=2, n_int=16, n_max=5)
@@ -354,7 +354,7 @@ def test_sigma2_scaled_fits_and_predicts_and_caches():
 
 
 def test_sigma2_unscaled_is_pure_ab_initio():
-    from linak.physics.atomic_structure.dhf_sigma import compute_sigma2
+    from qali.physics.atomic_structure.dhf_sigma import compute_sigma2
 
     res = compute_sigma2(11, scale=False, lmax=2, n_int=16, n_max=4)
     assert res.scaling == "none" and set(res.scale_sources.values()) == {"unscaled"}
@@ -364,7 +364,7 @@ def test_sigma2_unscaled_is_pure_ab_initio():
 
 
 def test_brueckner_scale_inputs_take_the_lowest_level_of_each_kappa():
-    from linak.pipelines.brueckner import scale_inputs
+    from qali.pipelines.brueckner import scale_inputs
 
     table = {(3, 'p', '1/2'): 1.0, (4, 'p', '1/2'): 2.0, (3, 'd', '5/2'): 3.0, (4, 'f', '7/2'): 4.0,
              (5, 'f', '7/2'): 5.0, (4, 's', '1/2'): 6.0, (5, 'g', '7/2'): 7.0}
@@ -374,9 +374,9 @@ def test_brueckner_scale_inputs_take_the_lowest_level_of_each_kappa():
 @pytest.mark.parametrize("Z, ref", [(3, 0.1894), (11, 0.9457)])
 def test_rpa_core_polarisability_matches_relativistic_rpa(Z, ref):
     # Johnson, Kolb & Huang (relativistic RPA): Li+ 0.1894, Na+ 0.9457 a.u.
-    from linak.physics.atomic_structure.dhf_cp import _Model
-    from linak.physics.atomic_structure.dhf_rpa import CoreRPA
-    from linak.physics.atomic_structure.dhf_sigma import MBPT
+    from qali.physics.atomic_structure.dhf_cp import _Model
+    from qali.physics.atomic_structure.dhf_rpa import CoreRPA
+    from qali.physics.atomic_structure.dhf_sigma import MBPT
 
     core, nv = one_valence_configuration(Z)
     m = _Model(Z, core, nv, 0.0, 0.0, None)
@@ -389,9 +389,9 @@ def test_rpa_core_polarisability_matches_relativistic_rpa(Z, ref):
 
 def test_rpa_dressed_dipole_is_hermitian_and_screened():
     # Na DHF 3s-3p1/2: the core screens the dipole (DHF+RPA < DHF); <3s||D||3p> = <3p||D||3s>
-    from linak.physics.atomic_structure.dhf_cp import _Model
-    from linak.physics.atomic_structure.dhf_rpa import CoreRPA, ValenceE1
-    from linak.physics.atomic_structure.dhf_sigma import Brueckner
+    from qali.physics.atomic_structure.dhf_cp import _Model
+    from qali.physics.atomic_structure.dhf_rpa import CoreRPA, ValenceE1
+    from qali.physics.atomic_structure.dhf_sigma import Brueckner
 
     core, nv = one_valence_configuration(11)
     m = _Model(11, core, nv, 0.0, 0.0, None)
@@ -424,7 +424,7 @@ def li_bo(tmp_path_factory):
     root = make_workspace(tmp_path_factory.mktemp("bo") / "ws")
     result = run_pipeline(["brueckner", "Li", "--n-max", "4", "--lmax", "3"], root)
     assert result.returncode == 0, result.stdout + result.stderr
-    return root, load_json(root / ".linak" / "data" / "Li_brueckner.json")
+    return root, load_json(root / ".qali" / "data" / "Li_brueckner.json")
 
 
 def test_brueckner_stage_levels_and_e1(li_bo):
@@ -438,11 +438,11 @@ def test_brueckner_stage_levels_and_e1(li_bo):
     assert data["alpha_core_au"] == pytest.approx(0.1894, rel=3e-3)  # RPA Li+
     assert data["alpha0_au"] == pytest.approx(164.1, rel=1e-2)       # Li 2s: 164.1(7) a.u.
     assert data["quantum_defects"]["s1/2"][-1][0] == 30
-    assert (root / ".linak" / "data" / "Li_brueckner_cache.npz").is_file()
+    assert (root / ".qali" / "data" / "Li_brueckner_cache.npz").is_file()
 
 
 def test_brueckner_lines_carry_their_source_label(li_bo):
-    from linak.physics.atomic_structure.dhf_lines import DHFLines
+    from qali.physics.atomic_structure.dhf_lines import DHFLines
 
     _, data = li_bo
     lines = DHFLines.from_payload(data)
@@ -457,7 +457,7 @@ def test_n_max_is_the_highest_n(tmp_path):
     assert low.returncode != 0 and "must be above the valence n of Na (3)" in low.stderr
     old = run_pipeline(["dhf", "Na", "--n-extra", "27"], root)
     assert old.returncode != 0 and "--n-max 30" in old.stderr
-    from linak.physics.atomic_structure.dhf_cp import report_n_max
+    from qali.physics.atomic_structure.dhf_cp import report_n_max
     assert report_n_max(3, None) == 9 and report_n_max(3, 30) == 30
     with pytest.raises(ValueError):
         report_n_max(3, 3)

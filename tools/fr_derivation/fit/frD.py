@@ -12,7 +12,7 @@ def radial(m, n1,l1,j1, n2,l2,j2, lam=0.0, om=None):
     k=min(len(r1),len(r2)); r=r1[:k]; x=b1[3][:k]
     base=P1[:k]*np.interp(r,r2,P2)*r
     i0=np.trapezoid(base*r,x)
-    from linak.physics.extrapolation.exact import polarization_term
+    from qali.physics.extrapolation.exact import polarization_term
     al,rc=m.params["singor_alpha_D"],m.params["singor_rc"]
     i1=np.trapezoid(base*r*polarization_term(m.params["form"],r,al,rc),x)
     return i0,i1

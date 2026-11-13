@@ -13,8 +13,8 @@ import math
 import numpy as np
 import pytest
 
-from linak.core.constants import ISOTOPE_MASS_AMU
-from linak.physics import laser_cooling as lc
+from qali.core.constants import ISOTOPE_MASS_AMU
+from qali.physics import laser_cooling as lc
 
 from helpers import write_result_summary
 

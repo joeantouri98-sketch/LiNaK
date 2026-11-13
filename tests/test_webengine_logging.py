@@ -6,7 +6,7 @@ import os
 import sys
 import tempfile
 
-from linak.gui.app import _configure_webengine_logging, webengine_log_path
+from qali.gui.app import _configure_webengine_logging, webengine_log_path
 
 
 def test_webengine_log_path_is_platform_temp(monkeypatch, tmp_path):
@@ -17,9 +17,9 @@ def test_webengine_log_path_is_platform_temp(monkeypatch, tmp_path):
         fake.mkdir()
         monkeypatch.setenv("TMP", str(fake))
         monkeypatch.setenv("TEMP", str(fake))
-        assert str(webengine_log_path()) == str(fake / "LiNaK" / "debug.log")
+        assert str(webengine_log_path()) == str(fake / "Qali" / "debug.log")
     else:
-        assert str(webengine_log_path()) == "/tmp/LiNaK/debug.log"
+        assert str(webengine_log_path()) == "/tmp/Qali/debug.log"
 
 
 def test_configure_webengine_logging_sets_log_file(monkeypatch):

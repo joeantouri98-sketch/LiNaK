@@ -1,5 +1,5 @@
 [project]
-name = "LiNak"
+name = "Qali"
 dynamic = ["version"]
 description = "An integrated computational toolkit for alkali-atom AMO physics"
 readme = "README.md"
@@ -26,8 +26,11 @@ dev = [
 ]
 
 [project.scripts]
-linak = "linak.cli:main"
-linak-gui = "linak.gui.app:main"
+qali = "qali.cli:main"
+qali-gui = "qali.gui.app:main"
+# The commands' names before the rename to Qali; kept so existing scripts and shortcuts work.
+linak = "qali.cli:main"
+linak-gui = "qali.gui.app:main"
 
 [build-system]
 requires = ["setuptools>=77", "setuptools-scm>=8"]
@@ -44,7 +47,7 @@ fallback_version = "0+unknown"
 tag_regex = "^(?:[\\w-]+-)?[vV]?\\.?(?P<version>\\d+(?:\\.\\d+){0,2}[^+]*)(?:\\+.*)?$"
 
 [tool.setuptools.package-data]
-linak = [
+qali = [
     "resources/Basis sets/**",
     "resources/HTMLs/*",
     "resources/Moments/*",
@@ -57,7 +60,7 @@ linak = [
     "resources/core/*",
     "resources/vendor/*",
 ]
-"linak.report_templates" = ["*"]
+"qali.report_templates" = ["*"]
 
 [project.optional-dependencies]
 arc = [
@@ -73,7 +76,7 @@ web = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["build", "dist", ".linak"]
+extend-exclude = ["build", "dist", ".qali", ".linak"]
 
 [tool.ruff.lint]
 # Ratchet: rules the code does not pass yet. Fix the hits, then delete the line;
@@ -109,7 +112,7 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src/linak/core", "src/linak/physics"]
+files = ["src/qali/core", "src/qali/physics"]
 mypy_path = "src"
 ignore_missing_imports = true
 warn_unused_configs = true

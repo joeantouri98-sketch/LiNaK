@@ -10,8 +10,8 @@ pytest.importorskip("PySide6.QtWidgets")
 from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.core import paths, user_tables as U  # noqa: E402
-from linak.gui import tables_page as T  # noqa: E402
+from qali.core import paths, user_tables as U  # noqa: E402
+from qali.gui import tables_page as T  # noqa: E402
 
 
 @pytest.fixture()
@@ -49,7 +49,7 @@ def test_tree_lists_the_tables_and_the_data_files(page):
 
 
 def test_editing_a_value_marks_it_and_apply_puts_it_in_force(page):
-    from linak.physics import polarizability_core as P
+    from qali.physics import polarizability_core as P
 
     page.tree.setCurrentItem(_find(page.tree, "table", "polarizability.alpha_core"))
     row = next(r for r in range(page.grid.rowCount()) if page.grid.item(r, 0).text() == "Cs")
@@ -99,7 +99,7 @@ def test_units_are_shown_where_a_number_has_one(page):
 
 
 def test_add_row_is_saved_applied_and_removable(page, monkeypatch):
-    from linak.pipelines import lifetimes as L
+    from qali.pipelines import lifetimes as L
 
     page.tree.setCurrentItem(_find(page.tree, "table", "lifetimes.known"))
     assert not page.remove_btn.isEnabled() and page.add_btn.isVisibleTo(page)
@@ -136,7 +136,7 @@ def test_only_open_lists_have_an_add_button(page):
 
 
 def test_add_a_whole_element_to_the_dline_table(page, monkeypatch):
-    from linak.core import spectroscopy as S
+    from qali.core import spectroscopy as S
     from tests.test_user_tables import MG
 
     page.tree.setCurrentItem(_find(page.tree, "table", "spectroscopy.dline"))

@@ -3,8 +3,8 @@
 import json
 from dataclasses import asdict
 
-from linak.core import comparison_rows as cr
-from linak.pipelines import compare_elements as ce
+from qali.core import comparison_rows as cr
+from qali.pipelines import compare_elements as ce
 
 
 def _record(name="Na", mass=22.99, wl=589.0):

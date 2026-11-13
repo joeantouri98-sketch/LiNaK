@@ -2,7 +2,7 @@
 """Na ground-state static polarizability alpha(0) regression."""
 from __future__ import annotations
 
-from linak.physics.polarizability_core import alpha0_static, load_cached_transitions
+from qali.physics.polarizability_core import alpha0_static, load_cached_transitions
 
 from helpers import write_result_summary
 

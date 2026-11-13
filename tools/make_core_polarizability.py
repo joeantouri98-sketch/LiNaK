@@ -30,16 +30,16 @@ from pathlib import Path
 import numpy as np
 from scipy.optimize import nnls
 
-from linak.core.constants import default_isotope_A
-from linak.physics.atomic_structure.dhf_cp import _Model, one_valence_configuration
-from linak.physics.atomic_structure.dhf_rpa import CoreRPA
-from linak.physics.atomic_structure.dhf_sigma import MBPT, _j2, _phase
+from qali.core.constants import default_isotope_A
+from qali.physics.atomic_structure.dhf_cp import _Model, one_valence_configuration
+from qali.physics.atomic_structure.dhf_rpa import CoreRPA
+from qali.physics.atomic_structure.dhf_sigma import MBPT, _j2, _phase
 
 Z_OF = {'Li': 3, 'Na': 11, 'K': 19, 'Rb': 37, 'Cs': 55, 'Fr': 87}
 LMAX = {'Li': 3, 'Na': 3, 'K': 3, 'Rb': 3, 'Cs': 4, 'Fr': 5}        # core l + 1 is enough; one spare
 import os
-OUT = Path(os.environ.get('LINAK_CORE_OUT') or
-           Path(__file__).resolve().parents[1] / 'src' / 'linak' / 'resources' / 'core' / 'core_polarizability.json')
+OUT = Path(os.environ.get('QALI_CORE_OUT') or
+           Path(__file__).resolve().parents[1] / 'src' / 'qali' / 'resources' / 'core' / 'core_polarizability.json')
 XI = np.concatenate([[0.0], np.logspace(-2, 3, 61)])
 OMEGA_GRID = np.logspace(np.log10(0.2), np.log10(5000.0), 60)
 
@@ -96,7 +96,7 @@ def main(argv):
               f"{len(W)} lines, fit error {err:.1e}; Im {rec['max_imag']:.1e}; "
               f"real ω check {rec['real_frequency_check']}; {time.time() - t0:.0f} s", flush=True)
     table['_source'] = ('Ion-core (M+) dipole polarisability at imaginary frequency: Dirac-Hartree-Fock '
-                        'core (finite nucleus) with random-phase-approximation dressing (linak dhf_rpa.CoreRPA), '
+                        'core (finite nucleus) with random-phase-approximation dressing (qali dhf_rpa.CoreRPA), '
                         'as a pseudo-spectrum alpha(i xi) = sum_k f_k/(omega_k^2 + xi^2) in atomic units. '
                         'The Polarizability stage rescales f so alpha(0) equals its core-polarisability table '
                         '(the shape comes from RPA). Built by tools/make_core_polarizability.py.')

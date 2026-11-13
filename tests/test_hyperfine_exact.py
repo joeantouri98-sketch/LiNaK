@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import linak.physics.hyperfine_core as hf
+import qali.physics.hyperfine_core as hf
 
 CASES = [(1.5, .5), (1.5, 1.5), (2.5, 1.5), (3.5, .5), (3.5, 1.5), (3.5, 2.5), (2.5, 2.5)]
 

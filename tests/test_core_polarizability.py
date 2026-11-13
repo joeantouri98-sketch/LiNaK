@@ -8,8 +8,8 @@ import math
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics.polarizability_core import ALPHA_CORE_AU, CORE_ELECTRONS, core_oscillators
+from qali.core.paths import reference_path
+from qali.physics.polarizability_core import ALPHA_CORE_AU, CORE_ELECTRONS, core_oscillators
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +48,7 @@ def test_core_lines_are_scaled_to_the_static_table_and_fall_back_without_one():
 def test_c6_with_the_rpa_core_matches_derevianko(data_dir):
     """With the RPA core, C₆ lands within 0.5 % of Derevianko, Porsev & Babb (2010) for Na–Cs
     (it was 2–4 % high for Rb and Cs with one core line) and within 2 % (1.1σ) for Fr."""
-    from linak.pipelines.polarizability import compute_C6
+    from qali.pipelines.polarizability import compute_C6
     ref = {"Na": (1556, 0.005), "K": (3897, 0.005), "Rb": (4690, 0.005), "Cs": (6846, 0.005), "Fr": (5256, 0.02)}
     for el, (c6, tol) in ref.items():
         with (data_dir / f"{el}_polarizability.json").open(encoding="utf-8") as f:
@@ -58,7 +58,7 @@ def test_c6_with_the_rpa_core_matches_derevianko(data_dir):
 
 
 def test_tweezer_depth_includes_the_core():
-    from linak.physics.tweezer_core import alpha_complex, attach_gamma
+    from qali.physics.tweezer_core import alpha_complex, attach_gamma
     tr = [dict(delta_E_au=0.05, fosc=1.0, sign=1, other_label="np", source="NIST"),
           dict(delta_E_au=1.5, fosc=10.0, sign=1, other_label="core", source="core")]
     ch, n_with, n_core = attach_gamma(tr, {"np": 3e7})

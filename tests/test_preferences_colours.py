@@ -11,17 +11,17 @@ pytest.importorskip("PySide6.QtWidgets")
 from PySide6.QtCore import QSettings  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from linak.gui import preferences_dialog as P  # noqa: E402
-from linak.gui import theme  # noqa: E402
+from qali.gui import preferences_dialog as P  # noqa: E402
+from qali.gui import theme  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def _clean():
     app = QApplication.instance() or QApplication([])
-    for name in (theme.DARK, theme.LIGHT):
+    for name in theme.COLOUR_THEMES:
         theme.set_overrides(name, {})
     yield app
-    for name in (theme.DARK, theme.LIGHT):
+    for name in theme.COLOUR_THEMES:
         theme.set_overrides(name, {})
 
 
@@ -80,7 +80,7 @@ def test_each_colour_is_separate_and_stage_dots_follow_them():
 
 
 def test_overview_table_copies_selection_and_has_units(tmp_path):
-    from linak.gui.overview import CopyableTable, SpeciesOverviewWidget
+    from qali.gui.overview import CopyableTable, SpeciesOverviewWidget
 
     t = CopyableTable(2, 2)
     from PySide6.QtWidgets import QTableWidgetItem
@@ -109,11 +109,11 @@ def test_both_themes_are_edited_and_saved_together(tmp_path):
 
 
 def test_card_labels_use_real_subscripts_and_copy_as_plain_text():
-    from linak.gui.overview import CARD_LABELS, plain_label
+    from qali.gui.overview import CARD_LABELS, plain_label
 
     assert CARD_LABELS["C6_au"] == "C<sub>6</sub>" and CARD_LABELS["alpha_0"] == "α<sub>0</sub>"
     assert plain_label("C<sub>6</sub> source") == "C₆ source"
     assert plain_label("a<sub>bg</sub>") == "a_bg"
-    from linak.physics.extrapolation import fit_settings as fs
+    from qali.physics.extrapolation import fit_settings as fs
 
     assert [f["label"] for f in fs.FIELDS[:3]] == ["Offset prior (τ₀)", "Slope prior (τ₁)", "Threshold term prior (τ₂)"]

@@ -3,9 +3,9 @@ import itertools
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics import blackbody_core as bc
-from linak.physics.polarizability_core import load_element
+from qali.core.paths import reference_path
+from qali.physics import blackbody_core as bc
+from qali.physics.polarizability_core import load_element
 
 FW_HZ = 2416.67      # Farley-Wing limit at 300 K
 

@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   pyside6-windows:
-    name: LiNaK Windows executable
+    name: Qali Windows executable
     runs-on: windows-latest
     steps:
       - name: Check out tagged source
@@ -32,16 +32,16 @@ jobs:
 
       - name: Archive application
         shell: pwsh
-        run: Compress-Archive -Path dist\pyside6\LiNaK.exe -DestinationPath LiNaK-windows-${{ github.ref_name }}.zip
+        run: Compress-Archive -Path dist\pyside6\Qali.exe -DestinationPath Qali-windows-${{ github.ref_name }}.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LiNaK-windows-${{ github.ref_name }}
-          path: LiNaK-windows-${{ github.ref_name }}.zip
+          name: Qali-windows-${{ github.ref_name }}
+          path: Qali-windows-${{ github.ref_name }}.zip
 
   pyside6-macos:
-    name: LiNaK macOS application
+    name: Qali macOS application
     runs-on: macos-latest
     steps:
       - name: Check out tagged source
@@ -58,10 +58,10 @@ jobs:
         run: ./packaging/build_pyside6.sh --clean
 
       - name: Archive application
-        run: ditto -c -k --sequesterRsrc --keepParent dist/pyside6/LiNaK.app LiNaK-macos-${{ github.ref_name }}.zip
+        run: ditto -c -k --sequesterRsrc --keepParent dist/pyside6/Qali.app Qali-macos-${{ github.ref_name }}.zip
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LiNaK-macos-${{ github.ref_name }}
-          path: LiNaK-macos-${{ github.ref_name }}.zip
+          name: Qali-macos-${{ github.ref_name }}
+          path: Qali-macos-${{ github.ref_name }}.zip

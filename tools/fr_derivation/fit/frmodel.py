@@ -1,6 +1,6 @@
 import sys
 import os; HERE=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,HERE)
-from linak.physics.extrapolation.exact import ExactModel, MARINESCU, HA_EV
+from qali.physics.extrapolation.exact import ExactModel, MARINESCU, HA_EV
 import frlev
 CS=MARINESCU["Cs"]
 class FrModel(ExactModel):

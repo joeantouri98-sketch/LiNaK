@@ -10,9 +10,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6.QtWidgets")
 from PySide6.QtWidgets import QApplication, QFileDialog  # noqa: E402
 
-from linak.core import paths, user_tables as U  # noqa: E402
-from linak.core.paths import resource_root  # noqa: E402
-from linak.gui import new_species_dialog as N  # noqa: E402
+from qali.core import paths, user_tables as U  # noqa: E402
+from qali.core.paths import resource_root  # noqa: E402
+from qali.gui import new_species_dialog as N  # noqa: E402
 
 
 @pytest.fixture()
@@ -55,7 +55,7 @@ def test_a_bad_file_leaves_a_message_and_changes_nothing(dlg, monkeypatch, tmp_p
 
 
 def test_typed_numbers_are_saved_into_the_tables(dlg):
-    from linak.core import constants as C
+    from qali.core import constants as C
 
     dlg._boxes["mass"].setText("24.305")
     assert dlg._status["mass"].text() == "✓ ready to save"
@@ -67,8 +67,8 @@ def test_typed_numbers_are_saved_into_the_tables(dlg):
 
 
 def test_hyperfine_constants_are_entered_and_saved(dlg, monkeypatch):
-    from linak.core import species_data as sd
-    from linak.gui import hyperfine_dialog as H
+    from qali.core import species_data as sd
+    from qali.gui import hyperfine_dialog as H
 
     def fill(self):
         self.mass.setText("25")
@@ -85,7 +85,7 @@ def test_hyperfine_constants_are_entered_and_saved(dlg, monkeypatch):
 
 
 def test_the_hyperfine_dialog_refuses_a_spin_zero_isotope(dlg):
-    from linak.gui.hyperfine_dialog import HyperfineDialog, QTableWidgetItem
+    from qali.gui.hyperfine_dialog import HyperfineDialog, QTableWidgetItem
 
     h = HyperfineDialog("Mg", dlg.data_dir)
     h.mass.setText("24")

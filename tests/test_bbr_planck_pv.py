@@ -11,7 +11,7 @@ import math
 import numpy as np
 import pytest
 
-from linak.physics.blackbody_core import (
+from qali.physics.blackbody_core import (
     _PV_Y_MAX,
     bbr_static_shift_hz,
     bbr_total_shift_hz,

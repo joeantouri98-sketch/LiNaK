@@ -2,7 +2,7 @@ from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import QApplication, QComboBox, QDoubleSpinBox, QScrollArea, QVBoxLayout, QWidget
 
-from linak.gui import wheel_guard
+from qali.gui import wheel_guard
 
 
 def _wheel(target, dy=-120):

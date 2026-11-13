@@ -13,8 +13,8 @@ import math
 
 import pytest
 
-from linak.core.constants import A0_SI, C_SI, EV_TO_HARTREE, H_SI, HC_EV_NM, KB_SI
-from linak.physics.polarizability_core import (
+from qali.core.constants import A0_SI, C_SI, EV_TO_HARTREE, H_SI, HC_EV_NM, KB_SI
+from qali.physics.polarizability_core import (
     NM_TO_AU_OMEGA,
     NM_TO_HARTREE,
     U_PREFACTOR,

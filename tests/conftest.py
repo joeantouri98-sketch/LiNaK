@@ -2,7 +2,7 @@
 """Shared fixtures for pipeline regression tests.
 
 All paths stay under tests/ or the package's bundled resources
-(src/linak/resources/). Artifacts go to tests/results/ only.
+(src/qali/resources/). Artifacts go to tests/results/ only.
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from linak.core.paths import PROJECT_ROOT_ENV, reference_path
+from qali.core.paths import PROJECT_ROOT_ENV, reference_path
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = Path(__file__).resolve().parent
@@ -26,7 +26,7 @@ if str(TESTS) not in sys.path:
 
 @pytest.fixture(scope="session", autouse=True)
 def isolated_user_data(tmp_path_factory) -> Path:
-    """Point LiNaK's per-user data home at a temp dir for the whole session.
+    """Point Qali's per-user data home at a temp dir for the whole session.
 
     Unconfigured runs default to the per-user home, so no test may seed or
     write the developer's real one; pipeline subprocesses inherit the
@@ -46,10 +46,10 @@ def isolated_user_data(tmp_path_factory) -> Path:
 def unpinned_workspace(monkeypatch) -> None:
     """No test starts with a workspace pinned by an earlier one.
 
-    A pinned workspace (a MainWindow test, say) wins over LINAK_PROJECT_ROOT, so a later test that points the
+    A pinned workspace (a MainWindow test, say) wins over QALI_PROJECT_ROOT, so a later test that points the
     environment at its own folder would silently read the real tables / data instead.
     """
-    from linak.core import workspace
+    from qali.core import workspace
 
     monkeypatch.setattr(workspace, "_ACTIVE", None)
 
@@ -61,7 +61,7 @@ def isolated_gui_settings(tmp_path, monkeypatch) -> None:
     Without this the GUI uses the developer's real settings, which on Windows
     are in the registry: the remembered output folder, theme and layout.
     """
-    monkeypatch.setenv("LINAK_SETTINGS_FILE", str(tmp_path / "gui_settings.ini"))
+    monkeypatch.setenv("QALI_SETTINGS_FILE", str(tmp_path / "gui_settings.ini"))
 
 
 @pytest.fixture(scope="session")
@@ -128,13 +128,13 @@ def lifetime_by_state(na_lifetimes: dict) -> dict:
 def workspace(tmp_path_factory) -> Path:
     """An isolated, checkout-shaped project root for end-to-end pipeline runs.
 
-    ``set_active``/``runtime_root_for`` only use ``<root>/.linak`` when *root*
+    ``set_active``/``runtime_root_for`` only use ``<root>/.qali`` when *root*
     looks like a checkout, so the two markers they check are created here. This
     keeps every pipeline write inside the temporary directory.
     """
     root = tmp_path_factory.mktemp("workspace")
     (root / "pyproject.toml").write_text("# isolated test workspace\n", encoding="utf-8")
-    (root / "src" / "linak").mkdir(parents=True, exist_ok=True)
+    (root / "src" / "qali").mkdir(parents=True, exist_ok=True)
     return root
 
 

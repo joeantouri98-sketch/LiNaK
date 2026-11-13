@@ -13,7 +13,7 @@ import math
 
 import pytest
 
-from linak.pipelines.hyperfine import _halflife_s, _parse_spin
+from qali.pipelines.hyperfine import _halflife_s, _parse_spin
 
 YEAR_S = 3.156e7
 

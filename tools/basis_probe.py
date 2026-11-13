@@ -9,7 +9,7 @@ import os
 import subprocess
 import tempfile
 
-from linak.integrations.orca_runner import resolve_orca_executable
+from qali.integrations.orca_runner import resolve_orca_executable
 
 CANDIDATES = [
     "def2-TZVP",

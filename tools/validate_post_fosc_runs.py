@@ -47,7 +47,7 @@ def _find(obj, key):
 
 
 def main() -> int:
-    from linak.core.workspace import Workspace
+    from qali.core.workspace import Workspace
 
     ws = Workspace.current()
     data_dir = ws.data_json_dir

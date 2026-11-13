@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from linak.core.errors import PipelineError, UnknownPipelineError
-from linak.gui.dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
-from linak.core.paths import is_checkout
-from linak.pipelines import PIPELINE_MODULES
-from linak.pipelines.runner import run
+from qali.core.errors import PipelineError, UnknownPipelineError
+from qali.gui.dataset_templates import CSV_DATASET_TEMPLATES, JSON_DATASET_TEMPLATES
+from qali.core.paths import is_checkout
+from qali.pipelines import PIPELINE_MODULES
+from qali.pipelines.runner import run
 
 
 def test_repository_is_detected_as_a_checkout():

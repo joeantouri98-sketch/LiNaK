@@ -550,7 +550,7 @@ wheels = [
 ]
 
 [[package]]
-name = "linak"
+name = "qali"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },

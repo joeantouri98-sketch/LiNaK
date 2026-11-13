@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from linak.physics import extrapolation as E
-from linak.physics.extrapolation.tables import OutOfTableRange, load_table
+from qali.physics import extrapolation as E
+from qali.physics.extrapolation.tables import OutOfTableRange, load_table
 
 GOLD = json.loads((Path(__file__).parent / "anchors" / "extrapolation_golden.json").read_text())
 
@@ -54,7 +54,7 @@ def test_resonance_anchor_is_excluded_not_fitted():
 
 
 def test_stale_hash_is_reported(monkeypatch):
-    from linak.physics.extrapolation import params
+    from qali.physics.extrapolation import params
     mp = params.model_params()
     monkeypatch.setitem(mp["species"]["Rb"], "lam", 0.9)
     assert not E.table_status("Rb")["fresh"]

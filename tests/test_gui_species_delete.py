@@ -11,8 +11,8 @@ QtWidgets = pytest.importorskip("PySide6.QtWidgets")
 
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox  # noqa: E402
 
-from linak.core.workspace import Workspace, hidden_species, species_files  # noqa: E402
-from linak.gui.species_delete import DeleteSpeciesDialog  # noqa: E402
+from qali.core.workspace import Workspace, hidden_species, species_files  # noqa: E402
+from qali.gui.species_delete import DeleteSpeciesDialog  # noqa: E402
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -71,9 +71,9 @@ def test_species_without_files_can_only_be_unlisted(tmp_path):
 @pytest.fixture
 def window(populated, monkeypatch):
     pytest.importorskip("PySide6.QtWebEngineWidgets")
-    from linak.gui import main_window as module
+    from qali.gui import main_window as module
 
-    monkeypatch.setenv("LINAK_PROJECT_ROOT", str(populated.root))
+    monkeypatch.setenv("QALI_PROJECT_ROOT", str(populated.root))
     monkeypatch.setattr(module, "seed_bundled_data", lambda *a, **k: None)
     # Whether a Recycle Bin exists depends on the machine, not on this code.
     monkeypatch.setattr(module, "move_to_trash", module.delete_permanently)
@@ -86,7 +86,7 @@ def window(populated, monkeypatch):
 
 
 def _answer(monkeypatch, delete_trees):
-    from linak.gui import main_window as module
+    from qali.gui import main_window as module
 
     class Answer(module.DeleteSpeciesDialog):
         def exec(self):
@@ -127,7 +127,7 @@ def test_window_delete_everything_then_type_it_back(window, populated, monkeypat
 
 
 def test_no_recycle_bin_asks_before_deleting_for_good(window, populated, monkeypatch):
-    from linak.gui import main_window as module
+    from qali.gui import main_window as module
 
     monkeypatch.setattr(module, "move_to_trash", list)
     asked = []
@@ -140,7 +140,7 @@ def test_no_recycle_bin_asks_before_deleting_for_good(window, populated, monkeyp
 
 
 def test_declining_permanent_delete_keeps_everything(window, populated, monkeypatch):
-    from linak.gui import main_window as module
+    from qali.gui import main_window as module
 
     window._set_species("Fe")
     monkeypatch.setattr(module, "move_to_trash", list)

@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from linak.core.paths import reference_path
+from qali.core.paths import reference_path
 
 DATA = reference_path("data_json")
 F_VALUES = reference_path("f_values")

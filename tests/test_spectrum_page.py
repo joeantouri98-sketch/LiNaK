@@ -12,9 +12,9 @@ import numpy as np
 import pytest
 
 from helpers import make_workspace, run_pipeline
-from linak.core.constants import C_SI
-from linak.physics import spectrum_core as sc
-from linak.report_templates import load as load_template
+from qali.core.constants import C_SI
+from qali.physics import spectrum_core as sc
+from qali.report_templates import load as load_template
 
 NODE = shutil.which("node")
 PHYS_JS = load_template("spectrum_physics.js")
@@ -82,7 +82,7 @@ def test_curve_of_growth_limits():
 
 
 def test_hyperfine_components_match_steck():
-    from linak.physics.hyperfine_core import hyperfine_energy
+    from qali.physics.hyperfine_core import hyperfine_energy
     # Cs D2 F=4 -> F'=5 lies 4021.776 - 263.8906 MHz below the line centroid (Steck, Cs D Line Data)
     comps = sc.hyperfine_components(3.5, 0.5, 1.5, 2298.1579425, 0.0, 50.28827, -0.4934, 0.56)
     c = next(c for c in comps if (c.F, c.Fp) == (4, 5))
@@ -170,7 +170,7 @@ def pages(tmp_path_factory):
     for sp in ("Rb", "Na_c1"):
         r = run_pipeline(["spectra", sp], root)
         assert r.returncode == 0, r.stdout + r.stderr
-        page = root / ".linak" / "plots" / sp / f"{sp}_spectrum.html"
+        page = root / ".qali" / "plots" / sp / f"{sp}_spectrum.html"
         out[sp] = (r.stdout, page.read_text(encoding="utf-8"), page.parent)
     return out
 

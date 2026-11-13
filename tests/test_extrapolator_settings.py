@@ -6,11 +6,11 @@ import os
 
 import pytest
 
-from linak.core.paths import reference_path
-from linak.physics.extrapolation import fit_settings as F
-from linak.physics.extrapolation import stage as S
-from linak.physics.extrapolation.params import anchor_config, fit_overrides
-from linak.physics.polarizability_core import load_nist_fvalues
+from qali.core.paths import reference_path
+from qali.physics.extrapolation import fit_settings as F
+from qali.physics.extrapolation import stage as S
+from qali.physics.extrapolation.params import anchor_config, fit_overrides
+from qali.physics.polarizability_core import load_nist_fvalues
 
 
 def _inputs(el="Rb"):
@@ -81,8 +81,8 @@ def test_settings_page_and_preferences_tab(tmp_path):
     from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import preferences_dialog as P
-    from linak.gui.extrapolator_settings import ExtrapolatorSettingsPage, settings_file
+    from qali.gui import preferences_dialog as P
+    from qali.gui.extrapolator_settings import ExtrapolatorSettingsPage, settings_file
 
     app = QApplication.instance() or QApplication([])
     page = ExtrapolatorSettingsPage(tmp_path, "Rb")
@@ -113,8 +113,8 @@ def test_extrapolation_dialog_uses_the_saved_fit_settings(tmp_path):
     pytest.importorskip("PySide6.QtWidgets")
     from PySide6.QtWidgets import QApplication
 
-    from linak.gui import extrapolation_dialog as D
-    from linak.gui.extrapolator_settings import settings_file
+    from qali.gui import extrapolation_dialog as D
+    from qali.gui.extrapolator_settings import settings_file
 
     app = QApplication.instance() or QApplication([])
     nist, ry = _inputs()
@@ -129,7 +129,7 @@ def test_unused_note_cells_are_editable_and_saved(tmp_path):
     from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance() or QApplication([])  # noqa: F841
-    from linak.gui.extrapolator_settings import ExtrapolatorSettingsPage
+    from qali.gui.extrapolator_settings import ExtrapolatorSettingsPage
 
     page = ExtrapolatorSettingsPage(tmp_path, "Na")
     tbl = page.model_table

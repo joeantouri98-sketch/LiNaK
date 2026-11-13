@@ -9,11 +9,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from linak.pipelines.plotinteractive import build_parser, grotrian_page
-from linak.pipelines.plotinteractive.inputs import load_inputs
-from linak.pipelines.plotinteractive.view import prepare_view
-from linak.core.species import resolve_species
-from linak.report_templates import load
+from qali.pipelines.plotinteractive import build_parser, grotrian_page
+from qali.pipelines.plotinteractive.inputs import load_inputs
+from qali.pipelines.plotinteractive.view import prepare_view
+from qali.core.species import resolve_species
+from qali.report_templates import load
 
 
 def _inputs(data_dir, tmp_path):

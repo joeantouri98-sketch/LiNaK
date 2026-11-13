@@ -15,8 +15,8 @@ import argparse
 import json
 import re
 
-from linak.core.paths import reference_path
-from linak.physics.polarizability_core import load_nist_fvalues
+from qali.core.paths import reference_path
+from qali.physics.polarizability_core import load_nist_fvalues
 
 HARTREE_EV = 27.211386245988
 

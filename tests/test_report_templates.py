@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Regression tests for the packaged-report renderer.
 
-``linak.report_templates`` replaces the historical inline HTML/CSS/JS
+``qali.report_templates`` replaces the historical inline HTML/CSS/JS
 builders and ``<head>/<body>`` string surgery inside the pipelines. These
 tests pin:
 
@@ -10,7 +10,7 @@ tests pin:
 * the byte-faithful head/body/title injection helpers,
 * the shared ``fullscreen.css`` asset (plain CSS, wrapped on demand),
 * the embedded-JS constant serialization (values come from
-  ``linak.core.constants``),
+  ``qali.core.constants``),
 * that ``ensure_offline_plotlyjs`` accepts plain string dirs (the
   orbital3d call site passes ``os.path.join`` output).
 
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from linak import report_templates as rt
+from qali import report_templates as rt
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -111,8 +111,8 @@ def test_inject_title_match():
 
 
 def test_js_constants_are_the_core_values():
-    """Embedded JS constants serialize linak.core.constants."""
-    from linak.core import constants as core
+    """Embedded JS constants serialize qali.core.constants."""
+    from qali.core import constants as core
 
     assert set(rt.JS_CONSTANT_NAMES) == {
         "A0_SI", "C_SI", "H_SI", "KB_SI", "AMU_KG", "KB_EV", "EV_TO_J",
@@ -146,9 +146,9 @@ def test_ensure_offline_plotlyjs_accepts_string_dirs(tmp_path: Path):
 def test_spec_ships_the_template_payload():
     """The frozen build carries the templates where the package expects them."""
     spec = (REPO_ROOT / "pysidedeploy.spec").read_text(encoding="utf-8")
-    assert "--include-data-dir=src/linak/report_templates=linak/report_templates" in spec
+    assert "--include-data-dir=src/qali/report_templates=qali/report_templates" in spec
     pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"linak.report_templates" = ["*"]' in pyproject
+    assert '"qali.report_templates" = ["*"]' in pyproject
 
 
 def test_no_template_carries_python_string_quotes():
@@ -166,7 +166,7 @@ def test_no_template_carries_python_string_quotes():
 
 def test_report_templates_are_packaged_data():
     """Report templates ship as package data with the shared asset set."""
-    templates = REPO_ROOT / "src" / "linak" / "report_templates"
+    templates = REPO_ROOT / "src" / "qali" / "report_templates"
     assert templates.is_dir(), "packaged report templates must exist"
     files = {p.name for p in templates.iterdir()}
     assert {n for n in files if n.endswith(".html")}, "at least one .html template"

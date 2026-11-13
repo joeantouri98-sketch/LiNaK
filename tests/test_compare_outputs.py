@@ -10,7 +10,7 @@ from compare_outputs import compare  # noqa: E402
 
 
 def _write(root: Path, name: str, text: str) -> None:
-    path = root / ".linak" / name
+    path = root / ".qali" / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from linak.core import workspace as workspace_module
-from linak.core.workspace import (
+from qali.core import workspace as workspace_module
+from qali.core.workspace import (
     Workspace,
     hidden_species,
     mark_removed,
@@ -13,7 +13,7 @@ from linak.core.workspace import (
     seed_bundled_data,
     species_files,
 )
-from linak.gui.project_io import workspace_species
+from qali.gui.project_io import workspace_species
 
 
 def _touch(path):

@@ -12,7 +12,7 @@ import math
 
 import pytest
 
-from linak.physics.blackbody_core import (
+from qali.physics.blackbody_core import (
     bbr_depopulation,
     bbr_static_shift_hz,
     bbr_total_shift_hz,
@@ -24,7 +24,7 @@ from linak.physics.blackbody_core import (
     nbar_photon,
     t_eff_gate,
 )
-from linak.physics.polarizability_core import alpha_real
+from qali.physics.polarizability_core import alpha_real
 
 H = 6.62607015e-34
 HBAR = H / (2 * math.pi)

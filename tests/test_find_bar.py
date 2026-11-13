@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6.QtWidgets")
 from PySide6.QtWidgets import QApplication, QPlainTextEdit, QTableWidget, QTableWidgetItem  # noqa: E402
 
-from linak.gui import find_bar as F  # noqa: E402
+from qali.gui import find_bar as F  # noqa: E402
 
 
 @pytest.fixture(scope="module")
