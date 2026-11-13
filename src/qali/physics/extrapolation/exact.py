@@ -38,7 +38,8 @@ class Cancelled(RuntimeError):
 
 
 # Marinescu-Sadeghpour-Dalgarno parameters, the values ARC uses (read-only: not editable in the GUI).
-MARINESCU = {
+# Per element: Z and alphaC (numbers) and a1..a4, rc (one value per l = 0..3).
+MARINESCU: dict[str, dict[str, Any]] = {
     "Li": dict(Z=3, alphaC=0.1923,
                a1=[2.47718079, 3.45414648, 2.51909839, 2.51909839], a2=[1.84150932, 2.5515108, 2.4371245, 2.4371245],
                a3=[-0.02169712, -0.21646561, 0.32505524, 0.32505524], a4=[-0.11988362, -0.06990078, 0.1060243, 0.1060243],
