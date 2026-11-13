@@ -751,6 +751,7 @@ class MainWindow(QMainWindow):
         if HAS_WEBENGINE:
             self.web_view = QWebEngineView()
             attach_web_downloads(self.web_view, self)
+            self.web_view.loadFinished.connect(lambda ok: ok and self._sync_page_theme())
             self.viewer_stack.addWidget(self.web_view)
         else:
             self.web_view = None
@@ -902,8 +903,26 @@ class MainWindow(QMainWindow):
         tokens = apply_theme(QApplication.instance(), name)
         if self.web_view is not None:
             self.web_view.page().setBackgroundColor(QColor(tokens.bg))
+            self._sync_page_theme()
         if save:
             self.settings.setValue(THEME_SETTING, name)
+
+    # The redesigned pages have a 'Theme: auto / light / dark' button whose 'auto' follows the
+    # browser's colour scheme, which inside the app is not the app's theme. Step the page's own button
+    # to the app's light or dark (so the page redraws its plots); other pages get the attribute only.
+    _PAGE_THEME_JS = (
+        "(function(t){var b=document.getElementById('theme');"
+        "if(b&&/^Theme: /.test(b.textContent.trim())){for(var i=0;i<3&&b.textContent.trim()!=='Theme: '+t;i++)b.click();}"
+        "else{document.documentElement.setAttribute('data-theme',t);}})(%s)")
+
+    def _sync_page_theme(self) -> None:
+        """Show the page in the viewer in the app's light or dark theme."""
+        if self.web_view is None:
+            return
+        import json as _json
+
+        from .theme import resolve as _resolve
+        self.web_view.page().runJavaScript(self._PAGE_THEME_JS % _json.dumps(_resolve(self.theme_name)))
 
     def _open_preferences(self, start_tab: str | None = None, species: str | None = None) -> None:
         PreferencesDialog(self, self.theme_name, self.settings,

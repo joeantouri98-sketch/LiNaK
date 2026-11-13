@@ -165,19 +165,27 @@ def radial_wavefunction(n: int, l: int, delta: float,
     u[-1] = 1.0
     u[-2] = math.exp(max(min(_a2 - _a1, 600.0), -600.0))
 
-    # Inward Numerov
+    # Inward Numerov. The recurrence runs on Python floats (indexing numpy arrays element by
+    # element is ~10x slower; a 150 000-point wave took 0.07 s); the arithmetic is the same.
+    A = (2.0 + (5.0 / 6.0) * h * h * g).tolist()
+    B = (1.0 - (1.0 / 12.0) * h * h * g).tolist()      # also the denominator
+    vals = [0.0] * n_grid
+    vals[-1], vals[-2] = float(u[-1]), float(u[-2])
+    u1, u2 = vals[-2], vals[-1]                         # u[i+1], u[i+2]
+    rescales = []
     for i in range(n_grid - 3, -1, -1):
-        num = (2.0 + (5.0 / 6.0) * h * h * g[i + 1]) * u[i + 1] - (
-            1.0 - (1.0 / 12.0) * h * h * g[i + 2]
-        ) * u[i + 2]
-        den = 1.0 - (1.0 / 12.0) * h * h * g[i]
-        if abs(den) < 1e-30:
-            u[i] = 0.0
-        else:
-            u[i] = num / den
-        # Prevent overflow: rescale periodically
-        if abs(u[i]) > 1e100:     # keep u*u (and its sum over up to 1.5e5 points) below float overflow
-            u[i:] *= 1e-100
+        den = B[i]
+        ui = 0.0 if abs(den) < 1e-30 else (A[i + 1] * u1 - B[i + 2] * u2) / den
+        if abs(ui) > 1e100:     # keep u*u (and its sum over up to 1.5e5 points) below float overflow
+            ui *= 1e-100
+            u1 *= 1e-100
+            rescales.append(i)
+        vals[i] = ui
+        u2, u1 = u1, ui
+    u = np.array(vals)
+    # Each rescale at index i also scaled every point beyond it (u[i:] *= 1e-100 in the old loop)
+    for i in rescales:
+        u[i + 1:] *= 1e-100
 
     # Force regular origin behavior softly (u→0)
     u[0] = 0.0

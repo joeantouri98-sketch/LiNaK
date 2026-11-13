@@ -256,7 +256,7 @@ def build_payload(element, species, lt, data_dir, args, hf_file=None) -> dict:
     levels, lines, gs, dropped = build_lines(lt)
     gi = [lv[0] for lv in levels].index(gs)
     symbol = species.get('symbol', element)
-    vp = sc.VAPOUR_PRESSURE.get(element) if species['kind'] != 'ion' else None
+    vp = sc.vapour_record(element) if species['kind'] != 'ion' else None
     dlines, dl_note = build_dlines(element, levels, lines, gs, data_dir, hf_file) if species['kind'] != 'ion' else ([], 'ion')
     T = args.T if args.T is not None else sc.DEFAULT_CELL_T.get(element, 300.0)
     lo, hi = default_range(lines, gi)
@@ -276,8 +276,7 @@ def build_payload(element, species, lt, data_dir, args, hf_file=None) -> dict:
         mass=ATOMIC_MASS_AMU.get(symbol, ATOMIC_MASS_AMU.get(element, 40.0)), gs=gs, gi=gi,
         IE=lt.get('ionization_energy_eV'),
         levels=levels, lines=lines, dropped=dropped,
-        vapour=None if vp is None else dict(solid=list(vp['solid']), liquid=list(vp['liquid']), T_melt=vp['T_melt'],
-                                            src=sc.VAPOUR_SOURCE),
+        vapour=vp,
         dlines=dlines, dl_note=dl_note,
         opts=dict(tabs=tabs, T=T, L=args.cell_length, N=N_typed, unit=args.units, wl=[lo, hi],
                   texc=None if math.isinf(t_exc) else t_exc, inst=args.instrument_pm),

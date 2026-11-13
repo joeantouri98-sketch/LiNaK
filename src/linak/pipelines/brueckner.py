@@ -47,7 +47,7 @@ from linak.physics.atomic_structure.angular import L_LETTERS, kappa_label
 from linak.physics.atomic_structure.brueckner import compute_brueckner
 from linak.physics.atomic_structure.dhf_cp import one_valence_configuration
 from linak.physics.polarizability_core import ALPHA_CORE_AU
-from linak.pipelines.dhf import ION_CORE_ALPHA_AU, ION_NIST_LEVELS, nist_inputs
+from linak.pipelines.dhf import ION_CORE_ALPHA_AU, check_n_max, ion_handbook, nist_inputs
 from linak.pipelines.rydberg import find_nist_levels_file
 
 _J_KAPPA = {('p', '1/2'): 1, ('p', '3/2'): -2, ('d', '3/2'): 2, ('d', '5/2'): -3,
@@ -71,7 +71,7 @@ def _cache_path(data_dir, element):
     return os.path.join(data_dir, f"{element}_brueckner_cache.npz")
 
 
-def run_element(element, nist_dir, data_dir, *, scale=True, ip_cm=None, n_extra=6, lmax=5, omegas=()):
+def run_element(element, nist_dir, data_dir, *, scale=True, ip_cm=None, n_max=None, lmax=5, omegas=()):
     print(f"\n{'='*65}")
     print(f"  {element}  —  Brueckner orbitals (DHF + Sigma(2)), RPA dipoles")
     print(f"{'='*65}")
@@ -83,7 +83,7 @@ def run_element(element, nist_dir, data_dir, *, scale=True, ip_cm=None, n_extra=
         raise MissingDataError(f"{element}: {exc}. The Brueckner model covers Li-Fr and the ions "
                                f"{', '.join(ION_CORE_ALPHA_AU)}") from exc
     nist_ip, table = nist_inputs(element, nist_dir)
-    builtin = ION_NIST_LEVELS.get(element) if nist_ip is None else None
+    builtin = ion_handbook(element) if nist_ip is None else None
     if builtin:
         table = dict(builtin[1])
     ip_source = "--ip" if ip_cm is not None else ("NIST Handbook (built-in)" if builtin else "NIST")
@@ -108,7 +108,7 @@ def run_element(element, nist_dir, data_dir, *, scale=True, ip_cm=None, n_extra=
           f"Sigma(2) virtual orbitals l <= {lmax}" + ("" if cache else "; first run builds Sigma (minutes)"))
     res = compute_brueckner(Z, charge=charge, mass_number=round(mass) if mass else None,
                             ionization_cm=ip_cm if scale else None, fit_levels_cm=fit, scale=scale,
-                            n_extra=n_extra, lmax=lmax, omegas_eV=omegas, cache=cache,
+                            n_max=n_max, lmax=lmax, omegas_eV=omegas, cache=cache,
                             progress=lambda msg: print(f"    {msg}", flush=True))
     if {k: id(v) for k, v in cache.items()} != before:
         np.savez(cache_path, **cache)
@@ -181,8 +181,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Ionization energy (cm-1); replaces the NIST value, so no NIST files are needed')
     parser.add_argument('--lmax', type=int, default=5,
                         help='Highest l of the virtual orbitals in Sigma(2); default 5')
-    parser.add_argument('--n-extra', type=int, default=6,
-                        help='Report levels and transitions up to n_valence + N; default 6')
+    parser.add_argument('--n-max', type=int, default=None,
+                        help='Highest n of the reported levels and transitions; default n_valence + 6 '
+                             '(Na 9, Cs 12)')
+    parser.add_argument('--n-extra', type=int, default=None, help=argparse.SUPPRESS)   # replaced by --n-max
     parser.add_argument('--omega', type=float, nargs='*', default=[],
                         help='Photon energies (eV) for alpha(omega)')
     parser.add_argument('--all', action='store_true')
@@ -197,8 +199,6 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if not args.all and not args.element:
         parser.error("give an element or --all")
-    if args.n_extra < 1:
-        parser.error("--n-extra must be at least 1")
     if not 2 <= args.lmax <= 7:
         parser.error("--lmax must be between 2 and 7")
     if args.ip is not None and (args.ip <= 0 or args.all):
@@ -213,9 +213,10 @@ def main(argv=None) -> int:
             elements = [resolve_species(args.element.strip())['species_id']]
         except ValueError as exc:
             parser.error(str(exc))
+    check_n_max(parser, args, elements)
     for el in elements:
         run_element(el, nist_dir, args.data_dir, scale=not args.unscaled, ip_cm=args.ip,
-                    n_extra=args.n_extra, lmax=args.lmax, omegas=args.omega)
+                    n_max=args.n_max, lmax=args.lmax, omegas=args.omega)
     return 0
 
 

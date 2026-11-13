@@ -17,7 +17,7 @@
     "gs_label": "3s",
     "alpha0_au": 162.6094,
     "alpha0_expt_au": 162.7,
-    "C6_au": 1557.93,
+    "C6_au": 1556.82,
     "C6_expt_au": 1556.0,
     "tol_rel_pipeline": 1e-05,
     "tol_rel_expt": 0.005

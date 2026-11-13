@@ -61,13 +61,13 @@ def test_undamped_real_part_equals_alpha_real():
     assert im == 0.0
 
 
-def test_attach_gamma_drops_core_and_counts_damped_channels():
+def test_attach_gamma_keeps_core_undamped_and_counts_damped_channels():
     transitions = [_channel(589.16, 0.64, "3p3/2"), _channel(330.3, 0.01, "4p3/2"),
                    dict(_channel(50.0, 1.0, "core"), source="core")]
     channels, n_with, n_core = attach_gamma(transitions, {"3p3/2": NA_D2_A_S})
-    assert (len(channels), n_with, n_core) == (2, 1, 1)
+    assert (len(channels), n_with, n_core) == (3, 1, 1)       # the core stays in Re[α] (trap depth)
     assert channels[0]["Gamma_au"] == pytest.approx(NA_D2_A_S * AU_TIME_S)
-    assert channels[1]["Gamma_au"] == 0.0
+    assert channels[1]["Gamma_au"] == 0.0 and channels[2]["Gamma_au"] == 0.0
     assert "Gamma_au" not in transitions[0], "the inputs are not modified"
 
 

@@ -96,7 +96,7 @@ def test_finite_nucleus_has_no_spurious_states_at_fr():
 def na_ws(tmp_path_factory):
     """Workspace with Na_dhf.json up to n = 30 (past NIST's n ~ 20, so --dhf has model lines to replace)."""
     root = make_workspace(tmp_path_factory.mktemp("dhf") / "ws")
-    result = run_pipeline(["dhf", "Na", "--n-extra", "27"], root)
+    result = run_pipeline(["dhf", "Na", "--n-max", "30"], root)
     assert result.returncode == 0, result.stdout + result.stderr
     return root
 
@@ -246,7 +246,7 @@ def test_polarizability_dhf_labels_its_lines(na_ws):
 def ion_ws(tmp_path_factory):
     root = make_workspace(tmp_path_factory.mktemp("dhf_ion") / "ws")
     for species in ("Mg_c1", "Ca_c1"):
-        result = run_pipeline(["dhf", species, "--n-extra", "17"], root)
+        result = run_pipeline(["dhf", species, "--n-max", "20"], root)
         assert result.returncode == 0, result.stdout + result.stderr
     return root
 
@@ -341,7 +341,7 @@ def test_sigma2_scaled_fits_and_predicts_and_caches():
     from linak.physics.atomic_structure.dhf_sigma import compute_sigma2
 
     kw = dict(ionization_cm=41449.451, fit_levels_cm={(3, 1): 16956.172, (3, -2): 16973.368},
-              lmax=2, n_int=16, n_extra=2)
+              lmax=2, n_int=16, n_max=5)
     cache: dict = {}
     res = compute_sigma2(11, cache=cache, **kw)
     lv = {x.label: x for x in res.levels}
@@ -356,7 +356,7 @@ def test_sigma2_scaled_fits_and_predicts_and_caches():
 def test_sigma2_unscaled_is_pure_ab_initio():
     from linak.physics.atomic_structure.dhf_sigma import compute_sigma2
 
-    res = compute_sigma2(11, scale=False, lmax=2, n_int=16, n_extra=1)
+    res = compute_sigma2(11, scale=False, lmax=2, n_int=16, n_max=4)
     assert res.scaling == "none" and set(res.scale_sources.values()) == {"unscaled"}
     assert not any(x.fitted for x in res.levels)
     # second order moves the DHF ionization energy (39952 cm-1) towards NIST (41449)
@@ -422,7 +422,7 @@ def test_rpa_dressed_dipole_is_hermitian_and_screened():
 @pytest.fixture(scope="module")
 def li_bo(tmp_path_factory):
     root = make_workspace(tmp_path_factory.mktemp("bo") / "ws")
-    result = run_pipeline(["brueckner", "Li", "--n-extra", "2", "--lmax", "3"], root)
+    result = run_pipeline(["brueckner", "Li", "--n-max", "4", "--lmax", "3"], root)
     assert result.returncode == 0, result.stdout + result.stderr
     return root, load_json(root / ".linak" / "data" / "Li_brueckner.json")
 
@@ -449,6 +449,18 @@ def test_brueckner_lines_carry_their_source_label(li_bo):
     assert lines.source == "Brueckner"
     assert lines.f_absorption("2s", "2p", [1], [1, 3], 0.068) > 0.7
     assert DHFLines.from_payload(_toy_payload()).source == "DHF"
+
+
+def test_n_max_is_the_highest_n(tmp_path):
+    root = make_workspace(tmp_path / "ws")
+    low = run_pipeline(["dhf", "Na", "--n-max", "3"], root)
+    assert low.returncode != 0 and "must be above the valence n of Na (3)" in low.stderr
+    old = run_pipeline(["dhf", "Na", "--n-extra", "27"], root)
+    assert old.returncode != 0 and "--n-max 30" in old.stderr
+    from linak.physics.atomic_structure.dhf_cp import report_n_max
+    assert report_n_max(3, None) == 9 and report_n_max(3, 30) == 30
+    with pytest.raises(ValueError):
+        report_n_max(3, 3)
 
 
 def test_model_f_needs_the_model_file(tmp_path):

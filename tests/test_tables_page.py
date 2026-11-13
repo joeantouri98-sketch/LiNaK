@@ -93,9 +93,9 @@ def test_filter_hides_non_matching_items(page):
 def test_units_are_shown_where_a_number_has_one(page):
     page.tree.setCurrentItem(_find(page.tree, "table", "polarizability.alpha_core"))
     assert {page.grid.item(r, 3).text() for r in range(page.grid.rowCount())} == {"a.u."}
-    page.tree.setCurrentItem(_find(page.tree, "table", "scattering.fallback"))
+    page.tree.setCurrentItem(_find(page.tree, "table", "spectrum.vapour_pressure"))
     units = {page.grid.item(r, 0).text().rsplit(" / ", 1)[-1]: page.grid.item(r, 3).text() for r in range(page.grid.rowCount())}
-    assert units == {"mass": "u", "wl": "nm", "A": "s\u207b\u00b9", "Isat": "mW/cm\u00b2", "tau": "ns", "vrec": "cm/s", "Erec": "nK"}
+    assert units == {"solid_a": "", "liquid_a": "", "solid_b": "K", "liquid_b": "K", "T_melt": "K"}
 
 
 def test_add_row_is_saved_applied_and_removable(page, monkeypatch):
@@ -167,7 +167,7 @@ def test_add_a_whole_element_to_the_dline_table(page, monkeypatch):
 
 
 def test_tables_that_cannot_be_added_to_can_still_be_browsed_and_edited(page):
-    for tid in ("scattering.fallback", "uncertainty.accuracy_grade"):
+    for tid in ("spectrum.vapour_pressure", "uncertainty.accuracy_grade"):
         page.tree.setCurrentItem(_find(page.tree, "table", tid))
         page.grid.setCurrentCell(0, 0)
         assert not page.remove_btn.isEnabled()

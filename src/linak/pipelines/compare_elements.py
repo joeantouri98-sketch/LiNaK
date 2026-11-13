@@ -17,13 +17,17 @@ Falls back to hardcoded experimental literature values for elements
 whose pipeline has not been run yet.
 
 Outputs:
-  data_json/comparison_table.json    — machine-readable summary
-  .linak/plots/comparison_table.html — interactive sortable HTML table (only with --html)
+  data_json/comparison_table.json    — machine-readable summary (with the C₆ matrix and the
+                                       tune-out wavelengths of the elements that have
+                                       polarizability data)
+  .linak/plots/comparison.html       — the Compare page (``compare_page``): D lines, Laser
+                                       cooling, Polarizability, C₆, Trends, Accuracy
 
 Usage:
   linak --pipeline compare_elements
   linak --pipeline compare_elements --T 500      (Doppler at 500 K)
   linak --pipeline compare_elements --elements Na K Rb
+  linak --pipeline compare_elements --no-page    (JSON only)
 """
 
 from __future__ import annotations
@@ -45,11 +49,10 @@ from linak.core.constants import (
 )
 from linak.core.elements import ELEMENTS
 from linak.core.errors import MissingDataError
-from linak.core.fileio import atomic_write_text, write_json
+from linak.core.fileio import write_json
 from linak.core.species import require_neutral_species
 from linak.core.spectroscopy import LITERATURE
 from linak.core.workspace import Workspace
-from linak.report_templates import js_constant, render as render_template
 
 pi = math.pi
 _Z_BY_SYMBOL = {sym: Z for Z, (sym, _q, _m) in ELEMENTS.items()}
@@ -101,13 +104,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--elements', nargs='+',
                         default=['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'],
                         help='Elements to include (default: all 6 alkalis)')
-    parser.add_argument('--html', action='store_true',
-                        help='Also write the interactive HTML table (the viewer table and the '
-                             'JSON are always produced)')
+    parser.add_argument('--no-page', action='store_true',
+                        help='Write the JSON only; skip plots/comparison.html')
+    parser.add_argument('--html', action='store_true', help=argparse.SUPPRESS)   # the page is now always written
+    from linak.pipelines.compare_page import TAB_FLAGS
+    for flag in list(TAB_FLAGS.values())[1:]:
+        parser.add_argument(f'--no-tab-{flag}', action='store_true', help=f'Leave out the {flag} tab')
     parser.add_argument('--data-dir', default=str(Workspace.current().data_json_dir),
                         help='Directory containing JSON data files (default: data_json)')
     parser.add_argument('--output-dir', default=str(Workspace.current().plots_dir),
-                        help='Output directory for HTML table (default: plots)')
+                        help='Output directory for the Compare page (default: plots)')
     return parser
 
 # PHYSICS FUNCTIONS
@@ -474,7 +480,7 @@ def build_table(elements, data_dir, T_K):
     return table_data
 
 
-# BUILD INTERACTIVE HTML TABLE
+# MERGE WITH THE SAVED TABLE
 
 
 def merge_with_existing(new_rows, json_path):
@@ -487,19 +493,6 @@ def merge_with_existing(new_rows, json_path):
         old = []
     replaced = {row.element for row in new_rows}
     return [row for row in old if row.element not in replaced] + list(new_rows)
-
-
-def build_html(table_data, T_K):
-    return render_template(
-        'compare_table.html',
-        raw_data=json.dumps([asdict(row) for row in table_data]),
-        kb_eV=js_constant('KB_EV'),
-        amu_kg=js_constant('AMU_KG'),
-        c_ms=js_constant('C_SI'),
-        eV_J=js_constant('EV_TO_J'),
-        h_J=js_constant('H_SI'),
-        t_k_str=f'{T_K:.0f}',
-    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -524,13 +517,25 @@ def main(argv: list[str] | None = None) -> int:
     # Elements already in the table stay; the requested ones are added or replaced.
     json_out = os.path.join(data_dir, 'comparison_table.json')
     table_data = merge_with_existing(table_data, json_out)
-    write_json(json_out, {'T_K': T_K, 'elements': [asdict(row) for row in table_data]})
+    from linak.pipelines import compare_page as cp
+    tabs = [t for t in cp.TABS if t == 'dl' or not getattr(args, f'no_tab_{cp.TAB_FLAGS[t]}', False)]
+    payload = cp.build_payload(table_data, data_dir, T_K, tabs=tabs)
+    out = {'T_K': T_K, 'elements': [asdict(row) for row in table_data]}
+    if payload['c6']:
+        out['C6_au'] = [{'pair': [a, b], 'C6_au': c, 'sigma_au': sg, 'reference_au': ref, 'reference_sigma_au': rs,
+                         'method': 'Casimir-Polder from each atom\'s alpha(i omega)'} for a, b, c, sg, ref, rs in payload['c6']]
+        out['tune_out_nm'] = {el: [{'wl_nm': t[0], 'between': [t[1], t[2]]} for t in p['to']] for el, p in payload['pol'].items()}
+    write_json(json_out, out)
     print(f"\nSaved JSON: {json_out}")
 
-    if args.html:
-        html_out = os.path.join(out_dir, 'comparison_table.html')
-        atomic_write_text(html_out, build_html(table_data, T_K))
-        print(f"Saved HTML: {html_out}")
+    if not args.no_page:
+        page = cp.write_page(payload, out_dir)
+        print(f"Saved page: {page}")
+        if payload['acc']:
+            print("  Accuracy (computed vs reference):")
+            for r in payload['acc']:
+                print(f"    {r['q']:9s} {r['who']:7s} {r['calc']:>14.6g}  ref {r['ref']:>12.6g}  "
+                      f"{100 * (r['calc'] - r['ref']) / r['ref']:+7.2f} %")
     print(f"\n{'='*70}")
     print("  Summary (D2 line, natural broadening):")
     print(f"  {'Element':>8}  {'wl_D2(nm)':>10}  {'tau(ns)':>8}  "

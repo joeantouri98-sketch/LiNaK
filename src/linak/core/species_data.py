@@ -45,7 +45,7 @@ ITEMS = (
          hint="only a comparison value"),
     Item("tweezer_wl", "Default tweezer wavelength", "optional", "number", table_id="tweezer.default_wavelength"),
     Item("dline", "D-line values", "optional", "record", table_id="spectroscopy.dline",
-         hint="for Compare elements, Scattering rate and the spectrum fallback"),
+         hint="for Compare elements"),
     Item("hf", "Hyperfine constants", "optional", "hyperfine", hint="A and B (and C) of each state, for one isotope"),
 )
 BY_KEY = {i.key: i for i in ITEMS}
@@ -62,7 +62,6 @@ STAGES = (
     ("spectra", "Spectrum", ("levels",)),
     ("grotrian", "Grotrian diagram and plots", ("orca",)),
     ("compare", "Compare elements", ("dline",)),
-    ("scattering", "Scattering rate", ("dline",)),
     ("hyperfine", "Hyperfine / Zeeman", ("hf",)),
     ("feshbach", "Feshbach resonances", ("manual:feshbach",)),
 )

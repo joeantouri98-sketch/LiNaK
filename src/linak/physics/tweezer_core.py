@@ -10,7 +10,8 @@ as ``polarizability_core.alpha_real``)::
     Im[α] → scattering  R_sc = (4π a₀³ / (ħ c)) · Im[α] · I
 
 Γ_k is the upper state's total decay rate (A_total from the lifetimes
-pipeline); core/continuum channels do not scatter trap light in this model.
+pipeline). The ion-core lines enter Re[α] (the trap depth) with Γ = 0: far below their
+resonances they polarise but do not scatter trap light.
 Recoil heating is Ė = 2 E_r R_sc with E_r = h²/(2 m λ²), and the
 order-of-magnitude trap lifetime is τ_heat ≈ |U| / Ė.
 
@@ -133,17 +134,21 @@ def attach_gamma(
     """Copies of *transitions* with ``Gamma_au``/``Gamma_s`` from the upper state.
 
     *upper_state_rates* maps a state label to its total decay rate A (s⁻¹).
-    Core channels are dropped; channels without a rate keep Γ = 0 (they still
-    count for Re[α]). Returns (channels, number with Γ, number of core skipped).
+    Core channels and channels without a rate keep Γ = 0: they count for Re[α] only. (Core
+    channels used to be dropped, which left the core polarisability out of the trap depth:
+    1.4 % for Cs at 1064 nm.) Returns (channels, number with Γ, number of core channels).
     """
     out = []
     n_with = 0
     n_skip_core = 0
     for tr in transitions:
+        t = dict(tr)
         if tr.get('source') == 'core':
             n_skip_core += 1
+            t['Gamma_au'] = 0.0
+            t['Gamma_s'] = 0.0
+            out.append(t)
             continue
-        t = dict(tr)
         A_s = upper_state_rates.get(t.get('other_label', ''))
         if A_s:
             t['Gamma_au'] = A_s * AU_TIME_S

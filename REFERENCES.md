@@ -76,6 +76,8 @@ Bibliographic sources used by **LiNaK** (alkali AMO pipeline). BibTeX entries li
 | \(^{87}\)Rb | Marte *et al.*, *Phys. Rev. Lett.* **89**, 283202 (2002) [arXiv:cond-mat/0210651]; Chin *et al.* RMP (2010) Table IV |
 | \(^{133}\)Cs | Berninger *et al.*, *Phys. Rev. A* **87**, 032517 (2013) [arXiv:1212.5584]; Chin *et al.* RMP (2010) |
 
+Published a(B) curves: Zürn et al., PRL 110, 135301 (2013), the coupled-channel ⁶Li table; Kraemer et al., Nature 440, 315 (2006), the Cs fit for 0–150 G; Jachymski & Julienne, PRA 88, 052701 (2013), the Cs fits for 490–900 G. Derived quantities: Gribakin & Flambaum, PRA 48, 546 (1993) (ā and the dimer correction); Weber et al., PRL 91, 123201 (2003) (L₃); Rem et al., PRL 110, 163202 (2013) (unitarity limit of L₃).
+
 See `data_json/<El>_feshbach.json` notes for resonance-by-resonance refs.
 
 ---

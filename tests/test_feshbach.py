@@ -123,8 +123,9 @@ def test_channel_parsing_and_grouping(na_feshbach_params):
     g = group_s_wave_by_channel([Resonance.from_json(r) for r in na_feshbach_params['resonances']])
     assert len(g) == 2 and len(g['|1,+1> + |1,+1>']) == 3 and len(g['|1,-1> + |1,-1>']) == 1
     mixed = [Resonance.from_json({'channel': 'x', 'partial_wave': pw, 'B0_G': 1.0, 'Delta_G': 1.0})
-             for pw in ('d', 's')]
-    assert len(group_s_wave_by_channel(mixed)['x']) == 1       # d-wave poles never enter a_s(B)
+             for pw in ('p', 'd', 's', 'g', 'f')]
+    # even-ℓ closed-channel states (s, d, g) are poles of the s-wave a(B); odd ℓ (p, f) are not
+    assert [r.partial_wave for r in group_s_wave_by_channel(mixed)['x']] == ['d', 's', 'g']
 
 
 def test_combined_curve_does_not_mix_channels(data_dir):

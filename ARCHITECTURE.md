@@ -17,7 +17,7 @@ what they wrote. Nothing is shared between pipelines except files.
 | Path | What it is | Rule of thumb |
 |---|---|---|
 | `src/linak/core/` | constants, elements, species ids, spectroscopy tables, paths, the workspace, safe file writes, errors | no plotting, no argparse |
-| `src/linak/physics/` | physics engines (`polarizability_core`, `qdt_radial`, `rydberg`, `blackbody_core`, `feshbach`, `hyperfine_core`, `lifetimes_core`, `spectrum_core`, `transitions_core`, `tweezer_core`) | data in, results out: no files, no CLI |
+| `src/linak/physics/` | physics engines (`polarizability_core`, `qdt_radial`, `rydberg`, `blackbody_core`, `feshbach`, `hyperfine_core`, `laser_cooling`, `lifetimes_core`, `orbital_radial`, `spectrum_core`, `transitions_core`, `tweezer_core`) | data in, results out: no files, no CLI |
 | `src/linak/pipelines/` | one module per pipeline: CLI + file IO + plots, `main(argv) -> int`; `plotinteractive/` is a package (inputs, view, one module per plot) | registered in `pipelines/runner.py::IMPLEMENTATIONS` |
 | `src/linak/integrations/` | ORCA (input templates, runner, output parser), ARC bridge | `runorca` lives here |
 | `src/linak/report_templates/` | the HTML/CSS/JS of every report + a tiny `$!token` renderer | presentation only |
@@ -27,7 +27,7 @@ what they wrote. Nothing is shared between pipelines except files.
 | `tools/` | maintainer scripts, incl. `compare_outputs.py` | not imported by `src/` |
 
 > Some physics still lives inside `pipelines/` (polarizability, compare_elements,
-> scattering_rate…), and `polarizability_core` still reads files. Moving it into
+> …), and `polarizability_core` still reads files. Moving it into
 > `physics/` engines, one pipeline at a time, is the main open structural task;
 > `tweezer`, `feshbach`, `hyperfine`, `blackbody`, `lifetimes`, `transitions` and
 > `plotinteractive` are done, and `tweezer` is the pattern (see "Split a pipeline into
@@ -57,7 +57,7 @@ what they wrote. Nothing is shared between pipelines except files.
                          └─► brueckner ─► <El>_brueckner.json ─┴─► lifetimes, polarizability (--model-f):
                                           f-values where NIST and literature have none
 
- several elements' rydberg + lifetimes ─► compare_elements ─► comparison_table.json ─► scattering_rate
+ several elements' lifetimes + polarizability ─► compare_elements ─► comparison_table.json + plots/comparison.html
 ```
 
 All of these files live in `<output folder>/data/`; reports go to `plots/<El>/`; raw ORCA

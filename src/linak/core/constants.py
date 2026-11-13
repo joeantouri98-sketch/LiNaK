@@ -134,6 +134,7 @@ ISOTOPE_MASS_AMU = {
     ('Cs', 133): 132.905452,
     ('Fr', 210): 209.996408, ('Fr', 223): 223.019736,
 }
+_user_tables.apply("constants.isotope_mass", ISOTOPE_MASS_AMU)
 
 # Alkali isotope-preferred elemental fallback (most common lab isotope)
 ALKALI_MASS_AMU = {
@@ -180,9 +181,12 @@ ALPHA0_EXPT = {
 }
 _user_tables.apply("constants.alpha0_expt", ALPHA0_EXPT)
 
+# Reference C6 (a.u.). Li: Yan et al., PRA 54, 2824 (1996) (variational); the rest from
+# Derevianko, Johnson, Safronova & Babb, PRL 82, 3589 (1999); Fr 5256(89) (it was 5500 here,
+# which no publication gives).
 C6_EXPT = {
     'Li': 1393.0,  'Na': 1556.0,  'K':  3897.0,
-    'Rb': 4691.0,  'Cs': 6851.0,  'Fr': 5500.0,
+    'Rb': 4691.0,  'Cs': 6851.0,  'Fr': 5256.0,
 }
 _user_tables.apply("constants.c6_expt", C6_EXPT)
 

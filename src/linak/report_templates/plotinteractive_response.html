@@ -173,7 +173,7 @@ tr.sel td{background:var(--hl)}
     </div>
     <section class="pane" id="pane-pol" role="tabpanel" aria-labelledby="tab-pol">
       <div class="plot"><div class="p" id="p1"></div></div>
-      <p class="note">Click the plot to move the cursor wavelength; the table below shows which lines make up α there. Poles are drawn as they are. The strip under the curve shows every line (position, f, source). Hover a magic point for its slope and robustness.</p>
+      <p class="note">The table below shows which lines make up α at the cursor wavelength.<br>Poles are drawn as they are.<br>The strip under the curve shows every line (position, f, source).</p>
       <div class="card">
         <div class="bar2"><b id="ctitle">Contributions</b><div class="seg" id="cstate" role="group" aria-label="State" style="min-width:200px"><button data-c="g" aria-pressed="true">Ground</button><button data-c="e" aria-pressed="false">Excited</button></div></div>
         <div class="hint" id="csum" style="margin:0 0 6px"></div>
@@ -183,7 +183,7 @@ tr.sel td{background:var(--hl)}
     </section>
     <section class="pane" id="pane-mag" role="tabpanel" aria-labelledby="tab-mag" hidden>
       <div class="plot"><div class="p" id="p2"></div></div>
-      <p class="note">Magic wavelengths are where α(ground) = α(excited). The lower panel shows how steeply Δα changes there (robustness); the table gives the same numbers with the trap depth at each one. ± is the shift from the f-value uncertainties alone, so it is a lower bound.</p>
+      <p class="note">Magic wavelengths: where α(ground) = α(excited).<br>Lower panel: how steeply Δα changes there (robustness).<br>The table gives the same numbers with the trap depth at each one.<br>± is the shift from the f-value uncertainties alone, so it is a lower bound.</p>
       <div class="card">
         <div class="bar2"><b>Magic wavelengths</b><span class="hint" id="minfo" style="margin:0"></span></div>
         <div class="tw"><table id="mtab"><thead></thead><tbody></tbody></table></div>
@@ -191,7 +191,7 @@ tr.sel td{background:var(--hl)}
     </section>
     <section class="pane" id="pane-tw" role="tabpanel" aria-labelledby="tab-tw" hidden>
       <div class="plot"><div class="p" id="p3" style="height:700px"></div></div>
-      <p class="note">Curves are the ground-state tweezer calculation at the reference intensity and scale with intensity (scattering and heating ∝ I; the heating lifetime does not depend on I). Trap numbers at the chosen wavelength use the polarizability above.</p>
+      <p class="note">Curves: the ground-state tweezer calculation at the reference intensity.<br>They scale with intensity: scattering and heating ∝ I, while the heating lifetime does not depend on I.<br>Trap numbers at the chosen wavelength use the polarizability above.</p>
       <div class="cols">
         <div class="card"><div class="bar2"><b id="ttitle">At the cursor wavelength</b></div><div class="tw"><table id="ttab"><tbody></tbody></table></div></div>
         <div class="card"><div class="bar2"><b>Top scattering channels</b><span class="hint" id="tchinfo" style="margin:0"></span></div><div class="tw"><table id="chtab"><thead></thead><tbody></tbody></table></div></div>
@@ -215,7 +215,7 @@ const fmt=(a)=>sci(a*UN[S.unit].f);
 const ST=[['NIST','--nist'],['literature','--ov5'],['DHF','--theo'],['Brueckner','--theo'],['Numerov','--r-vis'],['core','--muted']];
 // ---- physics (same sum as the pipeline: alpha = sum sign*f/(dE^2 - w^2), resonance guard 1e-4)
 function alpha(T,lam){const w=W(lam);let a=0,s2=0;for(const t of T){const dE=t[0],den=dE*dE-w*w;if(Math.abs(den)<1e-4*Math.abs(dE))return [NaN,NaN];a+=t[2]*t[1]/den;s2+=(t[6]*t[2]/den)**2}return [a,Math.sqrt(s2)]}
-function contribs(T,lam){const w=W(lam);return T.map(t=>{const den=t[0]*t[0]-w*w;return {lab:t[3],wl:t[5],f:t[1],src:t[4],sg:t[6],c:t[2]*t[1]/den}})}
+function contribs(T,lam){const w=W(lam),out=[];let core=null;T.forEach(t=>{const den=t[0]*t[0]-w*w,c=t[2]*t[1]/den;if(t[4]==='core'){if(!core){core={lab:'core',wl:t[5],f:0,src:'core',sg:0,c:0};out.push(core)}core.f+=t[1];core.c+=c;return}out.push({lab:t[3],wl:t[5],f:t[1],src:t[4],sg:t[6],c})});return out}   // the core's RPA lines as one row
 function grid(T,lo,hi){const xs=new Set();const n=1100;for(let i=0;i<=n;i++)xs.add(+(lo+(hi-lo)*i/n).toFixed(4));
   for(const t of T){const l=t[5];if(l<lo||l>hi)continue;for(const k of [2e-2,5e-3,1e-3,2e-4,5e-5])for(const sg of [-1,1]){const x=l*(1+sg*k);if(x>=lo&&x<=hi)xs.add(+x.toFixed(4))}}
   return [...xs].sort((a,b)=>a-b)}

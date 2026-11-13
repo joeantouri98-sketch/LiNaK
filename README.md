@@ -15,8 +15,8 @@ Pick an atom, run the calculations you need, and browse the results as interacti
 - Optical tweezer properties
 - Extrapolated ns→np oscillator strengths for high Rydberg levels (including Fr)
 - Hyperfine structure and Zeeman diagrams
-- Feshbach resonances
-- Grotrian diagrams, absorption and emission spectra (vapour cells, hyperfine D lines, saturated absorption), 3D orbitals and element comparisons
+- Feshbach resonances: a(B) from published tables and fits, collisions and loss, dimer energies, thresholds
+- Grotrian diagrams, absorption and emission spectra (vapour cells, hyperfine D lines, saturated absorption), orbital pages (3D, slices, model-potential radial functions, ⟨r⟩ and core penetration) and element comparisons
 
 Reference data from the NIST Atomic Spectra Database is included. You can also add results from the [ORCA](https://www.faccts.de/orca/) quantum chemistry program if you have it installed.
 
@@ -147,8 +147,8 @@ uv run linak --pipeline tweezer Na --wl 1064 --intensity 50 --waist 1
 uv run linak --pipeline hyperfine Na
 uv run linak --pipeline feshbach Na
 uv run linak --pipeline plotinteractive Na --plots 1
-uv run linak --pipeline compare_elements          # add --html for the HTML page too
-uv run linak --pipeline scattering_rate --element Na --line D2
+uv run linak --pipeline compare_elements          # table JSON + plots/comparison.html
+uv run linak --pipeline scattering_rate --element Na --line D2   # same page, Laser cooling tab
 ```
 
 To see every option for a stage:

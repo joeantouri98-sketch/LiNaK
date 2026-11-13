@@ -1,14 +1,11 @@
 {
   "_source": "Tiecke, Properties of Potassium (Table 9); Falke et al., PRA 74, 032503 (2006). Ground A from Arimondo/Beckmann (Allegrini Recommended).",
   "_isotope": "K-39 (I=3/2, 93.26% natural abundance = the hyperfine.py default)",
-  "_gI_prime": -0.00014193489,
-  "_gI_source": "Atomic g_I′ (μ_B units, Steck sign convention; measured in the atom, so it includes diamagnetic shielding): Arimondo, Inguscio & Violino, Rev. Mod. Phys. 49, 31 (1977), as tabulated in Steck and ElecSus (arXiv:1409.1873, Table B). Ground g_J: Vanden Bout et al., Phys. Rev. 165, 88 (1968).",
   "_note": "K-41 constants are under _K41_D_line (use --isotope 41). Other isotopes: A is rescaled from this block by g_I and B by Q (hyperfine anomaly neglected) with a printed warning. Allegrini notes a split in 4p1/2 literature (~27.78 vs ~28.85 MHz); Falke/Tiecke 27.775 is used here.",
   "4s1/2": {
     "A_MHz": 230.8598601,
     "B_MHz": 0.0,
-    "C_kHz": 0.0,
-    "gJ_exp": 2.002295
+    "C_kHz": 0.0
   },
   "4p1/2": {
     "A_MHz": 27.775,
@@ -23,12 +20,10 @@
   "_K41_D_line": {
     "_source": "Tiecke, Properties of Potassium Table 9; Falke et al. PRA 74, 032503 (2006); Allegrini et al. 2022 Sec. 4.3.2",
     "_isotope": "K-41 (I=3/2)",
-    "_gI_prime": -0.00007790600,
     "4s1/2": {
       "A_MHz": 127.0069352,
       "B_MHz": 0.0,
-      "C_kHz": 0.0,
-      "gJ_exp": 2.002295
+      "C_kHz": 0.0
     },
     "4p1/2": {
       "A_MHz": 15.245,

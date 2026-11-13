@@ -634,7 +634,7 @@ p {
     <div class="chip">blackbody.py<span class="arrow">→</span>BBR shifts + rates + PI</div>
     <div class="chip">tweezer.py<span class="arrow">→</span>R_sc, heating</div>
     <div class="chip">hyperfine.py<span class="arrow">→</span>Breit-Rabi / Zeeman</div>
-    <div class="chip">feshbach.py<span class="arrow">→</span>a(B), σ_el</div>
+    <div class="chip">feshbach.py<span class="arrow">→</span>a(B), ⟨σ⟩, E_b, s_res</div>
     <div class="chip">scattering_rate.py<span class="arrow">→</span>cooling R_scatt</div>
     <div class="chip">compare_elements.py<span class="arrow">→</span>CompTable</div>
     <div class="chip">plotinteractive.py<span class="arrow">→</span>Grotrian / spectrum</div>
@@ -1162,8 +1162,9 @@ p {
       shrinks toward zero at high $l$ (Section 02, <span class="file-badge">rydberg.py</span>):
       a large centrifugal barrier keeps high-$l$ electrons entirely outside the ionic
       core, where $V(r)=-e^2/4\pi\varepsilon_0 r$ is purely Coulombic, so the atom
-      behaves exactly like hydrogen. It is also the literal potential solved
-      numerically inside <span class="file-badge">orbital3d.py</span>'s radial grid.</p>
+      behaves exactly like hydrogen. It is also the outer-region potential of the
+      Coulomb fallback in <span class="file-badge">orbital_radial.py</span>; for Li&ndash;Fr the
+      orbital viewer solves the full model potential instead (Section 15).</p>
     </div>
   </details>
 
@@ -1380,8 +1381,9 @@ p {
     </p>
     <div class="annotation green">
       <span class="icon">✅</span>
-      <p><b>Role in the code.</b> <span class="file-badge">orbital3d.py</span> and
-      <span class="file-badge">qdt_radial.py</span> no longer evaluate this recurrence:
+      <p><b>Role in the code.</b> <span class="file-badge">orbital_radial.py</span> evaluates the
+      closed form (SciPy <code>eval_genlaguerre</code>) for one-electron species only.
+      <span class="file-badge">qdt_radial.py</span> and the viewer's Coulomb fallback do not:
       they integrate the radial equation numerically (inward Numerov), because quantum-defect
       levels have non-integer $n^*$ where the Laguerre form is not a solution. At integer
       $n^*$ the numerical function reproduces the closed form above (radial functions agree
@@ -1427,10 +1429,10 @@ p {
         <p style="font-size:13px">
           $L_{n-l-1}^{2l+1}$ is a polynomial of degree $n-l-1$, so $R_{nl}$ has
           exactly $n-l-1$ radial nodes (zero crossings, excluding the origin and
-          infinity), this is the "shell structure" visible directly in
-          <span class="file-badge">orbital3d.py</span>'s volume view as concentric
-          bright shells, and in its isosurface mode as nested surfaces at different
-          levels.
+          infinity), this is the "shell structure" visible in
+          <span class="file-badge">orbital3d.py</span>'s Slice and Radial tabs as
+          concentric shells and node ticks. The model-potential states of Li&ndash;Fr
+          keep the same count, n&minus;l&minus;1, with the inner nodes inside the core.
         </p>
       </div>
     </div>
@@ -2415,9 +2417,9 @@ p {
   </div>
 
   <div class="subsection">
-    <h3>Radial wavefunctions at non-integer $n^*$ (<span class="file-badge">qdt_radial.py</span>, <span class="file-badge">orbital3d.py</span>)</h3>
+    <h3>Radial wavefunctions at non-integer $n^*$ (<span class="file-badge">qdt_radial.py</span>, <span class="file-badge">orbital_radial.py</span>)</h3>
     <p>
-      Oscillator strengths for high-$n$ channels and the orbital viewer both need the
+      Oscillator strengths for high-$n$ channels (and the orbital viewer's Coulomb fallback) need the
       radial function $u(r)=rR(r)$ of a level with <em>non-integer</em> $n^*=n-\delta_\ell$,
       where the hydrogenic Laguerre form no longer applies. Outside the ionic core the
       electron still sees a pure Coulomb potential of core charge $Z$ ($Z=1$ for
@@ -2435,8 +2437,8 @@ p {
     <ol style="font-size:13px;color:var(--text2);padding-left:20px;line-height:1.85">
       <li><b>Inward Numerov integration</b> from large $r$ (start values from the asymptotic
         form above), which is stable for a decaying solution. <code>qdt_radial.py</code>
-        uses a 4000-point linear grid ($r_{\max}=\max(40,\,6n^{*2}/Z)$); the viewer uses a
-        4096-point logarithmic grid.</li>
+        uses a 4000-point linear grid ($r_{\max}=\max(40,\,6n^{*2}/Z)$); the viewer's fallback
+        uses a logarithmic grid (step 0.002 in $\ln r$).</li>
       <li><b>Core cutoff.</b> For non-integer $n^*$ the inward solution does not match a
         regular function at the origin; it grows without bound at small $r$. Only
         $r\ge r_c$ is physical, with
@@ -2444,8 +2446,8 @@ p {
           r_c=\max\!\big(r_{\rm in},\,1/Z\big)$$
         ($r_{\rm in}$ is the inner classical turning point; the $1\,a_0$ floor of the neutral
         case becomes $1/Z$ by hydrogenic scaling $r\to Zr$). Inside $r_c$ the function is set
-        to zero for the radial integrals; the viewer instead continues it as $R\propto r^{\ell}$
-        and says so in its info panel.</li>
+        to zero for the radial integrals; the viewer's fallback instead continues it as
+        $u\propto r^{\ell+1}$ and says so under its plots.</li>
       <li><b>Normalisation</b> $\int_{r_c}^{\infty}u^2\,dr=1$, and the overall sign is fixed so
         the outer lobe is positive.</li>
     </ol>
@@ -3331,25 +3333,39 @@ p {
     </div>
     <p>
       <span class="file-badge">polarizability.py</span> evaluates the integral by
-      Gauss-Legendre quadrature on a log-mapped grid. Heteronuclear $C_6^{AB}$
-      uses the standard combining rule when comparing species.
+      adaptive quadrature on a log-mapped grid, with the $\xi^{-4}$ tail added analytically.
+      Heteronuclear pairs use the same Casimir–Polder integral with each atom's own
+      $\alpha(i\xi)$, $C_6^{AB}=\frac{3}{\pi}\int_0^\infty\alpha_A(i\xi)\alpha_B(i\xi)\,d\xi$
+      (Compare page, C$_6$ tab).
     </p>
   </div>
 
   <div class="subsection">
     <h3>Ionic core polarizability</h3>
     <p>
-      A pure valence sum-over-states misses the closed-shell ionic core. The
-      pipeline adds a Thomas-Reiche-Kuhn-constrained one-pole Padé term with
-      tabulated $\alpha_{\rm core}$ (Mitroy / Safronova / Schwerdtfeger
-      compilations) so that $\alpha(0)$ is corrected by $0.1\%$ (Li) to
-      $\sim6\%$ (Fr):
+      A pure valence sum-over-states misses the closed-shell ionic core
+      ($0.1\%$ of $\alpha(0)$ for Li to $\sim6\%$ for Fr). The pipeline adds the
+      core's own dynamic response: Dirac–Hartree–Fock + RPA for the M$^+$ core
+      (<code>dhf_rpa.CoreRPA</code>), solved at imaginary frequency and stored as a
+      positive pseudo-spectrum in <code>resources/core/core_polarizability.json</code>
+      (15–38 lines per alkali, built by <code>tools/make_core_polarizability.py</code>),
+      scaled so $\alpha_c(0)$ equals the tabulated $\alpha_{\rm core}$
+      (Mitroy / Safronova / Schwerdtfeger compilations). The core lines then enter every
+      sum like any other transition.
     </p>
     <div class="math-block">
-      <div class="math-label">Core one-pole (ALPHA_CORE_AU in polarizability_core.py)</div>
-      $$\omega_c=\sqrt{\frac{N_{\rm core}}{\alpha_c}},\qquad
-      \alpha_{\rm core}(\omega)=\frac{N_{\rm core}}{\omega_c^2-\omega^2}$$
+      <div class="math-label">Core pseudo-spectrum (core_oscillators in polarizability_core.py)</div>
+      $$\alpha_{\rm core}(\omega)=s\sum_k\frac{f_k}{\Omega_k^2-\omega^2},\qquad
+      s=\frac{\alpha_{\rm core}^{\rm table}}{\sum_k f_k/\Omega_k^2}$$
     </div>
+    <p>
+      The shape matters for $C_6$ and the far-UV $\alpha(\lambda)$. The earlier one-line
+      model, $f=N_{\rm core}$ at $\omega_c=\sqrt{N_{\rm core}/\alpha_c}\approx2$&nbsp;a.u.,
+      put all the Thomas–Reiche–Kuhn strength of the deep shells where the outer shell
+      responds, so $\alpha_c(i\xi)$ fell off too slowly and $C_6$ came out 2–8&nbsp;% high
+      for Rb, Cs, Fr; with RPA they agree with Derevianko et&nbsp;al. (2010) to
+      $0.2\%$ (Fr $1.8\%$). Species not in the table keep the one-line model.
+    </p>
     <div class="annotation amber">
       <span class="icon">!</span>
       <p>
@@ -3373,9 +3389,9 @@ p {
       Magic wavelengths solve $\alpha_{\rm gs}(\omega)=\alpha_{\rm ex}(\omega)$.
       Trap depth and Gaussian-tweezer frequencies are the Grimm formulas of
       §01&nbsp;G (<code>U_joules</code>, <code>trap_frequencies_Hz</code>).
-      Outputs: <code>data_json/&lt;el&gt;_polarizability.json</code> and
-      <code>plots/&lt;el&gt;/&lt;el&gt;_polarizability.html</code> (full-viewport;
-      intensity / point calculator panel). For Na the pipeline reports
+      Output: <code>data_json/&lt;el&gt;_polarizability.json</code>; the plots are the
+      Polarizability page (<code>plots/&lt;el&gt;/&lt;el&gt;_response.html</code>, Visualise:
+      α(ω), magic wavelengths and tweezer tabs). For Na the pipeline reports
       $\alpha(0)=162.61$&nbsp;au vs expt $162.7$, and $C_6\approx1558$&nbsp;au
       vs expt $1556$ (see <a href="#sec16">Na Step&nbsp;7</a>).
     </p>
@@ -3653,11 +3669,9 @@ p {
       spontaneous emission. $\tau_{\rm heat}$ is an order-of-magnitude estimate
       (deposit one trap depth of energy); real hold times also depend on
       background gas, intensity noise, and tunneling. Outputs:
-      <code>data_json/&lt;el&gt;_tweezer.json</code> and
-      <code>plots/&lt;el&gt;/&lt;el&gt;_tweezer.html</code> ($R_{\rm sc}$,
-      heating, and $\tau_{\rm heat}$ vs $\lambda$). HTML fills the viewport
-      (same fullscreen CSS pattern as polarizability / Feshbach) and includes a
-      live point calculator (λ, $I$, $w_0$).
+      <code>data_json/&lt;el&gt;_tweezer.json</code>. The plots ($R_{\rm sc}$, heating and
+      $\tau_{\rm heat}$ vs $\lambda$, with a live point calculator for λ, $I$, $w_0$) are the
+      tweezer tab of the Polarizability page.
     </p>
     <div class="annotation green">
       <span class="icon">✅</span>
@@ -3770,8 +3784,10 @@ p {
     <p class="section-intro">
       Near a closed-channel bound state that crosses the open-channel threshold,
       the $s$-wave scattering length diverges. The pipeline does <b>not</b> solve
-      coupled channels; it evaluates the standard isolated-resonance product form
-      using literature $(B_0,\Delta,a_{\rm bg})$ tables you maintain in
+      coupled channels itself. Where the literature publishes a coupled-channel
+      table or field-dependent fits of $a(B)$ ($^6$Li, Cs) it uses them; elsewhere it
+      evaluates the isolated-resonance product form over the literature
+      $(B_0,\Delta,a_{\rm bg})$ you maintain in
       <code>data_json/&lt;el&gt;_feshbach.json</code>.
     </p>
   </div>
@@ -3783,7 +3799,8 @@ p {
       <tr><td><code>element</code>, <code>isotope_A</code></td><td>Species and mass number (e.g. Na, 23)</td></tr>
       <tr><td><code>note</code></td><td>Free-text provenance of the table</td></tr>
       <tr><td><code>a_bg_default_a0</code>, <code>a_bg_ref</code></td><td>Default background scattering length in $a_0$ and its source (Na $|1,1\rangle+|1,1\rangle$: 54.54&nbsp;$a_0$, Knoop et&nbsp;al. 2011)</td></tr>
-      <tr><td><code>resonances[]</code></td><td>One object per resonance: <code>label</code>, <code>channel</code>, <code>partial_wave</code>, <code>B0_G</code> (position, G), <code>Delta_G</code> (width, G), <code>a_bg_a0</code> (per-resonance background, optional) and <code>ref</code></td></tr>
+      <tr><td><code>resonances[]</code></td><td>One object per resonance: <code>label</code>, <code>channel</code>, <code>partial_wave</code> (ℓ of the closed-channel state; even ℓ are poles of $a(B)$), <code>B0_G</code> (position, G), <code>Delta_G</code> (width, G), <code>a_bg_a0</code> (per-resonance background, optional), <code>dmu_muB</code> or <code>s_res</code> (optional) and <code>ref</code></td></tr>
+      <tr><td><code>curves{channel}</code></td><td>Optional published $a(B)$ of a channel: <code>{"kind": "table", "file", "column", "narrow"}</code> (a coupled-channel table, interpolated in $\arctan(a/L)$) or <code>{"kind": "fit", "segments": [...], "global"}</code> (fits $(a_{\rm bg}+s(B-B_{\rm ref}))\prod(1-\Delta_i/(B-B_{0,i}))$ valid on stated field ranges)</td></tr>
     </table>
     <div class="math-block">
       <div class="math-label">Isolated-resonance form evaluated per entry</div>
@@ -3802,9 +3819,13 @@ p {
       $$a(B)=a_{\rm bg}\prod_i\Bigl(1-\frac{\Delta_i}{B-B_{0,i}}\Bigr)$$
     </div>
     <div class="math-block amber">
-      <div class="math-label">Unitary-limited elastic cross section</div>
-      $$\sigma_{\rm el}=\frac{4\pi a^2}{1+k^2 a^2},\qquad
-        k=\frac{\sqrt{2\mu k_B T}}{\hbar}$$
+      <div class="math-label">Thermal cross section (Maxwell–Boltzmann average, unitarity-limited)</div>
+      $$\langle\sigma\rangle=\frac{\langle\sigma v_{\rm rel}\rangle}{\langle v_{\rm rel}\rangle}=C a^2\int_0^\infty\frac{u\,e^{-u}}{1+k_T^2a^2u}\,du,\qquad
+        k_T^2=\frac{2\mu k_B T}{\hbar^2},\quad C=4\pi\ (8\pi\ \text{identical bosons})$$
+    </div>
+    <div class="math-block">
+      <div class="math-label">Dimers, resonance strength, three-body loss</div>
+      $$E_b=\frac{\hbar^2}{m(a-\bar a)^2},\qquad s_{\rm res}=\frac{a_{\rm bg}}{\bar a}\frac{\delta\mu\,\Delta}{\bar E},\ \bar E=\frac{\hbar^2}{m\bar a^2},\qquad L_3=\frac{3C\hbar a^4}{m}$$
     </div>
     <p>
       Mean scattering length $\bar a$ and van der Waals length $\beta_6$ are
@@ -3818,15 +3839,15 @@ p {
     <h3>Isotope notes</h3>
     <table class="def-table">
       <tr><th>Element</th><th>Default isotope in FR JSON</th><th>Source flavor</th></tr>
-      <tr><td>Li</td><td>$^6$Li</td><td>broad 834&nbsp;G (and companions)</td></tr>
+      <tr><td>Li</td><td>$^6$Li</td><td>Zürn et al. 2013 coupled-channel table (832, 690, 810&nbsp;G)</td></tr>
       <tr><td>Na</td><td>$^{23}$Na</td><td>Knoop / Stenger / Inouye</td></tr>
       <tr><td>K</td><td>$^{39}$K ($F=1$ manifold)</td><td>D'Errico et al., NJP 9, 223 (2007); see <code>K_feshbach.json</code></td></tr>
       <tr><td>Rb</td><td>$^{87}$Rb</td><td>Marte Table&nbsp;I (+ Chin $a_{\rm bg}$)</td></tr>
-      <tr><td>Cs</td><td>$^{133}$Cs</td><td>Berninger et al.</td></tr>
+      <tr><td>Cs</td><td>$^{133}$Cs</td><td>Kraemer 2006 and Jachymski &amp; Julienne 2013 fits; Berninger et al. poles</td></tr>
     </table>
     <p>
-      Output plot: <code>plots/&lt;el&gt;/&lt;el&gt;_feshbach.html</code>
-      (full-viewport). Nuclide labels use <code>nuclide_label()</code> from
+      Output page: <code>plots/&lt;el&gt;/&lt;el&gt;_feshbach.html</code>, tabs Scattering length
+      (with $1/(k_Fa)$ for fermions), Cross section &amp; loss, Molecules, Thresholds, Resonances. Nuclide labels use <code>nuclide_label()</code> from
       <span class="file-badge">constants.py</span>.
     </p>
   </div>
@@ -3892,29 +3913,45 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0
   <div class="subsection">
     <h3>orbital3d.py &amp; spectra.py</h3>
     <p>
-      <span class="file-badge">orbital3d.py</span> writes a self-contained, rotatable
-      orbital viewer (<code>plots/&lt;el&gt;/&lt;el&gt;_orbital3d.html</code>) for teaching /
-      intuition, not a replacement for true multi-electron orbitals. Every density is
-      computed in the browser (Web Worker) on a 3D grid and shown in one of two modes,
-      chosen with <code>--render</code>:
+      <span class="file-badge">orbital3d.py</span> writes the orbital page
+      (<code>plots/&lt;el&gt;/&lt;el&gt;_orbital3d.html</code>) for the ground state and every level
+      up to <code>--n-max</code> (default 10). Tabs:
     </p>
     <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.85">
-      <li><b><code>volume</code> (default)</b>: a WebGL2 ray-marched volume
-        (RGBA16F 3D texture) with display-floor, contrast, opacity and ray-step
-        controls; grid default 96, maximum 128 (plus 4 points per $\ell$). Needs WebGL2;
-        without it the page shows a fallback notice instead of failing silently.</li>
-      <li><b><code>isosurface</code></b>: nested Plotly isosurfaces with outer / inner
-        level, number of surfaces and opacity controls; grid default 55, maximum 75;
-        loads Plotly from the pinned CDN tag.</li>
+      <li><b>3D</b>, chosen with <code>--render</code>: <code>volume</code> (default), a WebGL2
+        ray-marched volume (RGBA16F 3D texture; grid default 96, maximum 128, plus 4 points per
+        $\ell$) with a cutaway of the half facing the viewer; or <code>isosurface</code>, nested
+        Plotly isosurfaces (grid default 55, maximum 75). The grid is computed in a Web Worker.</li>
+      <li><b>Slice</b>: a 2D cut in the $x$&ndash;$z$ plane (containing the quantisation axis) or
+        the $x$&ndash;$y$ plane, with radial nodes, the core radius and nodal lines drawn.</li>
+      <li><b>Radial</b>: $P(r)=u^2$ (or $rP(r)$, probability per unit $\ln r$, on a log axis) for up
+        to five states, with core radius, classical turning points, nodes and the enclosed probability.</li>
+      <li><b>Values</b>: $n^*$, model $\nu$, nodes, $\langle r\rangle$, $\langle r^2\rangle$,
+        $\langle 1/r\rangle$, $\langle 1/r^3\rangle$, outer turning point, core radius, probability inside
+        the core, and the Le Roy radius $2(\langle r^2\rangle_A^{1/2}+\langle r^2\rangle_B^{1/2})$.</li>
+      <li><b>Scaling</b>: $\langle r\rangle$ and the core probability against $n^*$, with the
+        hydrogenic $(3n^{*2}-\ell(\ell+1))/2Z$ and $n^{*-3}$ laws.</li>
     </ul>
     <p>
-      <b>What is plotted.</b> The radial factor is the decaying Coulomb (Whittaker)
-      function at $E=-Z^2/2n^{*2}$ with $n^*=n-\delta_\ell$, obtained by inward
-      Numerov integration (Section 02), so it is exact outside the ionic core; inside
-      the core radius $r_c$ it is continued as $R\propto r^{\ell}$ and the info panel says
-      so. J-resolved levels are drawn as spin-summed $|\ell,j,m_j\rangle$ densities
-      (Clebsch&ndash;Gordan weights); spin-free levels offer a complex ($L_z$ eigenstate)
-      or real $m_\ell$ basis. Axes are in &Aring;ngstr&ouml;m, $z$ is the quantisation axis.
+      <b>Radial functions</b> (<span class="file-badge">orbital_radial.py</span>, computed in Python and
+      shipped in the page, <code>--radial</code>):
+    </p>
+    <ul style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.85">
+      <li><b>Li&ndash;Fr, <code>model</code> (default)</b>: the $\ell$-dependent Marinescu&ndash;Sadeghpour&ndash;Dalgarno
+        potential (core screening $Z_\ell(r)$, core polarization, spin&ndash;orbit with the extrapolation model's fitted
+        $p$-channel scale), solved for the bound state with $n-\ell-1$ nodes. The eigenvalue $\nu$ is shown
+        next to the level's $n^*$ (they agree to $10^{-3}$&ndash;$6\times10^{-3}$). Core radius
+        $r_c$: the sphere holding 99&nbsp;% of the core electrons, $|Z_\ell(r)-1|<0.01(Z-1)$ (Gauss's law).</li>
+      <li><b>One-electron species</b>: the analytic hydrogenic function.</li>
+      <li><b>Everything else</b> (ions, Fr $d$/$f$, or <code>--radial coulomb</code>): the Coulomb function
+        at $n^*$ (above), exact outside $r_c$ only.</li>
+    </ul>
+    <p>
+      $n^*$ comes from each level's own binding energy, $n^*=\sqrt{R_M z^2/E_b}$. J-resolved levels are drawn as
+      spin-summed $|\ell,j,m_j\rangle$ densities (Clebsch&ndash;Gordan weights); the spin-free picture offers a
+      complex ($L_z$ eigenstate) or real $m_\ell$ basis. Colour scales can be set by the maximum outside the core,
+      so the valence shell stays visible next to the $s$-state peak at the nucleus. Lengths in $a_0$, &Aring; or nm;
+      $z$ is the quantisation axis.
     </p>
     <p>
       <span class="file-badge">spectra.py</span> writes the Spectrum page
@@ -3938,12 +3975,10 @@ linak --pipeline plotinteractive Na -e BLY3P -e PBE0
         <b>Ions.</b> Both scripts accept registered ion ids (e.g.
         <code>Na_c1</code>). The Spectrum page opens on the ground-state resonance lines
         (Na&nbsp;II: 29–39&nbsp;nm); for ions there is no vapour pressure, so set the
-        density on the page. Orbital
-        radials use the core charge $Z$ from <code>z_core</code> in the species
-        Rydberg JSON (or charge&nbsp;+&nbsp;1): $R(r)=f(Zr)$, so the box and $r_c$ scale as
-        $1/Z$ (Na<sup>+</sup>: $Z=2$). Still a single-electron QDT picture: useful
-        for high-$n$ Rydberg shape intuition, not a quantitative Na<sup>+</sup>
-        multi-electron orbital.
+        density on the page. Ion orbitals use the Coulomb function with the core
+        charge $Z$ from <code>z_core</code> in the species Rydberg JSON (or charge&nbsp;+&nbsp;1)
+        (Na<sup>+</sup>: $Z=2$). Still a single-electron QDT picture, exact outside the
+        core only: useful for Rydberg shapes, not a quantitative multi-electron orbital.
       </p>
     </div>
   </div>
@@ -4465,7 +4500,7 @@ linak --pipeline blackbody Na --T 300
       $$C_6=1558\,{\rm au}\quad({\rm expt\ }1556\,{\rm au})$$
     </div>
     <p>
-      The AC Stark panel in <code>plots/Na/Na_polarizability.html</code> reports
+      The tweezer tab of the Polarizability page (<code>plots/Na/Na_response.html</code>) reports
       trap depth and $\nu_r,\nu_z$ for the chosen $I$ and $w_0$. Formulas:
       <a href="#sec10">Section 10</a>.
     </p>
@@ -4490,8 +4525,8 @@ linak --pipeline blackbody Na --T 300
       $$\nu_r=31.0\,{\rm kHz},\quad \nu_z=7.42\,{\rm kHz}$$
     </div>
     <p>
-      Top scattering channels: $3p_{3/2}$ then $3p_{1/2}$. Live calculator in
-      <code>plots/Na/Na_tweezer.html</code>. Physics:
+      Top scattering channels: $3p_{3/2}$ then $3p_{1/2}$. Live calculator in the tweezer tab of
+      <code>plots/Na/Na_response.html</code>. Physics:
       <a href="#sec12">Section 12</a>. Do not confuse this far-detuned $R_{\rm sc}$
       with MOT $R_{\rm scatt}(I,\Delta)$ from Step&nbsp;6.
     </p>
@@ -4570,7 +4605,7 @@ linak --pipeline scattering_rate --element Na --line D2
       <tr><td><code>Na_grotrian.html</code></td><td>Levels + E1 arrows; ionization line at IE in Excitation mode</td></tr>
       <tr><td><code>Na_spectrum.html</code></td><td>Spectrum page: absorption, emission, hyperfine D lines, curve of growth, line list</td></tr>
       <tr><td><code>Na_orbital3d.html</code></td><td>Orbital viewer (QDT radial; volume or isosurface)</td></tr>
-      <tr><td><code>Na_polarizability.html</code> / <code>Na_tweezer.html</code> / <code>Na_hyperfine.html</code> / <code>Na_feshbach.html</code></td><td>Module-specific interactive plots</td></tr>
+      <tr><td><code>Na_response.html</code> (polarizability, magic wavelengths, tweezer) / <code>Na_hyperfine.html</code> / <code>Na_feshbach.html</code></td><td>Module-specific interactive plots</td></tr>
     </table>
     <p>Details: <a href="#sec15">Section 15</a>. Full flag list: <a href="#sec17">Section 17</a>.</p>
   </div>
@@ -4600,7 +4635,7 @@ linak --pipeline scattering_rate --element Na --line D2
         <h4>plots/Na/ (selected)</h4>
         <ul style="font-size:12px;color:var(--text2);padding-left:18px;line-height:1.7;font-family:var(--mono)">
           <li>Na_grotrian.html</li>
-          <li>Na_polarizability.html · Na_tweezer.html</li>
+          <li>Na_response.html (polarizability, magic wavelengths, tweezer)</li>
           <li>Na_hyperfine.html</li>
           <li>Na_feshbach.html · Na_spectrum.html</li>
           <li>Na_orbital3d.html · comparison / scatter widgets</li>
@@ -5017,7 +5052,6 @@ python -m linak.integrations.arc Sr --n-max 40
       <tr><td><code>--intensity</code></td><td>10</td><td>Peak $I$ (kW/cm²) for AC Stark panel</td></tr>
       <tr><td><code>--waist</code></td><td>1</td><td>$w_0$ (µm)</td></tr>
       <tr><td><code>--wl</code></td><td>off</td><td>Optional trap wavelength (nm) for point calc; omit to skip</td></tr>
-      <tr><td><code>--heteronuclear</code></td><td>off</td><td>Cross-species $C_6$ combining rule</td></tr>
       <tr><td><code>--data-dir</code></td><td><code>data_json</code></td><td>Input JSON directory</td></tr>
     </table>
   </div>
@@ -5110,8 +5144,8 @@ python -m linak.integrations.arc Sr --n-max 40
     <h3>compare_elements.py · scattering_rate.py</h3>
     <table class="def-table">
       <tr><th>Script</th><th>Flags</th><th>Notes</th></tr>
-      <tr><td><code>compare_elements.py</code></td><td><code>--T --elements … --data-dir --output-dir</code></td><td>Default $T=300$&nbsp;K; all six alkalis if omitted. Writes <code>data_json/comparison_table.json</code> and <code>plots/comparison_table.html</code></td></tr>
-      <tr><td><code>scattering_rate.py</code></td><td><code>--element --line {D1,D2} --data-dir --output-dir</code></td><td>Near-resonant MOT widget</td></tr>
+      <tr><td><code>compare_elements.py</code></td><td><code>--T --elements … --data-dir --output-dir</code></td><td>Default $T=300$&nbsp;K; all six alkalis if omitted. Writes <code>data_json/comparison_table.json</code> and <code>plots/comparison.html</code> (<code>--no-page</code>: JSON only; <code>--no-tab-…</code> leaves out a tab)</td></tr>
+      <tr><td><code>scattering_rate.py</code></td><td><code>--element --line {D1,D2} --data-dir --output-dir</code></td><td>Writes the same page, opened on the Laser cooling tab</td></tr>
     </table>
   </div>
 
@@ -5172,8 +5206,8 @@ python -m linak.integrations.arc Sr --n-max 40
     <div class="section-eyebrow">Section 18: compare_elements.py</div>
     <h2>Reading the Alkali Comparison Table</h2>
     <p class="section-intro">
-      How to read <code>plots/comparison_table.html</code>: the interactive
-      Li&rarr;Fr D-line dashboard built by
+      How to read the D lines tab of <code>plots/comparison.html</code>: the
+      Li&rarr;Fr D-line table built by
       <span class="file-badge">compare_elements.py</span>. Machine-readable
       companion: <code>data_json/comparison_table.json</code> only (HTML under
       <code>plots/</code>). Physics definitions live in
@@ -5199,7 +5233,8 @@ linak --pipeline compare_elements
 linak --pipeline compare_elements --T 500 --elements Li Na K Rb Cs Fr
     </div>
     <p>
-      Writes <code>plots/comparison_table.html</code> and
+      Writes <code>plots/comparison.html</code> (tabs: D lines, Laser cooling,
+      Polarizability, C$_6$, Trends, Accuracy) and
       <code>data_json/comparison_table.json</code>. Regenerate after any
       lifetimes / NIST refresh so the HTML, JSON, and the trend snapshot below
       stay in sync:
@@ -5209,8 +5244,8 @@ linak --pipeline lifetimes Na          <span class="comment"># repeat per elemen
 linak --pipeline compare_elements      <span class="comment"># rebuild CompTable</span>
     </div>
     <p>
-      The near-resonant MOT widget for one line is separate:
-      <code>linak --pipeline scattering_rate --element Na --line D2</code>
+      The Laser cooling tab of the same page covers the near-resonant MOT physics;
+      <code>linak --pipeline scattering_rate --element Na --line D2</code> opens it there
       (see <a href="#sec8">Laser Cooling</a>).
     </p>
   </div>

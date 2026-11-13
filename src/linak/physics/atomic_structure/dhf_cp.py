@@ -65,6 +65,18 @@ _MADELUNG = ((1, 0), (2, 0), (2, 1), (3, 0), (3, 1), (4, 0), (3, 2), (4, 1), (5,
 _NOBLE_GAS_ELECTRONS = (2, 10, 18, 36, 54, 86)
 
 
+DEFAULT_N_ABOVE_VALENCE = 6    # the reports go up to n_valence + 6 unless n_max is given
+
+
+def report_n_max(nv: int, n_max: int | None) -> int:
+    """Highest principal quantum number the models report: *n_max*, or n_valence + 6 if None."""
+    if n_max is None:
+        return nv + DEFAULT_N_ABOVE_VALENCE
+    if n_max <= nv:
+        raise ValueError(f"n_max = {n_max} must be above the valence n ({nv})")
+    return int(n_max)
+
+
 def one_valence_configuration(Z: int, charge: int = 0) -> tuple[tuple[tuple[int, int], ...], int]:
     """(closed core subshells (n, l), valence n) for an atom or positive ion (``charge``) with
     one s electron outside a noble-gas core (H excluded).  Raises ValueError otherwise."""
@@ -428,7 +440,7 @@ def compute(Z: int, ionization_cm: float, alpha_core_au: float, *,
             mass_number: float | None = None,
             fit_levels_cm: Mapping[tuple[int, int], float] | None = None,
             fit_upper_levels_cm: Mapping[tuple[int, int], float] | None = None,
-            n_extra: int = 6, n_defects: int = 30,
+            n_max: int | None = None, n_defects: int = 30,
             omegas_eV: Sequence[float] = ()) -> DHFResult:
     """DHF + core-polarisation spectrum and E1 properties of a one-valence atom.
 
@@ -441,7 +453,7 @@ def compute(Z: int, ionization_cm: float, alpha_core_au: float, *,
     fit_levels_cm   {(n, kappa): energy above ground in cm-1}: per-kappa cutoffs
     fit_upper_levels_cm  {(n, kappa): cm-1}: a second, higher level for a kappa that is also in
                     fit_levels_cm; that channel then gets a factor on alpha_c as well
-    n_extra         levels / transitions / lifetimes are reported up to n_valence + n_extra
+    n_max           highest n of the reported levels / transitions / lifetimes (None: n_valence + 6)
     """
     core_nl, nv = one_valence_configuration(Z, charge)
     m = _Model(Z, core_nl, nv, ionization_cm / HARTREE_TO_CM1, alpha_core_au, mass_number)
@@ -457,7 +469,7 @@ def compute(Z: int, ionization_cm: float, alpha_core_au: float, *,
     m.collect_states()
     reff = m.reff()
     g = m.level(nv, -1)
-    nmax = nv + n_extra
+    nmax = report_n_max(nv, n_max)
 
     report = sorted((s for kap in VALENCE_KAPPAS for s in m.states[kap] if s.eps < 0 and s.n <= nmax),
                     key=lambda s: s.eps)

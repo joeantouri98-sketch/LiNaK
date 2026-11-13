@@ -19,15 +19,17 @@ spectra live); the tests run both and require them to agree. Conventions:
   uses; Morton 2000, ApJS 130, 403), valid above 200 nm. Vacuum below 200 nm.
 * Vapour pressure: Alcock, Itkin & Horrigan, Can. Metall. Q. 23, 309 (1984), as tabulated in the
   CRC Handbook: log₁₀(P/Pa) = a − b/T for the solid and the liquid.
+* The vapour-pressure coefficients, default cell temperatures and isotope shifts are editable in
+  Preferences > Tables and variables.
 """
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any
 
 import numpy as np
 
+from linak.core import user_tables as _user_tables
 from linak.core.constants import AMU_KG, C_SI, H_SI, KB_EV, KB_SI
 
 R_E = 2.8179403262e-15          # classical electron radius (m), CODATA 2018
@@ -107,23 +109,34 @@ def vac_to_air_nm(lam_vac_nm):
 
 # ---------------------------------------------------------------- vapour
 # log10(P/Pa) = a − b/T for the solid (below T_melt) and the liquid; Alcock et al. (1984) via CRC.
-VAPOUR_PRESSURE: dict[str, dict[str, Any]] = {
-    'Li': dict(solid=(10.673, 8310.0), liquid=(10.061, 8023.0), T_melt=453.65),
-    'Na': dict(solid=(10.304, 5603.0), liquid=(9.710, 5377.0), T_melt=370.944),
-    'K': dict(solid=(9.967, 4646.0), liquid=(9.408, 4453.0), T_melt=336.53),
-    'Rb': dict(solid=(9.863, 4215.0), liquid=(9.318, 4040.0), T_melt=312.45),
-    'Cs': dict(solid=(9.717, 3999.0), liquid=(9.171, 3830.0), T_melt=301.59),
+# Editable in Preferences > Tables and variables (read at call time).
+VAPOUR_PRESSURE: dict[str, dict[str, float]] = {
+    'Li': dict(solid_a=10.673, solid_b=8310.0, liquid_a=10.061, liquid_b=8023.0, T_melt=453.65),
+    'Na': dict(solid_a=10.304, solid_b=5603.0, liquid_a=9.710, liquid_b=5377.0, T_melt=370.944),
+    'K': dict(solid_a=9.967, solid_b=4646.0, liquid_a=9.408, liquid_b=4453.0, T_melt=336.53),
+    'Rb': dict(solid_a=9.863, solid_b=4215.0, liquid_a=9.318, liquid_b=4040.0, T_melt=312.45),
+    'Cs': dict(solid_a=9.717, solid_b=3999.0, liquid_a=9.171, liquid_b=3830.0, T_melt=301.59),
 }
+_user_tables.apply("spectrum.vapour_pressure", VAPOUR_PRESSURE)
 VAPOUR_SOURCE = ("Alcock, Itkin & Horrigan, Can. Metall. Q. 23, 309 (1984), as tabulated in the CRC "
                  "Handbook; ±5% or better")
 
 
+def vapour_record(element):
+    """The page's form of an element's vapour-pressure curve, or None."""
+    vp = VAPOUR_PRESSURE.get(element)
+    if not vp:
+        return None
+    return dict(solid=[vp['solid_a'], vp['solid_b']], liquid=[vp['liquid_a'], vp['liquid_b']], T_melt=vp['T_melt'],
+                src=VAPOUR_SOURCE)
+
+
 def vapour_pressure_pa(element, T_K):
     vp = VAPOUR_PRESSURE.get(element)
-    if vp is None:
+    if not vp:
         return None
-    a, b = vp['solid'] if T_K < vp['T_melt'] else vp['liquid']
-    return 10.0 ** (a - b / T_K)
+    phase = 'solid' if T_K < vp['T_melt'] else 'liquid'
+    return 10.0 ** (vp[phase + '_a'] - vp[phase + '_b'] / T_K)
 
 
 def vapour_density_cm3(element, T_K):
@@ -134,6 +147,7 @@ def vapour_density_cm3(element, T_K):
 
 # Typical cell temperatures for an optically interesting vapour (a few cm, T ~ 1-100% at the D lines).
 DEFAULT_CELL_T = {'Li': 623.0, 'Na': 423.0, 'K': 333.0, 'Rb': 298.15, 'Cs': 298.15}
+_user_tables.apply("spectrum.cell_temperature", DEFAULT_CELL_T)
 
 
 # ---------------------------------------------------------------- populations
@@ -168,6 +182,7 @@ ISOTOPE_SHIFT_MHZ = {
     ('K', 41): {'D1': 235.5, 'D2': 236.2},             # Falke et al., PRA 74, 032503 (2006)
     ('Rb', 87): {'D1': 77.586, 'D2': 77.992},          # Banerjee et al., arXiv:physics/0209019, /0307094
 }
+_user_tables.apply("spectrum.isotope_shift", ISOTOPE_SHIFT_MHZ)
 ISOTOPE_SHIFT_SOURCE = {
     'Li': "Das & Natarajan, Phys. Rev. A 75, 052508 (2007)",
     'K': "Falke et al., Phys. Rev. A 74, 032503 (2006)",

@@ -96,7 +96,9 @@ def test_bundled_file_only_redirects_for_the_bundled_folder(ws, tmp_path):
 def test_every_physical_quantity_has_a_unit_and_dimensionless_ones_do_not():
     dimensional = {"polarizability.alpha_core": "a.u.", "constants.alpha0_expt": "a.u.", "constants.c6_expt": "a.u.", "lifetimes.known": "ns",
                    "tweezer.default_wavelength": "nm", "constants.alkali_mass": "u", "constants.abundance": "%",
-                   "uncertainty.accuracy_grade": "relative", "uncertainty.source": "relative", "polarizability.core_electrons": "electrons"}
+                   "uncertainty.accuracy_grade": "relative", "uncertainty.source": "relative", "polarizability.core_electrons": "electrons",
+                   "constants.isotope_mass": "u", "ions.core_alpha": "a.u.", "ions.handbook_levels": "cm\u207b\u00b9",
+                   "spectrum.isotope_shift": "MHz", "spectrum.cell_temperature": "K"}
     for table_id, expected in dimensional.items():
         assert {U.unit(table_id, k) for k, _p, _n in U.values(table_id)} == {expected}, table_id
     for table_id in ("blackbody.qd_diff", "blackbody.a_l", "polarizability.precision_fosc"):
@@ -105,7 +107,28 @@ def test_every_physical_quantity_has_a_unit_and_dimensionless_ones_do_not():
     assert by_name == {"D1_nm": "nm", "D2_nm": "nm", "IE_eV": "eV", "Z": "", "delta_p": "", "delta_s": "", "fosc_D1": "", "fosc_D2": "",
                        "g_lower_D1": "", "g_lower_D2": "", "g_upper_D1": "", "g_upper_D2": "", "mass_amu": "u", "soc_meV": "meV",
                        "tau_D1_ns": "ns", "tau_D2_ns": "ns"}
-    assert all(U.unit("scattering.fallback", k) for k, _p, _n in U.values("scattering.fallback"))
+    vp = {k.rsplit(" / ", 1)[-1]: U.unit("spectrum.vapour_pressure", k) for k, _p, _n in U.values("spectrum.vapour_pressure")}
+    assert vp == {"solid_a": "", "liquid_a": "", "solid_b": "K", "liquid_b": "K", "T_melt": "K"}
+
+
+def test_new_tables_reach_their_physics(ws):
+    """An edited ion level, vapour coefficient or isotope shift is what the stages then use."""
+    import json
+
+    from linak.physics import spectrum_core as sc
+    from linak.pipelines import dhf
+
+    ws.mkdir(parents=True, exist_ok=True)
+    (ws / U.OVERRIDES_FILE).write_text(json.dumps({
+        "ions.handbook_levels": {"Ca_c1 / 3d3/2": 13651.0},
+        "spectrum.vapour_pressure": {"Rb / solid_a": 9.963},
+        "spectrum.isotope_shift": {"Rb-87 / D2": 78.095}}), encoding="utf-8")
+    p0 = sc.vapour_pressure_pa("Rb", 298.15)
+    for t in ("ions.handbook_levels", "spectrum.vapour_pressure", "spectrum.isotope_shift"):
+        U.reload(t)
+    assert dhf.ion_handbook("Ca_c1")[1][(3, "d", "3/2")] == 13651.0
+    assert sc.vapour_pressure_pa("Rb", 298.15) == pytest.approx(p0 * 10 ** 0.1)
+    assert sc.ISOTOPE_SHIFT_MHZ[("Rb", 87)]["D2"] == 78.095
 
 
 def test_added_rows_go_into_the_live_dict_and_come_out_on_reload(ws):

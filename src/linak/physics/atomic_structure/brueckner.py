@@ -55,16 +55,16 @@ class BruecknerResult:
 def compute_brueckner(Z: int, *, charge: int = 0, mass_number: float | None = None,
                       ionization_cm: float | None = None,
                       fit_levels_cm: Mapping[tuple[int, int], float] | None = None,
-                      scale: bool = True, n_extra: int = 6, n_defects: int = 30, lmax: int = 5,
+                      scale: bool = True, n_max: int | None = None, n_defects: int = 30, lmax: int = 5,
                       omegas_eV: Sequence[float] = (), e1: bool = True,
                       cache: MutableMapping[str, np.ndarray] | None = None,
                       progress: Callable[[str], None] | None = None) -> BruecknerResult:
-    """Brueckner levels (up to n_valence + n_extra), E1 network, lifetimes, alpha and quantum
+    """Brueckner levels (up to n_max; None: n_valence + 6), E1 network, lifetimes, alpha and quantum
     defects (up to n_defects).  Inputs as for ``dhf_sigma.compute_sigma2``; e1=False skips the
     dipoles (levels and defects only)."""
     say = progress or (lambda _msg: None)
     st = setup_brueckner(Z, charge=charge, mass_number=mass_number, ionization_cm=ionization_cm,
-                         fit_levels_cm=fit_levels_cm, scale=scale, n_extra=n_extra, lmax=lmax,
+                         fit_levels_cm=fit_levels_cm, scale=scale, n_max=n_max, lmax=lmax,
                          cache=cache, progress=progress)
     m, br = st.model, st.br
     say("Brueckner levels ...")

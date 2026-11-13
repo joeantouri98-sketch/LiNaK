@@ -125,7 +125,7 @@ def test_js_physics_matches_python():
                   dop: SP.dopplerSigma(3.84e14, 86.9, 300), vap: SP.vapourDensityCm3(DATA.vp, 350),
                   bz: SP.boltzmann([0, 2.1, 3.0], [2, 6, 10], 3000), ew: SP.equivalentWidth(1e11, 0.7, 2.2e8, 3e6),
                   inst: SP.instrumentSigma(5e14, 0.01)})""",
-             dict(lam=lam, vp=sc.VAPOUR_PRESSURE["Rb"]))
+             dict(lam=lam, vp=sc.vapour_record("Rb")))
     assert got["air"] == pytest.approx(list(sc.vac_to_air_nm(lam)), rel=1e-12)
     assert got["back"] == pytest.approx(lam, rel=1e-9)
     assert got["dop"] == pytest.approx(sc.doppler_sigma_hz(3.84e14, 86.9, 300), rel=1e-12)

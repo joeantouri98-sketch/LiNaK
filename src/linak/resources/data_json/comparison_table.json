@@ -7,9 +7,9 @@
       "mass_amu": 6.941,
       "gs": "2s",
       "IE_eV": 5.391715,
-      "delta_s": 0.403671,
-      "delta_p": 0.043766,
-      "delta_d": 0.001658,
+      "delta_s": 0.40367,
+      "delta_p": 0.063487,
+      "delta_d": 0.001659,
       "soc_meV": 0.042,
       "D1": {
         "label": "2p1/2",
@@ -172,9 +172,9 @@
       "mass_amu": 85.468,
       "gs": "5s",
       "IE_eV": 4.177128,
-      "delta_s": 3.142985,
-      "delta_p": 2.678626,
-      "delta_d": 1.319683,
+      "delta_s": 3.143897,
+      "delta_p": 2.658422,
+      "delta_d": 1.317293,
       "soc_meV": 29.458,
       "D1": {
         "label": "5p1/2",
@@ -284,7 +284,7 @@
       "IE_eV": 4.072741,
       "delta_s": 5.092713,
       "delta_p": 4.618008,
-      "delta_d": 3.414502,
+      "delta_d": 3.417387,
       "soc_meV": 209.111,
       "D1": {
         "label": "7p1/2",
@@ -331,5 +331,1498 @@
       "source": "pipeline",
       "T_K": 300.0
     }
-  ]
+  ],
+  "C6_au": [
+    {
+      "pair": [
+        "Li",
+        "Li"
+      ],
+      "C6_au": 1357.961,
+      "sigma_au": 6.02,
+      "reference_au": 1389,
+      "reference_sigma_au": 2,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Li",
+        "Na"
+      ],
+      "C6_au": 1449.856,
+      "sigma_au": 11.1,
+      "reference_au": 1467,
+      "reference_sigma_au": 2,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Li",
+        "K"
+      ],
+      "C6_au": 2290.194,
+      "sigma_au": 7.06,
+      "reference_au": 2322,
+      "reference_sigma_au": 5,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Li",
+        "Rb"
+      ],
+      "C6_au": 2517.498,
+      "sigma_au": 7.69,
+      "reference_au": 2545,
+      "reference_sigma_au": 7,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Li",
+        "Cs"
+      ],
+      "C6_au": 3029.468,
+      "sigma_au": 9.1,
+      "reference_au": 3065,
+      "reference_sigma_au": 17,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Li",
+        "Fr"
+      ],
+      "C6_au": 2622.679,
+      "sigma_au": 17.5,
+      "reference_au": 2682,
+      "reference_sigma_au": 23,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Na",
+        "Na"
+      ],
+      "C6_au": 1556.82,
+      "sigma_au": 22.8,
+      "reference_au": 1556,
+      "reference_sigma_au": 4,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Na",
+        "K"
+      ],
+      "C6_au": 2441.772,
+      "sigma_au": 18.6,
+      "reference_au": 2447,
+      "reference_sigma_au": 6,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Na",
+        "Rb"
+      ],
+      "C6_au": 2686.816,
+      "sigma_au": 20.4,
+      "reference_au": 2683,
+      "reference_sigma_au": 7,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Na",
+        "Cs"
+      ],
+      "C6_au": 3228.667,
+      "sigma_au": 24.5,
+      "reference_au": 3227,
+      "reference_sigma_au": 18,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Na",
+        "Fr"
+      ],
+      "C6_au": 2816.775,
+      "sigma_au": 27.2,
+      "reference_au": 2842,
+      "reference_sigma_au": 24,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "K",
+        "K"
+      ],
+      "C6_au": 3878.824,
+      "sigma_au": 16.6,
+      "reference_au": 3897,
+      "reference_sigma_au": 15,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "K",
+        "Rb"
+      ],
+      "C6_au": 4267.856,
+      "sigma_au": 12.8,
+      "reference_au": 4274,
+      "reference_sigma_au": 13,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "K",
+        "Cs"
+      ],
+      "C6_au": 5146.68,
+      "sigma_au": 15.2,
+      "reference_au": 5159,
+      "reference_sigma_au": 30,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "K",
+        "Fr"
+      ],
+      "C6_au": 4447.765,
+      "sigma_au": 29.6,
+      "reference_au": 4500,
+      "reference_sigma_au": 39,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Rb",
+        "Rb"
+      ],
+      "C6_au": 4698.582,
+      "sigma_au": 19.8,
+      "reference_au": 4690,
+      "reference_sigma_au": 23,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Rb",
+        "Cs"
+      ],
+      "C6_au": 5668.033,
+      "sigma_au": 16.6,
+      "reference_au": 5663,
+      "reference_sigma_au": 34,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Rb",
+        "Fr"
+      ],
+      "C6_au": 4905.287,
+      "sigma_au": 32.6,
+      "reference_au": 4946,
+      "reference_sigma_au": 44,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Cs",
+        "Cs"
+      ],
+      "C6_au": 6846.397,
+      "sigma_au": 27.8,
+      "reference_au": 6846,
+      "reference_sigma_au": 74,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Cs",
+        "Fr"
+      ],
+      "C6_au": 5914.026,
+      "sigma_au": 39.1,
+      "reference_au": 5968,
+      "reference_sigma_au": 60,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    },
+    {
+      "pair": [
+        "Fr",
+        "Fr"
+      ],
+      "C6_au": 5162.511,
+      "sigma_au": 65.0,
+      "reference_au": 5256,
+      "reference_sigma_au": 89,
+      "method": "Casimir-Polder from each atom's alpha(i omega)"
+    }
+  ],
+  "tune_out_nm": {
+    "Li": [
+      {
+        "wl_nm": 670.9711632,
+        "between": [
+          "2p1/2",
+          "2p3/2"
+        ]
+      },
+      {
+        "wl_nm": 324.1616768,
+        "between": [
+          "2p3/2",
+          "3p1/2"
+        ]
+      }
+    ],
+    "Na": [
+      {
+        "wl_nm": 589.5567236,
+        "between": [
+          "3p1/2",
+          "3p3/2"
+        ]
+      },
+      {
+        "wl_nm": 331.9586283,
+        "between": [
+          "3p3/2",
+          "4p1/2"
+        ]
+      },
+      {
+        "wl_nm": 330.3721719,
+        "between": [
+          "4p1/2",
+          "4p3/2"
+        ]
+      }
+    ],
+    "K": [
+      {
+        "wl_nm": 768.970093,
+        "between": [
+          "4p1/2",
+          "4p3/2"
+        ]
+      },
+      {
+        "wl_nm": 405.9190904,
+        "between": [
+          "4p3/2",
+          "5p1/2"
+        ]
+      },
+      {
+        "wl_nm": 404.7210288,
+        "between": [
+          "5p1/2",
+          "5p3/2"
+        ]
+      },
+      {
+        "wl_nm": 344.9103029,
+        "between": [
+          "5p3/2",
+          "6p1/2"
+        ]
+      },
+      {
+        "wl_nm": 344.7853219,
+        "between": [
+          "6p1/2",
+          "6p3/2"
+        ]
+      },
+      {
+        "wl_nm": 321.8688713,
+        "between": [
+          "6p3/2",
+          "7p1/2"
+        ]
+      },
+      {
+        "wl_nm": 321.8252993,
+        "between": [
+          "7p1/2",
+          "7p3/2"
+        ]
+      },
+      {
+        "wl_nm": 310.297838,
+        "between": [
+          "7p3/2",
+          "8p1/2"
+        ]
+      },
+      {
+        "wl_nm": 310.274765,
+        "between": [
+          "8p1/2",
+          "8p3/2"
+        ]
+      },
+      {
+        "wl_nm": 303.5814875,
+        "between": [
+          "8p3/2",
+          "9p1/2"
+        ]
+      },
+      {
+        "wl_nm": 303.5669278,
+        "between": [
+          "9p1/2",
+          "9p3/2"
+        ]
+      }
+    ],
+    "Rb": [
+      {
+        "wl_nm": 790.0308928,
+        "between": [
+          "5p1/2",
+          "5p3/2"
+        ]
+      },
+      {
+        "wl_nm": 423.0170302,
+        "between": [
+          "5p3/2",
+          "6p1/2"
+        ]
+      },
+      {
+        "wl_nm": 421.0363418,
+        "between": [
+          "6p1/2",
+          "6p3/2"
+        ]
+      },
+      {
+        "wl_nm": 359.3954924,
+        "between": [
+          "6p3/2",
+          "7p1/2"
+        ]
+      },
+      {
+        "wl_nm": 358.9823746,
+        "between": [
+          "7p1/2",
+          "7p3/2"
+        ]
+      },
+      {
+        "wl_nm": 335.2079498,
+        "between": [
+          "7p3/2",
+          "8p1/2"
+        ]
+      },
+      {
+        "wl_nm": 335.0247945,
+        "between": [
+          "8p1/2",
+          "8p3/2"
+        ]
+      },
+      {
+        "wl_nm": 323.0201259,
+        "between": [
+          "8p3/2",
+          "9p1/2"
+        ]
+      },
+      {
+        "wl_nm": 322.9177377,
+        "between": [
+          "9p1/2",
+          "9p3/2"
+        ]
+      },
+      {
+        "wl_nm": 315.9227121,
+        "between": [
+          "9p3/2",
+          "10p1/2"
+        ]
+      },
+      {
+        "wl_nm": 315.8581054,
+        "between": [
+          "10p1/2",
+          "10p3/2"
+        ]
+      },
+      {
+        "wl_nm": 311.3983855,
+        "between": [
+          "10p3/2",
+          "11p1/2"
+        ]
+      },
+      {
+        "wl_nm": 311.3567363,
+        "between": [
+          "11p1/2",
+          "11p3/2"
+        ]
+      },
+      {
+        "wl_nm": 308.3249608,
+        "between": [
+          "11p3/2",
+          "12p1/2"
+        ]
+      },
+      {
+        "wl_nm": 308.2954155,
+        "between": [
+          "12p1/2",
+          "12p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.1388513,
+        "between": [
+          "12p3/2",
+          "13p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.1174999,
+        "between": [
+          "13p1/2",
+          "13p3/2"
+        ]
+      },
+      {
+        "wl_nm": 304.5259248,
+        "between": [
+          "13p3/2",
+          "14p1/2"
+        ]
+      },
+      {
+        "wl_nm": 304.5096267,
+        "between": [
+          "14p1/2",
+          "14p3/2"
+        ]
+      },
+      {
+        "wl_nm": 303.3005213,
+        "between": [
+          "14p3/2",
+          "15p1/2"
+        ]
+      },
+      {
+        "wl_nm": 303.2877468,
+        "between": [
+          "15p1/2",
+          "15p3/2"
+        ]
+      },
+      {
+        "wl_nm": 302.3472751,
+        "between": [
+          "15p3/2",
+          "16p1/2"
+        ]
+      },
+      {
+        "wl_nm": 302.3371721,
+        "between": [
+          "16p1/2",
+          "16p3/2"
+        ]
+      },
+      {
+        "wl_nm": 301.590842,
+        "between": [
+          "16p3/2",
+          "17p1/2"
+        ]
+      },
+      {
+        "wl_nm": 301.582679,
+        "between": [
+          "17p1/2",
+          "17p3/2"
+        ]
+      },
+      {
+        "wl_nm": 300.9799476,
+        "between": [
+          "17p3/2",
+          "18p1/2"
+        ]
+      },
+      {
+        "wl_nm": 300.9731294,
+        "between": [
+          "18p1/2",
+          "18p3/2"
+        ]
+      },
+      {
+        "wl_nm": 300.4798052,
+        "between": [
+          "18p3/2",
+          "19p1/2"
+        ]
+      },
+      {
+        "wl_nm": 300.4742098,
+        "between": [
+          "19p1/2",
+          "19p3/2"
+        ]
+      },
+      {
+        "wl_nm": 300.0649184,
+        "between": [
+          "19p3/2",
+          "20p1/2"
+        ]
+      },
+      {
+        "wl_nm": 300.0597932,
+        "between": [
+          "20p1/2",
+          "20p3/2"
+        ]
+      }
+    ],
+    "Cs": [
+      {
+        "wl_nm": 880.2339407,
+        "between": [
+          "6p1/2",
+          "6p3/2"
+        ]
+      },
+      {
+        "wl_nm": 460.220058,
+        "between": [
+          "6p3/2",
+          "7p1/2"
+        ]
+      },
+      {
+        "wl_nm": 457.3085555,
+        "between": [
+          "7p1/2",
+          "7p3/2"
+        ]
+      },
+      {
+        "wl_nm": 389.0159286,
+        "between": [
+          "7p3/2",
+          "8p1/2"
+        ]
+      },
+      {
+        "wl_nm": 388.0086909,
+        "between": [
+          "8p1/2",
+          "8p3/2"
+        ]
+      },
+      {
+        "wl_nm": 361.8426618,
+        "between": [
+          "8p3/2",
+          "9p1/2"
+        ]
+      },
+      {
+        "wl_nm": 361.3428771,
+        "between": [
+          "9p1/2",
+          "9p3/2"
+        ]
+      },
+      {
+        "wl_nm": 348.1090525,
+        "between": [
+          "9p3/2",
+          "10p1/2"
+        ]
+      },
+      {
+        "wl_nm": 347.8197063,
+        "between": [
+          "10p1/2",
+          "10p3/2"
+        ]
+      },
+      {
+        "wl_nm": 340.0972426,
+        "between": [
+          "10p3/2",
+          "11p1/2"
+        ]
+      },
+      {
+        "wl_nm": 339.916358,
+        "between": [
+          "11p1/2",
+          "11p3/2"
+        ]
+      },
+      {
+        "wl_nm": 334.9814264,
+        "between": [
+          "11p3/2",
+          "12p1/2"
+        ]
+      },
+      {
+        "wl_nm": 334.859656,
+        "between": [
+          "12p1/2",
+          "12p3/2"
+        ]
+      },
+      {
+        "wl_nm": 331.5028785,
+        "between": [
+          "12p3/2",
+          "13p1/2"
+        ]
+      },
+      {
+        "wl_nm": 331.4172922,
+        "between": [
+          "13p1/2",
+          "13p3/2"
+        ]
+      },
+      {
+        "wl_nm": 329.0246037,
+        "between": [
+          "13p3/2",
+          "14p1/2"
+        ]
+      },
+      {
+        "wl_nm": 328.961361,
+        "between": [
+          "14p1/2",
+          "14p3/2"
+        ]
+      },
+      {
+        "wl_nm": 327.1940259,
+        "between": [
+          "14p3/2",
+          "15p1/2"
+        ]
+      },
+      {
+        "wl_nm": 327.1463643,
+        "between": [
+          "15p1/2",
+          "15p3/2"
+        ]
+      },
+      {
+        "wl_nm": 325.8021794,
+        "between": [
+          "15p3/2",
+          "16p1/2"
+        ]
+      },
+      {
+        "wl_nm": 325.7649943,
+        "between": [
+          "16p1/2",
+          "16p3/2"
+        ]
+      },
+      {
+        "wl_nm": 324.7184968,
+        "between": [
+          "16p3/2",
+          "17p1/2"
+        ]
+      },
+      {
+        "wl_nm": 324.6893053,
+        "between": [
+          "17p1/2",
+          "17p3/2"
+        ]
+      },
+      {
+        "wl_nm": 323.8578316,
+        "between": [
+          "17p3/2",
+          "18p1/2"
+        ]
+      },
+      {
+        "wl_nm": 323.8343711,
+        "between": [
+          "18p1/2",
+          "18p3/2"
+        ]
+      },
+      {
+        "wl_nm": 323.1626887,
+        "between": [
+          "18p3/2",
+          "19p1/2"
+        ]
+      },
+      {
+        "wl_nm": 323.143715,
+        "between": [
+          "19p1/2",
+          "19p3/2"
+        ]
+      },
+      {
+        "wl_nm": 322.5932745,
+        "between": [
+          "19p3/2",
+          "20p1/2"
+        ]
+      },
+      {
+        "wl_nm": 322.5775421,
+        "between": [
+          "20p1/2",
+          "20p3/2"
+        ]
+      },
+      {
+        "wl_nm": 322.120154,
+        "between": [
+          "20p3/2",
+          "21p1/2"
+        ]
+      },
+      {
+        "wl_nm": 322.1070803,
+        "between": [
+          "21p1/2",
+          "21p3/2"
+        ]
+      },
+      {
+        "wl_nm": 321.7237318,
+        "between": [
+          "21p3/2",
+          "22p1/2"
+        ]
+      },
+      {
+        "wl_nm": 321.7121172,
+        "between": [
+          "22p1/2",
+          "22p3/2"
+        ]
+      },
+      {
+        "wl_nm": 321.3874219,
+        "between": [
+          "22p3/2",
+          "23p1/2"
+        ]
+      },
+      {
+        "wl_nm": 321.3777339,
+        "between": [
+          "23p1/2",
+          "23p3/2"
+        ]
+      },
+      {
+        "wl_nm": 321.0998816,
+        "between": [
+          "23p3/2",
+          "24p1/2"
+        ]
+      },
+      {
+        "wl_nm": 321.091294,
+        "between": [
+          "24p1/2",
+          "24p3/2"
+        ]
+      },
+      {
+        "wl_nm": 320.8521558,
+        "between": [
+          "24p3/2",
+          "25p1/2"
+        ]
+      },
+      {
+        "wl_nm": 320.8449598,
+        "between": [
+          "25p1/2",
+          "25p3/2"
+        ]
+      },
+      {
+        "wl_nm": 320.6472694,
+        "between": [
+          "25p3/2",
+          "26p"
+        ]
+      },
+      {
+        "wl_nm": 320.458198,
+        "between": [
+          "26p",
+          "27p"
+        ]
+      },
+      {
+        "wl_nm": 320.2921894,
+        "between": [
+          "27p",
+          "28p"
+        ]
+      },
+      {
+        "wl_nm": 320.1455342,
+        "between": [
+          "28p",
+          "29p"
+        ]
+      },
+      {
+        "wl_nm": 320.0153702,
+        "between": [
+          "29p",
+          "30p"
+        ]
+      },
+      {
+        "wl_nm": 319.8992631,
+        "between": [
+          "30p",
+          "31p"
+        ]
+      },
+      {
+        "wl_nm": 319.7953673,
+        "between": [
+          "31p",
+          "32p"
+        ]
+      },
+      {
+        "wl_nm": 319.7019275,
+        "between": [
+          "32p",
+          "33p"
+        ]
+      },
+      {
+        "wl_nm": 319.6176069,
+        "between": [
+          "33p",
+          "34p"
+        ]
+      },
+      {
+        "wl_nm": 319.5412377,
+        "between": [
+          "34p",
+          "35p"
+        ]
+      },
+      {
+        "wl_nm": 319.4719031,
+        "between": [
+          "35p",
+          "36p"
+        ]
+      },
+      {
+        "wl_nm": 319.4087707,
+        "between": [
+          "36p",
+          "37p"
+        ]
+      },
+      {
+        "wl_nm": 319.3510929,
+        "between": [
+          "37p",
+          "38p"
+        ]
+      },
+      {
+        "wl_nm": 319.2982057,
+        "between": [
+          "38p",
+          "39p"
+        ]
+      },
+      {
+        "wl_nm": 319.2496112,
+        "between": [
+          "39p",
+          "40p"
+        ]
+      },
+      {
+        "wl_nm": 319.2049766,
+        "between": [
+          "40p",
+          "41p"
+        ]
+      },
+      {
+        "wl_nm": 319.1637235,
+        "between": [
+          "41p",
+          "42p"
+        ]
+      },
+      {
+        "wl_nm": 319.1256026,
+        "between": [
+          "42p",
+          "43p"
+        ]
+      },
+      {
+        "wl_nm": 319.0902833,
+        "between": [
+          "43p",
+          "44p"
+        ]
+      },
+      {
+        "wl_nm": 319.0575173,
+        "between": [
+          "44p",
+          "45p"
+        ]
+      },
+      {
+        "wl_nm": 319.0270568,
+        "between": [
+          "45p",
+          "46p"
+        ]
+      },
+      {
+        "wl_nm": 318.9986542,
+        "between": [
+          "46p",
+          "47p"
+        ]
+      },
+      {
+        "wl_nm": 318.9722263,
+        "between": [
+          "47p",
+          "48p"
+        ]
+      },
+      {
+        "wl_nm": 318.9474439,
+        "between": [
+          "48p",
+          "49p"
+        ]
+      },
+      {
+        "wl_nm": 318.9243063,
+        "between": [
+          "49p",
+          "50p"
+        ]
+      }
+    ],
+    "Fr": [
+      {
+        "wl_nm": 782.0459225,
+        "between": [
+          "7p1/2",
+          "7p3/2"
+        ]
+      },
+      {
+        "wl_nm": 434.102263,
+        "between": [
+          "7p3/2",
+          "8p1/2"
+        ]
+      },
+      {
+        "wl_nm": 424.7526426,
+        "between": [
+          "8p1/2",
+          "8p3/2"
+        ]
+      },
+      {
+        "wl_nm": 369.0229357,
+        "between": [
+          "8p3/2",
+          "9p1/2"
+        ]
+      },
+      {
+        "wl_nm": 365.8551068,
+        "between": [
+          "9p1/2",
+          "9p3/2"
+        ]
+      },
+      {
+        "wl_nm": 344.1616894,
+        "between": [
+          "9p3/2",
+          "10p1/2"
+        ]
+      },
+      {
+        "wl_nm": 342.6506479,
+        "between": [
+          "10p1/2",
+          "10p3/2"
+        ]
+      },
+      {
+        "wl_nm": 331.5991351,
+        "between": [
+          "10p3/2",
+          "11p1/2"
+        ]
+      },
+      {
+        "wl_nm": 330.749727,
+        "between": [
+          "11p1/2",
+          "11p3/2"
+        ]
+      },
+      {
+        "wl_nm": 324.2697607,
+        "between": [
+          "11p3/2",
+          "12p1/2"
+        ]
+      },
+      {
+        "wl_nm": 323.7417049,
+        "between": [
+          "12p1/2",
+          "12p3/2"
+        ]
+      },
+      {
+        "wl_nm": 319.5893663,
+        "between": [
+          "12p3/2",
+          "13p1/2"
+        ]
+      },
+      {
+        "wl_nm": 319.237216,
+        "between": [
+          "13p1/2",
+          "13p3/2"
+        ]
+      },
+      {
+        "wl_nm": 316.4067729,
+        "between": [
+          "13p3/2",
+          "14p1/2"
+        ]
+      },
+      {
+        "wl_nm": 316.1600082,
+        "between": [
+          "14p1/2",
+          "14p3/2"
+        ]
+      },
+      {
+        "wl_nm": 314.1394809,
+        "between": [
+          "14p3/2",
+          "15p1/2"
+        ]
+      },
+      {
+        "wl_nm": 313.9591325,
+        "between": [
+          "15p1/2",
+          "15p3/2"
+        ]
+      },
+      {
+        "wl_nm": 312.4646341,
+        "between": [
+          "15p3/2",
+          "16p1/2"
+        ]
+      },
+      {
+        "wl_nm": 312.3290165,
+        "between": [
+          "16p1/2",
+          "16p3/2"
+        ]
+      },
+      {
+        "wl_nm": 311.1910617,
+        "between": [
+          "16p3/2",
+          "17p1/2"
+        ]
+      },
+      {
+        "wl_nm": 311.0862695,
+        "between": [
+          "17p1/2",
+          "17p3/2"
+        ]
+      },
+      {
+        "wl_nm": 310.199594,
+        "between": [
+          "17p3/2",
+          "18p1/2"
+        ]
+      },
+      {
+        "wl_nm": 310.1169671,
+        "between": [
+          "18p1/2",
+          "18p3/2"
+        ]
+      },
+      {
+        "wl_nm": 309.4121577,
+        "between": [
+          "18p3/2",
+          "19p1/2"
+        ]
+      },
+      {
+        "wl_nm": 309.3459603,
+        "between": [
+          "19p1/2",
+          "19p3/2"
+        ]
+      },
+      {
+        "wl_nm": 308.7761469,
+        "between": [
+          "19p3/2",
+          "20p1/2"
+        ]
+      },
+      {
+        "wl_nm": 308.7222618,
+        "between": [
+          "20p1/2",
+          "20p3/2"
+        ]
+      },
+      {
+        "wl_nm": 308.2611938,
+        "between": [
+          "20p3/2",
+          "21p1/2"
+        ]
+      },
+      {
+        "wl_nm": 308.2177881,
+        "between": [
+          "21p1/2",
+          "21p3/2"
+        ]
+      },
+      {
+        "wl_nm": 307.8272978,
+        "between": [
+          "21p3/2",
+          "22p1/2"
+        ]
+      },
+      {
+        "wl_nm": 307.7911305,
+        "between": [
+          "22p1/2",
+          "22p3/2"
+        ]
+      },
+      {
+        "wl_nm": 307.4634336,
+        "between": [
+          "22p3/2",
+          "23p1/2"
+        ]
+      },
+      {
+        "wl_nm": 307.4328308,
+        "between": [
+          "23p1/2",
+          "23p3/2"
+        ]
+      },
+      {
+        "wl_nm": 307.1550892,
+        "between": [
+          "23p3/2",
+          "24p1/2"
+        ]
+      },
+      {
+        "wl_nm": 307.1290698,
+        "between": [
+          "24p1/2",
+          "24p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.8915893,
+        "between": [
+          "24p3/2",
+          "25p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.869267,
+        "between": [
+          "25p1/2",
+          "25p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.6645434,
+        "between": [
+          "25p3/2",
+          "26p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.6452565,
+        "between": [
+          "26p1/2",
+          "26p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.4674699,
+        "between": [
+          "26p3/2",
+          "27p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.4506356,
+        "between": [
+          "27p1/2",
+          "27p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.2953931,
+        "between": [
+          "27p3/2",
+          "28p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.280645,
+        "between": [
+          "28p1/2",
+          "28p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.1442065,
+        "between": [
+          "28p3/2",
+          "29p1/2"
+        ]
+      },
+      {
+        "wl_nm": 306.1312526,
+        "between": [
+          "29p1/2",
+          "29p3/2"
+        ]
+      },
+      {
+        "wl_nm": 306.010662,
+        "between": [
+          "29p3/2",
+          "30p1/2"
+        ]
+      },
+      {
+        "wl_nm": 305.999213,
+        "between": [
+          "30p1/2",
+          "30p3/2"
+        ]
+      },
+      {
+        "wl_nm": 305.8872023,
+        "between": [
+          "30p3/2",
+          "31p"
+        ]
+      },
+      {
+        "wl_nm": 305.7820531,
+        "between": [
+          "31p",
+          "32p"
+        ]
+      },
+      {
+        "wl_nm": 305.6878145,
+        "between": [
+          "32p",
+          "33p"
+        ]
+      },
+      {
+        "wl_nm": 305.603025,
+        "between": [
+          "33p",
+          "34p"
+        ]
+      },
+      {
+        "wl_nm": 305.5266058,
+        "between": [
+          "34p",
+          "35p"
+        ]
+      },
+      {
+        "wl_nm": 305.4573346,
+        "between": [
+          "35p",
+          "36p"
+        ]
+      },
+      {
+        "wl_nm": 305.3943685,
+        "between": [
+          "36p",
+          "37p"
+        ]
+      },
+      {
+        "wl_nm": 305.3370183,
+        "between": [
+          "37p",
+          "38p"
+        ]
+      },
+      {
+        "wl_nm": 305.2846722,
+        "between": [
+          "38p",
+          "39p"
+        ]
+      },
+      {
+        "wl_nm": 305.2366466,
+        "between": [
+          "39p",
+          "40p"
+        ]
+      },
+      {
+        "wl_nm": 305.1925585,
+        "between": [
+          "40p",
+          "41p"
+        ]
+      },
+      {
+        "wl_nm": 305.151952,
+        "between": [
+          "41p",
+          "42p"
+        ]
+      },
+      {
+        "wl_nm": 305.1145218,
+        "between": [
+          "42p",
+          "43p"
+        ]
+      },
+      {
+        "wl_nm": 305.0798888,
+        "between": [
+          "43p",
+          "44p"
+        ]
+      },
+      {
+        "wl_nm": 305.0477497,
+        "between": [
+          "44p",
+          "45p"
+        ]
+      },
+      {
+        "wl_nm": 305.0179512,
+        "between": [
+          "45p",
+          "46p"
+        ]
+      },
+      {
+        "wl_nm": 304.9902655,
+        "between": [
+          "46p",
+          "47p"
+        ]
+      },
+      {
+        "wl_nm": 304.9644653,
+        "between": [
+          "47p",
+          "48p"
+        ]
+      },
+      {
+        "wl_nm": 304.9403973,
+        "between": [
+          "48p",
+          "49p"
+        ]
+      },
+      {
+        "wl_nm": 304.9178297,
+        "between": [
+          "49p",
+          "50p"
+        ]
+      }
+    ]
+  }
 }

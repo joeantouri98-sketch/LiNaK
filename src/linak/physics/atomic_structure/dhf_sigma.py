@@ -55,6 +55,7 @@ from linak.physics.atomic_structure.dhf_cp import (
     VALENCE_KAPPAS,
     _Model,
     one_valence_configuration,
+    report_n_max,
 )
 from linak.physics.atomic_structure.dirac_basis import (
     Basis,
@@ -413,7 +414,7 @@ class BruecknerSetup:
 def setup_brueckner(Z: int, *, charge: int = 0, mass_number: float | None = None,
                     ionization_cm: float | None = None,
                     fit_levels_cm: Mapping[tuple[int, int], float] | None = None,
-                    scale: bool = True, n_extra: int = 6, lmax: int = 5, n_int: int = 40,
+                    scale: bool = True, n_max: int | None = None, lmax: int = 5, n_int: int = 40,
                     kappas: tuple[int, ...] = VALENCE_KAPPAS,
                     cache: MutableMapping[str, np.ndarray] | None = None,
                     progress: Callable[[str], None] | None = None) -> BruecknerSetup:
@@ -425,7 +426,7 @@ def setup_brueckner(Z: int, *, charge: int = 0, mass_number: float | None = None
     m.scf_core()
     m.setup_valence()
     br = Brueckner(m, lmax=lmax, n_int=n_int)
-    nmax = nv + n_extra
+    nmax = report_n_max(nv, n_max)
 
     def n0(kap):
         return m.ncore(kap) + kappa_lj(kap)[0] + 1
@@ -489,7 +490,7 @@ def setup_brueckner(Z: int, *, charge: int = 0, mass_number: float | None = None
 def compute_sigma2(Z: int, *, charge: int = 0, mass_number: float | None = None,
                    ionization_cm: float | None = None,
                    fit_levels_cm: Mapping[tuple[int, int], float] | None = None,
-                   scale: bool = True, n_extra: int = 6, lmax: int = 5, n_int: int = 40,
+                   scale: bool = True, n_max: int | None = None, lmax: int = 5, n_int: int = 40,
                    kappas: tuple[int, ...] = VALENCE_KAPPAS,
                    cache: MutableMapping[str, np.ndarray] | None = None,
                    progress: Callable[[str], None] | None = None) -> Sigma2Result:
@@ -499,7 +500,7 @@ def compute_sigma2(Z: int, *, charge: int = 0, mass_number: float | None = None,
     fit_levels_cm   {(n, kappa): energy above ground, cm-1}: the lowest entry of each kappa fixes
                     lambda for that kappa (needs ionization_cm, which sets the ground level)
     scale           False: lambda = 1 everywhere, measured inputs ignored (pure ab initio)
-    n_extra         levels up to n_valence + n_extra
+    n_max           highest n of the reported levels (None: n_valence + 6)
     lmax            highest l of the MBPT orbitals; valence kappas above it are skipped
     cache           mapping kept by the caller between runs; Sigma matrices are read from and
                     written to it (keys 'meta', '<kappa>:S', '<kappa>:O')
@@ -507,7 +508,7 @@ def compute_sigma2(Z: int, *, charge: int = 0, mass_number: float | None = None,
     """
     say = progress or (lambda _msg: None)
     st = setup_brueckner(Z, charge=charge, mass_number=mass_number, ionization_cm=ionization_cm,
-                         fit_levels_cm=fit_levels_cm, scale=scale, n_extra=n_extra, lmax=lmax,
+                         fit_levels_cm=fit_levels_cm, scale=scale, n_max=n_max, lmax=lmax,
                          n_int=n_int, kappas=kappas, cache=cache, progress=progress)
     say("Brueckner levels ...")
     levels = brueckner_levels(st)

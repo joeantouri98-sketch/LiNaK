@@ -209,11 +209,11 @@ select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border
     </div>
     <section class="pane" id="pane-ab" role="tabpanel" aria-labelledby="tab-ab">
       <div class="plot"><div class="ptop"><span class="count" id="abinfo"></span></div><div class="p tall" id="pab"></div></div>
-      <p class="note">Each line's area is ∫σ dν = π r<sub>e</sub> c f, with the lower level populated as g e<sup>−E/kT</sup> and stimulated emission removed (1 − e<sup>−hν/kT</sup>). Lines narrower than one plotted point keep their area in that point; zoom in to see their shape. Sticks: population × f, coloured by the source of f.</p>
+      <p class="note">Each line's area is ∫σ dν = π r<sub>e</sub> c f.<br>The lower level is populated as g e<sup>−E/kT</sup>, and stimulated emission is removed (1 − e<sup>−hν/kT</sup>).<br>Lines narrower than one plotted point keep their area in that point; zoom in to see their shape.<br>Sticks: population × f, coloured by the source of f.</p>
     </section>
     <section class="pane" id="pane-em" role="tabpanel" aria-labelledby="tab-em" hidden>
       <div class="plot"><div class="ptop"><span class="count" id="eminfo"></span></div><div class="p tall" id="pem"></div></div>
-      <p class="note">Spectral power per unit of the x axis, normalised to its maximum. Optically thin source with Boltzmann upper populations; self-absorption is not included.</p>
+      <p class="note">Spectral power per unit of the x axis, normalised to its maximum.<br>Optically thin source with Boltzmann upper populations; self-absorption is not included.</p>
     </section>
     <section class="pane" id="pane-dl" role="tabpanel" aria-labelledby="tab-dl" hidden>
       <div class="plot"><div class="ptop"><span class="count" id="dlinfo"></span></div><div class="p tall" id="pdl"></div></div>
@@ -222,7 +222,7 @@ select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border
     </section>
     <section class="pane" id="pane-cg" role="tabpanel" aria-labelledby="tab-cg" hidden>
       <div class="plot"><div class="ptop"><span class="count" id="cginfo"></span></div><div class="p" id="pcg"></div></div>
-      <p class="note">W = ∫(1 − e<sup>−τ(ν)</sup>) dν with τ = Nℓ σ(ν). It grows as Nℓ while the line is thin, slowly (√ln τ₀) once the Doppler core saturates, and as √Nℓ when the damping wings take over. The marker is this cell (N × ℓ × the lower level's population). Each fine-structure line is treated as one line here; the D lines tab resolves the hyperfine structure.</p>
+      <p class="note">W = ∫(1 − e<sup>−τ(ν)</sup>) dν with τ = Nℓ σ(ν).<br>W grows as Nℓ while the line is thin, slowly (√ln τ₀) once the Doppler core saturates, and as √Nℓ when the damping wings take over.<br>Marker: this cell (N × ℓ × the lower level's population).<br>Each fine-structure line is treated as one line here; the D lines tab resolves the hyperfine structure.</p>
     </section>
     <section class="pane" id="pane-st" role="tabpanel" aria-labelledby="tab-st" hidden>
       <div class="card"><div class="bar2"><b>Absorption: white light through the vapour</b></div><canvas class="strip" id="sab"></canvas><canvas class="stripax" id="saxa"></canvas></div>
@@ -232,7 +232,7 @@ select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border
     <section class="pane" id="pane-li" role="tabpanel" aria-labelledby="tab-li" hidden>
       <div class="card"><div class="bar2"><b id="lititle">Lines</b><input type="search" id="q" placeholder="Search level or source" style="max-width:220px"><label class="hint" style="margin:0"><input type="checkbox" id="ligs"> ground state only</label><span class="pg"><button class="pill" id="pprev">‹</button><span class="hint" id="pinfo" style="margin:0 6px"></span><button class="pill" id="pnext">›</button></span></div>
       <div class="tw"><table id="litab"><thead></thead><tbody></tbody></table></div></div>
-      <p class="note">Widths and peak cross-sections at the gas temperature set in the rail. Γ/2π is the natural FWHM (1/τ<sub>u</sub> + 1/τ<sub>l</sub>)/2π.</p>
+      <p class="note">Widths and peak cross-sections at the gas temperature set in the rail.<br>Γ/2π is the natural FWHM (1/τ<sub>u</sub> + 1/τ<sub>l</sub>)/2π.</p>
     </section>
   </div>
 </div>
@@ -352,7 +352,7 @@ function buildDl(){const b=base(),st=dlState();if(!st){$('dlinfo').textContent='
   if(sas){lay.yaxis2=axs(b,'ΔT',{domain:[0,.3]});lay.yaxis.showticklabels=true}
   const od=Math.max(...Array.from(aD))*N*Lm;
   $('dlinfo').innerHTML=`${esc(d.name)} ${pretty(LV.findIndex(v=>v[0]===d.lower))} → ${pretty(LV.findIndex(v=>v[0]===d.upper))} · λ vac ${d.lam.toFixed(4)} nm, air ${SP.vacToAir(d.lam).toFixed(4)} nm · Γ/2π = ${(gNat/1e6).toFixed(3)} MHz · peak OD ${sci(od,3)}`+(sas?` · Lamb-dip FWHM ${(2*gH/1e6).toFixed(2)} MHz`:'');
-  $('dlnote').innerHTML=`Natural abundances; measured hyperfine constants${parts.length>1?' and isotope shifts'+(d.shift_src?' ('+esc(d.shift_src)+')':''):''}. Doppler FWHM ${parts.map(p=>D.element+'-'+p.i.A+' '+(2.3548*p.sD/1e6).toFixed(0)+' MHz').join(', ')} at ${sci(S.T)} K. `+(sas?'Saturated absorption: the weak probe sees Lamb dips at the components and crossovers halfway between components that share a level; heights from the weak-saturation estimate without optical pumping, so they are indicative. ':'')+(d.missing&&d.missing.length?`<span class="warn">Left out (no measured constants or isotope shift): ${d.missing.map(a=>D.element+'-'+a).join(', ')}.</span>`:'');
+  $('dlnote').innerHTML=`Natural abundances; measured hyperfine constants${parts.length>1?' and isotope shifts'+(d.shift_src?' ('+esc(d.shift_src)+')':''):''}.<br>Doppler FWHM ${parts.map(p=>D.element+'-'+p.i.A+' '+(2.3548*p.sD/1e6).toFixed(0)+' MHz').join(', ')} at ${sci(S.T)} K.`+(sas?'<br>Saturated absorption: the weak probe sees Lamb dips at the components, and crossovers halfway between components that share a level.<br>Dip heights come from the weak-saturation estimate without optical pumping, so they are indicative.':'')+(d.missing&&d.missing.length?`<br><span class="warn">Left out (no measured constants or isotope shift): ${d.missing.map(a=>D.element+'-'+a).join(', ')}.</span>`:'');
   const rows=parts.flatMap(p=>p.comps.map(c=>({iso:p.i.A,F:c.F,Fp:c.Fp,d:c.d,S:c.S,w:c.w}))).sort((a,c)=>a.d-c.d);
   $('dltitle').textContent=sas?'Saturated-absorption features':'Components';
   const frows=sas?feats.map(f=>({iso:f.p.i.A,kind:f.i===f.j?'Lamb dip':'crossover',a:f.p.comps[f.i],c:f.p.comps[f.j],d:f.d,k:f.k})).sort((a,c)=>a.d-c.d):[];
@@ -382,22 +382,39 @@ function stripRange(){if(S.str==='vis')return [380,750];const a=C/S.nu[1]*1e9,c=
 function buildSt(){const [l0,l1]=stripRange(),cA=$('sab'),cE=$('sem'),W=Math.max(300,Math.round(cA.clientWidth*(window.devicePixelRatio||1))),H=120;
   [cA,cE].forEach(c=>{c.width=W;c.height=H});const gA=cA.getContext('2d'),gE=cE.getContext('2d'),lam=[...Array(W)].map((_,k)=>l0+(l1-l0)*(k+.5)/W);
   const rgb=lam.map(SP.wlRgb),dim=lam.map(l=>l<380||l>780?[60,60,60]:null);
+  {const pa=popAbs(),pe=popEm(),ha=[],he=[];LN.forEach((l,i)=>{if(!keep(l)||l[2]<l0||l[2]>l1)return;const x=(l[2]-l0)/(l1-l0);
+      ha.push({x,i,v:pa[l[0]]*l[3]});if(l[4]>0)he.push({x,i,v:pe[l[1]]*l[4]*SP.H*nuOfLine(l)})});
+    const norm=h=>{const m=Math.max(1e-300,...h.map(o=>o.v));h.forEach(o=>o.r=o.v/m);return h.filter(o=>o.r>=1e-4)};
+    STRIP.sab=norm(ha);STRIP.sem=norm(he)}
   if(S.sts==='pat'){const pa=popAbs(),pe=popEm(),ab=[],em=[];LN.forEach(l=>{if(!keep(l)||l[2]<l0||l[2]>l1)return;ab.push([l[2],pa[l[0]]*l[3]]);if(l[4]>0)em.push([l[2],pe[l[1]]*l[4]*SP.H*nuOfLine(l)])});
     const am=Math.max(1e-300,...ab.map(x=>x[1])),emx=Math.max(1e-300,...em.map(x=>x[1])),op=v=>Math.max(0,Math.min(1,(Math.log10(v)+4)/4));
     lam.forEach((l,k)=>{const c=dim[k]||rgb[k];gA.fillStyle=`rgb(${c})`;gA.fillRect(k,0,1,H)});gE.fillStyle='#000';gE.fillRect(0,0,W,H);
     ab.forEach(([l,v])=>{const o=op(v/am);if(o<=0)return;const x=(l-l0)/(l1-l0)*W;gA.fillStyle=`rgba(0,0,0,${o})`;gA.fillRect(x-1,0,2,H)});
     em.forEach(([l,v])=>{const o=op(v/emx);if(o<=0)return;const x=(l-l0)/(l1-l0)*W,c=SP.wlRgb(l),cc=c.every(v=>v===0)?[160,160,160]:c;gE.fillStyle=`rgba(${cc},${o})`;gE.fillRect(x-1,0,2,H)});
-    $('stnote').innerHTML='Line pattern: a schematic, one line per transition, its darkness (absorption) or brightness (emission) following the log of its strength over four decades: population × f at the gas temperature, and N<sub>u</sub>A hν at the excitation temperature. Colours outside 380–780 nm are grey.'}
+    $('stnote').innerHTML='Line pattern: a schematic with one line per transition.<br>Darkness (absorption) or brightness (emission) follows the log of the line strength over four decades: population × f at the gas temperature, N<sub>u</sub>A hν at the excitation temperature.<br>Colours outside 380–780 nm are grey.'}
   else{const nu=Float64Array.from(lam.map(l=>C/(l*1e-9))).reverse(),res=S.sres;
     const prof=(lines,wk)=>{const L=lines.map(o=>{const sD=SP.dopplerSigma(o.nu,D.mass,S.T),sI=SP.instrumentSigma(o.nu,res);return Object.assign(o,{s:Math.hypot(sD,sI),g:shape(o.l,o.nu).g})});return Array.from(SP.sumProfiles(nu,L,false).re).reverse()};
     const A=absLines().map(o=>Object.assign({},o)),Nm=density()*1e6*S.L/100,sig=prof(A),Tr=sig.map(v=>Math.exp(-v*Nm));
     const pe=popEm(),E=[];LN.forEach((l,i)=>{if(!keep(l)||!(l[4]>0))return;const nv=nuOfLine(l);E.push({i,l,nu:nv,a:pe[l[1]]*l[4]*SP.H*nv})});
     const em=prof(E),emx=Math.max(...em)||1;
     lam.forEach((l,k)=>{const c=dim[k]||rgb[k];gA.fillStyle=`rgb(${c.map(v=>Math.round(v*Tr[k]))})`;gA.fillRect(k,0,1,H);const e=em[k]/emx,cc=dim[k]||rgb[k];gE.fillStyle=`rgb(${cc.map(v=>Math.round(v*Math.min(1,e)))})`;gE.fillRect(k,0,1,H)});
-    $('stnote').innerHTML=`Physical: a white continuum through this cell (N = ${sci(density(),3)} cm⁻³, ℓ = ${S.L} cm, T = ${sci(S.T)} K) seen with a ${res} nm FWHM spectrograph, and the optically thin emission at T<sub>exc</sub> = ${S.xinf?'∞':sci(S.texc)+' K'} at the same resolution, normalised to its brightest point. A line is visible only if it is wide or deep enough at this resolution.`}
+    $('stnote').innerHTML=`Physical absorption: a white continuum through this cell (N = ${sci(density(),3)} cm⁻³, ℓ = ${S.L} cm, T = ${sci(S.T)} K), seen with a ${res} nm FWHM spectrograph.<br>Physical emission: optically thin at T<sub>exc</sub> = ${S.xinf?'∞':sci(S.texc)+' K'}, at the same resolution, normalised to its brightest point.<br>A line is visible only if it is wide or deep enough at this resolution.`}
   [['saxa',cA],['saxe',cE]].forEach(([id])=>{const c=$(id);c.width=W;c.height=Math.round(26*(window.devicePixelRatio||1));const g=c.getContext('2d');g.fillStyle=css('--ink2');g.font=`${Math.round(11*(window.devicePixelRatio||1))}px ${css('--sans')}`;
     const span=l1-l0,step=[1,2,5,10,20,25,50,100,200,500].find(s=>span/s<=12)||1000;for(let t=Math.ceil(l0/step)*step;t<=l1;t+=step){const x=(t-l0)/span*W;g.fillRect(x,0,1,6);g.fillText(String(+t.toFixed(3)),x+2,c.height-4)}});
   return Promise.resolve()}
+const STRIP={sab:[],sem:[]};
+function stripTip(ev){const c=ev.currentTarget,hits=STRIP[c.id]||[],r=c.getBoundingClientRect(),fx=(ev.clientX-r.left)/r.width,px=5/r.width;
+  let best=null;for(const o of hits){const d=Math.abs(o.x-fx);if(d<=px&&(!best||o.r>best.o.r||(o.r===best.o.r&&d<best.d)))best={o,d}}
+  let tip=$('striptip');if(!best){if(tip)tip.remove();c.style.cursor='default';return null}
+  if(!tip){tip=document.createElement('div');tip.id='striptip';tip.className='cm';tip.style.pointerEvents='none';tip.style.padding='6px 10px';tip.style.fontSize='12.5px';document.body.appendChild(tip)}
+  const l=LN[best.o.i],emis=c.id==='sem';c.style.cursor='pointer';
+  tip.innerHTML=`<b>${lineName(l)}</b><br>λ vac ${l[2].toFixed(4)} nm`+(l[2]>=200?` · air ${SP.vacToAir(l[2]).toFixed(4)} nm`:'')+
+    `<br>f = ${sci(l[3])} (${esc(l[5])}${l[6]?' '+esc(l[6]):''}) · A = ${sci(l[4],3)} s⁻¹<br>`+
+    (emis?`power N<sub>u</sub>A hν: ${sci(best.o.r,3)} of the strongest (T<sub>exc</sub> = ${S.xinf?'∞':sci(S.texc)+' K'})`:`population × f: ${sci(best.o.r,3)} of the strongest (T = ${sci(S.T)} K)`)+
+    '<br><span style="color:var(--muted)">click: pick for the curve of growth</span>';
+  tip.style.left=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(ev.clientY+14)+'px';return best.o}
+['sab','sem'].forEach(id=>{const c=$(id);c.addEventListener('mousemove',stripTip);c.addEventListener('mouseleave',()=>{const t=$('striptip');if(t)t.remove()});
+  c.addEventListener('click',ev=>{const o=stripTip(ev);if(o){S.cg=o.i;fillCg()}})});
 // ---------------- Lines
 function liRows(){const q=S.q.toLowerCase(),out=[];LN.forEach((l,i)=>{if(!keep(l))return;if(S.ligs&&l[0]!==D.gi)return;const s=(LV[l[0]][1]+' '+LV[l[1]][1]+' '+l[5]).toLowerCase();if(q&&!s.includes(q))return;
   const nu=nuOfLine(l),sh=shape(l,nu);out.push({_i:i,_sel:i===S.cg,l,nu,sh,pk:SP.LINE_K*l[3]*SP.voigt(0,sh.s,sh.g)*1e4})});return out}

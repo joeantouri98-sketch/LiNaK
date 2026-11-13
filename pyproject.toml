@@ -54,6 +54,7 @@ linak = [
     "resources/f_values/*",
     "resources/orca_outputs/**",
     "resources/plots/**",
+    "resources/core/*",
     "resources/vendor/*",
 ]
 "linak.report_templates" = ["*"]

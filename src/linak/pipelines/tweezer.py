@@ -4,7 +4,7 @@ The ``tweezer`` pipeline: optical-tweezer scattering & heating.
 Photon scattering rate, recoil heating and an estimate of how long an atom
 stays trapped in a far-off-resonant single-beam Gaussian tweezer. The physics
 is in ``linak.physics.tweezer_core``; this module loads its inputs, prints a
-summary, writes the JSON and draws the report. (Near-resonant laser-cooling
+summary and writes the JSON; the plots are the tweezer tab of the Polarizability page. (Near-resonant laser-cooling
 curves are the ``scattering_rate`` pipeline; the conservative AC Stark depth
 and trap frequencies are also in ``polarizability``.)
 
@@ -15,7 +15,6 @@ Inputs (in the data folder):
 
 Outputs:
     data/<element>_tweezer.json
-    plots/<element>/<element>_tweezer.html
 
 Usage:
     linak --pipeline tweezer Na
@@ -43,16 +42,7 @@ from linak.physics.polarizability_core import (
     load_cached_transitions,
     load_element,
 )
-from linak.physics.tweezer_core import R_SC_PREFACTOR, U_PREFACTOR, compute
-from linak.report_templates import (
-    fullscreen_css,
-    inject_body,
-    inject_head,
-    js_constant,
-    load as load_template,
-    render as render_template,
-    write_offline_report,
-)
+from linak.physics.tweezer_core import compute
 
 DEFAULT_WL_NM = {
     'Li': 1064.0, 'Na': 1064.0, 'K': 1064.0,
@@ -139,7 +129,7 @@ def run_element(element, wl_nm=None, I_kWcm2=DEFAULT_I_KWCM2,
         wl_min=wl_min, wl_max=wl_max, n_grid=n_grid,
     )
     print(f"  Gamma attached for {result.n_with_gamma}/{result.n_transitions} channels "
-          f"(skipped {result.n_core_skipped} core)")
+          f"(plus {result.n_core_skipped} core lines, Γ = 0)")
     _print_point(result.point)
     return gs_label, result
 
@@ -171,141 +161,6 @@ def _print_point(point):
 
 
 # PLOT
-
-def plot_tweezer(element, gs_label, result, out_dir):
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-
-    el = element
-    sp = result.spectra
-    pt = result.point
-    I_ref = result.I_ref_kWcm2
-    waist = result.waist_um
-
-    fig = make_subplots(
-        rows=3, cols=1, shared_xaxes=True,
-        vertical_spacing=0.06,
-        subplot_titles=(
-            f"Photon scattering rate  ·  I = {I_ref:g} kW/cm²",
-            "Recoil heating rate  ·  Ė/k_B",
-            "Trap-heating lifetime  τ_heat ≈ |U|/Ė",
-        ),
-    )
-
-    fig.add_trace(go.Scatter(
-        x=sp.wl_nm, y=sp.R_sc_Hz, mode='lines',
-        name='R_sc', line=dict(color='#4ea1ff', width=1.6),
-        hovertemplate='λ=%{x:.2f} nm<br>R_sc=%{y:.4g} s⁻¹<extra></extra>',
-    ), row=1, col=1)
-
-    fig.add_trace(go.Scatter(
-        x=sp.wl_nm, y=sp.heating_uK_s, mode='lines',
-        name='heating', line=dict(color='#ff8c42', width=1.6),
-        hovertemplate='λ=%{x:.2f} nm<br>Ė/k_B=%{y:.4g} µK/s<extra></extra>',
-    ), row=2, col=1)
-
-    fig.add_trace(go.Scatter(
-        x=sp.wl_nm, y=sp.tau_heat_s, mode='lines',
-        name='τ_heat', line=dict(color='#7dce82', width=1.6),
-        hovertemplate='λ=%{x:.2f} nm<br>τ_heat=%{y:.4g} s<extra></extra>',
-    ), row=3, col=1)
-
-    for res in result.resonances:
-        wl = res.wl_nm
-        if not (result.wl_min <= wl <= result.wl_max):
-            continue
-        for row in (1, 2, 3):
-            fig.add_vline(
-                x=wl, line=dict(color='rgba(200,80,80,0.35)', width=1, dash='dot'),
-                row=row, col=1)
-        fig.add_annotation(
-            x=wl, y=1.02, yref='y domain', xref='x',
-            text=res.label, showarrow=False, textangle=-90,
-            font=dict(size=9, color='#c66'), row=1, col=1)
-
-    if math.isfinite(pt.R_sc_Hz):
-        fig.add_trace(go.Scatter(
-            x=[pt.wl_nm], y=[pt.R_sc_Hz], mode='markers',
-            name='point', marker=dict(size=10, color='#fff',
-                                      line=dict(color='#4ea1ff', width=2)),
-            hovertemplate=f"point λ={pt.wl_nm:.1f} nm<br>"
-                          f"R_sc={pt.R_sc_Hz:.4g} s⁻¹<extra></extra>",
-            showlegend=False,
-        ), row=1, col=1)
-
-    fig.update_yaxes(type='log', title_text='R_sc (s⁻¹)', row=1, col=1)
-    fig.update_yaxes(type='log', title_text='µK / s', row=2, col=1)
-    fig.update_yaxes(type='log', title_text='τ_heat (s)', row=3, col=1)
-    fig.update_xaxes(title_text='Wavelength (nm)', row=3, col=1)
-
-    fig.update_layout(
-        template='plotly_dark',
-        autosize=True,
-        margin=dict(l=70, r=40, t=80, b=50),
-        title=dict(
-            text=(f"<b>{el} — Optical tweezer scattering & heating</b><br>"
-                  f"<sup>ground {gs_label}  ·  "
-                  f"m = {result.mass_amu:.3f} amu (IUPAC avg)  ·  "
-                  f"{result.n_with_gamma} channels with Γ  ·  "
-                  f"w₀ = {waist:g} µm</sup>"),
-            x=0.02, xanchor='left',
-        ),
-        legend=dict(orientation='h', y=1.02, x=1, xanchor='right'),
-        hovermode='x unified',
-    )
-
-    os.makedirs(out_dir, exist_ok=True)
-    out_file = os.path.join(out_dir, f"{el}_tweezer.html")
-    raw = fig.to_html(include_plotlyjs=False, full_html=True)
-    raw = inject_head(raw, fullscreen_css())
-    raw = _inject_controls(raw, element, result)
-    write_offline_report(out_file, raw)
-    print(f"  ✓ {out_file}")
-    return out_file
-
-
-def _inject_controls(raw_html, element, result):
-    """Floating point calculator. Live α(λ) from spectrum interpolation;
-    R_sc, U, heating scale linearly with I in the far-detuned regime."""
-    pt = result.point
-    sp = result.spectra
-    el = element
-    mass = result.mass_amu
-    waist = result.waist_um
-
-    step = max(1, len(sp.wl_nm) // 800)
-    wl_js = sp.wl_nm[::step]
-    re_js = sp.alpha_re_au[::step]
-    im_js = sp.alpha_im_au[::step]
-
-    css = load_template('tweezer_control.css')
-
-    html = render_template(
-        'tweezer_control.html',
-        wl_default=pt.wl_nm,
-        I_default=pt.I_kWcm2,
-        waist=waist,
-    )
-
-    js = render_template(
-        'tweezer_control.js',
-        el_js=json.dumps(el),
-        wl_data=json.dumps(wl_js),
-        re_data=json.dumps(re_js),
-        im_data=json.dumps(im_js),
-        mass=mass,
-        U_PREF=U_PREFACTOR,
-        R_PREF=R_SC_PREFACTOR,
-        H_SI=js_constant('H_SI'),
-        KB_SI=js_constant('KB_SI'),
-        AMU_KG=js_constant('AMU_KG'),
-    )
-
-    raw_html = inject_head(raw_html, css)
-    raw_html = inject_body(raw_html, html + js)
-    return raw_html
-
-# SAVE JSON
 
 def _clean(obj):
     """Replace non-JSON floats with None."""
@@ -366,8 +221,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--lifetimes-file', default=None, metavar='FILE',
                         help='Lifetimes data to read instead of <species>_lifetimes.json '
                              '(a path, or a name under the data folder).')
-    parser.add_argument('--no-plot', action='store_true',
-                        help='Write the data (JSON) only; skip the interactive plot.')
+    parser.add_argument('--no-plot', action='store_true', help=argparse.SUPPRESS)   # the stage writes data only
     return parser
 
 
@@ -376,8 +230,6 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     data_dir = args.data_dir
-    plots_dir = Workspace.current().plots_dir
-    os.makedirs(plots_dir, exist_ok=True)
     print(f"linak --pipeline tweezer (v{__version__})")
 
     from linak.physics.polarizability_core import require_alpha_species
@@ -405,8 +257,6 @@ def main(argv=None) -> int:
         parser.error("--polarizability-file / --lifetimes-file apply to one species; drop --all")
     failed = []
     for el in elements:
-        el_out = os.path.join(plots_dir, el)
-        os.makedirs(el_out, exist_ok=True)
         pol_file = resolve_data_file(args.polarizability_file, el, data_dir, "polarizability")
         life_file = resolve_data_file(args.lifetimes_file, el, data_dir, "lifetimes")
         inputs = {k: os.path.basename(v) for k, v in
@@ -433,8 +283,6 @@ def main(argv=None) -> int:
             continue
         gs_label, tweezer = result
         save_json(el, gs_label, tweezer, data_dir, inputs)
-        if not args.no_plot:
-            plot_tweezer(el, gs_label, tweezer, el_out)
     if failed:
         print(f"  Failed: {', '.join(failed)}")
     return 1 if failed else 0

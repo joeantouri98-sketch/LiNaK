@@ -82,12 +82,12 @@ def test_feshbach_end_to_end_writes_finite_json(workspace):
     assert payload, "feshbach output JSON is empty"
 
 
-def test_report_carries_the_shared_fullscreen_css(workspace, feshbach_run):
-    """The single shared CSS (linak.report_templates/fullscreen.css) must reach generated reports."""
+def test_feshbach_report_is_the_tabbed_page(workspace, feshbach_run):
+    """The Feshbach report is the shared tabbed page (rail, tabs, theme), not a bare Plotly figure."""
     html = (workspace / ".linak" / "plots" / "Na" / "Na_feshbach.html").read_text(
         encoding="utf-8"
     )
-    assert "plotly-graph-div" in html, "fullscreen wrapper missing from the report"
+    assert 'role="tablist"' in html and 'id="theme"' in html, "tabbed page shell missing"
 
 
 def test_hyperfine_runs_a_state_without_constants(tmp_path):

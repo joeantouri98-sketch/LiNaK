@@ -125,11 +125,6 @@ def main() -> int:
     print("=== tweezer ===")
     for el in ["Li", "Na", "K", "Rb", "Cs", "Fr"]:
         tw = json.loads((data_dir / f"{el}_tweezer.json").read_text(encoding="utf-8"))
-        html = plots_dir / el / f"{el}_tweezer.html"
-        check(
-            html.exists() and html.stat().st_size > 1000,
-            f"{el} tweezer.html size={html.stat().st_size if html.exists() else 0}",
-        )
         re_a = _find(tw, "Re_alpha_au")
         if re_a is None:
             re_a = _find(tw, "alpha_re_au")

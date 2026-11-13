@@ -3,7 +3,7 @@
 ``comparison_table.json`` holds one nested record per element. The viewer
 table and its CSV export need one flat row per element at a chosen
 temperature; the Doppler-dependent columns are recomputed here with the same
-formulas as the HTML report (``report_templates/compare_table.html``).
+formulas as the Compare page (``report_templates/compare_page.html``).
 """
 
 from __future__ import annotations

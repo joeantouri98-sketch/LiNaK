@@ -118,8 +118,14 @@ def test_stage_flags_parse_to_the_stage_defaults():
 def test_polarizability_and_tweezer_stages_write_data_only():
     from linak.gui.stages import stage_argv
 
+    from linak.pipelines import polarizability, tweezer
+
     for stage_id in ("polarizability", "tweezer"):
         stage = STAGE_BY_ID[stage_id]
         assert all(f["name"] != "--no-plot" for f in stage["flags"])
         assert all(o.startswith("data/") for o in stage["outputs"])
-        assert stage_argv(stage, "Na", [])[-1] == "--no-plot"
+    # the per-species pages are gone; --no-plot only skips Polarizability's cross-element plots
+    assert not hasattr(polarizability, "plot_polarizability") and not hasattr(polarizability, "plot_magic_wavelengths")
+    assert not hasattr(tweezer, "plot_tweezer")
+    assert stage_argv(STAGE_BY_ID["polarizability"], "Na", [])[-1] == "--no-plot"
+    assert stage_argv(STAGE_BY_ID["tweezer"], "Na", []) == ["tweezer", "Na"]

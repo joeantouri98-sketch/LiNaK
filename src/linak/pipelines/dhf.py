@@ -21,7 +21,7 @@ Measured inputs:
                                      no comparison)
     ALPHA_CORE_AU (polarizability)   M+ core polarisability (atoms)
     ION_CORE_ALPHA_AU (here)         M2+ core polarisability (ions)
-    ION_NIST_LEVELS (here)           NIST Handbook limit and low levels of the ions,
+    ION_HANDBOOK_CM1 (here)          NIST Handbook limit and low levels of the ions,
                                      used when no ion NIST export (<El>_c1.csv) is present
 
 Every other number is a prediction; the run prints and stores each computed
@@ -41,6 +41,7 @@ Usage:
 __version__ = '1.0'
 
 import argparse
+import re
 import json
 import os
 from dataclasses import asdict
@@ -50,6 +51,7 @@ from linak.core.data_inputs import resolve_data_file
 from linak.core.errors import MissingDataError
 from linak.core.fileio import write_json
 from linak.core.paths import reference_path
+from linak.core import user_tables as _user_tables
 from linak.core.species import resolve_species
 from linak.core.workspace import Workspace
 from linak.physics.atomic_structure.angular import L_LETTERS
@@ -67,28 +69,39 @@ UPPER_D_SPAN = 8        # the second d level is the highest J-resolved pair up t
 # arXiv:1508.00653); Ca2+, Sr2+, Ba2+: 3.284, 5.748, 10.426 (the set quoted by Filippin et al.,
 # arXiv:1709.07672, which differs from RPA by 0.9-1.7%).
 ION_CORE_ALPHA_AU = {'Be_c1': 0.0519, 'Mg_c1': 0.48, 'Ca_c1': 3.284, 'Sr_c1': 5.748, 'Ba_c1': 10.426}
+_user_tables.apply("ions.core_alpha", ION_CORE_ALPHA_AU)
 
 # NIST Handbook of Basic Atomic Spectroscopic Data (Be II, Mg II, Ca II, Sr II, Ba II energy-level
 # tables): ionization limit and the levels used as inputs (lowest p pair, lowest and next d pair),
-# cm-1, as a {(n, l, J): cm-1} table.  Used only when no NIST export for the ion is found; a user
-# export or --ip always takes precedence.
-ION_NIST_LEVELS = {
-    'Be_c1': (146882.84, {(2, 'p', '1/2'): 31928.744, (2, 'p', '3/2'): 31935.320,
-                          (3, 'd', '3/2'): 98054.55, (3, 'd', '5/2'): 98055.10,
-                          (4, 'd', '3/2'): 119421.18, (4, 'd', '5/2'): 119421.42}),
-    'Mg_c1': (121267.64, {(3, 'p', '1/2'): 35669.31, (3, 'p', '3/2'): 35760.88,
-                          (3, 'd', '3/2'): 71491.06, (3, 'd', '5/2'): 71490.19,
-                          (4, 'd', '3/2'): 93311.11, (4, 'd', '5/2'): 93310.59}),
-    'Ca_c1': (95751.88, {(4, 'p', '1/2'): 25191.518, (4, 'p', '3/2'): 25414.414,
-                         (3, 'd', '3/2'): 13650.20, (3, 'd', '5/2'): 13710.89,
-                         (4, 'd', '3/2'): 56839.26, (4, 'd', '5/2'): 56858.47}),
-    'Sr_c1': (88964.0, {(5, 'p', '1/2'): 23715.19, (5, 'p', '3/2'): 24516.65,
-                        (4, 'd', '3/2'): 14555.90, (4, 'd', '5/2'): 14836.24,
-                        (5, 'd', '3/2'): 53286.31, (5, 'd', '5/2'): 53372.97}),
-    'Ba_c1': (80686.30, {(6, 'p', '1/2'): 20261.561, (6, 'p', '3/2'): 21952.404,
-                         (5, 'd', '3/2'): 4873.852, (5, 'd', '5/2'): 5674.807,
-                         (6, 'd', '3/2'): 45949.472, (6, 'd', '5/2'): 46154.847}),
+# cm-1.  Used only when no NIST export for the ion is found; a user export or --ip always takes
+# precedence.  Editable in Preferences > Tables and variables (read at call time by ion_handbook).
+ION_HANDBOOK_CM1 = {
+    'Be_c1': {'limit': 146882.84, '2p1/2': 31928.744, '2p3/2': 31935.320, '3d3/2': 98054.55, '3d5/2': 98055.10,
+              '4d3/2': 119421.18, '4d5/2': 119421.42},
+    'Mg_c1': {'limit': 121267.64, '3p1/2': 35669.31, '3p3/2': 35760.88, '3d3/2': 71491.06, '3d5/2': 71490.19,
+              '4d3/2': 93311.11, '4d5/2': 93310.59},
+    'Ca_c1': {'limit': 95751.88, '4p1/2': 25191.518, '4p3/2': 25414.414, '3d3/2': 13650.20, '3d5/2': 13710.89,
+              '4d3/2': 56839.26, '4d5/2': 56858.47},
+    'Sr_c1': {'limit': 88964.0, '5p1/2': 23715.19, '5p3/2': 24516.65, '4d3/2': 14555.90, '4d5/2': 14836.24,
+              '5d3/2': 53286.31, '5d5/2': 53372.97},
+    'Ba_c1': {'limit': 80686.30, '6p1/2': 20261.561, '6p3/2': 21952.404, '5d3/2': 4873.852, '5d5/2': 5674.807,
+              '6d3/2': 45949.472, '6d5/2': 46154.847},
 }
+_user_tables.apply("ions.handbook_levels", ION_HANDBOOK_CM1)
+_LEVEL_KEY = re.compile(r'^(\d+)([spdfgh])(\d+/2)$')
+
+
+def ion_handbook(element):
+    """(ionization limit, {(n, l, J): cm-1}) of a built-in ion, or None."""
+    rec = ION_HANDBOOK_CM1.get(element)
+    if not rec or 'limit' not in rec:
+        return None
+    levels = {}
+    for key, value in rec.items():
+        m = _LEVEL_KEY.match(key)
+        if m:
+            levels[(int(m.group(1)), m.group(2), m.group(3))] = value
+    return rec['limit'], levels
 
 
 # ============================================================================
@@ -185,7 +198,7 @@ def model_f_choice(args):
 # RUN ELEMENT
 # ============================================================================
 
-def run_element(element, nist_dir, data_dir, fit_d=True, alpha_core=None, n_extra=6,
+def run_element(element, nist_dir, data_dir, fit_d=True, alpha_core=None, n_max=None,
                 omegas=(), ip_cm=None, fit_p=True, d_two_levels=True):
     print(f"\n{'='*65}")
     print(f"  {element}  —  DHF frozen core + core polarisation")
@@ -202,7 +215,7 @@ def run_element(element, nist_dir, data_dir, fit_d=True, alpha_core=None, n_extr
     if a_c is None:
         raise MissingDataError(f"{element}: no core polarisability on record; pass --alpha-core")
     nist_ip, table = nist_inputs(element, nist_dir)
-    builtin = ION_NIST_LEVELS.get(element) if nist_ip is None and ip_cm is None else None
+    builtin = ion_handbook(element) if nist_ip is None and ip_cm is None else None
     if builtin:
         table = dict(builtin[1])
     ip_source = "--ip" if ip_cm is not None else ("NIST Handbook (built-in)" if builtin else "NIST")
@@ -217,7 +230,7 @@ def run_element(element, nist_dir, data_dir, fit_d=True, alpha_core=None, n_extr
 
     def _compute(upper_levels):
         return compute(Z, ip_cm, a_c, charge=charge, mass_number=round(mass) if mass else None,
-                       fit_levels_cm=fit, fit_upper_levels_cm=upper_levels, n_extra=n_extra,
+                       fit_levels_cm=fit, fit_upper_levels_cm=upper_levels, n_max=n_max,
                        omegas_eV=omegas)
     d_note = None
     try:
@@ -302,8 +315,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Fit d to the lowest d level only (no higher d level, no d alpha factor).')
     parser.add_argument('--alpha-core', type=float, default=None,
                         help='M+ core polarisability (au); default: ALPHA_CORE_AU; 0 = pure DHF')
-    parser.add_argument('--n-extra', type=int, default=6,
-                        help='Report levels and transitions up to n_valence + N; default 6')
+    parser.add_argument('--n-max', type=int, default=None,
+                        help='Highest n of the reported levels and transitions; default n_valence + 6 '
+                             '(Na 9, Cs 12)')
+    parser.add_argument('--n-extra', type=int, default=None, help=argparse.SUPPRESS)   # replaced by --n-max
     parser.add_argument('--omega', type=float, nargs='*', default=[],
                         help='Photon energies (eV) for alpha(omega)')
     parser.add_argument('--ip', type=float, default=None,
@@ -315,13 +330,27 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def check_n_max(parser, args, elements):
+    """Stop with a clear message if --n-max is not above every species' valence n (or the old
+    --n-extra is used)."""
+    from linak.physics.atomic_structure.dhf_cp import one_valence_configuration
+    if args.n_extra is not None:
+        parser.error("--n-extra was replaced by --n-max: give the highest n itself "
+                     "(for Na, --n-extra 27 is --n-max 30)")
+    if args.n_max is None:
+        return
+    for el in elements:
+        sp = resolve_species(el)
+        nv = one_valence_configuration(sp['Z'], sp['charge'])[1]
+        if args.n_max <= nv:
+            parser.error(f"--n-max {args.n_max} must be above the valence n of {el} ({nv})")
+
+
 def main(argv=None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if not args.all and not args.element:
         parser.error("give an element or --all")
-    if args.n_extra < 1:
-        parser.error("--n-extra must be at least 1")
     if args.ip is not None and (args.ip <= 0 or args.all):
         parser.error("--ip must be positive and given for one element (not with --all)")
     nist_dir = args.nist_dir or str(reference_path("NIST Levels"))
@@ -334,8 +363,9 @@ def main(argv=None) -> int:
             elements = [resolve_species(args.element.strip())['species_id']]
         except ValueError as exc:
             parser.error(str(exc))
+    check_n_max(parser, args, elements)
     for el in elements:
         run_element(el, nist_dir, args.data_dir, fit_d=not args.no_fit_d,
-                    alpha_core=args.alpha_core, n_extra=args.n_extra, omegas=args.omega,
+                    alpha_core=args.alpha_core, n_max=args.n_max, omegas=args.omega,
                     ip_cm=args.ip, fit_p=not args.no_fit_p, d_two_levels=not args.d_one_level)
     return 0

@@ -51,10 +51,15 @@ TABLES = (
     TableInfo("blackbody.a_l", "Blackbody", "A_L scaling", "linak.physics.blackbody_core", "A_L_TABLE"),
     TableInfo("lifetimes.known", "Lifetimes", "Known lifetimes", "linak.pipelines.lifetimes", "KNOWN_LIFETIMES", "ns"),
     TableInfo("nist.fscale", "Lifetimes", "NIST f-value scale (decays of a level)", "linak.physics.polarizability_core", "NIST_F_SCALE"),
-    TableInfo("scattering.fallback", "Scattering", "D-line parameters (fallback)", "linak.pipelines.scattering_rate", "FALLBACK"),
     TableInfo("tweezer.default_wavelength", "Tweezer", "Default wavelength", "linak.pipelines.tweezer", "DEFAULT_WL_NM", "nm"),
     TableInfo("constants.alkali_mass", "Species constants", "Atomic mass", "linak.core.constants", "ALKALI_MASS_AMU", "u"),
     TableInfo("constants.abundance", "Species constants", "Natural abundance", "linak.core.constants", "NATURAL_ABUNDANCE_PCT", "%"),
+    TableInfo("constants.isotope_mass", "Species constants", "Isotope mass", "linak.core.constants", "ISOTOPE_MASS_AMU", "u"),
+    TableInfo("ions.core_alpha", "Structure models", "Ion core polarizability (M2+)", "linak.pipelines.dhf", "ION_CORE_ALPHA_AU", "a.u."),
+    TableInfo("ions.handbook_levels", "Structure models", "Ion limit and input levels (NIST Handbook)", "linak.pipelines.dhf", "ION_HANDBOOK_CM1", "cm\u207b\u00b9"),
+    TableInfo("spectrum.isotope_shift", "Spectrum", "D-line isotope shifts", "linak.physics.spectrum_core", "ISOTOPE_SHIFT_MHZ", "MHz"),
+    TableInfo("spectrum.vapour_pressure", "Spectrum", "Vapour pressure, log10(P/Pa) = a - b/T", "linak.physics.spectrum_core", "VAPOUR_PRESSURE"),
+    TableInfo("spectrum.cell_temperature", "Spectrum", "Default cell temperature", "linak.physics.spectrum_core", "DEFAULT_CELL_T", "K"),
     TableInfo("spectroscopy.dline", "Species constants", "D-line literature values", "linak.core.spectroscopy", "LITERATURE"),
 )
 BY_ID = {t.table_id: t for t in TABLES}
@@ -79,6 +84,8 @@ ADDABLE = {
     "constants.c6_expt": AddSpec("element"),
     "constants.alkali_mass": AddSpec("element"),
     "constants.abundance": AddSpec("isotope", max_value=100.0),
+    "constants.isotope_mass": AddSpec("isotope"),
+    "spectrum.cell_temperature": AddSpec("element"),
     "tweezer.default_wavelength": AddSpec("element"),
     "lifetimes.known": AddSpec("element_state"),
     "blackbody.a_l": AddSpec("element_l"),                                  # any l: beterov_A_L looks the letter up
@@ -89,15 +96,11 @@ ADDABLE = {
 _STATE_RE = re.compile(r"^[1-9]\d?[spdfgh]$")
 _J_RE = re.compile(r"^\d{1,2}/2$")
 
-# Tables whose rows have different units: by the last part of the key.
-_SCATTERING_UNITS = {"mass": "u", "wl": "nm", "A": "s\u207b\u00b9", "Isat": "mW/cm\u00b2", "tau": "ns", "vrec": "cm/s", "Erec": "nK"}
-
-
 def unit(table_id: str, key: str) -> str:
     """Unit of one row; empty for a dimensionless number."""
     last = key.rsplit(" / ", 1)[-1]
-    if table_id == "scattering.fallback":
-        return _SCATTERING_UNITS.get(last, "")
+    if table_id == "spectrum.vapour_pressure":
+        return "" if last.endswith("_a") else "K"          # a in log10(Pa); b and the melting point in K
     if table_id == "spectroscopy.dline":
         if last == "mass_amu":
             return "u"

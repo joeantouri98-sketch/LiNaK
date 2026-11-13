@@ -108,7 +108,8 @@ PIPELINE = [
          flags=[
              dict(name="--alpha-core", kind="float", label="Core polarisability (au)", default="", section="model",
                   help="Blank: LiNaK's alpha_core table. 0 = pure DHF."),
-             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6", section="model"),
+             dict(name="--n-max", kind="int", label="Highest n", default="", section="model",
+                  help="Report levels and lines up to this n. Blank: valence n + 6 (Na 9, Cs 12)."),
              dict(name="--omega", kind="strlist", label="alpha(omega) photon energies (eV)",
                   default="", section="model"),
              dict(name="--no-fit-p", kind="invflag", label="Fit p levels", section="fit",
@@ -133,7 +134,8 @@ PIPELINE = [
          flags=[
              dict(name="--lmax", kind="int", label="Σ2 max l", default="5", section="model",
                   help="Highest l of the virtual orbitals in Σ2."),
-             dict(name="--n-extra", kind="int", label="Report up to n_valence +", default="6", section="model"),
+             dict(name="--n-max", kind="int", label="Highest n", default="", section="model",
+                  help="Report levels and lines up to this n. Blank: valence n + 6 (Na 9, Cs 12)."),
              dict(name="--omega", kind="strlist", label="alpha(omega) photon energies (eV)",
                   default="", section="model"),
              dict(name="--unscaled", kind="invflag", label="Scale Σ2 to NIST", section="fit",
@@ -244,9 +246,6 @@ PIPELINE = [
                   help="Isotope whose mass is used for trap frequencies. Default: most abundant natural isotope."),
              dict(name="--wl", kind="float", label="Point-calc wavelength (nm)", default="",
                   help="Optional single wavelength for an AC Stark point calculation."),
-             dict(name="--heteronuclear", kind="flag", label="Heteronuclear C6 combining rule",
-                  help="Use the London combining rule for cross-species C6 "
-                       "(only matters with --all)."),
              dict(name="--all", kind="flag", label="Run all available elements",
                   help="Compute the polarizability workflow for all elements with sufficient data."),
              dict(name="--state", kind="str", label="State-only alpha(0) lookup",
@@ -326,7 +325,6 @@ PIPELINE = [
 
     dict(id="tweezer", label="Optical tweezer", symbol="R_sc", pipeline="tweezer",
          desc="Tweezer photon scattering rate & recoil heating. Data only: the plots are on the Polarizability page (Visualise).",
-         always=["--no-plot"],
          positional=lambda el: [el],
          flags=[
              dict(name="--wl", kind="float", label="Trap wavelength (nm)", default="",
@@ -374,18 +372,31 @@ PIPELINE = [
                   "plots/{el}/{el}_hyperfine.html"]),
 
     dict(id="feshbach", label="Feshbach resonances", symbol="a(B)", pipeline="feshbach",
-         desc="Magnetic Feshbach a(B); needs {el}_feshbach.json (not Fr).",
+         desc="Scattering length, collisions, molecules and thresholds vs field; needs {el}_feshbach.json (not Fr).",
          positional=lambda el: [el],
          flags=[
-             dict(name="--no-plot", kind="invflag", label="Generate plot",
-                  help="Untick to write the data only and skip the plot."),
-             dict(name="--B-max", kind="float", label="Max B field (Gauss)", default="",
-                  help="Default: auto from the resonances in the JSON file."),
-             dict(name="--B-points", kind="int", label="B-field sample points", default="2000"),
+             dict(name="--no-plot", kind="invflag", label="Generate page",
+                  help="Untick to write the data only and skip the page."),
+             dict(name="--no-tab-collisions", kind="invflag", label="Cross section & loss tab",
+                  help="Thermal cross section, elastic and three-body rates."),
+             dict(name="--no-tab-molecules", kind="invflag", label="Molecules tab",
+                  help="Feshbach-dimer binding energy."),
+             dict(name="--no-tab-thresholds", kind="invflag", label="Thresholds tab",
+                  help="Ground-state Zeeman levels and channel thresholds."),
+             dict(name="--no-tab-resonances", kind="invflag", label="Resonances tab",
+                  help="Resonance table with s_res."),
+             dict(name="--field-unit", kind="choice", label="Field unit when the page opens",
+                  choices=[("G", "gauss"), ("mT", "mT")], default="G", help="Switchable on the page."),
+             dict(name="--kT-uK", kind="float", label="Gas temperature (µK)", default="1",
+                  help="For the thermal cross section and rates."),
+             dict(name="--density", kind="float", label="Density (cm⁻³)", default="",
+                  help="Per spin state for a Fermi gas. Blank: 1e12 (fermions), 1e13 (bosons)."),
+             dict(name="--B-max", kind="float", label="Max B field (G)", default="",
+                  help="Blank: past the highest resonance."),
+             dict(name="--B-points", kind="int", label="B-field sample points", default="2000",
+                  help="Uniform points; more are added around each pole."),
              dict(name="--channel", kind="str", label="Entrance channel", default="",
-                  help="e.g. '|1,+1> + |1,+1>'. Default: the channel with the most s-wave resonances."),
-             dict(name="--kT-uK", kind="float", label="Collision energy (uK)", default="1",
-                  help="Collision energy as a temperature, for the sigma(B) panel."),
+                  help="e.g. '|1,+1> + |1,+1>'. Blank: the channel with the most resonances."),
              dict(name="--isotope", kind="int", label="Isotope mass number A", default="",
                   help="Default: isotope_A from the feshbach JSON."),
              dict(name="--all", kind="flag", label="Run all available elements",
@@ -568,7 +579,7 @@ PIPELINE = [
          outputs=["plots/{el}/{el}_response.html"]),
 
     dict(id="orbital3d", label="Orbital viewer", symbol="|ψ|²", pipeline="orbital3d",
-         desc="3D orbital viewer for each Rydberg state (volume or isosurface).",
+         desc="Orbital viewer: 3D, slices, radial functions and ⟨r⟩ for each state.",
          positional=lambda el: [el],
          flags=[
              dict(name="--rydberg-file", kind="path", browse="data", label="Rydberg data", default="",
@@ -579,7 +590,12 @@ PIPELINE = [
                   choices=["volume", "isosurface"], default="volume",
                   help="volume: WebGL2 raymarched volume (default, works offline). "
                        "isosurface: classic Plotly |psi|^2 level-set surfaces."),
-             dict(name="--n-max", kind="int", label="Max n", default="10"),
+             dict(name="--radial", kind="choice", label="Radial function",
+                  choices=["model", "coulomb"], default="model",
+                  help="model: model potential for Li-Fr, inner shells included. "
+                       "coulomb: Coulomb function at n*, outside the core only."),
+             dict(name="--n-max", kind="int", label="Max n", default="10",
+                  help="Highest n listed."),
              dict(name="--grid", kind="int", label="Grid points per axis", default="",
                   help="Blank = 96 (volume, max 128) or 55 (isosurface, max 75)."),
              dict(name="--isovalue", kind="float", label="Lowest level / outer isovalue", default="0.04"),
@@ -589,32 +605,28 @@ PIPELINE = [
 
     dict(id="compare", label="Compare elements", symbol="Σ",
          pipeline="compare_elements",
-         desc="Adds selected element(s) to the cross-element table shown in the viewer.",
+         desc="Adds element(s) to the cross-element table and writes the Compare page.",
          positional=lambda el: [],
          flags=[
              dict(name="__elements", kind="str", label="Elements / families",
                   default="alkali",
                   help="Examples: alkali, Li,Na,K, Mg, alkaline_earth."),
+             dict(name="--no-page", kind="invflag", label="Generate page",
+                  help="Untick to write the table data only."),
+             dict(name="--no-tab-cooling", kind="invflag", label="Laser cooling tab",
+                  help="Scattering rate, molasses force, Doppler temperature."),
+             dict(name="--no-tab-polarizability", kind="invflag", label="Polarizability tab",
+                  help="α(λ) of every element and its tune-out wavelengths."),
+             dict(name="--no-tab-c6", kind="invflag", label="C₆ tab",
+                  help="Homo- and heteronuclear C₆."),
+             dict(name="--no-tab-trends", kind="invflag", label="Trends tab",
+                  help="Any quantity against Z."),
+             dict(name="--no-tab-accuracy", kind="invflag", label="Accuracy tab",
+                  help="Computed values against precision data."),
              dict(name="--T", kind="float", label="Temperature (K)", default="300",
-                  help="Temperature for Doppler broadening in the table."),
-             dict(name="--html", kind="flag", label="Generate HTML",
-                  help="Also write plots/comparison_table.html."),
+                  help="For the Doppler columns of the D-line table."),
          ],
-         outputs=["data/comparison_table.json"]),
-
-    dict(id="scattering", label="Scattering rate", symbol="R(D)",
-         pipeline="scattering_rate",
-         desc="Near-resonant MOT scattering-rate widget.",
-         positional=lambda el: ["--element", el],
-         flags=[
-             dict(name="--line", kind="choice",
-                  label="Line shown when the plot first opens",
-                  choices=["D1", "D2"], default="D2",
-                  help="Both D1 and D2 are selectable inside the generated plot."),
-             dict(name="--data-dir", kind="path", browse="dir", label="Data directory", default=workspace_data_dir),
-             dict(name="--output-dir", kind="path", browse="dir", label="Output directory", default=workspace_plots_dir),
-         ],
-         outputs=["plots/scattering_rate.html"]),
+         outputs=["data/comparison_table.json", "plots/comparison.html"]),
 
 ]
 # The sidebar's sections, in running order. Every stage is in exactly one
@@ -624,7 +636,7 @@ STAGE_GROUPS = (
     ("Atomic structure", ("rydberg", "transitions", "lifetimes")),
     ("Atomic response", ("polarizability", "tweezer", "blackbody", "hyperfine", "feshbach")),
     ("Visualise", ("grotrian", "response", "spectra", "orbital3d")),
-    ("Compare", ("compare", "scattering")),
+    ("Compare", ("compare",)),
 )
 
 STAGE_BY_ID = {s["id"]: s for s in PIPELINE}
@@ -711,10 +723,13 @@ STAGE_PHYSICS = {
         "with sigma/pi strengths, and the constants used."
     ),
     "feshbach": (
-        "Evaluates the standard isolated-resonance form "
-        "a(B) = a_bg*(1 - Delta/(B-B0)) from literature resonance parameters "
-        "you supply, plus the resulting elastic cross-section -- not a full "
-        "coupled-channels calculation."
+        "Scattering length a(B) per entrance channel from published coupled-channel "
+        "tables and fits where they exist (6Li, Cs) and otherwise the isolated-resonance "
+        "form a_bg*(1 - Delta/(B-B0)) over the literature poles; not a coupled-channels "
+        "calculation of its own. From a(B): 1/(kF a) for a Fermi gas, the thermal cross "
+        "section with the unitarity limit, elastic and three-body rates, Feshbach-dimer "
+        "binding energies with the van der Waals correction, ground-state Zeeman "
+        "thresholds, and s_res for each resonance."
     ),
     "grotrian": (
         "Builds the interactive energy-level (Grotrian) diagram from the "
@@ -746,20 +761,23 @@ STAGE_PHYSICS = {
         "colour strips and the line list with air and vacuum wavelengths."
     ),
     "orbital3d": (
-        "Draws the Rydberg-state orbital (exact Coulomb radial function at the "
-        "quantum-defect n*, spin-orbit m_j or spin-free m_l angular part) as a "
-        "volume or |psi|^2 isosurfaces -- outside the ionic core only; the core "
-        "region is not modelled."
+        "Orbital page for the ground state and every level up to Max n: a 3D volume "
+        "(or |psi|^2 isosurfaces), a 2D slice through the quantisation axis, the radial "
+        "function with core radius, turning points and nodes, a table of <r^k> and core "
+        "penetration, and their scaling with n*. Radial functions come from the "
+        "model potential for Li-Fr (inner shells included, eigenvalue checked against "
+        "the level), hydrogenic functions for one-electron species, and the Coulomb "
+        "function at n* otherwise (outside the core only). Angular part: spin-orbit m_j "
+        "(spin-summed) or spin-free m_l."
     ),
     "compare": (
-        "Builds or updates the cross-element CompTable: D-line wavelengths, "
-        "lifetimes, natural/Doppler linewidths, saturation intensities, and "
-        "laser-cooling numbers side by side for Li through Fr."
-    ),
-    "scattering": (
-        "Plots the two-level optical-Bloch-equation scattering rate "
-        "R(I,Delta) = (Gamma/2) * s/(1+s+(2*Delta/Gamma)^2) versus detuning "
-        "and intensity for the MOT cooling transition."
+        "Builds or updates the cross-element table (D-line wavelengths, lifetimes, "
+        "natural and Doppler widths, saturation intensities, recoil) and the Compare "
+        "page: two-level laser cooling (scattering rate, 1D molasses force, Doppler "
+        "temperature, slower length), ground-state alpha(lambda) with tune-out "
+        "wavelengths, homo- and heteronuclear C6 by Casimir-Polder, trends against Z, "
+        "and every computed lifetime, alpha(0), C6 and tune-out against precision data. "
+        "alpha(lambda), C6 and tune-outs need the Polarizability stage run first."
     ),
 }
 
@@ -793,6 +811,7 @@ DEFAULT_INPUT_FILES = {
     "--blackbody-file": "{el}_blackbody.json",
     "--polarizability-file": "{el}_polarizability.json",
     "--orca-file": "{el}.json",
+    "--hf-file": "{el}_hf_constants.json",
     "--model-file": "{el}_<model>.json",
     "--soc-file": "none",
     "--magn-csv": "bundled IAEA table",

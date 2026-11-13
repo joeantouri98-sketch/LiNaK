@@ -81,13 +81,12 @@ NIST_F_SCALE = {
 }
 _user_tables.apply("nist.fscale", NIST_F_SCALE)
 
-# Ionic core polarizabilities (au) 
+# Ionic core polarizabilities (au)
 # RRPA / relativistic coupled-cluster + experiment (Mitroy, Safronova & Clark
 # review 2010; Lim, Laerdahl & Schwerdtfeger 2002). A pure valence
 # sum-over-states misses this entirely; it is 0.1% (Li) to 6.4% (Fr) of α(0).
-# Modelled as a single effective oscillator at ω_c = sqrt(N_core/α_c)
-# (Thomas-Reiche-Kuhn-constrained one-pole Padé), which reproduces α_c
-# exactly at ω = 0 and decays correctly at imaginary frequency for C₆.
+# Its frequency dependence comes from ``core_oscillators``: the RPA pseudo-spectrum of
+# resources/core/core_polarizability.json scaled to these static values.
 ALPHA_CORE_AU = {
     'Li': 0.1894, 'Na': 0.9947, 'K': 5.354,
     'Rb': 9.076,  'Cs': 15.644, 'Fr': 20.38,
@@ -95,6 +94,44 @@ ALPHA_CORE_AU = {
 _user_tables.apply("polarizability.alpha_core", ALPHA_CORE_AU)
 CORE_ELECTRONS = {'Li': 2, 'Na': 10, 'K': 18, 'Rb': 36, 'Cs': 54, 'Fr': 86}
 _user_tables.apply("polarizability.core_electrons", CORE_ELECTRONS)
+
+
+@functools.lru_cache(maxsize=1)
+def _core_table() -> dict:
+    """The bundled RPA core pseudo-spectra ({} if the file is missing)."""
+    try:
+        from linak.core.paths import reference_path
+        with open(reference_path('core', 'core_polarizability.json'), encoding='utf-8') as f:
+            return json.load(f).get('elements', {})
+    except (OSError, ValueError):
+        return {}
+
+
+def core_oscillators(element, alpha_core=None, n_core=None):
+    """The ion core as lines (ω_k, f_k), α_c(ω) = Σ f_k/(ω_k² − ω²), in atomic units.
+
+    From the bundled table: the core's dipole response in Dirac–Hartree–Fock + RPA at imaginary
+    frequency, written as a positive pseudo-spectrum (tools/make_core_polarizability.py), with the
+    f_k scaled so α_c(0) equals *alpha_core* (default ALPHA_CORE_AU, editable in Preferences).
+    The RPA shape matters for C₆ and the far-UV α(λ): the one-line model it replaces, f = N_core
+    at ω_c = √(N_core/α_c) (all the Thomas–Reiche–Kuhn strength at ~2 a.u.), let α_c(iξ) fall off
+    too slowly and put C₆ 2–8 % high for Rb, Cs and Fr. It is kept as the fallback for an element
+    the table does not have (a species you add), with *n_core* electrons.
+    """
+    a_c = ALPHA_CORE_AU.get(element, 0.0) if alpha_core is None else float(alpha_core)
+    if a_c <= 0:
+        return []
+    rec = _core_table().get(element)
+    if rec and rec.get('omega_au') and rec.get('f'):
+        w = [float(x) for x in rec['omega_au']]
+        f = [float(x) for x in rec['f']]
+        a_rpa = sum(fk / (wk * wk) for wk, fk in zip(w, f))
+        s = a_c / a_rpa
+        return [(wk, fk * s) for wk, fk in zip(w, f)]
+    n = CORE_ELECTRONS.get(element, 0) if n_core is None else int(n_core)
+    if n <= 0:
+        return []
+    return [(math.sqrt(n / a_c), float(n))]
 
 # CONVERSIONS & HELPERS
 
@@ -1075,6 +1112,7 @@ def load_element(element, data_dir=None, f_values_dir=None, verbose=True, extrap
         precision_fosc_j = PRECISION_FOSC_J.get(element, {}),
         alpha_core_au   = ALPHA_CORE_AU.get(element, 0.0),
         core_electrons  = CORE_ELECTRONS.get(element, 0),
+        core_oscillators = core_oscillators(element),
         ryd             = ryd,
         extrapolation   = extrap_block,
     )
@@ -1411,7 +1449,7 @@ def _ls_state_term(t, state_label, data):
 SOURCE_REL_UNCERTAINTY = {
     'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'extrapolated': 0.20, 'ORCA': 0.25,
     'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
-    'DHF': 0.05,     # atomic_structure.dhf_lines.DHF_REL_UNCERTAINTY
+    'DHF': 0.05,     # default as atomic_structure.dhf_lines.DHF_REL_UNCERTAINTY; Lifetimes reads this table too
     'Brueckner': 0.05,
 }
 _user_tables.apply("uncertainty.source", SOURCE_REL_UNCERTAINTY)
@@ -1561,23 +1599,22 @@ def build_transitions_for_state(state_label, data, all_transitions):
         ))
 
     # Ionic-core contribution
-    # The core is common to every valence state, so it is appended to each
-    # state's network identically (it cancels exactly in Δα, as it should).
-    # One-pole Padé constrained by the TRK sum rule: f_c = N_core electrons,
-    # ω_c = sqrt(N_core / α_core), which gives f_c/ω_c² = α_core at ω = 0 and
-    # the standard α_core(iξ) = α_c·ω_c²/(ω_c²+ξ²) falloff used in
-    # Casimir-Polder C₆ work (Derevianko et al.).
-    a_core = data.get('alpha_core_au', 0.0)
-    n_core = data.get('core_electrons', 0)
-    if a_core > 0 and n_core > 0:
-        omega_c = math.sqrt(n_core / a_core)
+    # The core is common to every valence state, so it is appended to each state's network
+    # identically (it cancels exactly in Δα, as it should): the RPA pseudo-spectrum of
+    # ``core_oscillators``, or one line f = N_core at √(N_core/α_c) for data built without it.
+    osc = data.get('core_oscillators')
+    if osc is None:
+        a_core = data.get('alpha_core_au', 0.0)
+        n_core = data.get('core_electrons', 0)
+        osc = [(math.sqrt(n_core / a_core), float(n_core))] if a_core > 0 and n_core > 0 else []
+    for omega_c, f_c in osc:
         result.append(dict(
-            delta_E_au  = omega_c,
-            fosc        = float(n_core),
+            delta_E_au  = float(omega_c),
+            fosc        = float(f_c),
             sign        = +1,
             other_label = 'core',
             source      = 'core',
-            wl_nm       = 45.56335 / omega_c,
+            wl_nm       = 45.56335 / float(omega_c),
             sigma_f     = 0.0,
         ))
 

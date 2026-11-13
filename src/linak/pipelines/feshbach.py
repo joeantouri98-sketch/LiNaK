@@ -1,15 +1,22 @@
 """
 The ``feshbach`` pipeline: magnetic Feshbach resonances for alkali atoms.
 -----------------------------------------------------------------------------
-Scattering length a(B) and elastic cross section σ(B) from literature
-resonance parameters, plus the van der Waals scales β₆ and ā. The physics is
-in ``linak.physics.feshbach``; this module loads its inputs, prints a summary,
-writes the JSON and draws the report. Sign convention (Chin et al.): the zero
-crossing is at B₀ + Δ; for a_bg·Δ > 0, a → +∞ just below B₀.
+Scattering length a(B) per entrance channel from published coupled-channel
+tables and fits where they exist (⁶Li, Cs) and from the literature resonance
+parameters otherwise, plus the van der Waals scales β₆ and ā. The page has five
+tabs: a(B) (with 1/(k_F a) for a Fermi gas), thermal cross section and loss
+rates, Feshbach-molecule binding energies, the ground-state Zeeman thresholds,
+and the resonance table with s_res. The physics is in ``linak.physics.feshbach``;
+this module loads its inputs, prints a summary, writes the JSON and the page.
+Sign convention (Chin et al.): the zero crossing is at B₀ + Δ; for a_bg·Δ > 0,
+a → +∞ just below B₀.
 
 Inputs (in the data folder)
 ---------------------------
-    <element>_feshbach.json        literature B₀, Δ, a_bg (user-maintained)
+    <element>_feshbach.json        literature B₀, Δ, a_bg, δμ, s_res and the published
+                                   a(B) curves of each channel (user-maintained)
+    <element>_feshbach_table.json  a coupled-channel a(B) table a curve names (⁶Li)
+    <element>_hf_constants.json    ground-state hyperfine constant (Thresholds tab)
     <element>_polarizability.json  C₆ (fallback: the C6_EXPT table)
     nuclear_data.json              isotope mass (fallback: tabulated masses)
 
@@ -22,12 +29,13 @@ Usage
 -----
     linak --pipeline feshbach Na
     linak --pipeline feshbach Na --B-max 2500 --kT-uK 1.0
+    linak --pipeline feshbach Li --density 1e12 --field-unit mT
     linak --pipeline feshbach --all
 """
 
 from __future__ import annotations
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 import argparse
 import json
@@ -48,20 +56,23 @@ from linak.core.constants import (
     nuclide_plain,
 )
 from linak.core.errors import MissingDataError
-from linak.report_templates import (
-    fullscreen_css,
-    inject_head,
-    inject_title,
-    write_offline_report,
-)
+from linak.report_templates import load as load_template
+from linak.report_templates import render, write_offline_report
 from linak.physics.feshbach import (
     FeshbachResult,
     Resonance,
     _checked_C6,
+    channel_curve_spec,
+    channel_kets,
     compute,
     is_boson,
+    resonance_strength,
     validate_feshbach_params,
 )
+
+TEMPLATE = 'feshbach_page.html'
+TABS = ('a', 'cs', 'mo', 'th', 'rs')
+TAB_FLAGS = {'a': 'a', 'cs': 'collisions', 'mo': 'molecules', 'th': 'thresholds', 'rs': 'resonances'}
 
 # ============================================================================
 # ARGPARSE
@@ -87,8 +98,16 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Entrance channel for the combined a(B) curve, e.g. '|1,+1> + |1,+1>' "
                              "(default: the channel with the most s-wave resonances)")
     parser.add_argument('--kT-uK', type=float, default=1.0,
-                        help='Collision energy as temperature [µK] for σ(B) '
+                        help='Gas temperature [µK] for the thermal cross section and rates '
                              '(default: 1 µK)')
+    parser.add_argument('--density', type=float, default=None,
+                        help='Density [cm⁻³] for k_F, T_F and the collision rates; per spin state '
+                             'for a Fermi gas (default: 1e12 for fermions, 1e13 for bosons)')
+    parser.add_argument('--field-unit', choices=('G', 'mT'), default='G',
+                        help='Field unit the page opens in (switchable on the page)')
+    for t in TABS[1:]:
+        parser.add_argument(f'--no-tab-{TAB_FLAGS[t]}', action='store_true',
+                            help=f'Leave out the {TAB_FLAGS[t]} tab')
     parser.add_argument('--isotope', type=int, default=None,
                         help='Mass number A (default: from feshbach JSON)')
     return parser
@@ -110,6 +129,8 @@ class FeshbachInputs:
     mass_amu: float
     mass_source: str
     note: str
+    published: dict | None = None    # channel -> TableCurve | FitCurve
+    stale_hint: str | None = None
 
 
 def get_available_elements(data_dir):
@@ -189,157 +210,208 @@ def load_inputs(element, data_dir, isotope_A=None):
         raise ValueError(f'{element}_feshbach.json has no resonances')
     C6_au, C6_src = load_C6_au(element, data_dir)
     mass_amu, mass_src = load_mass_amu(element, A, data_dir)
+    resonances = [Resonance.from_json(row) for row in rows]
+    published = load_published_curves(params, resonances, data_dir, element)
     return FeshbachInputs(
         element=element,
         isotope_A=A,
-        resonances=[Resonance.from_json(row) for row in rows],
+        resonances=resonances,
         a_bg_default_a0=float(params.get('a_bg_default_a0', rows[0].get('a_bg_a0', 100.0))),
         C6_au=C6_au,
         C6_source=C6_src,
         mass_amu=mass_amu,
         mass_source=mass_src,
         note=params.get('note', ''),
+        published=published,
+        stale_hint=_stale_copy_hint(element, data_dir, params),
     )
 
 
+def load_published_curves(params, resonances, data_dir, element):
+    """{channel: TableCurve | FitCurve} from the "curves" entry of the parameter file. A table file
+    that is missing is reported and that channel falls back to the resonance formula."""
+    out = {}
+    tables = {}
+    for ch, spec in (params.get('curves') or {}).items():
+        rows = None
+        if spec.get('kind') == 'table':
+            name = spec.get('file') or f'{element}_feshbach_table.json'
+            if name not in tables:
+                path = os.path.join(data_dir, os.path.basename(name))
+                if not os.path.isfile(path):
+                    print(f"  WARNING: {name} (the a(B) table of {ch}) is missing from {data_dir}; "
+                          f"that channel uses the resonance formula instead.")
+                    tables[name] = None
+                else:
+                    with open(path, encoding='utf-8') as f:
+                        tables[name] = json.load(f).get('rows')
+            rows = tables[name]
+            if rows is None:
+                continue
+        out[ch] = channel_curve_spec(spec, resonances, rows)
+    return out
+
+
+def _stale_copy_hint(element, data_dir, params):
+    """A note when the bundled parameter file has published a(B) curves that this copy lacks."""
+    if params.get('curves'):
+        return None
+    try:
+        from linak.core.paths import reference_path
+        bundled = reference_path('data_json', f'{element}_feshbach.json')
+        if os.path.abspath(bundled) == os.path.abspath(os.path.join(data_dir, f'{element}_feshbach.json')):
+            return None
+        with open(bundled, encoding='utf-8') as f:
+            if not json.load(f).get('curves'):
+                return None
+    except (OSError, ValueError):
+        return None
+    return (f"  Note: the bundled {element}_feshbach.json now has published a(B) curves (tables or fits) that "
+            f"your copy in {data_dir} lacks; delete your copy to get them (it is re-seeded on the next start).")
+
+
 # ============================================================================
-# PLOTTING
+# PAGE
 # ============================================================================
 
-def plot_feshbach(inputs: FeshbachInputs, result: FeshbachResult, output_dir):
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
+def _r(v, p=6):
+    """Finite float rounded to *p* significant digits, else None (JSON has no NaN)."""
+    v = float(v)
+    if not math.isfinite(v):
+        return None
+    return float(f'{v:.{p}g}')
 
-    el = inputs.element
-    os.makedirs(output_dir, exist_ok=True)
-    out_path = os.path.join(output_dir, f'{el}_feshbach.html')
 
-    B = result.B_G
-    fig = make_subplots(
-        rows=2, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.08,
-        subplot_titles=(
-            f'{el} — scattering length a(B)',
-            f'elastic cross section σ_el (E = k_B · {result.kT_uK} µK)',
-        ),
-    )
+def _runs(flags):
+    """[[i0, i1], ...] index runs where *flags* is True."""
+    out, start = [], None
+    for k, f in enumerate(list(flags) + [False]):
+        if f and start is None:
+            start = k
+        elif not f and start is not None:
+            out.append([start, k - 1])
+            start = None
+    return out
 
-    colors = ['#e8a838', '#38bdf8', '#f472b6', '#4ade80', '#a78bfa', '#fb7185']
 
-    # Combined curve
-    fig.add_trace(go.Scatter(
-        x=B, y=result.a_combined_a0,
-        mode='lines', name=f"a(B) {result.default_channel or 'combined'}",
-        line=dict(color='#f0f4ff', width=2.2),
-        hovertemplate='B=%{x:.2f} G<br>a=%{y:.4g} a₀<extra>combined</extra>',
-    ), row=1, col=1)
+def resonance_rows(inputs: FeshbachInputs, result: FeshbachResult):
+    """The resonance table: literature values plus the zero crossing and s_res (from δμ, else published)."""
+    rows = []
+    for r in inputs.resonances:
+        a_bg = r.background(inputs.a_bg_default_a0)
+        if r.dmu_muB is not None and a_bg:
+            s_res, src = resonance_strength(a_bg, r.Delta_G, r.dmu_muB, result.a_bar_a0, result.mass_amu), 'δμ'
+        elif r.s_res is not None:
+            s_res, src = r.s_res, 'published'
+        else:
+            s_res, src = None, None
+        rows.append(dict(label=r.label, ch=r.channel, pw=r.partial_wave, B0=r.B0_G, D=r.Delta_G,
+                         abg=_r(a_bg), dmu=r.dmu_muB, sres=None if s_res is None else _r(s_res, 4),
+                         sresSrc=src, sw=r.is_s_wave, ref=r.ref))
+    return rows
 
-    fig.add_trace(go.Scatter(
-        x=B, y=result.sigma_combined_a02,
-        mode='lines', name=f"σ {result.default_channel or 'combined'}",
-        line=dict(color='#f0f4ff', width=2.2),
-        hovertemplate='B=%{x:.2f} G<br>σ=%{y:.4g} a₀²<extra>combined</extra>',
-        showlegend=False,
-    ), row=2, col=1)
 
-    # Other entrance channels (each its own product over that channel's s-wave poles)
+def _ket_index(ket, zs, high_field_rank):
+    """Level index of a channel state: '|n>' is the n-th lowest level at high field (the ⁶Li labels
+    |1>, |2>, |3>), '|F,mF>' matches the zero-field label."""
+    body = ket.strip('|> ').replace(' ', '')
+    if ',' not in body:
+        n = int(body)
+        return high_field_rank[n - 1] if 1 <= n <= len(high_field_rank) else None
+    F, mF = (float(x) for x in body.split(','))
+    for i, (Fl, ml) in enumerate(zs.labels):
+        if abs(Fl - F) < 1e-9 and abs(ml - mF) < 1e-9:
+            return i
+    return None
+
+
+def thresholds(inputs: FeshbachInputs, result: FeshbachResult, data_dir, B_max, n=400):
+    """Ground-state Zeeman levels and the channel states for the Thresholds tab, or None if the
+    isotope's ground hyperfine constant is not available."""
+    from linak.physics.hyperfine_core import ZeemanSystem, lande_gJ
+    from linak.physics.hyperfine_core import MU_B_MHz_G, MU_N_MHz_G
+    from linak.pipelines.hyperfine import get_isotope, load_atomic_gI, load_hf_constants, load_nuclear_index
+    el, A = inputs.element, inputs.isotope_A
+    try:
+        nuclear = load_nuclear_index(os.path.join(data_dir, 'nuclear_data.json'))
+    except (OSError, ValueError):
+        return None
+    iso = get_isotope(nuclear, el, A)
+    if iso is None:
+        return None
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):
+        hf, _src = load_hf_constants(el, data_dir, isotope_A=A, nuclear=nuclear)
+    if not hf:
+        return None
+    ground = next(iter(hf))            # the file lists the ground state first
+    c = hf[ground]
+    if not ground.endswith('1/2') or not c.A_MHz:
+        return None
+    gJ = lande_gJ(0, 0.5, 0.5, gJ_exp=c.gJ_exp, mass_u=float(A) if A else None)
+    gI_prime = load_atomic_gI(el, data_dir, A)
+    if gI_prime is not None:
+        gI, gI_src = -gI_prime / (MU_N_MHz_G / MU_B_MHz_G), 'atomic, shielded'
+    else:
+        gI, gI_src = float(iso.get('g_I') or 0.0), 'bare nucleus'
+    zs = ZeemanSystem(float(iso['I']), 0.5, c.A_MHz, c.B_MHz, gJ, gI, c.C_kHz)
+    B = np.linspace(0.0, B_max, n)
+    E = zs.energies(B)                                   # (n, levels) MHz
+    E_hi = zs.solve(max(B_max, 1000.0))
+    rank = [int(i) for i in np.argsort(E_hi)]
+    chs = {}
     for ch in result.channels:
-        if ch.channel == result.default_channel:
-            continue
-        fig.add_trace(go.Scatter(
-            x=B, y=np.clip(np.asarray(ch.a_a0, dtype=float), -5000, 5000),
-            mode='lines', name=f"a(B) {ch.channel}", visible='legendonly',
-            line=dict(width=1.8),
-            hovertemplate='B=%{x:.2f} G<br>a=%{y:.4g} a₀<extra>' + ch.channel + '</extra>',
-        ), row=1, col=1)
-        fig.add_trace(go.Scatter(
-            x=B, y=ch.sigma_a02, mode='lines', name=f"σ {ch.channel}",
-            visible='legendonly', line=dict(width=1.8), showlegend=False,
-        ), row=2, col=1)
+        kets = channel_kets(ch.channel)
+        if len(kets) == 2:
+            ij = [_ket_index(k, zs, rank) for k in kets]
+            if None not in ij:
+                chs[ch.channel] = ij
+    return dict(B=[_r(b) for b in B], E=[[_r(e, 9) for e in E[:, i]] for i in range(zs.dim)],
+                lab=[list(l) for l in zs.labels], hf=[list(h) for h in zs.high_field], chs=chs,
+                I=float(iso['I']), A=c.A_MHz, gJ=round(gJ, 8), gI=gI, gIsrc=gI_src)
 
-    # Individual resonances (clipped for readability)
-    for i, curve in enumerate(result.curves):
-        res = curve.resonance
-        c = colors[i % len(colors)]
-        if curve.a_a0 is None:     # d/g-wave pole: not a pole of the s-wave a(B); marker only
-            for _row in (1, 2):
-                fig.add_vline(x=res.B0_G, line=dict(color=c, width=1, dash='dot'), row=_row, col=1)
-            continue
-        a = np.array(curve.a_a0, dtype=float)
-        # Clip display of poles for legibility
-        a_plot = np.clip(a, -5000, 5000)
-        fig.add_trace(go.Scatter(
-            x=B, y=a_plot,
-            mode='lines', name=res.label,
-            line=dict(color=c, width=1.4, dash='dot'),
-            hovertemplate=(
-                f"{res.label}<br>"
-                f"channel: {res.channel}<br>"
-                'B=%{x:.2f} G<br>a=%{y:.4g} a₀<extra></extra>'
-            ),
-        ), row=1, col=1)
 
-        # Vertical marker at B₀
-        fig.add_vline(
-            x=res.B0_G, line=dict(color=c, width=1, dash='dash'),
-            row=1, col=1,
-        )
-        fig.add_vline(
-            x=res.B0_G, line=dict(color=c, width=1, dash='dash'),
-            row=2, col=1,
-        )
-
-    # ā and a_bg guides
-    fig.add_hline(
-        y=result.a_bar_a0,
-        line=dict(color='#94a3b8', width=1, dash='dot'),
-        annotation_text=f"ā = {result.a_bar_a0:.1f} a₀",
-        annotation_position='bottom right',
-        row=1, col=1,
-    )
-    fig.add_hline(
-        y=result.a_bg_default_a0,
-        line=dict(color='#64748b', width=1, dash='dot'),
-        annotation_text=f"a_bg = {result.a_bg_default_a0:.2f} a₀",
-        annotation_position='top right',
-        row=1, col=1,
+def build_payload(inputs: FeshbachInputs, result: FeshbachResult, args, data_dir):
+    el, A = inputs.element, inputs.isotope_A
+    fermion = result.is_boson is False
+    density = args.density if args.density is not None else (1e12 if fermion else 1e13)
+    B = result.B_G
+    chans = []
+    for c in result.channels:
+        chans.append(dict(name=c.channel, ident=bool(len(channel_kets(c.channel)) == 2
+                                                    and channel_kets(c.channel)[0] == channel_kets(c.channel)[1]),
+                          src=c.source, ref=c.ref, abg=_r(c.a_bg_a0),
+                          a=[_r(v, 7) for v in np.asarray(c.a_a0, dtype=float)],
+                          br=_runs(c.bridged) if c.bridged is not None else [],
+                          poles=[_r(p, 9) for p in c.poles_G], zeros=[_r(z, 9) for z in c.zeros_G]))
+    default = next(i for i, c in enumerate(result.channels) if c.channel == result.default_channel)
+    tabs = [t for t in TABS if t == 'a' or not getattr(args, f'no_tab_{TAB_FLAGS[t]}', False)]
+    thr = thresholds(inputs, result, data_dir, float(B[-1])) if 'th' in tabs else None
+    a_scale = max([abs(c.a_bg_a0) for c in result.channels if math.isfinite(c.a_bg_a0)] + [100.0])
+    return dict(
+        element=el, A=A, label=nuclide_label(el, A), plain=nuclide_plain(el, A), boson=result.is_boson,
+        mass=result.mass_amu, massSrc=inputs.mass_source, C6=result.C6_au, C6src=inputs.C6_source,
+        beta6=result.beta6_a0, abar=result.a_bar_a0, B=[_r(b, 9) for b in B], ch=chans, **{'def': default},
+        res=resonance_rows(inputs, result), thr=thr, note=inputs.note,
+        opts=dict(tabs=tabs, tab='a', unit=args.field_unit, T=args.kT_uK, n=density,
+                  Bmax=float(B[-1]), yclip=float(_r(min(max(4 * a_scale, 500.0), 2e4), 2))),
     )
 
-    fig.update_yaxes(title_text='a / a₀', row=1, col=1,
-                     range=[-500, 500], zeroline=True)
-    fig.update_yaxes(title_text='σ_el / a₀²', type='log', row=2, col=1)
-    fig.update_xaxes(title_text='B [Gauss]', row=2, col=1)
 
-    subtitle = (
-        f"C₆ = {result.C6_au:.1f} au ({inputs.C6_source}) · "
-        f"β₆ = {result.beta6_a0:.2f} a₀ · "
-        f"ā = {result.a_bar_a0:.2f} a₀ · "
-        f"m = {result.mass_amu:.6f} amu ({inputs.mass_source})"
-    )
-    A = inputs.isotope_A
-    nuc = nuclide_label(el, A)
-    nuc_plain = nuclide_plain(el, A)
-    fig.update_layout(
-        title=dict(
-            text=(f'<b>{nuc} Feshbach resonances</b>'
-                  f'<br><sup>{nuc_plain}  ·  {subtitle}</sup>'),
-            x=0.5,
-        ),
-        template='plotly_dark',
-        autosize=True,
-        legend=dict(orientation='h', y=1.08),
-        margin=dict(t=100, b=50, l=70, r=30),
-    )
+def payload_js(payload: dict) -> str:
+    text = json.dumps(payload, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+    return text.replace('</', '<\\/').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
 
-    raw_html = fig.to_html(include_plotlyjs=False, full_html=True)
-    # Browser tab + accessible document title, then the shared fullscreen
-    # wrapper — both snippet insertions live in the renderer.
-    raw_html = inject_title(raw_html, f'{nuc_plain} Feshbach')
-    raw_html = inject_head(raw_html, fullscreen_css())
-    write_offline_report(out_path, raw_html)
-    print(f'  Plot -> {out_path}')
-    return out_path
+
+def write_page(element, payload, out_dir):
+    html = render(TEMPLATE, TITLE=f"{payload['plain']} Feshbach", PHYS_JS=load_template('feshbach_physics.js'),
+                  DATA_JS=payload_js(payload))
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f'{element}_feshbach.html')
+    write_offline_report(path, html)
+    print(f'  Page -> {path}')
+    return path
 
 # ============================================================================
 # JSON OUTPUT
@@ -374,8 +446,11 @@ def write_output_json(inputs: FeshbachInputs, result: FeshbachResult, data_dir):
                 'a_bg_a0': c.a_bg_a0,
                 'ref': c.resonance.ref,
                 'in_s_wave_a': c.a_a0 is not None,
+                'dmu_muB': row['dmu'],
+                's_res': row['sres'],
+                's_res_source': row['sresSrc'],
             }
-            for c in result.curves
+            for c, row in zip(result.curves, resonance_rows(inputs, result))
         ],
         'default_channel': result.default_channel,
         'is_boson': result.is_boson,
@@ -386,6 +461,10 @@ def write_output_json(inputs: FeshbachInputs, result: FeshbachResult, data_dir):
                 'a_bg_a0': c.a_bg_a0,
                 'identical_bosons': c.identical_bosons,
                 'sigma_prefactor': '8*pi*a^2' if c.identical_bosons else '4*pi*a^2',
+                'source': c.source,
+                'ref': c.ref,
+                'poles_G': [round(p, 4) for p in c.poles_G],
+                'zero_crossings_G': [round(z, 4) for z in c.zeros_G],
                 'a_a0': [None if (math.isnan(v) or math.isinf(v)) else round(float(v), 4)
                          for v in np.asarray(c.a_a0, dtype=float)[::step]],
             }
@@ -416,7 +495,10 @@ def run_one(element, args):
         inputs.resonances, inputs.a_bg_default_a0, inputs.C6_au, inputs.mass_amu,
         kT_uK=args.kT_uK, B_max=args.B_max, B_points=args.B_points,
         boson=is_boson(element, inputs.isotope_A), channel=args.channel,
+        published=inputs.published, refine=True,
     )
+    if inputs.stale_hint:
+        print(inputs.stale_hint)
     if len(result.channels) > 1:
         print(f"  NOTE: {len(result.channels)} entrance channels in {element}_feshbach.json; the "
               f"combined curve is channel {result.default_channel!r} (use --channel to pick another).")
@@ -429,10 +511,15 @@ def run_one(element, args):
     for r in inputs.resonances:
         print(f"    - {r.label:20s}  B0={r.B0_G:7.1f} G  "
               f"Delta={r.Delta_G:6.3f} G  [{r.channel}]")
+    for c in result.channels:
+        how = {'table': 'coupled-channel table', 'fit': 'published fits',
+               'resonances': 'isolated-resonance formula'}[c.source]
+        zs = ', '.join(f'{z:.2f}' for z in c.zeros_G) or 'none'
+        print(f"  a(B) {c.channel}: {how}; zero crossings at {zs} G")
 
     out_dir = args.output_dir or os.path.join(Workspace.current().plots_dir, element)
     if not args.no_plot:
-        plot_feshbach(inputs, result, out_dir)
+        write_page(element, build_payload(inputs, result, args, args.data_dir), out_dir)
     write_output_json(inputs, result, args.data_dir)
     return result
 

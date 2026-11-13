@@ -1,0 +1,383 @@
+<meta charset="utf-8"><title>$!TITLE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+:root{
+  --bg:#fcfcfb; --panel:#f3f2ef; --edge:#dedcd6; --ink:#161513; --ink2:#55534e; --muted:#7d7a73; --grid:#e8e6e1;
+  --nist:#2a78d6; --soc:#eb6834; --td:#6250d6; --line:#6b6963; --band:#e5f1ec; --cont:#efeeea; --sel:#0e9f6e; --hl:#fff3c4;
+  --r-xray:#6b2fd6; --r-vuv:#7a3fe0; --r-uv:#2a5bd6; --r-vis:#e8710a; --r-nir:#c8261c; --r-mir:#7a7770; --r-mic:#9a978f; --qdt:#7fa6dc; --theo:#b03aa8; --ov3:#2e8b57; --ov4:#a23b72; --ov5:#c08a00; --ov6:#4a7a96;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171716; --panel:#212120; --edge:#34332f; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8d86; --grid:#2b2a28;
+  --nist:#3987e5; --soc:#d95926; --td:#9085e9; --line:#9d9b94; --band:#1e2e28; --cont:#1f1f1d; --sel:#2dd4a0; --hl:#4a4220;
+  --r-xray:#a98af5; --r-vuv:#a98af5; --r-uv:#5b8cf0; --r-vis:#f08a2d; --r-nir:#ee5d52; --r-mir:#a09d95; --r-mic:#c3c1ba; --qdt:#5d86bd; --theo:#d77fd0; --ov3:#4fc18a; --ov4:#d777a8; --ov5:#e0b030; --ov6:#7fb0cc; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;margin:0;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:12px}
+h1{font-size:21px;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--edge);border-radius:4px;padding:1px 6px}
+.hdr-btns{margin-left:auto;display:flex;gap:8px}
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);gap:14px;align-items:start}
+.app.closed{grid-template-columns:minmax(0,1fr)}
+.app.closed .rail{display:none}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.rail h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0;min-width:0}
+.row label{flex:1;min-width:0;cursor:pointer}
+.row .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chip{width:12px;height:12px;border-radius:3px;flex:none}
+.bar{width:16px;height:0;border-top:3px solid;flex:none;border-radius:2px}
+input[type=checkbox],input[type=radio]{accent-color:var(--nist);margin:0}
+input[type=range]{width:100%;accent-color:var(--nist)}
+input[type=number],input[type=search],input[type=text]{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;min-width:0;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lbl{font-size:12px;color:var(--ink2);margin:6px 0 3px}
+.sl{margin:6px 0}.sl .top{display:flex;justify-content:space-between;color:var(--ink2);font-size:12.5px}
+.sl .v{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.seg{display:flex;border:1px solid var(--edge);border-radius:6px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:var(--ink2);border:0;padding:5px 2px;font:inherit;font-size:12.5px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--edge)}
+.seg button[aria-pressed=true]{background:var(--nist);color:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:4px 12px}
+.checks label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px}
+.hint{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+.main{min-width:0;display:flex;flex-direction:column;gap:10px}
+.plot{border:1px solid var(--edge);border-radius:8px;background:var(--bg);overflow:hidden}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px 0;flex-wrap:wrap}
+.count{font-size:12.5px;color:var(--ink2)}
+#plot{width:100%;height:680px}
+.note{color:var(--ink2);font-size:12.5px;line-height:1.5;max-width:100ch;margin:0}
+.card{border:1px solid var(--edge);border-radius:8px;padding:10px 12px;min-width:0}
+.card .bar2{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.card .bar2 b{font-size:13px;font-weight:600;margin-right:auto}
+.btn{background:transparent;color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--nist);border-color:var(--nist);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 12px 4px 0;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11.5px;cursor:pointer;user-select:none}
+th.nosort{cursor:default}
+th .arr{font-size:9px;margin-left:3px}
+td.m{font-family:var(--mono);font-size:12px}
+tbody tr.t{cursor:pointer;user-select:none;-webkit-user-select:none}
+#plot,.ptop{user-select:none;-webkit-user-select:none}
+tbody tr.t:hover{background:var(--panel)}
+tbody tr.sel{background:var(--hl)}
+.empty{color:var(--muted);font-size:12.5px}
+.pager{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.j{font-size:.85em;vertical-align:sub;line-height:0}
+.cm{position:fixed;z-index:50;background:var(--bg);border:1px solid var(--edge);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:4px;min-width:200px}
+.cm button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-radius:5px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.cm button:hover{background:var(--panel)}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:10px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dlg h3{margin:0 0 2px;font-size:17px}
+.dlg h4{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dlg .g{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:2px 12px;font-size:13px}
+.dlg .g span:nth-child(odd){color:var(--ink2)}
+.dlg .g span:nth-child(even){font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:4px;padding:0 4px}
+.rail h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.rail h2::before{content:'▾';font-size:10px;width:10px;display:inline-block;transition:transform .12s}
+.rail section.shut>h2::before{transform:rotate(-90deg)}
+.rail section.shut>*:not(h2){display:none}
+.rail section.shut>h2{margin-bottom:0}
+.rail h2:focus-visible{outline:2px solid var(--nist);outline-offset:2px;border-radius:3px}
+.railtools{display:flex;gap:8px}.railtools .btn{flex:1}
+@media print{header,.rail,.note,.card,.ptop button,.cm,.ov{display:none!important}.app{display:block}body{background:#fff}}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--edge);margin-bottom:2px}
+.tabs button{background:transparent;color:var(--ink2);border:0;border-bottom:2px solid transparent;padding:8px 14px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--nist);font-weight:600}
+.tabs button:focus-visible{outline:2px solid var(--nist);outline-offset:-2px;border-radius:4px}
+.pane[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.stat{border:1px solid var(--edge);border-radius:8px;padding:6px 10px;min-width:150px}
+.stat .k{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .v{font-family:var(--mono);font-size:14px;margin-top:1px}
+.stat .d{font-size:11.5px;color:var(--ink2)}
+.p{height:560px}.p.short{height:520px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media(max-width:1100px){.cols{grid-template-columns:minmax(0,1fr)}}
+.pillrow{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--edge);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;background:transparent;color:var(--ink2)}
+.pill[aria-pressed=true]{background:var(--nist);border-color:var(--nist);color:#fff}
+tr.sel td{background:var(--hl)}
+.cls{display:inline-block;border-radius:4px;padding:0 6px;font-size:11.5px;border:1px solid var(--edge)}
+.cls.robust{color:var(--sel);border-color:var(--sel)}.cls.sensitive{color:var(--ov5);border-color:var(--ov5)}.cls.very{color:var(--r-nir);border-color:var(--r-nir)}
+.shr{display:inline-block;height:8px;background:var(--nist);border-radius:2px;vertical-align:middle;opacity:.75}
+.shr.neg{background:var(--soc)}
+@media print{header,.rail,.tabs,.note,.card,.stat,.chips,.cm{display:none!important}.app{display:block}body{background:#fff}.pane[hidden]{display:none}}
+
+.pg{display:flex;align-items:center}.pg .pill:disabled{opacity:.4;cursor:default}
+
+</style>
+<style>
+select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;width:100%}
+.p.tall{height:640px}
+.stat .k{text-transform:none;letter-spacing:0}
+.warn{color:var(--soc);font-size:12px}
+td.wrap{white-space:normal;min-width:260px;max-width:520px;font-size:11.5px;color:var(--ink2)}
+.dom{display:inline-block;border-radius:4px;padding:0 6px;font-size:11.5px;border:1px solid var(--edge)}
+.dom.open{color:var(--sel);border-color:var(--sel)}.dom.closed{color:var(--soc);border-color:var(--soc)}.dom.mid{color:var(--ov5);border-color:var(--ov5)}
+</style>
+<header>
+  <h1 id="h1"></h1>
+  <span class="sub" id="sub"></span>
+  <div class="hdr-btns">
+    <button class="btn" id="exportbtn" aria-haspopup="menu">Export ▾</button>
+    <button class="btn" id="railbtn" aria-expanded="true">Hide controls</button>
+    <button class="btn" id="theme" aria-label="Switch theme">Theme: auto</button>
+  </div>
+</header>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Controls">
+    <section class="railtools"><button class="btn" id="colall">Collapse all</button><button class="btn" id="expall">Expand all</button></section>
+    <section><h2>Field</h2>
+      <div class="seg" id="unit" role="group" aria-label="Field unit"><button data-v="G">gauss</button><button data-v="mT">mT</button></div>
+      <div class="two" style="margin-top:6px"><div><div class="lbl" id="fromlbl">From</div><input type="number" id="x0" step="any"></div><div><div class="lbl" id="tolbl">To</div><input type="number" id="x1" step="any"></div></div>
+      <div class="railtools" style="margin-top:6px"><button class="btn" id="fitall">Full range</button></div>
+      <div class="hint">Zoom on a plot to look closer; every tab follows the same field range.</div>
+    </section>
+    <section><h2>Channels</h2>
+      <div id="chk"></div>
+      <div class="lbl" style="margin-top:8px">Collisions and molecules use</div><select id="chsel" aria-label="Channel"></select>
+    </section>
+    <section><h2>Scattering length axis</h2>
+      <div class="seg" id="ym" role="group" aria-label="a axis"><button data-v="asinh">asinh</button><button data-v="lin">Linear</button></div>
+      <div class="lbl" style="margin-top:6px">Linear range ± (a₀)</div><input type="number" id="yclip" step="any" min="1">
+      <div class="hint">asinh: linear within ±ā, logarithmic beyond, so the background and the poles show together.</div>
+    </section>
+    <section><h2>Gas</h2>
+      <div class="two"><div><div class="lbl">T (µK)</div><input type="number" id="T" step="any" min="0.001"></div><div><div class="lbl" id="nlbl">n (cm⁻³)</div><input type="number" id="n" step="any" min="0"></div></div>
+      <div class="hint" id="gashint"></div>
+    </section>
+    <section id="l3sec"><h2>Three-body loss</h2>
+      <div class="lbl">Efimov factor C</div><input type="number" id="C3" step="any" min="0">
+      <div class="hint">L₃ = 3Cℏa⁴/m (Weber 2003). C runs from 0 to 67.1 for a &gt; 0 as the Efimov phase varies; it is capped at the unitarity limit of the gas temperature.</div>
+    </section>
+    <section><button class="btn" id="reset" style="width:100%">Reset</button></section>
+  </aside>
+  <div class="main">
+    <div class="chips" id="stats"></div>
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-a" aria-selected="true" aria-controls="pane-a" data-t="a">Scattering length</button>
+      <button role="tab" id="tab-cs" aria-selected="false" aria-controls="pane-cs" data-t="cs">Cross section &amp; loss</button>
+      <button role="tab" id="tab-mo" aria-selected="false" aria-controls="pane-mo" data-t="mo">Molecules</button>
+      <button role="tab" id="tab-th" aria-selected="false" aria-controls="pane-th" data-t="th">Thresholds</button>
+      <button role="tab" id="tab-rs" aria-selected="false" aria-controls="pane-rs" data-t="rs">Resonances</button>
+    </div>
+    <section class="pane" id="pane-a" role="tabpanel" aria-labelledby="tab-a">
+      <div class="plot"><div class="ptop"><span class="count" id="ainfo"></span></div><div class="p tall" id="pa"></div></div>
+      <p class="note" id="anote"></p>
+    </section>
+    <section class="pane" id="pane-cs" role="tabpanel" aria-labelledby="tab-cs" hidden>
+      <div class="plot"><div class="ptop"><span class="count" id="csinfo"></span></div><div class="p tall" id="pcs"></div></div>
+      <p class="note" id="csnote"></p>
+    </section>
+    <section class="pane" id="pane-mo" role="tabpanel" aria-labelledby="tab-mo" hidden>
+      <div class="plot"><div class="ptop"><span class="count" id="moinfo"></span></div><div class="p tall" id="pmo"></div></div>
+      <p class="note" id="monote"></p>
+    </section>
+    <section class="pane" id="pane-th" role="tabpanel" aria-labelledby="tab-th" hidden>
+      <div class="plot"><div class="ptop"><span class="count" id="thinfo"></span></div><div class="p tall" id="pth"></div></div>
+      <p class="note" id="thnote"></p>
+    </section>
+    <section class="pane" id="pane-rs" role="tabpanel" aria-labelledby="tab-rs" hidden>
+      <div class="card"><div class="bar2"><b>Resonances</b></div>
+      <div class="tw"><table id="rstab"><thead></thead><tbody></tbody></table></div></div>
+      <p class="note" id="rsnote"></p>
+    </section>
+  </div>
+</div>
+<script>
+$!PHYS_JS
+</script>
+<script>
+const D=$!DATA_JS;
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sci=(x,p)=>{if(x==null||!isFinite(x))return '–';if(x===0)return '0';const e=Math.floor(Math.log10(Math.abs(x)));p=p||4;return (e<5&&e>-3)?(+x.toPrecision(p)).toString():(x/10**e).toFixed(p-1)+'×10'+String(e).split('').map(c=>SUP[c]).join('')};
+const num=(id,d)=>{const v=+$(id).value;return isFinite(v)&&$(id).value!==''?v:d};
+const O=D.opts,B=D.B,NB=B.length,FERMI=D.boson===false,A0CM2=Math.pow(FP.A0*100,2);
+const COLS=['--nist','--soc','--sel','--td','--ov5','--ov4','--ov3','--theo'];
+const S={tab:O.tabs.includes(O.tab)?O.tab:O.tabs[0],unit:O.unit,r:[0,O.Bmax],on:new Set([D.def]),sel:D.def,ym:'asinh',yclip:O.yclip,T:O.T,n:O.n,C3:67.1,theme:'auto',rail:true,sort:[2,1]};
+(function(){const h=new URLSearchParams(location.hash.slice(1));if(O.tabs.includes(h.get('tab')))S.tab=h.get('tab');if(['G','mT'].includes(h.get('unit')))S.unit=h.get('unit')})();
+const U={G:{f:1,l:'B (G)',n:'G'},mT:{f:0.1,l:'B (mT)',n:'mT'}};
+const bx=b=>b*U[S.unit].f,bstr=(b,p)=>`${(+(bx(b)).toPrecision(p||7))} ${U[S.unit].n}`;
+// bridged flags from runs [[i0,i1],...]
+D.ch.forEach(c=>{const f=new Uint8Array(NB);(c.br||[]).forEach(([i,j])=>{for(let k=i;k<=j;k++)f[k]=1});c.flag=f});
+const chCol=i=>css(COLS[i%COLS.length]);
+function base(){const ink=css('--ink'),ink2=css('--ink2'),grid=css('--grid'),bg=css('--bg');return {ink,ink2,grid,bg,
+  lay:{paper_bgcolor:bg,plot_bgcolor:bg,font:{family:css('--sans'),color:ink},hovermode:'closest',margin:{l:84,r:24,t:30,b:52},showlegend:true,legend:{orientation:'h',x:0,y:1.08,font:{size:12,color:ink2}},
+   hoverlabel:{bgcolor:css('--panel'),bordercolor:css('--edge'),font:{color:ink,family:css('--sans'),size:12}}}}}
+const cfg={displaylogo:false,responsive:true,modeBarButtonsToRemove:['lasso2d','select2d']};
+const axs=(b,t,extra)=>Object.assign({title:{text:t,font:{color:b.ink2,size:12}},gridcolor:b.grid,linecolor:b.ink2,tickfont:{color:b.ink2,size:11},ticks:'outside',tickcolor:b.ink2,zerolinecolor:b.grid,exponentformat:'power'},extra||{});
+function idxRange(){let i0=0,i1=NB-1;while(i0<NB-1&&B[i0+1]<S.r[0])i0++;while(i1>0&&B[i1-1]>S.r[1])i1--;return [i0,i1]}
+const xr=()=>[bx(S.r[0]),bx(S.r[1])];
+// break a curve where it jumps through a pole (a sign flip between two large values)
+function broken(xs,ys,big){const X=[],Y=[];for(let k=0;k<xs.length;k++){if(k&&ys[k]!=null&&ys[k-1]!=null&&ys[k]*ys[k-1]<0&&Math.abs(ys[k])>big&&Math.abs(ys[k-1])>big){X.push(null);Y.push(null)}X.push(xs[k]);Y.push(ys[k])}return [X,Y]}
+const SC=()=>Math.max(D.abar,1);
+const tr_y=a=>a==null||!isFinite(a)?null:(S.ym==='asinh'?Math.asinh(a/SC()):a);
+function asinhTicks(lo,hi){const s=SC(),v=[0];for(let e=Math.floor(Math.log10(s));e<=7;e++)[1,3].forEach(m=>{const x=m*10**e;if(x>=s*0.9){v.push(x,-x)}});
+  const t=v.map(x=>Math.asinh(x/s)).filter(t=>t>=lo-1e-9&&t<=hi+1e-9);return {tickvals:t,ticktext:t.map(t=>{const x=s*Math.sinh(t);return Math.abs(x)<1e-9?'0':sci(Math.round(x),2)})}}
+function invKfa(a){return 1/(FP.kF(S.n)*a)}
+// ---------------- a(B)
+function buildA(){const b=base(),[i0,i1]=idxRange(),xs=B.slice(i0,i1+1).map(bx),tr=[],shapes=[],big=S.ym==='asinh'?Math.asinh(10):S.yclip;
+  const on=[...S.on].sort((p,q)=>p-q);
+  on.forEach(ci=>{const c=D.ch[ci],col=chCol(ci);const a=c.a.slice(i0,i1+1),f=c.flag.slice(i0,i1+1);
+    ['pub','br'].forEach(kind=>{const ys=a.map((v,k)=>(kind==='pub'?!f[k]:(f[k]||(k>0&&f[k-1])||(k<f.length-1&&f[k+1])))?tr_y(v):null);
+      if(kind==='br'&&!f.some(v=>v))return;
+      const [X,Y]=broken(xs,ys,big);const cd=[];for(let k=0,m=0;k<X.length;k++){if(X[k]==null){cd.push(null);continue}cd.push(a[m]);m++}
+      tr.push({x:X,y:Y,customdata:cd,mode:'lines',name:kind==='pub'?c.name:c.name+' (between fits)',showlegend:kind==='pub'||on.length===1,line:{color:col,width:kind==='pub'?2:1.6,dash:kind==='pub'?'solid':'dash'},
+        hovertemplate:`<b>${esc(c.name)}</b><br>%{x:.6g} ${U[S.unit].n}<br>a = %{customdata:.5g} a₀`+(FERMI&&!c.ident?'<br>1/(k<sub>F</sub>a) = %{text}':'')+`<extra></extra>`,
+        text:FERMI&&!c.ident?cd.map(v=>v==null?'':sci(invKfa(v),3)):undefined,cliponaxis:true})});
+    c.poles.filter(p=>p>=S.r[0]&&p<=S.r[1]).forEach(p=>shapes.push({type:'line',xref:'x',yref:'paper',x0:bx(p),x1:bx(p),y0:FERMI?0.36:0,y1:1,line:{color:col,width:1,dash:'dot'}}));
+    const z=c.zeros.filter(p=>p>=S.r[0]&&p<=S.r[1]);if(z.length)tr.push({x:z.map(bx),y:z.map(()=>0),mode:'markers',name:'zero crossings',showlegend:false,marker:{size:8,symbol:'circle-open',color:col,line:{width:2}},hovertemplate:`${esc(c.name)} zero crossing<br>%{x:.6g} ${U[S.unit].n}<extra></extra>`});
+    const pz=c.poles.filter(p=>p>=S.r[0]&&p<=S.r[1]);if(pz.length)tr.push({x:pz.map(bx),y:pz.map(()=>S.ym==='asinh'?Math.asinh(1e4/SC()):S.yclip*0.92),mode:'markers',showlegend:false,marker:{size:9,symbol:'triangle-down',color:col},hovertemplate:`${esc(c.name)} pole<br>%{x:.6g} ${U[S.unit].n}<extra></extra>`})});
+  // abar guide
+  tr.push({x:xr(),y:[tr_y(D.abar),tr_y(D.abar)],mode:'lines',name:'ā',line:{color:css('--muted'),width:1,dash:'dot'},hovertemplate:`ā = ${D.abar.toFixed(1)} a₀<extra></extra>`});
+  let yax;if(S.ym==='asinh'){const lim=Math.asinh(2e4/SC());yax=axs(b,'a (a₀), asinh scale',Object.assign({range:[-lim,lim]},asinhTicks(-lim,lim)))}else yax=axs(b,'a (a₀)',{range:[-S.yclip,S.yclip]});
+  const lay=Object.assign({},b.lay,{uirevision:'a'+S.unit+S.ym,shapes,xaxis:axs(b,U[S.unit].l,{range:xr(),anchor:FERMI?'y2':'y'}),yaxis:Object.assign(yax,{domain:FERMI?[.4,1]:[0,1]})});
+  if(FERMI){const fc=on.filter(ci=>!D.ch[ci].ident);fc.forEach(ci=>{const c=D.ch[ci],a=c.a.slice(i0,i1+1),ys=a.map(v=>v==null||!isFinite(v)?null:invKfa(v));const [X,Y]=broken(xs,ys,0.5);
+      tr.push({x:X,y:Y,yaxis:'y2',mode:'lines',showlegend:false,line:{color:chCol(ci),width:1.8},hovertemplate:`<b>${esc(c.name)}</b><br>%{x:.6g} ${U[S.unit].n}<br>1/(k<sub>F</sub>a) = %{y:.4g}<extra></extra>`})});
+    lay.yaxis2=axs(b,'1/(k<sub>F</sub>a)',{domain:[0,.32],range:[-3,3]});
+    lay.shapes.push({type:'rect',xref:'paper',yref:'y2',x0:0,x1:1,y0:-1,y1:1,fillcolor:css('--band'),opacity:.6,line:{width:0},layer:'below'});
+    lay.annotations=[{xref:'paper',yref:'y2',x:.995,y:2.4,text:'BEC side',showarrow:false,xanchor:'right',font:{size:11,color:b.ink2}},{xref:'paper',yref:'y2',x:.995,y:-2.4,text:'BCS side',showarrow:false,xanchor:'right',font:{size:11,color:b.ink2}},
+      {xref:'paper',yref:'y2',x:.005,y:0,text:'strongly interacting |1/(k<sub>F</sub>a)| &lt; 1',showarrow:false,xanchor:'left',font:{size:11,color:b.ink2}}]}
+  const zl=c=>{const z=c.zeros.filter(p=>p>=S.r[0]&&p<=S.r[1]);return z.length?`, zero${z.length>1?'s':''} at ${z.slice(0,6).map(p=>bstr(p,6)).join(', ')}${z.length>6?' …':''}`:''};
+  const parts=on.map(ci=>{const c=D.ch[ci];return `${esc(c.name)}: ${c.src==='table'?'coupled-channel table':c.src==='fit'?'published fits':'isolated-resonance formula'}${zl(c)}`});
+  $('ainfo').innerHTML=parts.join(' · ')+(FERMI?` · k<sub>F</sub> = ${sci(FP.kF(S.n),3)} a₀⁻¹ (n = ${sci(S.n,3)} cm⁻³ per spin state)`:'');
+  $('anote').innerHTML=['Sign convention a = a<sub>bg</sub>(1 − Δ/(B − B₀)): the zero crossing is at B₀ + Δ.','Dotted verticals: the poles. Open circles: the zero crossings.',
+    on.some(ci=>D.ch[ci].src==='fit')?'Dashed: between the published fits, a product model scaled to meet the fits at both ends, so it is indicative.':'',
+    on.some(ci=>D.ch[ci].src==='resonances')?'Isolated-resonance formula: the product over the channel\'s listed poles. It is accurate near each resonance; far from them it is only as good as the constant background.':'',
+    FERMI?'1/(k<sub>F</sub>a): balanced two-component Fermi gas, k<sub>F</sub> = (6π²n)<sup>1/3</sup>. The shaded band is the strongly interacting regime.':''].filter(Boolean).join('<br>');
+  return Plotly.react('pa',tr,lay,cfg)}
+// ---------------- cross section and loss
+function selCh(){return D.ch[S.sel]}
+function buildCs(){const b=base(),c=selCh(),[i0,i1]=idxRange(),bos=!!(c.ident&&D.boson),fermPair=c.ident&&D.boson===false,tr=[];
+  const step=Math.max(1,Math.floor((i1-i0)/1500)),ks=[];for(let k=i0;k<=i1;k+=step)ks.push(k);
+  const xs=ks.map(k=>bx(B[k])),a=ks.map(k=>c.a[k]);
+  if(fermPair){Plotly.react('pcs',[],b.lay,cfg);$('csinfo').textContent='';$('csnote').innerHTML='<span class="warn">Both atoms are in the same internal state of a fermion: there is no s-wave scattering in this channel.</span>';return}
+  const sth=a.map(v=>v==null||!isFinite(v)?null:FP.thermalSigma(v,S.T,D.mass,bos)*A0CM2),s0=a.map(v=>v==null||!isFinite(v)?null:FP.sigma0(v,bos)*A0CM2),un=FP.unitarity(S.T,D.mass,bos)*A0CM2;
+  tr.push({x:xs,y:sth,mode:'lines',name:`thermal ⟨σ⟩ at ${sci(S.T,3)} µK`,line:{color:css('--nist'),width:2},hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>⟨σ⟩ = %{y:.4g} cm²<extra></extra>'});
+  tr.push({x:xs,y:s0,mode:'lines',name:`zero energy ${bos?'8':'4'}πa²`,line:{color:css('--muted'),width:1.2,dash:'dot'},hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>σ(k→0) = %{y:.4g} cm²<extra></extra>'});
+  tr.push({x:xr(),y:[un,un],mode:'lines',name:'unitarity limit',line:{color:css('--soc'),width:1,dash:'dash'},hovertemplate:`unitarity ${bos?'8':'4'}π/k<sub>T</sub>² = %{y:.4g} cm²<extra></extra>`});
+  const gel=a.map(v=>v==null||!isFinite(v)?null:FP.elasticRate(v,S.T,D.mass,bos,S.n));
+  tr.push({x:xs,y:gel,yaxis:'y2',mode:'lines',name:'elastic rate Γ<sub>el</sub> = n⟨σv<sub>rel</sub>⟩',line:{color:css('--sel'),width:2},hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>Γ<sub>el</sub> = %{y:.4g} s⁻¹<extra></extra>'});
+  let l3info='';
+  if(D.boson){const g3=a.map(v=>v==null||!isFinite(v)?null:FP.L3(v,D.mass,S.C3,S.T)*S.n*S.n);
+    tr.push({x:xs,y:g3,yaxis:'y2',mode:'lines',name:'three-body rate L₃n²',line:{color:css('--soc'),width:2},customdata:gel.map((g,k)=>g&&g3[k]?g/g3[k]:null),hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>L₃n² = %{y:.4g} s⁻¹<br>Γ<sub>el</sub>/L₃n² = %{customdata:.3g}<extra></extra>'});
+    l3info=` · C = ${S.C3}`}
+  const lay=Object.assign({},b.lay,{uirevision:'cs'+S.unit,xaxis:axs(b,U[S.unit].l,{range:xr(),anchor:'y2'}),yaxis:axs(b,'σ (cm²)',{type:'log',domain:[.52,1]}),yaxis2:axs(b,'Rate per atom (s⁻¹)',{type:'log',domain:[0,.44]})});
+  $('csinfo').innerHTML=`${esc(c.name)} · T = ${sci(S.T,3)} µK · n = ${sci(S.n,3)} cm⁻³ · k<sub>T</sub> = ${sci(FP.thermalK(S.T,D.mass),3)} a₀⁻¹ · ⟨v<sub>rel</sub>⟩ = ${sci(FP.vRel(S.T,D.mass)*100,3)} cm/s`+l3info;
+  $('csnote').innerHTML=[`⟨σ⟩ = ⟨σv<sub>rel</sub>⟩/⟨v<sub>rel</sub>⟩ for a Maxwell–Boltzmann gas, with σ(k) = ${bos?'8':'4'}πa²/(1 + k²a²) (${bos?'identical bosons':'distinguishable atoms'}).`,
+    'Near a pole it saturates at the unitarity limit set by the temperature.','Effective-range corrections are left out; they matter for narrow resonances.',
+    ...(D.boson?['Three-body loss: dn/dt = −L₃n³ with L₃ = 3Cℏa⁴/m, capped at the unitarity limit 36√3π²ℏ⁵/(m³(k<sub>B</sub>T)²) (Rem et al. 2013).','Γ<sub>el</sub>/L₃n², the ratio of good to bad collisions, sets how well evaporation works.']:['In a two-component Fermi gas, three-body recombination is Pauli-suppressed.','Losses near the resonance come from relaxation of the shallow dimers instead.'])].join('<br>');
+  return Plotly.react('pcs',tr,lay,cfg)}
+// ---------------- molecules
+function buildMo(){const b=base(),c=selCh(),[i0,i1]=idxRange(),tr=[];const step=Math.max(1,Math.floor((i1-i0)/2500)),ks=[];for(let k=i0;k<=i1;k+=step)ks.push(k);
+  const xs=ks.map(k=>bx(B[k])),a=ks.map(k=>c.a[k]),ok=v=>v!=null&&v>2*D.abar,eU=a.map(v=>ok(v)?FP.bindingHz(v,D.mass,0)/1e3:null),eG=a.map(v=>ok(v)?FP.bindingHz(v,D.mass,D.abar)/1e3:null);
+  const Eb=FP.Ebar(D.abar,D.mass)/FP.H/1e3;
+  tr.push({x:xs,y:eG,mode:'lines',name:'E<sub>b</sub> = ℏ²/m(a − ā)² (Gribakin–Flambaum)',line:{color:css('--nist'),width:2},customdata:a.map(v=>v>0?[v,v/2]:null),hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>E<sub>b</sub>/h = %{y:.4g} kHz<br>a = %{customdata[0]:.4g} a₀ · size ⟨r⟩ = a/2 = %{customdata[1]:.4g} a₀<extra></extra>'});
+  tr.push({x:xs,y:eU,mode:'lines',name:'universal ℏ²/ma²',line:{color:css('--muted'),width:1.2,dash:'dot'},hovertemplate:'%{x:.6g} '+U[S.unit].n+'<br>universal E<sub>b</sub>/h = %{y:.4g} kHz<extra></extra>'});
+  tr.push({x:xr(),y:[Eb,Eb],mode:'lines',name:'Ē = ℏ²/mā²',line:{color:css('--soc'),width:1,dash:'dash'},hovertemplate:'Ē/h = %{y:.4g} kHz<extra></extra>'});
+  const rs=D.res.filter(r=>r.ch===c.name&&r.sw&&r.sres);
+  const lay=Object.assign({},b.lay,{uirevision:'mo'+S.unit,xaxis:axs(b,U[S.unit].l,{range:xr()}),yaxis:axs(b,'Binding energy E<sub>b</sub>/h (kHz)',{type:'log'})});
+  $('moinfo').innerHTML=`${esc(c.name)} · ā = ${D.abar.toFixed(2)} a₀ · Ē/h = ${sci(Eb,3)} kHz`+(rs.length?' · '+rs.map(r=>`${esc(r.label)}: s<sub>res</sub> = ${sci(r.sres,3)}, R* = ${sci(D.abar/r.sres,3)} a₀`).join(' · '):'');
+  $('monote').innerHTML=['The shallow Feshbach dimer exists where a &gt; 0; it is drawn where a &gt; 2ā.','Its binding energy approaches the universal ℏ²/ma² for a ≫ ā.','The Gribakin–Flambaum form ℏ²/m(a − ā)² adds the leading van der Waals correction; it holds across most of an open-channel-dominated resonance (s<sub>res</sub> ≫ 1).','Near a closed-channel-dominated resonance (s<sub>res</sub> ≪ 1) the universal regime holds only for a ≫ R* = ā/s<sub>res</sub>, very close to the pole.','Away from it the dimer follows the bare closed-channel state, which these formulas do not describe.'].join('<br>');
+  return Plotly.react('pmo',tr,lay,cfg)}
+// ---------------- thresholds
+const MUB_MHZ_G=1.39962449361;
+function frs(v){const t=Math.round(2*Math.abs(v));const s=t%2?t+'/2':String(t/2);return (v<0?'−':v>0?'+':'')+s}
+function buildTh(){const b=base(),T=D.thr;if(!T){Plotly.react('pth',[],b.lay,cfg);$('thinfo').textContent='';$('thnote').innerHTML='<span class="warn">No ground-state hyperfine constants for this isotope, so the thresholds are not drawn.</span>';return}
+  const k0=T.B.findIndex(v=>v>=S.r[0]),k1=T.B.length-1-[...T.B].reverse().findIndex(v=>v<=S.r[1]),ks=[];for(let k=Math.max(0,k0-1);k<=Math.min(T.B.length-1,k1+1);k++)ks.push(k);
+  const xs=ks.map(k=>bx(T.B[k])),tr=[],used=new Map();D.ch.forEach((c,ci)=>(T.chs[c.name]||[]).forEach(i=>{if(!used.has(i))used.set(i,ci)}));
+  T.E.forEach((E,i)=>{const hl=used.has(i),col=hl?chCol(used.get(i)):css('--line');const lb=`|F = ${frs(T.lab[i][0]).replace('+','')}, m<sub>F</sub> = ${frs(T.lab[i][1])}⟩`;
+    tr.push({x:xs,y:ks.map(k=>E[k]/1e3),mode:'lines',name:lb,showlegend:false,line:{color:col,width:hl?2.4:1.1},hovertemplate:`${lb}${T.hf?` → high field |m<sub>J</sub> = ${frs(T.hf[i][0])}, m<sub>I</sub> = ${frs(T.hf[i][1])}⟩`:''}<br>%{x:.6g} ${U[S.unit].n}<br>E/h = %{y:.6g} GHz<extra></extra>`})});
+  const lowest=ks.map(k=>2*Math.min(...T.E.map(E=>E[k])));
+  D.ch.forEach((c,ci)=>{const ij=T.chs[c.name];if(!ij)return;const th=ks.map((k,m)=>T.E[ij[0]][k]+T.E[ij[1]][k]-lowest[m]);
+    const mu=ks.map((k,m)=>{const k2=Math.min(k+1,T.B.length-1),k1_=Math.max(k-1,0);return -((T.E[ij[0]][k2]+T.E[ij[1]][k2])-(T.E[ij[0]][k1_]+T.E[ij[1]][k1_]))/(T.B[k2]-T.B[k1_])/MUB_MHZ_G});
+    tr.push({x:xs,y:th,yaxis:'y2',mode:'lines',name:c.name,line:{color:chCol(ci),width:2},customdata:mu,hovertemplate:`<b>${esc(c.name)}</b><br>%{x:.6g} ${U[S.unit].n}<br>above the lowest two-atom threshold: %{y:.5g} MHz<br>pair magnetic moment %{customdata:.4f} μ<sub>B</sub><extra></extra>`})});
+  const lay=Object.assign({},b.lay,{uirevision:'th'+S.unit,xaxis:axs(b,U[S.unit].l,{range:xr(),anchor:'y2'}),yaxis:axs(b,'Single-atom energy E/h (GHz)',{domain:[.5,1]}),yaxis2:axs(b,'Channel threshold (MHz)',{domain:[0,.42]})});
+  $('thinfo').innerHTML=`Ground state, I = ${frs(T.I).replace('+','')}, A<sub>hfs</sub> = ${T.A} MHz, g<sub>J</sub> = ${T.gJ}, g<sub>I</sub> = ${sci(T.gI,6)} (${esc(T.gIsrc)})`;
+  $('thnote').innerHTML=['Top: ground-state Zeeman levels (Breit–Rabi, exact diagonalisation); the states of the listed channels are coloured.','Bottom: each channel’s two-atom threshold above the lowest one.','A Feshbach resonance occurs where a closed-channel molecular state, bound below a higher threshold, crosses the entrance threshold.','δμ is the difference of their magnetic moments.'].join('<br>');
+  return Plotly.react('pth',tr,lay,cfg)}
+// ---------------- resonance table
+function dom(s){if(s==null)return '–';return s>5?'<span class="dom open">open</span>':s<0.2?'<span class="dom closed">closed</span>':'<span class="dom mid">intermediate</span>'}
+const RSCOLS=[['Channel',r=>esc(r.ch),'',r=>r.ch],['ℓ',r=>r.pw,'',r=>r.pw],['B₀',r=>bstr(r.B0),'m',r=>r.B0],['Δ',r=>bstr(r.D,4),'m',r=>r.D],['a<sub>bg</sub> (a₀)',r=>r.abg==null?'–':sci(r.abg,4),'m',r=>r.abg],
+  ['B₀ + Δ',r=>r.sw?bstr(r.B0+r.D):'–','m',r=>r.B0+r.D],['δμ (μ<sub>B</sub>)',r=>r.dmu==null?'–':r.dmu,'m',r=>r.dmu],['s<sub>res</sub>',r=>r.sres==null?'–':sci(r.sres,3)+(r.sresSrc==='published'?'*':''),'m',r=>r.sres],
+  ['R* (a₀)',r=>r.sres?sci(D.abar/r.sres,3):'–','m',r=>r.sres?D.abar/r.sres:null],['Character',r=>dom(r.sres),'',r=>r.sres],['Reference',r=>esc(r.ref),'wrap',r=>r.ref]];
+function buildRs(){const t=$('rstab'),[k,dir]=S.sort,rows=D.res.map((r,i)=>Object.assign({_i:i},r)).sort((p,q)=>{const x=RSCOLS[k][3](p),y=RSCOLS[k][3](q);return ((x==null)-(y==null))||(x>y?1:x<y?-1:0)*dir});
+  t.tHead.innerHTML='<tr>'+RSCOLS.map((c,j)=>`<th data-k="${j}">${c[0]}${k===j?'<span class="arr">'+(dir>0?'▲':'▼')+'</span>':''}</th>`).join('')+'</tr>';
+  t.tBodies[0].innerHTML=rows.map(r=>`<tr class="t" data-i="${r._i}">`+RSCOLS.map(c=>`<td class="${c[2]}">${c[1](r)}</td>`).join('')+'</tr>').join('');
+  t.tHead.querySelectorAll('th').forEach(th=>th.onclick=()=>{const j=+th.dataset.k;S.sort=[j,S.sort[0]===j?-S.sort[1]:1];buildRs()});
+  t.tBodies[0].querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const r=D.res[+tr.dataset.i],w=Math.max(5*Math.abs(r.D),0.05);S.r=[Math.max(B[0],r.B0-w),Math.min(B[NB-1],r.B0+w)];const ci=D.ch.findIndex(c=>c.name===r.ch);if(ci>=0){S.on.add(ci);S.sel=ci}S.tab='a';draw()});
+  $('rsnote').innerHTML=['B₀, Δ, a<sub>bg</sub>: the literature’s isolated-resonance parameters. B₀ + Δ is the zero of that formula; the zeros of the full a(B) are on the Scattering length tab.','ℓ: the partial wave of the closed-channel molecular state. Even ℓ (s, d, g) couple to the s-wave entrance channel and are poles of a(B).','s<sub>res</sub> = (a<sub>bg</sub>/ā)(δμΔ/Ē) with Ē = ℏ²/mā² (Chin et al., RMP 82, 1225 (2010)); * marks a published value, used where δμ is not listed.','Open-channel dominated (s<sub>res</sub> ≫ 1): universal over much of the width. Closed-channel dominated (s<sub>res</sub> ≪ 1): only within R* of the pole.',...(D.note?[esc(D.note)]:[])].join('<br>')}
+// ---------------- page
+function stats(){const k=(l,v,d)=>`<div class="stat"><div class="k">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
+  let h=k('ā',D.abar.toFixed(2)+' a₀','mean scattering length')+k('R<sub>vdW</sub>',(D.beta6/2).toFixed(2)+' a₀','β₆/2')+k('Ē/h',sci(FP.Ebar(D.abar,D.mass)/FP.H/1e6,4)+' MHz','ℏ²/mā²')+k('C₆',sci(D.C6,5)+' au',esc(D.C6src));
+  if(FERMI)h+=k('T<sub>F</sub>',sci(FP.TF(S.n,D.mass)*1e6,3)+' µK',`n = ${sci(S.n,3)} cm⁻³ per spin`);else h+=k('Statistics',D.boson?'boson':'–',`${D.label}`);
+  $('stats').innerHTML=h}
+function chChecks(){$('chk').innerHTML=D.ch.map((c,i)=>`<div class="row"><span class="bar" style="border-color:${chCol(i)}"></span><label><input type="checkbox" data-ch="${i}" ${S.on.has(i)?'checked':''}> ${esc(c.name)}</label><span class="n">${c.src==='table'?'table':c.src==='fit'?'fits':'formula'}</span></div>`).join('');
+  document.querySelectorAll('[data-ch]').forEach(x=>x.onchange=()=>{const i=+x.dataset.ch;if(x.checked)S.on.add(i);else if(S.on.size>1)S.on.delete(i);else x.checked=true;draw()});
+  $('chsel').innerHTML=D.ch.map((c,i)=>`<option value="${i}">${esc(c.name)}</option>`).join('');$('chsel').value=String(S.sel)}
+function syncRail(){$('x0').value=+bx(S.r[0]).toPrecision(8);$('x1').value=+bx(S.r[1]).toPrecision(8);$('yclip').value=S.yclip;$('T').value=S.T;$('n').value=S.n;$('C3').value=S.C3;
+  $('nlbl').innerHTML=FERMI?'n per spin state (cm⁻³)':'n (cm⁻³)';$('gashint').innerHTML=FERMI?'Sets k<sub>F</sub>, T<sub>F</sub> and the collision rates.':'Sets the thermal cross section and the collision and loss rates.';
+  $('l3sec').hidden=!D.boson;$('fromlbl').textContent='From ('+U[S.unit].n+')';$('tolbl').textContent='To ('+U[S.unit].n+')';
+  document.querySelectorAll('#unit button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===S.unit)));document.querySelectorAll('#ym button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===S.ym)))}
+function draw(){const t=S.tab;['a','cs','mo','th','rs'].forEach(k=>{$('pane-'+k).hidden=k!==t});document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.t===t)));
+  syncRail();stats();const h=new URLSearchParams(location.hash.slice(1));h.set('tab',t);h.set('unit',S.unit);history.replaceState(null,'','#'+h.toString());
+  return ({a:buildA,cs:buildCs,mo:buildMo,th:buildTh,rs:buildRs})[t]()}
+$('h1').innerHTML=`${D.label} Feshbach resonances`;$('sub').innerHTML=`m = ${D.mass.toFixed(6)} u (${esc(D.massSrc)}) · ${D.boson==null?'':D.boson?'boson':'fermion'}`;
+document.title=D.plain+' Feshbach';
+chChecks();
+document.querySelectorAll('#unit button').forEach(b=>b.onclick=()=>{S.unit=b.dataset.v;draw()});
+document.querySelectorAll('#ym button').forEach(b=>b.onclick=()=>{S.ym=b.dataset.v;draw()});
+$('x0').onchange=$('x1').onchange=()=>{const f=U[S.unit].f,a=num('x0',bx(S.r[0]))/f,c=num('x1',bx(S.r[1]))/f;if(a!==c){S.r=[Math.max(B[0],Math.min(a,c)),Math.min(B[NB-1],Math.max(a,c))];draw()}};
+$('fitall').onclick=()=>{S.r=[B[0],B[NB-1]];draw()};
+$('yclip').onchange=()=>{const v=num('yclip',S.yclip);if(v>0){S.yclip=v;draw()}};
+$('T').onchange=()=>{const v=num('T',S.T);if(v>0){S.T=v;draw()}};$('n').onchange=()=>{const v=num('n',S.n);if(v>0){S.n=v;draw()}};$('C3').onchange=()=>{const v=num('C3',S.C3);if(v>=0){S.C3=v;draw()}};
+$('chsel').onchange=e=>{S.sel=+e.target.value;S.on.add(S.sel);chChecks();draw()};
+document.querySelectorAll('.tabs button').forEach(b=>{b.hidden=!O.tabs.includes(b.dataset.t);b.onclick=()=>{S.tab=b.dataset.t;Promise.resolve(draw()).then(hookAll)}});
+$('reset').onclick=()=>location.reload();
+$('railbtn').onclick=()=>{S.rail=!S.rail;$('app').classList.toggle('closed',!S.rail);$('railbtn').textContent=S.rail?'Hide controls':'Show controls';$('railbtn').setAttribute('aria-expanded',String(S.rail));setTimeout(()=>{document.querySelectorAll('.pane:not([hidden]) .p').forEach(p=>Plotly.Plots.resize(p))},30)};
+$('theme').onclick=()=>{const o=['auto','light','dark'];S.theme=o[(o.indexOf(S.theme)+1)%3];const h=document.documentElement;S.theme==='auto'?h.removeAttribute('data-theme'):h.setAttribute('data-theme',S.theme);$('theme').textContent='Theme: '+S.theme;draw()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw());
+const SK='linak-feshbach-rail';let shut={};try{shut=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+const secs=[...document.querySelectorAll('.rail section')].filter(x=>x.querySelector(':scope>h2'));const keepRail=()=>{try{localStorage.setItem(SK,JSON.stringify(shut))}catch(e){}};
+secs.forEach((sec,i)=>{const h=sec.querySelector(':scope>h2'),key=h.textContent.trim();h.tabIndex=0;h.setAttribute('role','button');const set=v=>{sec.classList.toggle('shut',v);h.setAttribute('aria-expanded',String(!v));shut[key]=v};
+  set(shut[key]===undefined?false:!!shut[key]);const tog=()=>{set(!sec.classList.contains('shut'));keepRail()};h.onclick=tog;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}}});
+$('colall').onclick=()=>{secs.forEach(x=>{x.classList.add('shut');x.querySelector('h2').setAttribute('aria-expanded','false');shut[x.querySelector('h2').textContent.trim()]=true});keepRail()};
+$('expall').onclick=()=>{secs.forEach(x=>{x.classList.remove('shut');x.querySelector('h2').setAttribute('aria-expanded','true');shut[x.querySelector('h2').textContent.trim()]=false});keepRail()};
+const closeCM=()=>{const m=$('cm');m&&m.remove()};document.addEventListener('click',e=>{if(!e.target.closest('.cm'))closeCM()});
+async function lightly(fn){const h=document.documentElement,prev=h.getAttribute('data-theme');h.setAttribute('data-theme','light');try{await draw();await fn()}finally{prev==null?h.removeAttribute('data-theme'):h.setAttribute('data-theme',prev);draw()}}
+function dl(name,href){const a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();a.remove()}
+const blob=(t,type)=>URL.createObjectURL(new Blob([t],{type}));const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+function csv(){if(S.tab==='rs')return 'channel,l,B0_G,Delta_G,a_bg_a0,zero_G,dmu_muB,s_res,s_res_source,R_star_a0,ref\n'+D.res.map(r=>[r.ch,r.pw,r.B0,r.D,r.abg==null?'':r.abg,r.sw?r.B0+r.D:'',r.dmu==null?'':r.dmu,r.sres==null?'':r.sres,r.sresSrc||'',r.sres?D.abar/r.sres:'',r.ref].map(q).join(',')).join('\n');
+  if(S.tab==='a'){const on=[...S.on].sort((p,r)=>p-r),[i0,i1]=idxRange();return 'B_G,'+on.map(ci=>q('a_a0 '+D.ch[ci].name)+','+q('between_fits '+D.ch[ci].name)).join(',')+'\n'+B.slice(i0,i1+1).map((b,k)=>[b,...on.flatMap(ci=>[D.ch[ci].a[i0+k],D.ch[ci].flag[i0+k]])].map(q).join(',')).join('\n')}
+  const id={cs:'pcs',mo:'pmo',th:'pth'}[S.tab],gd=$(id);if(!gd.data||!gd.data.length)return '';const tr=gd.data.filter(t=>t.x&&t.x.length>2);
+  return U[S.unit].l+','+tr.map(t=>q(String(t.name).replace(/<[^>]+>/g,''))).join(',')+'\n'+tr[0].x.map((x,k)=>[x,...tr.map(t=>t.y[k])].map(q).join(',')).join('\n')}
+const PLOTS={a:[['pa','Scattering length']],cs:[['pcs','Cross section and loss']],mo:[['pmo','Molecules']],th:[['pth','Thresholds']],rs:[]};
+$('exportbtn').onclick=e=>{e.stopPropagation();closeCM();const b=e.currentTarget.getBoundingClientRect(),m=document.createElement('div');m.className='cm';m.id='cm';
+  m.innerHTML=PLOTS[S.tab].map(([id,nm])=>`<button data-a="svg" data-p="${id}">${nm} as SVG</button><button data-a="png" data-p="${id}">${nm} as PNG</button>`).join('')+'<button data-a="pdf">Page as PDF (print dialog)</button><button data-a="csv">Data as CSV</button>';
+  document.body.appendChild(m);m.style.top=(b.bottom+4)+'px';m.style.left=Math.max(8,Math.min(b.left,innerWidth-m.offsetWidth-8))+'px';
+  m.onclick=ev=>{const a=ev.target.dataset.a,id=ev.target.dataset.p;if(!a)return;closeCM();const o={width:1600,height:1000,filename:D.element+'_feshbach_'+S.tab};
+    if(a==='svg')lightly(()=>Plotly.downloadImage(id,{...o,format:'svg'}));if(a==='png')lightly(()=>Plotly.downloadImage(id,{...o,format:'png',scale:3}));
+    if(a==='pdf')lightly(async()=>{window.print();await new Promise(r=>setTimeout(r,2000))});if(a==='csv')dl(D.element+'_feshbach_'+S.tab+'.csv',blob(csv(),'text/csv'))}};
+const hooked={};function hookAll(){['pa','pcs','pmo','pth'].forEach(id=>{const el=$(id);if(hooked[id]||!el.on)return;hooked[id]=1;
+  el.on('plotly_relayout',ev=>{const a=ev['xaxis.range[0]'],c=ev['xaxis.range[1]'];if(a!=null&&c!=null){const f=U[S.unit].f;S.r=[Math.max(B[0],Math.min(a,c)/f),Math.min(B[NB-1],Math.max(a,c)/f)];draw()}else if(ev['xaxis.autorange']){S.r=[B[0],B[NB-1]];draw()}})})}
+Promise.resolve(draw()).then(hookAll);
+</script>

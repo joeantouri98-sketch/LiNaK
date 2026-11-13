@@ -20,15 +20,11 @@ ARC_VALENCE = {          # a.u.
 
 
 @pytest.fixture(scope="module")
-def na_network(root_dir):
-    import os
-    cwd = os.getcwd()
-    os.chdir(root_dir)
-    try:
-        data = A.load_element("Na", verbose=False)
-    finally:
-        os.chdir(cwd)
-    return data
+def na_network():
+    # the bundled data, by path: the default data folder is the session workspace, which is only
+    # seeded when another test has created it (this file failed when run on its own)
+    from linak.core.paths import reference_path
+    return A.load_element("Na", str(reference_path("data_json", "Na_rydberg.json").parent), verbose=False)
 
 
 @pytest.mark.parametrize("state,ref", sorted(ARC_VALENCE.items()))

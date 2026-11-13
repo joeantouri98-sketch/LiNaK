@@ -5,7 +5,10 @@ first source that has it:
 
   1. NIST (term + J for ions, J-resolved lines with LS 6j completion, or the multiplet
      resolved into fine structure with LS 6j weights), 1b. the curated literature
-     overlay, 2. ORCA TD-DFT for ground-state lines matched within 0.10 eV, 3. ORCA
+     overlay, 1c. a structure model when one is chosen (--model-f: DHF + core
+     polarisation or Brueckner; its dipole at the line's measured energy, except the
+     ground ns → np Cooper-minimum series and lines whose radial integral nearly
+     cancels), 2. ORCA TD-DFT for ground-state lines matched within 0.10 eV, 3. ORCA
      EOM-CCSD excited → excited moments, 4. Numerov radial integrals calibrated on
      NIST, 5. the Coulomb approximation.
 
@@ -23,7 +26,7 @@ peak cross sections, saturation intensities, recoil, Doppler limit and capture v
 ``coulomb_fosc`` is the single implementation in ``polarizability_core`` (P26).
 
 No files or prints here: the ``lifetimes`` pipeline loads the transitions, the
-NIST / literature / ORCA f-values and passes them in.
+NIST / literature / model / ORCA f-values and passes them in.
 """
 
 from __future__ import annotations
@@ -41,6 +44,7 @@ from linak.core.constants import AMU_KG, C_M_S, EINSTEIN_PREFACTOR, EV_TO_HARTRE
 from linak.physics.atomic_structure.dhf_lines import DHF_REL_UNCERTAINTY, DHFLines
 from linak.physics.polarizability_core import (
     ACC_UNCERTAINTY,
+    SOURCE_REL_UNCERTAINTY,
     coulomb_fosc,
     parse_term_from_label,
 )
@@ -600,7 +604,8 @@ def _line_row(t, c: _Context) -> TransitionA | str:
         if _f_dhf:
             fosc        = _f_dhf
             fosc_source = c.sources.dhf.source
-            fosc_delta  = DHF_REL_UNCERTAINTY
+            # the per-source table (Preferences > Tables and variables > Uncertainty model)
+            fosc_delta  = SOURCE_REL_UNCERTAINTY.get(fosc_source, DHF_REL_UNCERTAINTY)
             g_upper     = sum(j + 1 for j in _JU2)
             g_lower     = sum(j + 1 for j in _JL2)
 
