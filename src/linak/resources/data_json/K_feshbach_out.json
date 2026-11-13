@@ -32,11 +32,11 @@
       "B0_G": 403.4,
       "Delta_G": -52.0,
       "a_bg_a0": -29.0,
-      "ref": "D'Errico et al. Table 1 \u2014 |1,1> B_exp=403.4(7) G (molecule assoc. \u2248401.5 G; B_th=402.4 G), \u2212\u0394_th=52 G \u2192 \u0394=\u221252 G, a_bg=\u221229 a0",
+      "ref": "D'Errico et al. Table 1 \u2014 |1,1> B_exp=403.4(7) G (molecule assoc. \u2248401.5 G; B_th=402.4 G), \u2212\u0394_th=52 G \u2192 \u0394=\u221252 G, a_bg=\u221229 a0; \u03b4\u03bc = 1.5 \u03bcB from Chin et al., RMP 82, 1225 (2010) Table IV",
       "in_s_wave_a": true,
-      "dmu_muB": null,
-      "s_res": null,
-      "s_res_source": null
+      "dmu_muB": 1.5,
+      "s_res": 2.105,
+      "s_res_source": "\u03b4\u03bc"
     },
     {
       "label": "s-wave 745.1 G",
@@ -1641,7 +1641,7 @@
     87.42335667833916,
     90.0200900450225,
     92.26218210787536,
-    94.68274761261722,
+    94.6827476126172,
     96.51192346173086,
     99.54144572286143,
     101.70539019509754,

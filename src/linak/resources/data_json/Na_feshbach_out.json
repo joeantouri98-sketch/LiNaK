@@ -32,11 +32,11 @@
       "B0_G": 905.0,
       "Delta_G": 1.04,
       "a_bg_a0": 54.54,
-      "ref": "Stenger et al. PRL 82, 4569 (1999); Knoop et al. \u2014 90.51(4) mT, \u0394\u22480.104 mT",
+      "ref": "Stenger et al. PRL 82, 4569 (1999); Knoop et al. \u2014 90.51(4) mT, \u0394\u22480.104 mT; \u03b4\u03bc = 3.8 \u03bcB from Chin et al., RMP 82, 1225 (2010) Table IV",
       "in_s_wave_a": true,
-      "dmu_muB": null,
-      "s_res": null,
-      "s_res_source": null
+      "dmu_muB": 3.8,
+      "s_res": 0.08254,
+      "s_res_source": "\u03b4\u03bc"
     },
     {
       "label": "s-wave 2054 G",
@@ -58,7 +58,7 @@
       "B0_G": 1195.0,
       "Delta_G": -4.0,
       "a_bg_a0": 54.54,
-      "ref": "Stenger et al. PRL 82, 2422 (1999) \u2014 B0=1195 G, \u0394=\u22124 G (fit guide in Fig. 1e); Knoop theory B0=120.75(0.5) mT",
+      "ref": "Stenger et al. PRL 82, 2422 (1999) \u2014 B0=1195 G, \u0394=\u22124 G (fit guide in Fig. 1e); Knoop theory B0=120.75(0.5) mT; a_bg: |1,-1>+|1,-1> and |1,+1>+|1,+1> are both pure F_tot = 2 (M = -2, +2) pairs, so their zero-field scattering length is the same 54.54 a0 (Knoop et al.)",
       "in_s_wave_a": true,
       "dmu_muB": null,
       "s_res": null,

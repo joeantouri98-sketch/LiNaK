@@ -21,7 +21,8 @@
       "B0_G": 403.4,
       "Delta_G": -52,
       "a_bg_a0": -29,
-      "ref": "D'Errico et al. Table 1 — |1,1> B_exp=403.4(7) G (molecule assoc. ≈401.5 G; B_th=402.4 G), −Δ_th=52 G → Δ=−52 G, a_bg=−29 a0"
+      "ref": "D'Errico et al. Table 1 — |1,1> B_exp=403.4(7) G (molecule assoc. ≈401.5 G; B_th=402.4 G), −Δ_th=52 G → Δ=−52 G, a_bg=−29 a0; δμ = 1.5 μB from Chin et al., RMP 82, 1225 (2010) Table IV",
+      "dmu_muB": 1.5
     },
     {
       "label": "s-wave 745.1 G",

@@ -39,7 +39,8 @@
       "B0_G": 1007.34,
       "Delta_G": 0.17,
       "a_bg_a0": 100,
-      "ref": "Marte Table I — Bexp=1007.34 G, Δ_th=170 mG (broadest; usable for a(B) tuning). Chin/Dürr quote B0=1007.4 G, Δ=0.21 G"
+      "ref": "Marte Table I — Bexp=1007.34 G, Δ_th=170 mG (broadest; usable for a(B) tuning). Chin/Dürr quote B0=1007.4 G, Δ=0.21 G; δμ = 2.79 μB from Chin et al., RMP 82, 1225 (2010) Table IV",
+      "dmu_muB": 2.79
     }
   ],
   "_85Rb_note": {

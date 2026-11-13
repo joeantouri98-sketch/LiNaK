@@ -19,30 +19,31 @@
   "quantum_defects_ritz": {
     "s": {
       "delta0": 1.3479401336347037,
-      "delta2": 0.06272469243833102,
+      "delta2": 0.06272469243833692,
       "n_min": 5,
       "n_max": 12,
       "n_points": 8,
-      "rms": 1.0034163395308249e-05
+      "rms": 1.0034163395333822e-05
     },
     "p": {
-      "delta0": 0.8548409456100472,
-      "delta2": 0.11619823142832685,
+      "delta0": 0.854840945610047,
+      "delta2": 0.11619823142832936,
       "n_min": 5,
       "n_max": 11,
       "n_points": 6,
-      "rms": 1.7596527078504193e-05
+      "rms": 1.759652707849816e-05
     },
     "d": {
       "delta0": 0.015009221152664481,
-      "delta2": -0.044751938663891135,
+      "delta2": -0.044751938663891114,
       "n_min": 5,
       "n_max": 10,
       "n_points": 6,
-      "rms": 4.917712449954668e-05
+      "rms": 4.917712449954672e-05
     }
   },
   "qd_notes": "Averaged with inverse-variance weights from ASD Uncertainty (eV); theoretical [ ] levels excluded from the QD fit but kept in excitations.",
+  "nist_levels_replaced": [],
   "ground_state": {
     "n": 3,
     "l": "s",

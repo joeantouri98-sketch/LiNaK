@@ -1,9 +1,9 @@
 {
   "element": "Cs",
   "isotope_A": 133,
-  "note": "Literature magnetic Feshbach parameters for elastic a(B)=a_bg(1−Δ/(B−B0)) in the aa channel |3,+3>+|3,+3| (absolute ground state). High-field s-wave poles and zeros from Berninger et al., PRA 87, 032517 (2013) [arXiv:1212.5584v2] M2012 (Tables 2 & 4). Low-field Chin RMP Table IV values updated with M2012 B0=−12.38 G. Δ for high-field s-waves taken as B_zero−B_pole from Table 2. Cs has many overlapping d/g/i resonances; only the main s-waves plus a few well-characterized higher-ℓ lines are listed. Isolated Chin form is approximate when resonances overlap.",
-  "a_bg_default_a0": 2858,
-  "a_bg_ref": "Berninger et al. PRA 87, 032517 (2013) Table 4 — M2012 triplet scattering length a_T=2858(19) a0. Local a_bg on each resonance may differ (Chin RMP quotes 1720 a0 for the low-field s-wave).",
+  "note": "133Cs |3,+3>+|3,+3> (absolute ground state). a(B) of the channel is piecewise published fits: Kraemer et al. (0-150 G, the broad s-wave pole near -12 G with a field-dependent background; narrow d/g lines excluded and multiplied in from the list below) and Jachymski & Julienne (490-508, 530-570 and 750-900 G, fits to the M2012 coupled-channel a(B) of Berninger et al.). Between the fitted ranges a(B) is a global product model scaled to meet the fits (drawn dashed). The resonance list gives Berninger et al.'s measured poles and zero crossings (PRA 87, 032517 (2013)).",
+  "a_bg_default_a0": 1722,
+  "a_bg_ref": "Kraemer et al., Nature 440, 315 (2006), Methods: a(B) = (1722 + 1.52 B/G)(1 - 28.72/(B/G + 11.74)) a0. (The earlier 2858 a0 was the triplet scattering length a_T, not the background of this channel.)",
   "resonances": [
     {
       "label": "s-wave -12.38 G",
@@ -11,8 +11,9 @@
       "partial_wave": "s",
       "B0_G": -12.38,
       "Delta_G": 29.5,
-      "a_bg_a0": 2858,
-      "ref": "Berninger Table 4 s-pole −12.38(8) G; zero crossing 17.12 G (Table 2) → Δ≈29.5 G. Chin RMP Table IV had B0=−11.7 G, Δ=28.7 G, a_bg=1720 a0. Controls a(B) for B≳0 (Cs BEC / Efimov near ~8–20 G)."
+      "a_bg_a0": 1722,
+      "ref": "Berninger Table 4 s-pole −12.38(8) G; zero crossing 17.12 G (Table 2) → Δ≈29.5 G. Chin RMP Table IV had B0=−11.7 G, Δ=28.7 G, a_bg=1720 a0. Controls a(B) for B≳0 (Cs BEC / Efimov near ~8–20 G).; a_bg = 1722 a0: Kraemer 2006 background at B = 0; s_res = 560 (Chin et al., RMP 82, 1225 (2010) Table IV)",
+      "s_res": 560
     },
     {
       "label": "d-wave 47.97 G",
@@ -29,8 +30,9 @@
       "partial_wave": "s",
       "B0_G": 548.78,
       "Delta_G": 7.48,
-      "a_bg_a0": 2858,
-      "ref": "Berninger Table 4 — −6(34)7s(6) pole 548.78(9) G; zero near 556.26 G (Table 2) → Δ≈7.48 G. Open-channel dominated; overlaps g-wave near 554 G."
+      "a_bg_a0": 2581.0,
+      "ref": "Berninger Table 4 — −6(34)7s(6) pole 548.78(9) G; zero near 556.26 G (Table 2) → Δ≈7.48 G. Open-channel dominated; overlaps g-wave near 554 G.; a_bg = 2581 a0: Jachymski & Julienne local background near 550 G; s_res = 160 (Jachymski & Julienne, PRA 88, 052701 (2013) Table I (Chin: 170))",
+      "s_res": 160
     },
     {
       "label": "g-wave 554.06 G",
@@ -39,7 +41,8 @@
       "B0_G": 554.06,
       "Delta_G": 0.33,
       "a_bg_a0": -1000,
-      "ref": "Berninger Table 1 — g(3) Bmax=554.06(2) G, Bmin=553.73(2) G → Δ=0.33(3) G; local a_bg≈−1000 a0 on shoulder of 549 G s-wave (text §III.2)"
+      "ref": "Berninger Table 1 — g(3) Bmax=554.06(2) G, Bmin=553.73(2) G → Δ=0.33(3) G; local a_bg≈−1000 a0 on shoulder of 549 G s-wave (text §III.2); s_res = 1.6 (Jachymski & Julienne Table I)",
+      "s_res": 1.6
     },
     {
       "label": "s-wave 786.8 G",
@@ -47,8 +50,9 @@
       "partial_wave": "s",
       "B0_G": 786.8,
       "Delta_G": 94.1,
-      "a_bg_a0": 2858,
-      "ref": "Berninger Table 4 — −6(34)6s(6) pole 786.8(6) G; zero near 880.90 G (Table 2) → Δ≈94.1 G. Broad high-field resonance."
+      "a_bg_a0": 2166.0,
+      "ref": "Berninger Table 4 — −6(34)6s(6) pole 786.8(6) G; zero near 880.90 G (Table 2) → Δ≈94.1 G. Broad high-field resonance.; a_bg = 2166 a0: Jachymski & Julienne local background near 800 G; s_res = 1480 (Jachymski & Julienne Table I (Chin: 1470))",
+      "s_res": 1480
     },
     {
       "label": "d-wave 820.37 G",
@@ -57,7 +61,104 @@
       "B0_G": 820.37,
       "Delta_G": 0.96,
       "a_bg_a0": -4200,
-      "ref": "Berninger Table 1 — −6(34)6d(6) Bmax=820.37(20) G, Bmin=819.41(2) G → Δ=0.96(22) G; local a_bg≈−4200 a0 from broad 787 G s-wave (text §III.2)"
+      "ref": "Berninger Table 1 — −6(34)6d(6) Bmax=820.37(20) G, Bmin=819.41(2) G → Δ=0.96(22) G; local a_bg≈−4200 a0 from broad 787 G s-wave (text §III.2); s_res = 16 (Jachymski & Julienne Table I)",
+      "s_res": 16
     }
-  ]
+  ],
+  "curves": {
+    "|3,+3> + |3,+3>": {
+      "kind": "fit",
+      "ref": "Kraemer et al. 2006; Jachymski & Julienne 2013",
+      "global": {
+        "a_bg_a0": 1722,
+        "slope_a0_per_G": 1.52,
+        "ref": "Kraemer 2006 background, used only between the fitted ranges"
+      },
+      "segments": [
+        {
+          "B_min_G": 0,
+          "B_max_G": 150,
+          "a_bg_a0": 1722,
+          "slope_a0_per_G": 1.52,
+          "B_ref_G": 0,
+          "poles": [
+            [
+              -11.74,
+              28.72
+            ]
+          ],
+          "ref": "Kraemer et al., Nature 440, 315 (2006), Methods; valid 0-150 G away from the narrow lines"
+        },
+        {
+          "B_min_G": 490,
+          "B_max_G": 508,
+          "a_bg_R6": 15.2312,
+          "R6_a0": 202.1,
+          "alpha_per_G": 0.00368,
+          "B_ref_G": 500,
+          "poles": [
+            [
+              492.68,
+              0.1518
+            ],
+            [
+              495.04,
+              3.397
+            ],
+            [
+              501.44,
+              2.088
+            ],
+            [
+              505.38,
+              0.2389
+            ]
+          ],
+          "ref": "Jachymski & Julienne, PRA 88, 052701 (2013) [arXiv:1308.0681] Table I: fits of Eq. (26) to the M2012 coupled-channel a(B) (Berninger et al., PRA 87, 032517 (2013)) (four d-wave lines)"
+        },
+        {
+          "B_min_G": 530,
+          "B_max_G": 570,
+          "a_bg_R6": 12.7729,
+          "R6_a0": 202.1,
+          "alpha_per_G": 0.00448,
+          "B_ref_G": 550,
+          "poles": [
+            [
+              544.19,
+              0.02179
+            ],
+            [
+              548.79,
+              6.626
+            ],
+            [
+              554.07,
+              0.5048
+            ]
+          ],
+          "ref": "Jachymski & Julienne, PRA 88, 052701 (2013) [arXiv:1308.0681] Table I: fits of Eq. (26) to the M2012 coupled-channel a(B) (Berninger et al., PRA 87, 032517 (2013)) (s-wave 548.79 G with two g-wave lines)"
+        },
+        {
+          "B_min_G": 750,
+          "B_max_G": 900,
+          "a_bg_R6": 10.7164,
+          "R6_a0": 202.1,
+          "alpha_per_G": 0.000469,
+          "B_ref_G": 800,
+          "poles": [
+            [
+              786.17,
+              92.26
+            ],
+            [
+              820.32,
+              0.4508
+            ]
+          ],
+          "ref": "Jachymski & Julienne, PRA 88, 052701 (2013) [arXiv:1308.0681] Table I: fits of Eq. (26) to the M2012 coupled-channel a(B) (Berninger et al., PRA 87, 032517 (2013)) (s-wave 786.17 G with the 820.32 G d-wave line)"
+        }
+      ]
+    }
+  }
 }
