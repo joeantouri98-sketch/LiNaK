@@ -1,7 +1,7 @@
 {
   "element": "Rb",
   "isotope_A": 87,
-  "note": "Literature magnetic Feshbach parameters for elastic a(B)=a_bg(1−Δ/(B−B0)) in 87Rb |1,+1>+|1,+1| (aa). Positions Bexp and theoretical elastic widths Δ from Marte et al., PRL 89, 283202 (2002) [arXiv:cond-mat/0210651v2] Table I (l=0 s-wave rows). a_bg≈100 a0 from Chin RMP Table IV. Marte Δ is listed in mG and converted to G here. Many narrow d-wave (l=2) loss peaks in Table I omitted (Δ≪0.1 mG). 85Rb has a separate broad resonance near 155 G (Claussen/Chin; not this isotope).",
+  "note": "Literature magnetic Feshbach parameters for 87Rb. |1,+1>+|1,+1> (aa): positions Bexp and theoretical elastic widths Δ from Marte et al., PRL 89, 283202 (2002) [arXiv:cond-mat/0210651] Table I: the four s-wave (l=0) rows and the d-wave (l=2) rows with Δ ≥ 0.2 mG; d-wave rows with Δ < 0.1 mG are omitted. a_bg≈100 a0 from Chin RMP Table IV. Marte Δ is listed in mG and converted to G here. Mixed |1,mF>+|2,mF'> channels near 9 G and 18 G: Kaufman et al., PRA 80, 050701(R) (2009) Table I, with the inelastic decay width γB (a = a_bg[1 − Δ/(B − B0 − iγ/2)]); the 17.821 G a+e line has no fitted width and is omitted. Marte Table II lists further resonances in |1,0>+|1,+1>, |1,0>+|1,0> and |1,-1>+|1,+1> without widths; they are not included. 85Rb has a separate broad resonance near 155 G (Claussen/Chin; not this isotope).",
   "a_bg_default_a0": 100,
   "a_bg_ref": "Chin et al., Rev. Mod. Phys. 82, 1225 (2010) Table IV — 87Rb aa a_bg=100 a0",
   "resonances": [
@@ -41,6 +41,131 @@
       "a_bg_a0": 100,
       "ref": "Marte Table I — Bexp=1007.34 G, Δ_th=170 mG (broadest; usable for a(B) tuning). Chin/Dürr quote B0=1007.4 G, Δ=0.21 G; δμ = 2.79 μB from Chin et al., RMP 82, 1225 (2010) Table IV",
       "dmu_muB": 2.79
+    },
+    {
+      "label": "d-wave 391.49 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "d",
+      "B0_G": 391.49,
+      "Delta_G": 0.0003,
+      "a_bg_a0": 100,
+      "ref": "Marte et al., PRL 89, 283202 (2002), Table I — Bexp=391.49 G, Δ_th=0.3 mG; closed channel l=2 2(1,2)-4, mF=3"
+    },
+    {
+      "label": "d-wave 551.47 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "d",
+      "B0_G": 551.47,
+      "Delta_G": 0.0002,
+      "a_bg_a0": 100,
+      "ref": "Marte et al., PRL 89, 283202 (2002), Table I — Bexp=551.47 G, Δ_th=0.2 mG; closed channel l=2 2(1,2)-4, mF=2"
+    },
+    {
+      "label": "d-wave 632.45 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "d",
+      "B0_G": 632.45,
+      "Delta_G": 0.0015,
+      "a_bg_a0": 100,
+      "ref": "Marte et al., PRL 89, 283202 (2002), Table I — Bexp=632.45 G, Δ_th=1.5 mG; closed channel l=2 2(2,2)-5, mF=4"
+    },
+    {
+      "label": "d-wave 719.48 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "d",
+      "B0_G": 719.48,
+      "Delta_G": 0.0005,
+      "a_bg_a0": 100,
+      "ref": "Marte et al., PRL 89, 283202 (2002), Table I — Bexp=719.48 G, Δ_th=0.5 mG; closed channel l=2 2(2,2)-5, mF=3"
+    },
+    {
+      "label": "d-wave 831.29 G",
+      "channel": "|1,+1> + |1,+1>",
+      "partial_wave": "d",
+      "B0_G": 831.29,
+      "Delta_G": 0.0002,
+      "a_bg_a0": 100,
+      "ref": "Marte et al., PRL 89, 283202 (2002), Table I — Bexp=831.29 G, Δ_th=0.2 mG; closed channel l=2 2(2,2)-5, mF=2"
+    },
+    {
+      "label": "s-wave 9.0918 G",
+      "channel": "|1,+1> + |2,-2>",
+      "partial_wave": "s",
+      "B0_G": 9.0918,
+      "Delta_G": 0.0013,
+      "gamma_G": 0.0046,
+      "a_bg_a0": 98.0,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=9.0918 G, ΔB=1.3 mG, γB=4.6 mG, a_bg=98.0 a0; bound state (cf) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 17.9208 G",
+      "channel": "|1,+1> + |2,-2>",
+      "partial_wave": "s",
+      "B0_G": 17.9208,
+      "Delta_G": 0.00095,
+      "gamma_G": 0.0034,
+      "a_bg_a0": 98.0,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=17.9208 G, ΔB=0.95 mG, γB=3.4 mG, a_bg=98.0 a0; bound state (be) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 9.1047 G",
+      "channel": "|1,+1> + |2,-1>",
+      "partial_wave": "s",
+      "B0_G": 9.1047,
+      "Delta_G": 0.002,
+      "gamma_G": 0.0047,
+      "a_bg_a0": 97.7,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=9.1047 G, ΔB=2.0 mG, γB=4.7 mG, a_bg=97.7 a0; bound state (cg) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>. Erhard et al., PRA 69, 032705 (2004) measured 9.09(1) G."
+    },
+    {
+      "label": "s-wave 9.0448 G",
+      "channel": "|1,+1> + |2,0>",
+      "partial_wave": "s",
+      "B0_G": 9.0448,
+      "Delta_G": 0.0013,
+      "gamma_G": 0.003,
+      "a_bg_a0": 97.7,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=9.0448 G, ΔB=1.3 mG, γB=3.0 mG, a_bg=97.7 a0; bound state (ch) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 17.9848 G",
+      "channel": "|1,+1> + |2,0>",
+      "partial_wave": "s",
+      "B0_G": 17.9848,
+      "Delta_G": 0.0014,
+      "gamma_G": 0.0032,
+      "a_bg_a0": 97.7,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=17.9848 G, ΔB=1.4 mG, γB=3.2 mG, a_bg=97.7 a0; bound state (bg) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 18.4108 G",
+      "channel": "|1,+1> + |2,+1>",
+      "partial_wave": "s",
+      "B0_G": 18.4108,
+      "Delta_G": 0.0038,
+      "gamma_G": 0.0128,
+      "a_bg_a0": 98.0,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=18.4108 G, ΔB=3.8 mG, γB=12.8 mG, a_bg=98.0 a0; bound state (bh) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 18.0059 G",
+      "channel": "|1,0> + |2,-2>",
+      "partial_wave": "s",
+      "B0_G": 18.0059,
+      "Delta_G": 0.0035,
+      "gamma_G": 0.0061,
+      "a_bg_a0": 97.4,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=18.0059 G, ΔB=3.5 mG, γB=6.1 mG, a_bg=97.4 a0; bound state (ce) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
+    },
+    {
+      "label": "s-wave 18.1707 G",
+      "channel": "|1,0> + |2,-1>",
+      "partial_wave": "s",
+      "B0_G": 18.1707,
+      "Delta_G": 0.0014,
+      "gamma_G": 0.0155,
+      "a_bg_a0": 98.3,
+      "ref": "Kaufman et al., PRA 80, 050701(R) (2009), Table I (coupled-channel fit; B0 measured) — B0=18.1707 G, ΔB=1.4 mG, γB=15.5 mG, a_bg=98.3 a0; bound state (cf) in a=|1,+1>, b=|1,0>, c=|1,-1>, d..h=|2,-2>..|2,+2>."
     }
   ],
   "_85Rb_note": {

@@ -209,7 +209,7 @@ def tune_out_wavelengths(transitions_list, wl_min_nm=200.0, wl_max_nm=2000.0):
         return float(np.sum(fs / (dE * dE - w * w)))
 
     res = sorted({(abs(t['delta_E_au']), t.get('other_label', '')) for t in transitions_list
-                  if t['delta_E_au'] != 0 and t.get('other_label') != 'core'})
+                  if t['delta_E_au'] != 0 and t.get('other_label') not in ('core', 'continuum')})
     out = []
     w_lo, w_hi = omega_au_from_nm(wl_max_nm), omega_au_from_nm(wl_min_nm)
     for (e1, l1), (e2, l2) in itertools.pairwise(res):
@@ -247,7 +247,7 @@ def find_magic_wavelengths(trans_ground, trans_excited,
     all_res = []
     for tr in trans_ground + trans_excited:
         dE = abs(tr['delta_E_au'])
-        if dE > 0:
+        if dE > 0 and tr.get('source') not in ('core', 'continuum'):
             wl_r = nm_from_omega_au(dE)
             if wl_min_nm < wl_r < wl_max_nm:
                 all_res.append(wl_r)
@@ -308,7 +308,7 @@ def find_magic_wavelengths(trans_ground, trans_excited,
         if all_res:
             nearest_res = min(all_res, key=lambda r: abs(r - wl_magic))
             nearest_res_tr = min(
-                trans_ground + trans_excited,
+                [t for t in trans_ground + trans_excited if t.get('source') not in ('core', 'continuum')],
                 key=lambda tr: abs(nm_from_omega_au(abs(tr['delta_E_au'])) - nearest_res)
                 if abs(tr['delta_E_au']) > 0 else float('inf')
             )
@@ -358,6 +358,7 @@ def run_element(element, excited_label=None,
                         rydberg_file=rydberg_file, transitions_file=transitions_file)
     if data is None:
         return None
+    data['valence_continuum'] = True     # add the photoionization continuum (valence_continuum.py)
     if model_f:
         from qali.pipelines.dhf import load_dhf_lines
         data['dhf_lines'] = load_dhf_lines(element, data_dir, model_file, model_f)
@@ -681,6 +682,7 @@ def main(argv=None) -> int:
                             transitions_file=resolve_data_file(args.transitions_file, el, data_dir, "Transitions"))
         if data is None:
             raise MissingDataError(f"No polarizability data for {el} in {data_dir}")
+        data['valence_continuum'] = True
         from qali.pipelines.dhf import load_dhf_lines, model_f_choice
         _model, _model_spec = model_f_choice(args)
         if _model:
@@ -690,9 +692,9 @@ def main(argv=None) -> int:
             parser.error(f"state {lab!r} not in {el} rydberg set")
         trans = build_transitions_for_state(lab, data, data['transitions'])
         a0 = alpha0_static(trans)
-        valence = [t for t in trans if t.get('other_label') != 'core']
+        valence = [t for t in trans if t.get('other_label') not in ('core', 'continuum')]
         print(f"  {el} {lab}: alpha(0) = {a0:.6g} au  "
-              f"({len(valence)} valence + core partners)")
+              f"({len(valence)} valence partners, plus continuum and core)")
         return 0
 
     if args.all:

@@ -305,7 +305,7 @@ def resonance_rows(inputs: FeshbachInputs, result: FeshbachResult):
             s_res, src = r.s_res, 'published'
         else:
             s_res, src = None, None
-        rows.append(dict(label=r.label, ch=r.channel, pw=r.partial_wave, B0=r.B0_G, D=r.Delta_G,
+        rows.append(dict(label=r.label, ch=r.channel, pw=r.partial_wave, B0=r.B0_G, D=r.Delta_G, gam=r.gamma_G,
                          abg=_r(a_bg), dmu=r.dmu_muB, sres=None if s_res is None else _r(s_res, 4),
                          sresSrc=src, sw=r.is_s_wave, ref=r.ref))
     return rows
@@ -443,6 +443,7 @@ def write_output_json(inputs: FeshbachInputs, result: FeshbachResult, data_dir):
                 'partial_wave': c.resonance.partial_wave,
                 'B0_G': c.resonance.B0_G,
                 'Delta_G': c.resonance.Delta_G,
+                **({'gamma_G': c.resonance.gamma_G} if c.resonance.gamma_G else {}),
                 'a_bg_a0': c.a_bg_a0,
                 'ref': c.resonance.ref,
                 'in_s_wave_a': c.a_a0 is not None,

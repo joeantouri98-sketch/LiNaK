@@ -62,6 +62,7 @@ from qali.physics.atomic_structure.dirac_basis import (
     dirac_matrices,
     evaluate,
     nuclear_potential,
+    physical_states,
     psi_k,
 )
 
@@ -112,7 +113,7 @@ class MBPT:
             H, S, _ = dirac_matrices(b, kap, V0, self.c)
             H = H - model._exchange(b, kap, comps, core)
             eps, vec = eigh(H, S)
-            sel = np.where(eps > -self.c ** 2)[0]
+            sel = physical_states(eps, model.Z, kap, self.c)      # no basis intruders (dirac_basis)
             ncore = model.ncore(kap)
             self.orbs[kap] = [Orb(kap, float(eps[idx]), vec[:, idx] @ comps[0], vec[:, idx] @ comps[1],
                                   i < ncore, vec[:, idx]) for i, idx in enumerate(sel)]
@@ -439,7 +440,7 @@ def setup_brueckner(Z: int, *, charge: int = 0, mass_number: float | None = None
     e_high = max(float(br.dhf_energies(kap, k)[-1]) for kap, k in nlev.items())
     nodes = _nodes(lo, max(-0.004, 0.8 * e_high))
 
-    meta = np.array([SIGMA2_VERSION, Z, charge, mass_number or 0.0, lmax, n_int, *nodes])
+    meta = np.array([SIGMA2_VERSION, Z, charge, m.mass_number, lmax, n_int, *nodes])   # A as used (finite nucleus)
     cached = cache is not None and 'meta' in cache and np.array_equal(np.asarray(cache['meta']), meta)
     for kap in nlev:
         if cached and cache is not None and f"{kap}:S" in cache:

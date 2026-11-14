@@ -3,7 +3,7 @@
     "element": "Na",
     "T_K": 300.0,
     "field_V_cm": 100.0,
-    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change. rydberg_dyn: principal-value Planck integral (the former grid sum was grid-dependent). Numerov is solved at each level's own defect (qdt_radial.level_defects_from_rydberg) and type scales stop at n*=10; rydberg_dyn matches an ARC 3.10 sum once its missing strength is added, to about 1 %.",
+    "note": "Frozen regression anchors after Numerov NIST-overlap calibration (runtime median scale; no hardcoded element constants) + literature overlay. Update deliberately when physics or inputs change. rydberg_dyn: principal-value Planck integral (the former grid sum was grid-dependent). Numerov is solved at each level's own defect (qdt_radial.level_defects_from_rydberg) and type scales stop at n*=10; rydberg_dyn matches an ARC 3.10 sum once its missing strength is added, to about 1 %. alpha0 and C6 include the valence photoionization continuum (valence_continuum.py).",
     "sources": {
       "alpha0": "data_json/Na_polarizability.json",
       "lifetimes": "data_json/Na_lifetimes.json",
@@ -15,9 +15,9 @@
   },
   "alpha0": {
     "gs_label": "3s",
-    "alpha0_au": 162.6094,
+    "alpha0_au": 162.6783,
     "alpha0_expt_au": 162.7,
-    "C6_au": 1556.82,
+    "C6_au": 1559.08,
     "C6_expt_au": 1556.0,
     "tol_rel_pipeline": 1e-05,
     "tol_rel_expt": 0.005

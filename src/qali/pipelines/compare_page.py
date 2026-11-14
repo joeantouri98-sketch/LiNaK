@@ -168,6 +168,8 @@ def build_payload(rows, data_dir, T_K, *, tabs=TABS, tab='dl', element=None, lin
         tr = [[_r(t['delta_E_au'], 10), _r(t.get('sign', 1) * t['fosc'], 7)] for t in d['transitions_gs']]
         polp[el] = dict(a0=_r(d['alpha0_au']), a0s=_r(d.get('alpha0_sigma_au')), C6=_r(d.get('C6_au')),
                         C6s=_r(d.get('C6_sigma_au')), gs=d.get('gs_label', ''), tr=tr,
+                        thr=_r(min((t['delta_E_au'] for t in d['transitions_gs'] if t.get('source') == 'continuum'),
+                                   default=None), 10),
                         to=[[_r(t[0], 10), t[1], t[2]] for t in to.get(el, [])])
     c6p = [[a, b, _r(c, 7), _r(s, 3)] + (list(_ref_c6(a, b)) if _ref_c6(a, b) else [None, None])
            for (a, b), (c, s) in c6.items()]

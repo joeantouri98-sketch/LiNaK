@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "Qali (formerly LiNaK): an alkali-atom AMO pipeline"
+title: "Qali: an integrated computational toolkit for AMO physics"
 message: "If you use Qali, please cite it using the metadata below."
 type: software
 authors:
@@ -22,8 +22,8 @@ abstract: >-
   levels, transitions, lifetimes, polarizability, BBR, tweezers, hyperfine,
   and Feshbach, with optional ORCA (Neese) and ARC bridges. Limited support
   for ions and 3d metals (Fe, Cr).
-url: "https://github.com/joeantouri98-sketch/LiNaK"
-repository-code: "https://github.com/joeantouri98-sketch/LiNaK"
+url: "https://github.com/joeantouri98-sketch/Qali"
+repository-code: "https://github.com/joeantouri98-sketch/Qali"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.21821149"

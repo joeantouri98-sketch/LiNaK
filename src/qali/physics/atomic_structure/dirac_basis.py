@@ -110,6 +110,34 @@ def dirac_matrices(basis: Basis, kappa: int, V: np.ndarray, c: float = C_AU):
     return 0.5 * (H + H.T), 0.5 * (S + S.T), (P, Q)
 
 
+def dirac_floor(Z: float, kappa: int, c: float = C_AU) -> float:
+    """Lowest bound energy (shifted by -c^2) of channel kappa for a bare point nucleus Z.
+
+    The lowest n of a channel is |kappa| for kappa < 0 and kappa + 1 for kappa > 0 (n_r = 0 or 1).
+    A screened, finite nucleus binds less, so no physical state of an atom lies below this; a
+    lower positive-energy eigenvalue is a basis intruder (the DKB spurious state of kappa > 0 near
+    a point nucleus at large Z)."""
+    g = math.sqrt(max(kappa * kappa - (Z / c) ** 2, 0.0))
+    n_r = 0 if kappa < 0 else 1
+    return c * c * (1.0 / math.sqrt(1.0 + ((Z / c) / (n_r + g)) ** 2) - 1.0)
+
+
+INTRUDER_MARGIN = 0.02      # 2 % below the point-nucleus floor still counts as physical
+
+
+def physical_states(eps: np.ndarray, Z: float, kappa: int, c: float = C_AU) -> np.ndarray:
+    """Indices of the positive-energy eigenvalues that are physical (above -c^2 and not intruders
+    below the point-nucleus floor of the channel, ``dirac_floor``)."""
+    floor = dirac_floor(Z, kappa, c) * (1.0 + INTRUDER_MARGIN)
+    return np.where(eps > max(-c * c, floor))[0]
+
+
+def n_intruders(eps: np.ndarray, Z: float, kappa: int, c: float = C_AU) -> int:
+    """Positive-energy eigenvalues below the point-nucleus floor of the channel (basis intruders)."""
+    floor = dirac_floor(Z, kappa, c) * (1.0 + INTRUDER_MARGIN)
+    return int(np.sum((eps > -c * c) & (eps <= floor)))
+
+
 def solve_channel(H: np.ndarray, S: np.ndarray, comps, nstates: int, c: float = C_AU):
     """Lowest positive-energy states: eps, P, Q (normalised), coefficient vectors."""
     eps, vec = eigh(H, S)
@@ -145,6 +173,12 @@ def psi_k(basis: Basis, f: np.ndarray, k: int) -> np.ndarray:
 def nuclear_radius(mass_number: float) -> float:
     """Uniform-sphere nuclear radius R = 1.2 fm A^(1/3), in bohr."""
     return 1.2 * mass_number ** (1 / 3) / BOHR_FM
+
+
+def default_mass_number(Z: int) -> int:
+    """A rough mass number on the valley of stability, A ≈ 2Z + 0.006 Z² (Fr: 219, Cs: 128), for a
+    finite nucleus when no isotope is given: R ∝ A^(1/3), so 5 % in A is under 2 % in R."""
+    return max(1, round(2 * Z + 0.006 * Z * Z)) if Z > 1 else 1
 
 
 def nuclear_potential(r: np.ndarray, Z: float, R: float) -> np.ndarray:

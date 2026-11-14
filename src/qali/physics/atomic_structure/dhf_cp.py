@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from scipy.linalg import eigh
@@ -49,10 +49,13 @@ from qali.physics.atomic_structure.angular import (
 from qali.physics.atomic_structure.dirac_basis import (
     C_AU,
     Basis,
+    default_mass_number,
     dirac_matrices,
     evaluate,
+    n_intruders,
     nuclear_potential,
     nuclear_radius,
+    physical_states,
     psi_k,
 )
 
@@ -159,6 +162,7 @@ class DHFResult:
     transitions: tuple[Transition, ...]
     lifetimes: tuple[Lifetime, ...]
     quantum_defects: dict[str, tuple[tuple[int, float], ...]]
+    basis_intruders: dict[str, int] = field(default_factory=dict)   # skipped per core channel (0: none)
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +183,11 @@ class _Model:
         self.n_core_el = sum(occ for _, _, occ in self.core)
         self.z_ion = Z - self.n_core_el            # charge the valence electron sees far out
         self.core_kappas = sorted({k for _, k, _ in self.core}, key=lambda k: (kappa_lj(k)[0], k > 0))
-        self.R_nuc = nuclear_radius(mass_number) if mass_number else 0.0
+        # always a finite nucleus: a point nucleus at large Z lets the DKB basis produce an intruder
+        # in kappa > 0 (Fr 2p1/2 at -11702 a.u.), which would replace a core orbital
+        self.mass_number = mass_number or default_mass_number(Z)
+        self.R_nuc = nuclear_radius(self.mass_number)
+        self.intruders: dict[int, int] = {}         # basis intruders skipped per core channel
         self.bc = Basis(Z, rmax=40.0, n_int=n_int_core, beta=0.0)
         # first knot at 1e-3/Z: inside the nucleus, but avoids the dynamic range that
         # would cost high-n Rydberg levels their last digits
@@ -263,7 +271,11 @@ class _Model:
             new_orbs, eps_all = {}, []
             for kap in self.core_kappas:
                 eps, vec = eigh(Fk[kap], Sk[kap])
-                sel = np.where(eps > -c * c)[0][:len(nsub[kap])]
+                sel = physical_states(eps, Z, kap, c)[:len(nsub[kap])]
+                self.intruders[kap] = n_intruders(eps, Z, kap, c)
+                if len(sel) < len(nsub[kap]):
+                    raise ValueError(f"core channel {kappa_label(0, kap)[1:]}: only {len(sel)} physical "
+                                     f"states for {len(nsub[kap])} core orbitals")
                 occ = kappa_lj(kap)[1] + 1
                 for i, n in enumerate(nsub[kap]):
                     v = vec[:, sel[i]]
@@ -317,6 +329,8 @@ class _Model:
 
     def channel(self, kap):
         eps, vec = eigh(self._hamiltonian(kap), self.S[kap])
+        # no intruder filter here: with the finite nucleus the valence basis has none, and the fitted
+        # core-polarisation wells can hold deep states that the cutoff fits must keep counting
         sel = np.where(eps > -self.c ** 2)[0]
         self._n_negative[kap] = int(sel[0])
         P, Q, _ = self.comps[kap]
@@ -528,4 +542,5 @@ def compute(Z: int, ionization_cm: float, alpha_core_au: float, *,
         alpha_dynamic_au={f"{w:g}": alpha_at(w / HARTREE_TO_EV) for w in omegas_eV},
         levels=tuple(levels), transitions=tuple(transitions), lifetimes=lifetimes,
         quantum_defects=defects,
+        basis_intruders={kappa_label(0, k)[1:]: v for k, v in sorted(m.intruders.items()) if v},
     )

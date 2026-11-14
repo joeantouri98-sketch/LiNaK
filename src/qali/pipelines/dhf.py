@@ -281,6 +281,9 @@ def _print_summary(element, result, comparison):
     print(f"  Core SCF: {result.core_scf_iterations} iterations; cutoffs: s {result.cpp_cutoff_bohr:.4f}"
           + "".join(f", {k} {v:.4f}" for k, v in result.cpp_cutoffs_kappa_bohr.items()) + " bohr"
           + "".join(f"; alpha factor {k} {v:.4f}" for k, v in result.cpp_alpha_factors_kappa.items()))
+    if result.basis_intruders:
+        print("  Basis intruders skipped (below the point-nucleus floor of the channel): "
+              + ", ".join(f"{k} {v}" for k, v in result.basis_intruders.items()))
     print(f"\n  {'state':8} {'DHF (cm-1)':>12} {'NIST (cm-1)':>12} {'diff':>9}")
     for row in comparison:
         tag = '  (input)' if row['fitted'] else ''

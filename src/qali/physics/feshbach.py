@@ -95,13 +95,17 @@ def a_bar_a0(beta6):
     return A_BAR_FACTOR * beta6
 
 
-def scattering_length(B, a_bg, B0, Delta):
+def scattering_length(B, a_bg, B0, Delta, gamma=None):
     """
     a(B) = a_bg (1 − Δ/(B − B₀)).
 
-    Returns NaN exactly at B = B₀ (pole).
+    Returns NaN exactly at B = B₀ (pole). With an inelastic decay width *gamma* (field units) the
+    resonance is a(B) = a_bg [1 − Δ/(B − B₀ − iγ/2)] and this returns its real part, which stays
+    finite: |Re a − a_bg| ≤ |a_bg Δ|/γ.
     """
     B = np.asarray(B, dtype=float)
+    if gamma:
+        return np.real(a_bg * (1.0 - Delta / (B - B0 - 0.5j * gamma)))
     denom = B - B0
     with np.errstate(divide='ignore', invalid='ignore'):
         a = a_bg * (1.0 - Delta / denom)
@@ -201,6 +205,7 @@ class Resonance:
     ref: str
     dmu_muB: float | None = None   # δμ, closed- minus open-channel magnetic moment (μ_B)
     s_res: float | None = None     # published resonance strength (used when δμ is not given)
+    gamma_G: float | None = None   # inelastic decay width γ (field units): a = a_bg[1 − Δ/(B − B₀ − iγ/2)]
 
     @classmethod
     def from_json(cls, row: Mapping) -> Resonance:
@@ -216,6 +221,7 @@ class Resonance:
             ref=row.get('ref', ''),
             dmu_muB=None if row.get('dmu_muB') is None else float(row['dmu_muB']),
             s_res=None if row.get('s_res') is None else float(row['s_res']),
+            gamma_G=float(row['gamma_G']) if row.get('gamma_G') else None,
         )
 
     def background(self, a_bg_default: float) -> float:
@@ -225,6 +231,11 @@ class Resonance:
     def is_s_wave(self) -> bool:
         """A pole of the s-wave a(B) (even closed-channel ℓ, see ``couples_to_s_wave``)."""
         return couples_to_s_wave(self.partial_wave)
+
+    @property
+    def is_pole(self) -> bool:
+        """A true pole of Re a(B): s-wave coupled and without an inelastic decay width."""
+        return self.is_s_wave and not self.gamma_G
 
 
 @dataclass(frozen=True)
@@ -284,23 +295,24 @@ def multi_resonance_a(B, resonances: Sequence[Resonance], a_bg_default):
     Product of isolated-resonance factors (valid when resonances are well
     separated compared to their widths):
 
-        a(B)/a_bg = Π_i (1 − Δ_i / (B − B₀,i))
+        a(B)/a_bg = Π_i (1 − Δ_i / (B − B₀,i − iγ_i/2))
 
-    The overall a_bg is the first resonance's own, else *a_bg_default*: pass
+    γ_i is the inelastic decay width of a resonance in a channel that can relax (zero for most);
+    the result is Re a. The overall a_bg is the first resonance's own, else *a_bg_default*: pass
     the resonances of ONE entrance channel (``group_s_wave_by_channel``).
     """
     B = np.asarray(B, dtype=float)
     a_bg = resonances[0].background(a_bg_default)
-    factor = np.ones_like(B, dtype=float)
+    factor = np.ones_like(B, dtype=complex)
     for res in resonances:
         B0 = res.B0_G
         Delta = res.Delta_G
-        denom = B - B0
+        denom = B - B0 - 0.5j * (res.gamma_G or 0.0)
         with np.errstate(divide='ignore', invalid='ignore'):
             f = 1.0 - Delta / denom
         f = np.where(np.abs(denom) < 1e-12, np.nan, f)
         factor = factor * f
-    return a_bg * factor
+    return a_bg * np.real(factor)
 
 
 def default_B_max(resonances: Sequence[Resonance]) -> float:
@@ -392,7 +404,7 @@ def compute(
         else:
             a_ch = multi_resonance_a(B, rs, a_bg_default_a0)
             source, ref = 'resonances', ''
-            poles, zeros = _product_poles_and_zeros(B, a_ch, [r.B0_G for r in rs])
+            poles, zeros = _product_poles_and_zeros(B, a_ch, [r.B0_G for r in rs if r.is_pole])
             a_bg = rs[0].background(a_bg_default_a0)
         if ident and boson is False:
             sig_ch = np.zeros_like(a_ch)       # identical fermions: no s-wave collisions
@@ -420,7 +432,7 @@ def compute(
         if not res.is_s_wave:
             curves.append(ResonanceCurve(res, a_bg, None, None))
             continue
-        a = scattering_length(B, a_bg, res.B0_G, res.Delta_G)
+        a = scattering_length(B, a_bg, res.B0_G, res.Delta_G, res.gamma_G)
         sigma = sigma_el_a0(a, k_th, identical_bosons=bool(identical_particles(res.channel) and boson))
         curves.append(ResonanceCurve(res, a_bg, a, sigma))
     return FeshbachResult(

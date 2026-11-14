@@ -183,12 +183,12 @@ select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border
     </div>
     <section class="pane" id="pane-lv" role="tabpanel" aria-labelledby="tab-lv">
       <div class="plot"><div class="p" id="plv"></div></div>
-      <p class="note">Zero-field hyperfine levels, each state on its own frequency scale (relative to its centroid). Dots are the 2F+1 m<sub>F</sub> sublevels, coloured by m<sub>F</sub>; g<sub>F</sub> on the right. The arrow marks the ground-state microwave clock interval.</p>
+      <p class="note">Zero-field hyperfine levels, each state on its own frequency scale relative to its centroid.<br>Dots: the 2F+1 m<sub>F</sub> sublevels, coloured by m<sub>F</sub>; g<sub>F</sub> is on the right.<br>Arrow: the ground-state microwave clock interval.</p>
       <div class="card"><div class="bar2"><b>F levels</b></div><div class="tw"><table id="lvtab"><thead></thead><tbody></tbody></table></div></div>
     </section>
     <section class="pane" id="pane-br" role="tabpanel" aria-labelledby="tab-br" hidden>
       <div class="plot"><div class="p tall" id="pbr"></div></div>
-      <p class="note">Exact levels of H<sub>hf</sub> + (g<sub>J</sub> μ<sub>B</sub> J<sub>z</sub> − g<sub>I</sub> μ<sub>N</sub> I<sub>z</sub>)B, solved per m<sub>F</sub> (m<sub>F</sub> is exact at every field, so each curve is one level even where levels cross). Click a curve to move the cursor there and to show its composition below. dE/dB is the level's slope: positive slopes are low-field seekers (magnetically trappable).</p>
+      <p class="note">Exact levels of H<sub>hf</sub> + (g<sub>J</sub> μ<sub>B</sub> J<sub>z</sub> − g<sub>I</sub> μ<sub>N</sub> I<sub>z</sub>)B, solved per m<sub>F</sub>.<br>m<sub>F</sub> is exact at every field, so each curve is one level even where levels cross.<br>dE/dB is the level's slope: positive slopes are low-field seekers (magnetically trappable).</p>
       <div class="card"><div class="bar2"><b id="brtitle">Levels at the cursor</b><select id="focus" aria-label="State in the table" style="max-width:180px"></select></div><div class="tw"><table id="brtab"><thead></thead><tbody></tbody></table></div></div>
       <div class="plot"><div class="ptop"><span class="count" id="comptitle">Composition</span></div><div class="p short" id="pcomp" style="height:300px"></div></div>
     </section>
@@ -199,13 +199,13 @@ select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border
         <div class="plot"><div class="ptop"><span class="count" id="oftitle">Optical components vs field</span></div><div class="p" id="pof" style="height:440px"></div></div>
         <div class="plot"><div class="ptop"><span class="count" id="sptitle">Spectrum at the cursor</span></div><div class="p" id="psp" style="height:440px"></div></div>
       </div>
-      <p class="note">Optical detunings are from the line's zero-field centroid. The field-insensitive points (diamonds) are where a microwave frequency is stationary in B, such as the 87Rb |1,−1⟩ ↔ |2,+1⟩ two-photon line near 3.23 G.</p>
+      <p class="note">Optical detunings are from the line's zero-field centroid.<br>Diamonds: field-insensitive points, where a microwave frequency is stationary in B (such as the 87Rb |1,−1⟩ ↔ |2,+1⟩ two-photon line near 3.23 G).</p>
       <div class="card"><div class="bar2"><b id="sftitle">Zero-field hyperfine line strengths S<sub>FF′</sub></b></div><div class="tw"><table id="sftab"><thead></thead><tbody></tbody></table></div></div>
     </section>
     <section class="pane" id="pane-co" role="tabpanel" aria-labelledby="tab-co" hidden>
       <div class="card"><div class="bar2"><b>Nucleus</b></div><div class="tw"><table id="nutab"><thead></thead><tbody></tbody></table></div></div>
       <div class="card"><div class="bar2"><b>States</b></div><div class="tw"><table id="cotab"><thead></thead><tbody></tbody></table></div></div>
-      <p class="note">A, B in MHz and C in kHz (magnetic dipole, electric quadrupole, magnetic octupole). g<sub>J</sub> is measured where the constants file gives it, otherwise Landé with g<sub>S</sub> = 2.00231930436 and the reduced-mass g<sub>L</sub>. g<sub>I</sub> is the atomic value (with diamagnetic shielding) where the file gives it, otherwise the bare nuclear μ<sub>I</sub>/I.</p>
+      <p class="note">A and B in MHz, C in kHz (magnetic dipole, electric quadrupole, magnetic octupole).<br>g<sub>J</sub>: measured where the constants file gives it, otherwise Landé with g<sub>S</sub> = 2.00231930436 and the reduced-mass g<sub>L</sub>.<br>g<sub>I</sub>: the atomic value (with diamagnetic shielding) where the file gives it, otherwise the bare nuclear μ<sub>I</sub>/I.</p>
     </section>
   </div>
 </div>

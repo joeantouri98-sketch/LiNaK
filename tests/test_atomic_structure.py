@@ -469,3 +469,28 @@ def test_model_f_needs_the_model_file(tmp_path):
     assert result.returncode != 0
     assert "Na_brueckner.json" in result.stdout + result.stderr
     assert "Brueckner stage" in result.stdout + result.stderr
+
+
+def test_point_nucleus_intruder_is_recognised_at_fr():
+    """With a point nucleus at Z = 87 the DKB basis gives a kappa = +1 state far below the
+    point-Coulomb 2p1/2 floor; physical_states skips it, and the first state kept is 2p1/2."""
+    from qali.physics.atomic_structure.dirac_basis import dirac_floor, n_intruders, physical_states
+    from scipy.linalg import eigh
+    Z = 87
+    b = Basis(Z, rmax=60.0, n_int=90)
+    H, S, _ = dirac_matrices(b, 1, -Z / b.r)
+    eps = eigh(H, S, eigvals_only=True)
+    floor = dirac_floor(Z, 1)
+    keep = physical_states(eps, Z, 1)
+    assert eps[keep[0]] == pytest.approx(floor, rel=2e-3)
+    if n_intruders(eps, Z, 1):
+        assert eps[keep[0] - 1] < 1.02 * floor
+
+
+def test_dhf_model_defaults_to_a_finite_nucleus():
+    from qali.physics.atomic_structure.dhf_cp import _Model
+    from qali.physics.atomic_structure.dirac_basis import default_mass_number
+    core, nv = one_valence_configuration(87)
+    m = _Model(87, core, nv, 0.15, 0.0, None)
+    assert m.mass_number == default_mass_number(87) and m.R_nuc > 0
+    assert 215 <= default_mass_number(87) <= 230 and 125 <= default_mass_number(55) <= 140

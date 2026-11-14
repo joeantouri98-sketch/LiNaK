@@ -153461,6 +153461,8 @@
       "v_cap_ms": 0.00033648017117959643
     }
   ],
+  "user_lifetime_overrides": {},
+  "nist_f_scale": {},
   "transitions": [
     {
       "upper_label": "4p1/2",

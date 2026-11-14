@@ -130,7 +130,8 @@ def _alpha_networks(element, data, data_dir, excited_label, polarizability_file=
         print(f"  Ground state {gs_label}: using {len(trans_gs)} cached transitions "
               f"from _polarizability.json")
     else:
-        trans_gs = build_transitions_for_state(gs_label, data, all_transitions)
+        # with the valence photoionization continuum, as the Polarizability stage's cached networks
+        trans_gs = build_transitions_for_state(gs_label, dict(data, valence_continuum=True), all_transitions)
         print(f"  Ground state {gs_label}: α(0) network built from pipeline JSON "
               f"({len(trans_gs)} transitions)")
 
@@ -148,7 +149,8 @@ def _alpha_networks(element, data, data_dir, excited_label, polarizability_file=
             print(f"  Excited state {excited_label}: using {len(trans_ex)} cached "
                   f"transitions from _polarizability.json")
         else:
-            trans_ex = build_transitions_for_state(excited_label, data, all_transitions)
+            trans_ex = build_transitions_for_state(excited_label, dict(data, valence_continuum=True),
+                                                   all_transitions)
             print(f"  Excited state {excited_label}: network built from pipeline JSON "
                   f"({len(trans_ex)} transitions)")
         if not trans_ex:

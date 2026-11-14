@@ -5,6 +5,28 @@ Short notes on what changed in Qali (called LiNaK until November 2026). Newest f
 ## Latest
 
 ### Fixed
+- **Polarizabilities left out the valence photoionization continuum.** The sums over bound np lines (to n = 50) miss the oscillator strength that goes to the continuum: 0.24 for Li 2s, 0.01–0.05 for Na–Fr. Li α(0) came out 0.8 % low and C₆ 2.6 % low.
+  - New `physics/valence_continuum.py`: the bound state and the energy-normalised continuum εl′ in the same Marinescu model potential as the orbital page, df/dε from the j-resolved E1 matrix element, integrated from threshold to 20 Hartree plus an ε^−7/2 tail, as pseudo-lines (`source: continuum`, 10 % uncertainty). Checked against the bound series: df/dε at threshold equals the limit of f_n n*³ to 2 %.
+  - Used by Polarizability, Tweezer and the Blackbody ground and excited networks. Neutral Li–Fr only; Fr p → εd is left out (Fr d is not fitted).
+  - Results:
+
+    | | α(0) before → now | C₆ before → now | C₆ reference |
+    |---|---|---|---|
+    | Li | 162.82 → 164.09 (164.11) | 1357.6 → 1393.0 | 1393.39(16) |
+    | Na | 162.61 → 162.68 | 1556.8 → 1559.1 | 1556(4) |
+    | K | 289.54 → 289.59 | 3878.8 → 3881.6 | 3897(15) |
+    | Rb | 318.69 → 318.80 | 4698.4 → 4703.1 | 4691(23) |
+    | Cs | 399.62 → 399.76 | 6846.9 → 6854.7 | 6851(74) |
+    | Fr | 315.02 → 316.05 | 5162.5 → 5214.0 | 5256(89) |
+
+    Li 2p₁/₂ α(0) 119.5 → 127.1 a.u. (126.97 calculated).
+  - Above a state's photoionization threshold Re α needs a principal value over the continuum, which a sum over lines cannot give: α(λ) is now not evaluated there (NaN in the code, no curve on the pages). Magic wavelengths below the excited state's threshold (Li < 350 nm, Na < 408 nm, K < 455 nm, Rb < 474 nm, Cs < 494 nm) are no longer listed; they were computed without the continuum.
+  - Bundled outputs regenerated with `tools/regenerate_all.py --refresh-bundled`; the Na regression anchor moves to α(0) 162.678, C₆ 1559.08. The same run refreshes the hyperfine pages (current notes) and the Fr 7d lifetimes, which the restored bundle had from an older run: 7d₃/₂ 73.6 ns and 7d₅/₂ 67.7 ns, the published values.
+- **DHF: point-nucleus intruder in the core.** With no isotope mass the DHF model used a point nucleus, and at Fr the DKB basis then gives a κ = +1 state at −11702 a.u., which replaced the 2p₁/₂ core orbital. The model now always uses a finite nucleus (A ≈ 2Z + 0.006Z² when no isotope is given), and the core SCF skips any positive-energy eigenvalue more than 2 % below the point-Coulomb floor of its channel (`dirac_basis.dirac_floor`); skipped states are reported as `basis_intruders`. Brueckner orbitals use the same filter.
+- **Feshbach: ⁸⁷Rb had one entrance channel.** The file held the four s-wave lines of |1,+1⟩ + |1,+1⟩ only.
+  - Added the d-wave lines of that channel with Δ ≥ 0.2 mG (Marte et al. 2002, Table I: 391.49, 551.47, 632.45, 719.48, 831.29 G), which are poles of a(B) like the Cs d- and g-wave lines.
+  - Added six mixed-spin channels near 9 G and 18 G (Kaufman et al., PRA 80, 050701 (2009)), including the |1,+1⟩ + |2,−1⟩ line at 9.10 G (Erhard et al. 2004).
+  - These channels can relax, so the resonance has an inelastic width γ: a = a_bg[1 − Δ/(B − B₀ − iγ/2)]. The resonance table has a γ column and a(B) is drawn as Re a, which stays finite (|Re a − a_bg| ≤ |a_bg|Δ/γ ≈ 40 a₀ at 9.10 G) and has no zero crossing when γ > Δ.
 - **Bundled hyperfine constants restored.** `Na`, `K`, `Rb` and `Cs_hf_constants.json` had lost the measured atomic g_I′ and ground-state g_J (an older copy from an output folder was put over them), so the hyperfine pages fell back to the bare-nucleus g_I. They are back as of 2026-11-11.
 - **`tools/regenerate_all.py --refresh-bundled`** updates the bundled example data safely: it runs every stage in a fresh temporary folder and copies back only the files the stages wrote, never the input files. Copying an output folder over `resources/data_json` by hand brings in old copies of the input files.
 

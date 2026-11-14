@@ -174,6 +174,9 @@ def alpha_complex(omega_au: float, transitions: Sequence[dict]) -> tuple[float, 
     Near an undamped pole the channel is skipped; if every channel was a pole,
     both parts are NaN.
     """
+    thr = min((t['delta_E_au'] for t in transitions if t.get('source') == 'continuum'), default=math.inf)
+    if omega_au >= thr:          # above the photoionization threshold: not modelled (see alpha_real)
+        return _NAN, _NAN
     re = 0.0
     im = 0.0
     near_pole = False

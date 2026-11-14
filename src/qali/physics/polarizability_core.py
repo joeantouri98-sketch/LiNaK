@@ -1448,7 +1448,7 @@ def _ls_state_term(t, state_label, data):
 # NOT included in the propagated α and C₆ errors).
 SOURCE_REL_UNCERTAINTY = {
     'precision': 0.01, 'NIST': 0.10, 'literature': 0.10, 'extrapolated': 0.20, 'ORCA': 0.25,
-    'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'unknown': 0.50,
+    'Numerov': 0.20, 'Coulomb': 0.40, 'core': 0.0, 'continuum': 0.10, 'unknown': 0.50,
     'DHF': 0.05,     # default as atomic_structure.dhf_lines.DHF_REL_UNCERTAINTY; Lifetimes reads this table too
     'Brueckner': 0.05,
 }
@@ -1598,6 +1598,24 @@ def build_transitions_for_state(state_label, data, all_transitions):
                 src, _transition_acc(src, data, ll, ul, upper_J)),
         ))
 
+    # Photoionization continuum of the valence electron (model potential, neutral Li–Fr), when the
+    # caller asked for it: the bound sums stop at n = 50 and miss the continuum's oscillator strength
+    # (0.24 for Li 2s, 0.01–0.05 for the heavier alkalis). Pseudo-lines from valence_continuum.
+    if data.get('valence_continuum'):
+        from qali.physics.valence_continuum import REL_SIGMA, lines_for_state
+        charge = int((data.get('ryd') or {}).get('charge') or 0)
+        symbol = str(data.get('element', '')).split('_')[0]
+        for w_c, f_c in lines_for_state(symbol, charge, state_label, -E_state_au):
+            result.append(dict(
+                delta_E_au  = w_c,
+                fosc        = f_c,
+                sign        = +1,
+                other_label = 'continuum',
+                source      = 'continuum',
+                wl_nm       = 45.56335 / w_c,
+                sigma_f     = REL_SIGMA * f_c,
+            ))
+
     # Ionic-core contribution
     # The core is common to every valence state, so it is appended to each state's network
     # identically (it cancels exactly in Δα, as it should): the RPA pseudo-spectrum of
@@ -1633,12 +1651,16 @@ def alpha_real(omega_au, transitions_list):
     returning NaN for the whole sum when any |dE| < GUARD was incorrect for
     high-n states.
 
-    At omega != 0: return NaN if any term sits inside a resonance guard band.
+    At omega != 0: return NaN if any term sits inside a resonance guard band, and at or above the
+    photoionization threshold when the list carries continuum pseudo-lines: there Re α needs the
+    principal value over the continuum, which a sum over lines cannot give.
     """
     result = 0.0
     GUARD = 1e-4
     omega_au = float(omega_au)
     static = abs(omega_au) < 1e-15
+    if not static and omega_au >= continuum_threshold_au(transitions_list):
+        return float('nan')
     for tr in transitions_list:
         dE = tr['delta_E_au']
         f = tr['fosc']
@@ -1653,6 +1675,12 @@ def alpha_real(omega_au, transitions_list):
             return float('nan')
         result += sgn * f / denom
     return result
+
+
+def continuum_threshold_au(transitions_list):
+    """Photon energy of the first continuum pseudo-line (≈ the photoionization threshold), else ∞."""
+    return min((t['delta_E_au'] for t in transitions_list if t.get('source') == 'continuum'),
+               default=math.inf)
 
 
 def alpha0_static(transitions_list):

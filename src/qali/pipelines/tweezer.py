@@ -74,6 +74,7 @@ def load_ground_transitions(element, data_dir, polarizability_file=None):
     data = load_element(element, data_dir)
     if data is None:
         return None
+    data['valence_continuum'] = True     # as the Polarizability stage
     gs_label = data['gs_label']
     transitions = build_transitions_for_state(gs_label, data, data['transitions'])
     print(f"  Ground {gs_label}: built {len(transitions)} transitions "

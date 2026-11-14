@@ -16,7 +16,8 @@ const CP = (() => {
   const vp = (T, m) => Math.sqrt(2 * KB * T / (m * AMU));
   const slower = (v, G, wl, m, eta) => v * v / (2 * (eta || 0.5) * amax(G, wl, m));
   // α(λ) of a ground state from [ΔE_au, s·f] pairs (a.u.); NaN within 1e-4 ΔE of a pole, as alpha_real
-  function alpha(wl, tr) { const w = NM_TO_AU / wl; let a = 0; for (const [dE, sf] of tr) { const den = dE * dE - w * w; if (Math.abs(den) < 1e-4 * Math.abs(dE)) return NaN; a += sf / den; } return a; }
+  function alpha(wl, tr, thr) { const w = NM_TO_AU / wl; if (thr && w >= thr) return NaN; let a = 0;   // NaN above the photoionization threshold
+  for (const [dE, sf] of tr) { const den = dE * dE - w * w; if (Math.abs(den) < 1e-4 * Math.abs(dE)) return NaN; a += sf / den; } return a; }
   const omegaNm = wl => NM_TO_AU / wl;
   // D-line table at temperature T (the comparison table's columns)
   function dopplerFwhmHz(wl, T, m) { const nu = C / (wl * 1e-9), mc2 = m * AMU * C * C / EV_J; return nu * Math.sqrt(8 * Math.log(2) * KB_EV * T / mc2); }

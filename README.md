@@ -38,7 +38,7 @@ Example results for Li, Na, K, Rb, Cs, Fr and Na⁺ are included, so you can exp
 You need [Python](https://www.python.org/downloads/) 3.12, 3.13 or 3.14, [Git](https://git-scm.com/downloads) and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
-git clone https://github.com/joeantouri98-sketch/LiNaK.git Qali
+git clone https://github.com/joeantouri98-sketch/Qali.git
 cd Qali
 uv sync
 ```
@@ -192,7 +192,7 @@ QALI_PROJECT_ROOT=/path/to/folder uv run qali --pipeline rydberg Na
 | Overview says data is unavailable | Run the missing stage. Overview shows saved results and does not calculate anything. |
 | A stage reports missing data | Run the earlier stages first. |
 
-If that does not help, please [open an issue](https://github.com/joeantouri98-sketch/LiNaK/issues) with the species, what you ran and the full error message.
+If that does not help, please [open an issue](https://github.com/joeantouri98-sketch/Qali/issues) with the species, what you ran and the full error message.
 
 ## Learn more
 
@@ -205,7 +205,7 @@ If that does not help, please [open an issue](https://github.com/joeantouri98-sk
 
 If you use Qali in a paper or thesis, please cite:
 
-Youssef Antoury, *Qali (formerly LiNaK): an alkali-atom AMO pipeline* (2026). DOI: [10.5281/zenodo.21821149](https://doi.org/10.5281/zenodo.21821149)
+Youssef Antoury, *Qali: an integrated computational toolkit for AMO physics* (2026). DOI: [10.5281/zenodo.21821149](https://doi.org/10.5281/zenodo.21821149)
 
 Please also cite the sources of any numbers you quote, such as NIST ASD. [REFERENCES.md](REFERENCES.md) lists what to cite, and [REFERENCES.bib](REFERENCES.bib) has the BibTeX entries. If you report ORCA or ARC results, cite those programs too.
 
@@ -217,4 +217,3 @@ Qali is released under the [GNU General Public License v3.0 or later](LICENSE) (
 
 Youssef Antoury: [Joeantouri98@gmail.com](mailto:Joeantouri98@gmail.com)
 
-Results for Fe and Cr are not included. If you need them, feel free to get in touch.

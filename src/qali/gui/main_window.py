@@ -475,7 +475,7 @@ class MainWindow(QMainWindow):
             "output; the physics lives in the pipelines.</p>"
             "<p>Author: Youssef Antoury<br>"
             "Licence: GNU GPL v3 or later<br>"
-            "Source: <a href='https://github.com/joeantouri98-sketch/LiNaK'>github.com/joeantouri98-sketch/LiNaK</a><br>"
+            "Source: <a href='https://github.com/joeantouri98-sketch/Qali'>github.com/joeantouri98-sketch/Qali</a><br>"
             "Cite: <a href='https://doi.org/10.5281/zenodo.21821149'>doi:10.5281/zenodo.21821149</a></p>"
             "<p>Plotly.js (MIT) is bundled for offline plots. See Help &gt; Help contents for the flags "
             "reference and short physics notes per stage.</p>",

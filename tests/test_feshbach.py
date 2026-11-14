@@ -179,3 +179,29 @@ def test_resonance_without_own_background_uses_the_table_default():
     res = Resonance.from_json({"label": "x", "B0_G": 10, "Delta_G": 0.5})
     assert res.a_bg_a0 is None and res.background(54.5) == 54.5
     assert (res.partial_wave, res.channel, res.ref) == ("s", "", "")
+
+
+def test_inelastic_width_removes_the_pole():
+    """a = a_bg[1 − Δ/(B − B0 − iγ/2)]: Re a stays within |a_bg Δ/γ| of a_bg and has no zero for γ > Δ."""
+    import numpy as np
+
+    from qali.physics.feshbach import Resonance, multi_resonance_a, scattering_length
+    B = np.linspace(9.0, 9.2, 4001)
+    a = scattering_length(B, 97.7, 9.1047, 0.0020, 0.0047)
+    assert np.all(np.isfinite(a))
+    assert np.max(np.abs(a - 97.7)) == pytest.approx(97.7 * 0.0020 / 0.0047, rel=1e-3)
+    assert np.all(a > 0)
+    r = Resonance('x', '|1,+1> + |2,-1>', 's', 9.1047, 0.0020, 97.7, '', gamma_G=0.0047)
+    assert not r.is_pole and r.is_s_wave
+    assert np.allclose(multi_resonance_a(B, [r], 100.0), a)
+
+
+def test_rb87_lists_the_mixed_spin_channels():
+    import json
+
+    from qali.core.paths import reference_path
+    d = json.loads(reference_path('data_json', 'Rb_feshbach.json').read_text(encoding='utf-8'))
+    chans = {r['channel'] for r in d['resonances']}
+    assert '|1,+1> + |1,+1>' in chans and '|1,+1> + |2,-1>' in chans and len(chans) == 7
+    erhard = next(r for r in d['resonances'] if r['channel'] == '|1,+1> + |2,-1>')
+    assert erhard['B0_G'] == pytest.approx(9.1047) and erhard['gamma_G'] > erhard['Delta_G']

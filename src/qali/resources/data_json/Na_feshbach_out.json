@@ -4,10 +4,10 @@
   "version": "0.2",
   "mass_amu": 22.989769,
   "mass_source": "ISOTOPE_MASS_AMU (A=23)",
-  "C6_au": 1556.82,
+  "C6_au": 1559.08,
   "C6_source": "polarizability.json",
-  "beta6_a0": 89.8739,
-  "a_bar_a0": 42.9587,
+  "beta6_a0": 89.9065,
+  "a_bar_a0": 42.9743,
   "a_bg_default_a0": 54.54,
   "kT_uK": 1.0,
   "k_a0inv": 0.0003642994084085492,
@@ -35,7 +35,7 @@
       "ref": "Stenger et al. PRL 82, 4569 (1999); Knoop et al. \u2014 90.51(4) mT, \u0394\u22480.104 mT; \u03b4\u03bc = 3.8 \u03bcB from Chin et al., RMP 82, 1225 (2010) Table IV",
       "in_s_wave_a": true,
       "dmu_muB": 3.8,
-      "s_res": 0.08254,
+      "s_res": 0.08257,
       "s_res_source": "\u03b4\u03bc"
     },
     {

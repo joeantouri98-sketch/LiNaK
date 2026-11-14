@@ -4,7 +4,7 @@ Thanks for your interest in improving Qali.
 
 ## Reporting bugs / requesting features
 
-Please open a [GitHub issue](https://github.com/joeantouri98-sketch/LiNaK/issues)
+Please open a [GitHub issue](https://github.com/joeantouri98-sketch/Qali/issues)
 with:
 - The element/species and command you ran.
 - The full error output or a description of the unexpected result.

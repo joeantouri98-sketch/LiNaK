@@ -3364,7 +3364,34 @@ p {
       put all the Thomas–Reiche–Kuhn strength of the deep shells where the outer shell
       responds, so $\alpha_c(i\xi)$ fell off too slowly and $C_6$ came out 2–8&nbsp;% high
       for Rb, Cs, Fr; with RPA they agree with Derevianko et&nbsp;al. (2010) to
-      $0.2\%$ (Fr $1.8\%$). Species not in the table keep the one-line model.
+      $0.2\%$. Species not in the table keep the one-line model.
+    </p>
+  </div>
+
+  <div class="subsection">
+    <h3>Valence photoionization continuum</h3>
+    <p>
+      The valence sums run over bound lines to $n=50$; the oscillator strength that goes to the
+      continuum is missing from them: $0.24$ for Li 2s, $0.01$&ndash;$0.05$ for Na&ndash;Fr.
+      <span class="file-badge">valence_continuum.py</span> solves the bound state and the
+      energy-normalised continuum $\varepsilon\ell'$ in the same Marinescu model potential as the
+      orbital page (outward Numerov, amplitude from the WKB phase average far out) and adds the
+      continuum as pseudo-lines (<code>source: continuum</code>) at $\omega=\varepsilon+E_{\rm bind}$,
+      with the level's measured binding energy:
+    </p>
+    <div class="math-block">
+      <div class="math-label">Continuum oscillator-strength density</div>
+      $$\frac{df}{d\varepsilon}=\frac23\,\omega\sum_{j'}(2j'+1)\begin{Bmatrix}\ell&j&\tfrac12\\ j'&\ell'&1\end{Bmatrix}^2
+        \ell_>\left|\int u_{n\ell j}\,r\,u_{\varepsilon\ell'j'}\,dr\right|^2$$
+    </div>
+    <p>
+      integrated from threshold to 20 Hartree plus an $\varepsilon^{-7/2}$ tail. At threshold it
+      equals the limit of $f_n n^{*3}$ of the bound series to 2&nbsp;%. With it Li $\alpha(0)=164.09$
+      (164.11) and $C_6=1393.0$ (1393.39), and the heavier alkalis agree with Derevianko et&nbsp;al.
+      (2010) to 0.4&nbsp;% (Fr 0.8&nbsp;%). Above a state's photoionization threshold the real
+      $\alpha(\omega)$ needs a principal value over the continuum, which a sum over lines cannot
+      give, so it is not evaluated there; magic wavelengths are searched below it. Neutral Li&ndash;Fr
+      only; Fr $p\to\varepsilon d$ is left out (Fr $d$ is not fitted).
     </p>
     <div class="annotation amber">
       <span class="icon">!</span>
@@ -3392,7 +3419,7 @@ p {
       Output: <code>data_json/&lt;el&gt;_polarizability.json</code>; the plots are the
       Polarizability page (<code>plots/&lt;el&gt;/&lt;el&gt;_response.html</code>, Visualise:
       α(ω), magic wavelengths and tweezer tabs). For Na the pipeline reports
-      $\alpha(0)=162.61$&nbsp;au vs expt $162.7$, and $C_6\approx1558$&nbsp;au
+      $\alpha(0)=162.68$&nbsp;au vs expt $162.7$, and $C_6\approx1559$&nbsp;au
       vs expt $1556$ (see <a href="#sec16">Na Step&nbsp;7</a>).
     </p>
   </div>
@@ -3799,7 +3826,7 @@ p {
       <tr><td><code>element</code>, <code>isotope_A</code></td><td>Species and mass number (e.g. Na, 23)</td></tr>
       <tr><td><code>note</code></td><td>Free-text provenance of the table</td></tr>
       <tr><td><code>a_bg_default_a0</code>, <code>a_bg_ref</code></td><td>Default background scattering length in $a_0$ and its source (Na $|1,1\rangle+|1,1\rangle$: 54.54&nbsp;$a_0$, Knoop et&nbsp;al. 2011)</td></tr>
-      <tr><td><code>resonances[]</code></td><td>One object per resonance: <code>label</code>, <code>channel</code>, <code>partial_wave</code> (ℓ of the closed-channel state; even ℓ are poles of $a(B)$), <code>B0_G</code> (position, G), <code>Delta_G</code> (width, G), <code>a_bg_a0</code> (per-resonance background, optional), <code>dmu_muB</code> or <code>s_res</code> (optional) and <code>ref</code></td></tr>
+      <tr><td><code>resonances[]</code></td><td>One object per resonance: <code>label</code>, <code>channel</code>, <code>partial_wave</code> (ℓ of the closed-channel state; even ℓ are poles of $a(B)$), <code>B0_G</code> (position, G), <code>Delta_G</code> (width, G), <code>a_bg_a0</code> (per-resonance background, optional), <code>dmu_muB</code> or <code>s_res</code> (optional), <code>gamma_G</code> (inelastic decay width γ, G, optional: for an entrance channel that can relax; then $a=a_{\rm bg}[1-\Delta/(B-B_0-i\gamma/2)]$ and $a(B)$ is drawn as Re $a$, which has no pole) and <code>ref</code></td></tr>
       <tr><td><code>curves{channel}</code></td><td>Optional published $a(B)$ of a channel: <code>{"kind": "table", "file", "column", "narrow"}</code> (a coupled-channel table, interpolated in $\arctan(a/L)$) or <code>{"kind": "fit", "segments": [...], "global"}</code> (fits $(a_{\rm bg}+s(B-B_{\rm ref}))\prod(1-\Delta_i/(B-B_{0,i}))$ valid on stated field ranges)</td></tr>
     </table>
     <div class="math-block">
